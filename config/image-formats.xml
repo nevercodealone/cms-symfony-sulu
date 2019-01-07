@@ -17,4 +17,4 @@
     Render an image from the media_selection in a specific format the following way:
     <img src="{{ image.thumbnails['300x'] }}" alt="{{ image.title }}" title="{{ image.description|default(image.title) }}">
     -->
-</formats>k
+</formats>
