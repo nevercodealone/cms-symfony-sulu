@@ -1,0 +1,77 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+    <key>slider</key>
+
+    <meta>
+        <title lang="en">Slider</title>
+        <title lang="de">Slider</title>
+    </meta>
+
+    <properties>
+        <property name="title" type="text_line" mandatory="true">
+            <meta>
+                <title lang="en">Title</title>
+                <title lang="de">Titel</title>
+            </meta>
+
+            <tag name="sulu.node.name"/>
+        </property>
+
+        <block name="slider" default-type="slider_item">
+            <meta>
+                <title lang="de">Topslider</title>
+                <title lang="en">Topslider</title>
+            </meta>
+            <types>
+                <type name="slider_item">
+                    <properties>
+                        <property name="slider_small" type="text_line" mandatory="true">
+                            <meta>
+                                <title lang="en">Slide small</title>
+                            </meta>
+                        </property>
+                        <property name="slider_headline" type="text_line" mandatory="true">
+                            <meta>
+                                <title lang="en">Slide headline</title>
+                            </meta>
+                        </property>
+                        <property name="slider_subline" type="text_line" mandatory="true">
+                            <meta>
+                                <title lang="en">Slide subline</title>
+                            </meta>
+                        </property>
+                        <property name="slider_image" type="media_selection" maxOccurs="1" mandatory="true">
+                            <meta>
+                                <title lang="en">Slide image</title>
+                            </meta>
+                            <params>
+                                <param name="types" value="image"/>
+                            </params>
+                        </property>
+                        <property name="slider_button" type="text_line" mandatory="true">
+                            <meta>
+                                <title lang="en">Slide button</title>
+                            </meta>
+                        </property>
+                        <property name="slider_link" type="internal_links">
+                            <meta>
+                                <title lang="en">Link</title>
+                            </meta>
+
+                            <params>
+                                <param name="properties" type="collection">
+                                    <param name="title" value="title"/>
+                                    <param name="article" value="article"/>
+                                </param>
+                            </params>
+                        </property>
+                    </properties>
+                </type>
+            </types>
+        </block>
+
+    </properties>
+</template>

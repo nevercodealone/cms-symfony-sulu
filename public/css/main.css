@@ -1,0 +1,353 @@
+
+/* ==========================================================================
+   General
+   ========================================================================== */
+
+
+
+body {
+  font-family: Hack, monospace;
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 16px;
+  background: url(../img/bg-dark.png) center center no-repeat fixed;
+  background-size: cover;
+  position: relative;
+  padding: 3em 0;
+  color: #ffffff;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+p {
+  font-weight: 300;
+  color: #808080;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 { font-weight: 300; }
+
+a {
+  color: #ffffff;
+  transition: all 0.3s ease-in-out;
+  text-decoration: underline;
+}
+
+a:hover,
+a:focus {
+  color: #8ec150;
+  text-decoration: none;
+}
+
+a:focus { outline: none; }
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+ul,
+li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ==========================================================================
+   Hero section
+   ========================================================================== */ 
+
+.welcome-message { margin-top: 4.5em; }
+
+.welcome-message h1,
+.welcome-message h2 { color: #fff; }
+
+.welcome-message h1 {
+  font-size: 36px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.welcome-message h2 { font-size: 24px; }
+
+#effect-canvas { display: none; }
+
+/* ==========================================================================
+   Sub form
+   ========================================================================== */   
+
+.sub-form { margin-top: 3em; }
+
+.center-block { float: none; }
+
+.form-control {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid #FFFFFF;
+  border-radius: 0;
+  outline: none;
+  width: 100%;
+  padding: 0;
+  box-shadow: none;
+  transition: all .3s;
+  color: #fff;
+}
+
+.form-control:focus {
+  border-bottom: 1px solid #82b641;
+  box-shadow: 0 1px 0 0 #82b641;
+}
+
+.form-control.error {
+  border-bottom: 1px solid #F44336;
+  box-shadow: 0 1px 0 0 #F44336;
+}
+
+.form-control.valid {
+  border-bottom: 1px solid #4CAF50;
+  box-shadow: 0 1px 0 0 #4CAF50;
+}
+
+.form-input { position: relative; }
+
+.form-input label {
+  color: #FFFFFF;
+  position: absolute;
+  top: .2em;
+  left: 1.2em;
+  font-size: 14px;
+  cursor: text;
+  transition: .2s ease-out;
+  font-weight: 400;
+}
+
+.form-input label.active {
+  font-size: 12px;
+  -webkit-transform: translateY(-140%);
+  -ms-transform: translateY(-140%);
+  transform: translateY(-140%);
+}
+
+.error { color: #F44336 !important; }
+
+.valid { color: #4CAF50 !important; }
+
+.error i,
+.valid i { padding-right: .5em; }
+
+#mc-form i.fa-envelope-o, #mc-form i.fa-user {
+  color: #FFFFFF;
+  position: absolute;
+  left: -1.2em;
+  top: 5px;
+  font-size: 1.5em;
+}
+
+.btn-default {
+  text-decoration: none;
+  color: #FFF;
+  background-color: #5FBB28;
+  text-align: center;
+  letter-spacing: .5px;
+  border: none;
+  border-radius: 2px;
+  height: 36px;
+  line-height: 36px;
+  outline: 0;
+  padding: 0 2rem;
+  text-transform: uppercase;
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16), 0 2px 10px 0 rgba(0,0,0,0.12);
+  margin-top: 1.5em;
+}
+
+.btn-default:hover {
+  box-shadow: 0 5px 11px 0 rgba(0,0,0,0.18), 0 4px 15px 0 rgba(0,0,0,0.15);
+  background-color: #8ec150;
+  color: #FFF;
+}
+
+.btn-default:active,
+.btn-default:focus {
+  outline: none !important;
+  background-color: #8ec150;
+  border-color: #8ec150;
+  color: #FFF;
+}
+
+.waves-effect {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+  overflow: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  vertical-align: middle;
+  z-index: 1;
+  will-change: opacity, transform;
+  transition: all .3s ease-out;
+}
+
+.waves-effect .waves-ripple {
+  position: absolute;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.2);
+  transition: all 0.7s ease-out;
+  transition-property: -webkit-transform, opacity;
+  transition-property: transform, opacity;
+  -webkit-transform: scale(0);
+  -ms-transform: scale(0);
+  transform: scale(0);
+  pointer-events: none;
+}
+
+.waves-effect.waves-light .waves-ripple { background-color: rgba(255, 255, 255, 0.45); }
+
+.waves-notransition { transition: none !important; }
+
+.waves-circle {
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(circle, white 100%, black 100%);
+}
+
+.waves-input-wrapper {
+  border-radius: 0.2em;
+  vertical-align: bottom;
+}
+
+.waves-input-wrapper .waves-button-input {
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.waves-circle {
+  text-align: center;
+  width: 2.5em;
+  height: 2.5em;
+  line-height: 2.5em;
+  border-radius: 50%;
+  -webkit-mask-image: none;
+}
+
+.waves-block { display: block; }
+
+a.waves-effect .waves-ripple { z-index: -1; }
+
+/* ==========================================================================
+   19.Social 
+   ========================================================================== */
+
+
+.social li {
+  display: inline-block;
+  padding-right: .8em;
+}
+
+.social li:last-child { padding-right: 0; }
+
+.social li a {
+  display: block;
+  transition: all 0.3s ease-in-out;
+  font-size: 1.3em;
+  color: #fff;
+  background: transparent;
+  border: 1px solid #FFFFFF;
+  width: 55px;
+  height: 55px;
+  line-height: 55px;
+  border-radius: 50%;
+  text-align: center;
+}
+
+.social li a:hover {
+  background: #82b641;
+  border: 1px solid #82b641;
+  box-shadow: 0 5px 11px 0 rgba(0,0,0,0.18), 0 4px 15px 0 rgba(0,0,0,0.15);
+}
+
+.social .waves-effect { overflow: inherit; }
+
+/* ==========================================================================
+   footer
+   ========================================================================== */
+   
+  
+   
+.site-footer { margin-top: 3em; }
+
+.site-footer small {
+  color: #fff;
+  margin-top: 1.5em;
+  display: inline-block;
+  font-size: 100%;
+}
+
+/* ==========================================================================
+   Small devices (tablets, 768px and up)
+   ========================================================================== */
+   
+@media (min-width: 768px) {
+
+body { padding: 4.5em 0; }
+
+.welcome-message h1 { font-size: 48px; }
+
+.site-footer { margin-top: 4.5em; }
+}
+
+/* ==========================================================================
+   Medium devices (desktops, 992px and up) 
+   ========================================================================== */
+   
+@media (min-width: 992px) {
+
+body { padding: 6em 0; }
+
+#effect-canvas {
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.welcome-message { margin-top: 3.5em; }
+
+.welcome-message h1 { font-size: 60px; }
+
+.btn-default { margin-top: 0; }
+
+.site-footer { margin-top: 6em; }
+}
+
+@media (min-width: 992px) {
+  .welcome-message h1 {
+    font-size: 50px;
+  }
+}

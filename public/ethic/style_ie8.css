@@ -1,0 +1,504 @@
+/*------------------------------------------------------------------
+[Master Stylesheet]
+Theme Name: Ethic HTML5 Template
+Theme URI: http://www.templaza.com/
+Author: templaza
+Author URI: http://themeforest.net/user/templaza
+Version: 1.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+
+------------------------------------------------------------------*/
+
+/**
+* Table of Contents:
+
+* 1.0 - Content
+*   1.1 - Header
+
+
+
+* -----------------------------------------------------------------------------
+*/
+/*--------------------- Bootstrap3 -----------------------*/
+.container{
+    width: 1203px;
+}
+.row {
+    margin-right: -15px;
+    margin-left: -15px;
+    width: 100% !important;
+}
+.row:after{
+    display: block;
+    clear: both;
+    content: '';
+}
+.col-xs-1, .col-sm-1, .col-md-1, .col-lg-1, .col-xs-2, .col-sm-2, .col-md-2, .col-lg-2, .col-xs-3, .col-sm-3, .col-md-3, .col-lg-3, .col-xs-4, .col-sm-4, .col-md-4, .col-lg-4, .col-xs-5, .col-sm-5, .col-md-5, .col-lg-5, .col-xs-6, .col-sm-6, .col-md-6, .col-lg-6, .col-xs-7, .col-sm-7, .col-md-7, .col-lg-7, .col-xs-8, .col-sm-8, .col-md-8, .col-lg-8, .col-xs-9, .col-sm-9, .col-md-9, .col-lg-9, .col-xs-10, .col-sm-10, .col-md-10, .col-lg-10, .col-xs-11, .col-sm-11, .col-md-11, .col-lg-11, .col-xs-12, .col-sm-12, .col-md-12, .col-lg-12 {
+    position: relative;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+.col-lg-1, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-10, .col-lg-11, .col-lg-12 {
+    float: left!important;
+}
+/*--------------------- min width 1200px -------------------------*/
+.col-lg-12 {
+    width: 100% !important;
+}
+.col-lg-11 {
+    width: 91.66666667% !important;
+}
+.col-lg-10 {
+    width: 83.33333333% !important;
+}
+.col-lg-9 {
+    width: 75% !important;
+}
+.col-lg-8 {
+    width: 66.66666667% !important;
+}
+.col-lg-7 {
+    width: 58.33333333% !important;
+}
+.col-lg-6 {
+    width: 50% !important;
+}
+.col-lg-5 {
+    width: 41.66666667% !important;
+}
+.col-lg-4 {
+    width: 33.33333333% !important;
+}
+.col-lg-3 {
+    width: 25% !important;
+}
+.col-lg-2 {
+    width: 16.66666667% !important;
+}
+.col-lg-1 {
+    width: 8.33333333% !important;
+}
+.col-lg-pull-12 {
+    right: 100% !important;
+}
+.col-lg-pull-11 {
+    right: 91.66666667% !important;
+}
+.col-lg-pull-10 {
+    right: 83.33333333% !important;
+}
+.col-lg-pull-9 {
+    right: 75% !important;
+}
+.col-lg-pull-8 {
+    right: 66.66666667% !important;
+}
+.col-lg-pull-7 {
+    right: 58.33333333% !important;
+}
+.col-lg-pull-6 {
+    right: 50% !important;
+}
+.col-lg-pull-5 {
+    right: 41.66666667% !important;
+}
+.col-lg-pull-4 {
+    right: 33.33333333% !important;
+}
+.col-lg-pull-3 {
+    right: 25% !important;
+}
+.col-lg-pull-2 {
+    right: 16.66666667% !important;
+}
+.col-lg-pull-1 {
+    right: 8.33333333% !important;
+}
+.col-lg-pull-0 {
+    right: 0;
+}
+.col-lg-push-12 {
+    left: 100% !important;
+}
+.col-lg-push-11 {
+    left: 91.66666667% !important;
+}
+.col-lg-push-10 {
+    left: 83.33333333% !important;
+}
+.col-lg-push-9 {
+    left: 75% !important;
+}
+.col-lg-push-8 {
+    left: 66.66666667% !important;
+}
+.col-lg-push-7 {
+    left: 58.33333333% !important;
+}
+.col-lg-push-6 {
+    left: 50% !important;
+}
+.col-lg-push-5 {
+    left: 41.66666667% !important;
+}
+.col-lg-push-4 {
+    left: 33.33333333% !important;
+}
+.col-lg-push-3 {
+    left: 25% !important;
+}
+.col-lg-push-2 {
+    left: 16.66666667% !important;
+}
+.col-lg-push-1 {
+    left: 8.33333333% !important;
+}
+.col-lg-push-0 {
+    left: 0;
+}
+.col-lg-offset-12 {
+    margin-left: 100% !important;
+}
+.col-lg-offset-11 {
+    margin-left: 91.66666667% !important;
+}
+.col-lg-offset-10 {
+    margin-left: 83.33333333% !important;
+}
+.col-lg-offset-9 {
+    margin-left: 75% !important;
+}
+.col-lg-offset-8 {
+    margin-left: 66.66666667% !important;
+}
+.col-lg-offset-7 {
+    margin-left: 58.33333333% !important;
+}
+.col-lg-offset-6 {
+    margin-left: 50% !important;
+}
+.col-lg-offset-5 {
+    margin-left: 41.66666667% !important;
+}
+.col-lg-offset-4 {
+    margin-left: 33.33333333% !important;
+}
+.col-lg-offset-3 {
+    margin-left: 25% !important;
+}
+.col-lg-offset-2 {
+    margin-left: 16.66666667% !important;
+}
+.col-lg-offset-1 {
+    margin-left: 8.33333333% !important;
+}
+.col-lg-offset-0 {
+    margin-left: 0;
+}
+
+/*------------------ min width 992px----------------------*/
+.col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-10, .col-md-11, .col-md-12 {
+    float: left;
+}
+.col-md-12 {
+    width: 100% !important;
+}
+.col-md-11 {
+    width: 91.66666667% !important;
+}
+.col-md-10 {
+    width: 83.33333333% !important;
+}
+.col-md-9 {
+    width: 75% !important;
+}
+.col-md-8 {
+    width: 66.66666667% !important;
+}
+.col-md-7 {
+    width: 58.33333333% !important;
+}
+.col-md-6 {
+    width: 50% !important;
+}
+.col-md-5 {
+    width: 41.66666667% !important;
+}
+.col-md-4 {
+    width: 33.33333333% !important;
+}
+.col-md-3 {
+    width: 25% !important;
+}
+.col-md-2 {
+    width: 16.66666667% !important;
+}
+.col-md-1 {
+    width: 8.33333333% !important;
+}
+.col-md-pull-12 {
+    right: 100% !important;
+}
+.col-md-pull-11 {
+    right: 91.66666667% !important;
+}
+.col-md-pull-10 {
+    right: 83.33333333% !important;
+}
+.col-md-pull-9 {
+    right: 75% !important;
+}
+.col-md-pull-8 {
+    right: 66.66666667% !important;
+}
+.col-md-pull-7 {
+    right: 58.33333333% !important;
+}
+.col-md-pull-6 {
+    right: 50% !important;
+}
+.col-md-pull-5 {
+    right: 41.66666667% !important;
+}
+.col-md-pull-4 {
+    right: 33.33333333% !important;
+}
+.col-md-pull-3 {
+    right: 25% !important;
+}
+.col-md-pull-2 {
+    right: 16.66666667% !important;
+}
+.col-md-pull-1 {
+    right: 8.33333333% !important;
+}
+.col-md-pull-0 {
+    right: 0;
+}
+.col-md-push-12 {
+    left: 100% !important;
+}
+.col-md-push-11 {
+    left: 91.66666667% !important;
+}
+.col-md-push-10 {
+    left: 83.33333333% !important;
+}
+.col-md-push-9 {
+    left: 75% !important;
+}
+.col-md-push-8 {
+    left: 66.66666667% !important;
+}
+.col-md-push-7 {
+    left: 58.33333333% !important;
+}
+.col-md-push-6 {
+    left: 50% !important;
+}
+.col-md-push-5 {
+    left: 41.66666667% !important;
+}
+.col-md-push-4 {
+    left: 33.33333333% !important;
+}
+.col-md-push-3 {
+    left: 25% !important;
+}
+.col-md-push-2 {
+    left: 16.66666667% !important;
+}
+.col-md-push-1 {
+    left: 8.33333333% !important;
+}
+.col-md-push-0 {
+    left: 0;
+}
+.col-md-offset-12 {
+    margin-left: 100% !important;
+}
+.col-md-offset-11 {
+    margin-left: 91.66666667% !important;
+}
+.col-md-offset-10 {
+    margin-left: 83.33333333% !important;
+}
+.col-md-offset-9 {
+    margin-left: 75% !important;
+}
+.col-md-offset-8 {
+    margin-left: 66.66666667% !important;
+}
+.col-md-offset-7 {
+    margin-left: 58.33333333% !important;
+}
+.col-md-offset-6 {
+    margin-left: 50% !important;
+}
+.col-md-offset-5 {
+    margin-left: 41.66666667% !important;
+}
+.col-md-offset-4 {
+    margin-left: 33.33333333% !important;
+}
+.col-md-offset-3 {
+    margin-left: 25% !important;
+}
+.col-md-offset-2 {
+    margin-left: 16.66666667% !important;
+}
+.col-md-offset-1 {
+    margin-left: 8.33333333% !important;
+}
+.col-md-offset-0 {
+    margin-left: 0;
+}
+/*---------------------- Search -------------------------*/
+.tz-content-search{
+    height: 200px!important;
+}
+.tz-content-search input{
+    color: #444444;
+}
+/*-------------------- offcanvas-menu --------------------*/
+
+.tz-offcavans-menu{
+    display: none!important;
+}
+
+/*--------------------- Header 01 ------------------------*/
+.tz-header .container{
+    width: 1203px;
+}
+.tz-header .tz-search{
+    background: #95001d;
+}
+.tz-button-toggle{
+    background: #95001d;
+    border-left: 2px solid #ffffff;
+}
+.tz-header .sub-menu-style-2{
+    left: -400px;
+}
+/*--------------------- Header 02 ------------------------*/
+body .tz-header-2 .tz-search{
+    background: #334878;
+}
+body .tz-header-2 .tz-button-toggle{
+    background: #334878;
+    border-left: 2px solid #ffffff;
+}
+body .tz-header-2 .tz-logo {
+    padding-right: 30px!important;
+}
+/*--------------------- Header 03 ------------------------*/
+body .tz-header-3 .tz-search{
+    background: #2D938E;
+
+}
+body .tz-header-3 .tz-button-toggle{
+    background: #2D938E;
+    border-left: 2px solid #ffffff;
+    border-left: 0!important;
+}
+body .tz-header-3 .tz-logo {
+    padding-right: 30px!important;
+}
+/*--------------------- Header 04 ------------------------*/
+body .tz-header-4 .tz-search{
+    background: #4C6778;
+}
+body .tz-header-4 .tz-button-toggle{
+    background: #4C6778;
+    border-left: 2px solid #ffffff;
+    border-left: 0!important;
+}
+body .tz-image-logo-style-4 img{
+    margin-left: -45px;
+}
+/*--------------------- Header 05 ------------------------*/
+body .tz-header-5 .tz-search{
+    background: #334878;
+}
+body .tz-header-5 .tz-button-toggle{
+    background: #334878;
+}
+body .tz-header-5 .tz-logo{
+    padding-right: 30px;
+}
+/*--------------------- Header 06 ------------------------*/
+body .tz-header-6 .tz-search{
+    background: #ffffff;
+}
+body .tz-header-6 .tz-button-toggle{
+    background: #ffffff;
+}
+/*--------------------- Header 07 ------------------------*/
+body .tz-header-7 .tz-search{
+    background: #E0675A;
+}
+body .tz-header-7 .tz-button-toggle{
+    background: #E0675A;
+}
+
+/*--------------------- Home 01 ------------------------*/
+body .tz-header-home-1{
+    margin-top: -56px!important;
+}
+body .tz-lastest-articles-content span{
+    visibility: hidden!important;
+}
+body .tz-banner-style1 .tz-banner-content{
+    visibility: hidden!important;
+}
+.tz-banner-content{
+    visibility: hidden!important;
+}
+/*--------------------- Home 02 ------------------------*/
+
+.bg-video {
+    background-image: url("images/Home-02/enjoy.jpg")!important;
+}
+.tz-image-event-item:after{
+    display: none!important;
+}
+/*--------------------- Home 03 ------------------------*/
+.tz-header-3-content > button{
+    background: none!important;
+}
+.tz-header-3 .tz-button-toggle{
+    background: none;
+}
+/*---------------------- Home 05-----------------------*/
+
+body .bg-video-style-5{
+    background-image: url("images/Home-05/life-student-Home-05.jpg")!important;
+}
+
+/*--------------------- Home 07 ------------------------*/
+div.tz-cource-services-style-7 li{
+    margin: 3px 0!important;
+}
+body .bg-video-style-7{
+    background-image: url("images/Home-07/life-student-Home-07.jpg")!important;
+}
+
+/*-------------------- Blog Single-Right ------------------*/
+.tz-blog-more li span:hover a,
+.tz-blog-more li span:hover a i{
+    color: #444444!important;
+}
+body .tz-item-portfolio span{
+    display: none;
+}
+
+/*------------------- Social Activity -------------------*/
+.tz-share-images .tz-multil-photo a{
+    width: 20%!important;
+    margin: 0!important;
+    display: inline-block!important;
+    float: left!important;
+
+}

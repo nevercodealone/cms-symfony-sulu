@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% block meta %}
+            {% include "SuluWebsiteBundle:Extension:seo.html.twig" with {
+                "seo": extension.seo|default([]),
+                "content": content|default([]),
+                "urls": urls|default([]),
+                "shadowBaseLocale": shadowBaseLocale|default(),
+                "defaultLocale": app.request.locale
+            } %}
+        {% endblock %}
+        <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+        <!--[if IE 8]>
+        <link href="/ethic/style_ie8.css" rel="stylesheet" type="text/css"/>
+        <![endif]-->
+        <!-- HTML5 Shim and Respond.js') }} IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js') }} doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+        <script src="/ethic/js/html5shiv.js"></script>
+        <script src="/ethic/js/respond.min.js"></script>
+        <![endif]-->
+        {% block style %}
+            <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+            <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
+            <link href='//cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.css' rel='stylesheet' type='text/css'>
+            <link href='//cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css' rel='stylesheet' type='text/css'>
+            <link href='//fonts.googleapis.com/css?family=Varela' rel='stylesheet' type='text/css'>
+            <link href='/css/nca-contact.css' rel='stylesheet' type='text/css'>
+            <link href="/ethic/style.css" rel="stylesheet"/>
+       {% endblock %}
+    </head>
+
+    <body>
+        <header class="tz-header tz-header-2">
+            {% block header %}
+                <div class="tz-customer-container">
+                    <div class="container">
+                        <div class="tz-header-content">
+                            <h3 class="tz-logo pull-left">
+                                <a href="{{ sulu_content_root_path() }}"><img alt="Never Code Alone Logo" src="/img/logo.png"></a>
+                            </h3>
+                            <button type="button" class="tz-button-toggle btn-navbar pull-right" data-target=".nav-collapse">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <nav class="nav-collapse pull-right">
+                                <ul class="tz-menu">
+                                    {% for item in sulu_navigation_root_tree('main') %}
+                                        <li>
+                                            <a href="{{ sulu_content_path(item.url) }}"
+                                               title="{{ item.title }}">{{ item.title }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div><!-- End Content Main Header -->
+                </div>
+            {% endblock %}
+        </header>
+        <section id="content">
+            {% block content %}{% endblock %}
+        </section>
+        <div id="switch">
+            <div class="content-switcher">
+                <h3 class="ncagreen">Kontakt</h3>
+                <div>
+                    <div class="row no-gutter-6 demo-thumbz-2 no-margin-right">
+                        <form method="post" class="ContactForm-03" id="nca-form" aria-live='assertive'>
+                            <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3">
+                                <div class="form-group">
+                                    <label for="reason">Wie möchtest du mit mir in Kontakt treten?</label>
+                                    <select id="reason" class="form-control">
+                                        <option value="email">E-Mail</option>
+                                        <option value="lunch">Lunch</option>
+                                        <option value="call">Rückruf</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="namefield">Name:*</label>
+                                    <input id="namefield" type="text" class="form-control" placeholder="Max Mustermann" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="emailfield">E-Mail:*</label>
+                                    <input id="emailfield" class="form-control" type="email" placeholder="max.mustermann@web.de" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone">Telefonnummer:</label>
+                                    <input id="phone" type="text" class="form-control" placeholder="017624747727">
+                                </div>
+                                <div class="form-group">
+                                    <label for="messagefield">Deine Nachricht:</label>
+                                    <textarea id="messagefield" rows="3" class="form-control" style="height:100px" placeholder="Ruf mich mal an"></textarea>
+                                </div>
+                                <div class="button">
+                                    <button type="submit" class="btn btn-success submitf-03" value='SUBMIT' name='submitf-03'>
+                                        senden
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="clear"></div>
+            <div id="hide"><i class="fa fa-times"></i></div>
+        </div>
+        <button id="show" style="display: block; border: 2px solid green;">
+            <span class="visuallyhidden">Kontakt Formular öffnen</span>
+            <div id="setting"><i class="fa fa-comment"></i></div>
+        </button>
+        <footer class="tz-footer">
+            {% block footer %}
+                <!-- Begin Footer -->
+                <div class="tz-footer-content tz-footer-content-2 tz-background-color-8">
+                    <div class="container">
+                        <img src="/img/rogoit-logo.png" alt="Rogoit Webdesign">
+                        <ul class="tz-footer-part">
+                            <li>
+                                <div class="tz-footer-content-main">
+                                    <img src="/ethic/images/check-footer-Home4.png" alt="ROLAND GOLLA">
+                                    <h4>ROLAND GOLLA</h4>
+                                    <ul>
+                                        <li><a href="https://www.rolandgolla.de/" target="_blank" rel="noopener">PHP Freelancer</a></li>
+                                        <li><a href="https://www.rolandgolla.de/php-kurs-inhouse-schulung/" target="_blank" rel="noopener">PHP-Kurs
+                                                Inhouse-Schulung</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="tz-footer-content-main">
+                                    <img src="/ethic/images/check-footer-Home4.png"
+                                         alt="Images remove footer">
+                                    <h4>ENTWICKLUNGSHILFE NRW</h4>
+                                    <ul>
+                                        <li><a href="http://www.entwicklungshilfe.nrw/dozenten/" target="_blank" rel="noopener">Dozenten</a></li>
+                                        <li><a href="http://www.entwicklungshilfe.nrw/workshops/soforthilfe/" target="_blank" rel="noopener">Soforthilfe</a>
+                                        </li>
+                                        <li><a href="http://www.entwicklungshilfe.nrw/code-rocker/" target="_blank" rel="noopener">Code-Rocker</a>
+                                        </li>
+                                        <li><a href="http://www.entwicklungshilfe.nrw/workshops/moderierte-code-reviews/"
+                                               target="_blank" rel="noopener">Code Reviews</a></li>
+                                        <li><a href="http://www.entwicklungshilfe.nrw/workshops/moderiertes-pair-programming/"
+                                               target="_blank" rel="noopener">Pair Programming</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="tz-footer-content-main">
+                                    <img src="/ethic/images/check-footer-Home4.png"
+                                         alt="Images remove footer">
+                                    <h4>WEBVISUM</h4>
+                                    <ul>
+                                        <li><a href="https://webvisum.de/schulungen.html" target="_blank" rel="noopener">Magento Support</a></li>
+                                        <li><a href="https://webvisum.de/magento-hosting" target="_blank" rel="noopener">Hosting</a></li>
+                                        <li><a href="https://webvisum.de/online-marketing" target="_blank" rel="noopener">Online Marketing</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="tz-footer-content-main">
+                                    <img src="/ethic/images/check-footer-Home4.png"
+                                         alt="Images remove footer">
+                                    <h4>PARTNER WERDEN</h4>
+                                    <ul>
+                                        <li><a href="https://blog.nevercodealone.de/kontakt-nca/" target="_blank" rel="noopener">Sponsoring</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="tz-footer-address-site">
+                    <address>Never Code Alone, Mercatorstr. 120 47051 Duisburg, Deutschland | Telefon: <a href="tel:+4917624747727">+49
+                            (0)176 24 74 77 27</a></address>
+                    <address>Never Code Alone gehört Rogoit Webdesign. Es gilt das <a href="/impressum/">Impressum</a>.
+                    </address>
+                </div>
+            {% endblock %}
+        </footer>
+
+        {% block javascripts %}
+            <script>
+                var Desktop = 5,
+                    tabletportrait = 2,
+                    mobilelandscape = 1,
+                    mobileportrait = 1,
+                    resizeTimer = null;
+            </script>
+            <script src="//code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+            <script src="//stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+            <script src="/ethic/js/off-canvas.js"></script>
+            <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.isotope/1.5.25/jquery.isotope.js"></script>
+            <script src="/ethic/js/resize.js"></script>
+            <script src="/ethic/js/custom-portfolio.js"></script>
+            <script src="//cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+            <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-parallax/1.1.3/jquery-parallax-min.js"></script>
+            <script src="/ethic/js/custom.js"></script>
+            <script src="/js/main.js"></script>
+            <script src="/js/nca-contact.js"></script>
+        {% endblock %}
+    </body>
+</html>
