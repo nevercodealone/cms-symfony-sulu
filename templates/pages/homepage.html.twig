@@ -1,7 +1,6 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
-    <h1>{{ content.title }}</h1>
     {% for block in content.blocks %}
         {% include "includes/ethic/" ~ block.type ~ ".html.twig" with {content: block}%}
     {% endfor %}
