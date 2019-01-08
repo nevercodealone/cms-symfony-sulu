@@ -1,0 +1,71 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+    <key>conference</key>
+
+    <view>pages/conference</view>
+    <controller>SuluWebsiteBundle:Default:index</controller>
+    <cacheLifetime>86400</cacheLifetime>
+
+    <meta>
+        <title lang="en">Conference</title>
+        <title lang="de">Conference</title>
+    </meta>
+
+    <properties>
+        <xi:include href="../includes/highlight.xml"/>
+
+        <section name="hero-section">
+            <properties>
+                <property name="town" type="text_line" mandatory="true">
+                    <meta>
+                        <title lang="en">Town</title>
+                    </meta>
+                </property>
+                <property name="date" type="date" mandatory="true">
+                    <meta>
+                        <title lang="en">Date</title>
+                    </meta>
+                </property>
+                <property name="eventLink" type="url" colspan="6">
+                    <meta>
+                        <title>Eventlink</title>
+                    </meta>
+                </property>
+                <property name="description" type="text_editor">
+                    <meta>
+                        <title lang="en">Description</title>
+                    </meta>
+
+                    <params>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content" value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]" />
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
+                </property>
+                <property name="eventheaderimage" type="media_selection" maxOccurs="1" mandatory="true">
+                    <meta>
+                        <title lang="en">Event header image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <property name="previewimage" type="media_selection" maxOccurs="1" mandatory="true">
+                    <meta>
+                        <title lang="en">Preview Image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+
+            </properties>
+        </section>
+
+    </properties>
+</template>
