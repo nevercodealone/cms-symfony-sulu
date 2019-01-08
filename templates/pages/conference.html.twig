@@ -60,6 +60,17 @@
                             </div>
                         </div>
                     </header>
+                    <section class="about section-spacing">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-md-6">{{ content.overviewLeft|raw }}</div>
+                                <div class="col-md-6">
+                                    <h2>{{ content.overviewHeadline }}</h2>
+                                    {{ content.overviewRight|raw }}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 {% endblock %}
                 {{ dump(content) }}
             </section>

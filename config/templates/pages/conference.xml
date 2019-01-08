@@ -17,8 +17,7 @@
 
     <properties>
         <xi:include href="../includes/highlight.xml"/>
-
-        <section name="hero-section">
+        <section name="header">
             <properties>
                 <property name="town" type="text_line" mandatory="true">
                     <meta>
@@ -41,6 +40,7 @@
                     </meta>
 
                     <params>
+                        <param name="table" value="false"/>
                         <param name="link" value="true"/>
                         <!-- CKEditor Parameters examples: -->
                         <param name="extra_allowed_content" value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]" />
@@ -63,9 +63,34 @@
                         <param name="types" value="image"/>
                     </params>
                 </property>
-
             </properties>
         </section>
+        <section name="overview">
+            <properties>
+                <property name="overviewLeft" type="text_area">
+                    <meta>
+                        <title lang="en">Overview left</title>
+                    </meta>
+                </property>
+                <property name="overviewHeadline" type="text_line" mandatory="true">
+                    <meta>
+                        <title lang="en">Overview Headline</title>
+                    </meta>
+                </property>
+                <property name="overviewRight" type="text_editor">
+                    <meta>
+                        <title lang="en">Overview right</title>
+                    </meta>
 
+                    <params>
+                        <param name="table" value="false"/>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content" value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]" />
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
     </properties>
 </template>
