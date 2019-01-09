@@ -52,7 +52,7 @@
                                 <div class="col-md-12">
                                     <div class="welcome-message">
                                         <h1>Scala Workshop - OTTO #NCAEvent</h1>
-                                        <p>29. September 2018</p>
+                                        <p>{{ content.date|localizeddate('long', 'none', "de") }}</p>
                                         <p>Hamburg</p>
                                     </div>
                                     <div class="action-btn"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Tickets kaufen</a> <a href="#counter" class="bttn">Event Infos</a></div>
@@ -67,6 +67,62 @@
                                 <div class="col-md-6">
                                     <h2>{{ content.overviewHeadline }}</h2>
                                     {{ content.overviewRight|raw }}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="schedule section-spacing" id="schedule">
+                        <div class="container">
+                            <header class="text-center">
+                                <h2>{{ content.timeTableHeadline }}</h2>
+                                <h3>{{ content.timeTableSubline }}</h3>
+                            </header>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div role="tabpanel" id="schedule-days">
+                                        <ul class="nav nav-tabs content-tabs" role="tablist">
+                                            <li role="presentation" class="active">
+                                                <a href="#day-1" aria-controls="day-1" role="tab" data-toggle="tab">
+                                                    <i class="fa fa-calendar"></i>{{ content.date|localizeddate('full', 'none', "de") }}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div role="tabpanel" class="tab-pane fade in active" id="day-1">
+                                                <ul class="timeline">
+                                                    {% for timeTableItem in content.timeTableItems %}
+                                                        <li class="event">
+                                                            <div class="row">
+                                                                {% if timeTableItem.images is not empty %}
+                                                                    {% if timeTableItem.alignRight %}
+                                                                        <div class="col-md-3 col-md-push-9 text-center">
+                                                                    {% else %}
+                                                                        <div class="col-md-3 text-center">
+                                                                    {% endif %}
+                                                                        <img src="{{ timeTableItem.images[0].url }}" alt="OTTO Frederik und Sebastian" data-no-retina>
+                                                                    </div>
+                                                                {% endif %}
+                                                                {% if timeTableItem.alignRight %}
+                                                                    <div class="col-md-9 col-md-pull-3">
+                                                                {% else %}
+                                                                    <div class="col-md-9">
+                                                                {% endif %}
+                                                                    <p>{{ timeTableItem.time|date('H:i') }} Uhr</p>
+                                                                    <h4>{{ timeTableItem.timetableHeadline }}</h4>
+                                                                    {% if timeTableItem.timetableDescription != '' %}
+                                                                        {{ timeTableItem.timetableDescription|raw }}
+                                                                    {% endif %}
+                                                                    {% if timeTableItem.timetableDescription != '' %}
+                                                                        <p class="event-speaker">- Mit {{ timeTableItem.timetableSpeaker }}</p>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

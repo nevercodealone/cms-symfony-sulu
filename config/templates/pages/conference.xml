@@ -18,6 +18,9 @@
     <properties>
         <xi:include href="../includes/highlight.xml"/>
         <section name="header">
+            <meta>
+                <title lang="en">Header</title>
+            </meta>
             <properties>
                 <property name="town" type="text_line" mandatory="true">
                     <meta>
@@ -66,6 +69,9 @@
             </properties>
         </section>
         <section name="overview">
+            <meta>
+                <title lang="en">Overview</title>
+            </meta>
             <properties>
                 <property name="overviewLeft" type="text_area">
                     <meta>
@@ -90,6 +96,70 @@
                         <param name="ui_color" value="#ffcc00"/>
                     </params>
                 </property>
+            </properties>
+        </section>
+        <section name="timetable">
+            <meta>
+                <title lang="en">Timetable</title>
+            </meta>
+            <properties>
+                <property name="timeTableHeadline" type="text_line" mandatory="true">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="timeTableSubline" type="text_line" mandatory="true">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+                <block name="timeTableItems" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Time table</title>
+                    </meta>
+                    <types>
+                        <type name="editor_image">
+                            <meta>
+                                <title lang="en">Time item</title>
+                            </meta>
+                            <properties>
+                                <property name="time" type="time" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Time</title>
+                                    </meta>
+                                </property>
+                                <property name="timetableHeadline" type="text_line" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Headline</title>
+                                    </meta>
+                                </property>
+                                <property name="images" type="media_selection" colspan="12">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="type" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="alignRight" type="checkbox">
+                                    <meta>
+                                        <title lang="en">Align right</title>
+                                    </meta>
+                                </property>
+                                <property name="timetableDescription" type="text_editor" colspan="12">
+                                    <meta>
+                                        <title lang="en">Description</title>
+                                    </meta>
+                                </property>
+                                <property name="timetableSpeaker" type="text_line">
+                                    <meta>
+                                        <title lang="en">Speaker</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
             </properties>
         </section>
     </properties>
