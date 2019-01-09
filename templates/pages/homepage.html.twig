@@ -4,4 +4,40 @@
     {% for block in content.blocks %}
         {% include "includes/ethic/" ~ block.type ~ ".html.twig" with {content: block}%}
     {% endfor %}
+
+    <section class="tz-lastest-event tz-lastest-event-style-4">
+        <h3 class="tz-event-title">{{ content.eventCarouselHeadline }}</h3>
+        <div class="container">
+            <div class="tz-event-container">
+                <div class="tz-event-wrapper owl-carousel owl-theme">
+                    {% for eventCarouselItem in content.eventCarouselItems %}
+                        <div class="tz-event-style-4">
+                            <div class="tz-image-event-item">
+                                <img src="{{ eventCarouselItem.excerptImages[0].url }}" alt="{{ eventCarouselItem.title }}">
+                                <a href="https://youtu.be/4Z_JgTUYKsc" target="_blank" rel="noopener"><i class="fa fa-arrows-alt"></i></a>
+                            </div>
+                            <div class="tz-content-event-item">
+                                <h6>{{ eventCarouselItem.title }}</h6>
+                                <strong>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} @ 9:00 am</strong>
+                                <img src="/ethic/images/check-01-home1.png" style="display: unset; width: unset" alt="{{ eventCarouselItem.title }}">
+                                <p>
+                                    <strong><a href="{{ eventCarouselItem.blogLink }}" target="_blank" rel="noopener">{{ eventCarouselItem.blogLinkText }}</a></strong>
+                                    {{ eventCarouselItem.description }}
+                                    <br>
+                                    <strong>
+                                        Spende {{ eventCarouselItem.donation }},- Euro
+                                        <br>
+                                        <a href="{{ eventCarouselItem.socialInstitutionLink }}" target="_blank" rel="noopener">
+                                            {{ eventCarouselItem.socialInstitutionLinkText }}
+                                        </a>
+                                    </strong>
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section><!-- End class tz-lastest-event theme-white -->
+    {{ dump() }}
 {% endblock %}

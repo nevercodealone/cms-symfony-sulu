@@ -22,6 +22,14 @@
                 <title lang="en">Header</title>
             </meta>
             <properties>
+                <property name="sponsorLogo" type="media_selection" maxOccurs="1" mandatory="true">
+                    <meta>
+                        <title lang="en">Sponsor Logo</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
                 <property name="town" type="text_line" mandatory="true">
                     <meta>
                         <title lang="en">Town</title>
@@ -32,12 +40,42 @@
                         <title lang="en">Date</title>
                     </meta>
                 </property>
-                <property name="eventLink" type="url" colspan="6">
+                <property name="eventLink" type="url">
                     <meta>
-                        <title>Eventlink</title>
+                        <title>Event link</title>
                     </meta>
                 </property>
-                <property name="description" type="text_editor">
+                <property name="previewImageLink" type="url">
+                    <meta>
+                        <title>Preview image link</title>
+                    </meta>
+                </property>
+                <property name="blogLink" type="url" colspan="6">
+                    <meta>
+                        <title>Blog link</title>
+                    </meta>
+                </property>
+                <property name="blogLinkText" type="text_line" mandatory="true"  colspan="6">
+                    <meta>
+                        <title lang="en">Blog link text</title>
+                    </meta>
+                </property>
+                <property name="socialInstitutionLink" type="url" colspan="6">
+                    <meta>
+                        <title>Social institution link</title>
+                    </meta>
+                </property>
+                <property name="socialInstitutionLinkText" type="text_line" mandatory="true"  colspan="6">
+                    <meta>
+                        <title lang="en">Social institution link text</title>
+                    </meta>
+                </property>
+                <property name="donation" type="text_line">
+                    <meta>
+                        <title lang="en">Donation</title>
+                    </meta>
+                </property>
+                <property name="description" type="text_area">
                     <meta>
                         <title lang="en">Description</title>
                     </meta>
@@ -53,14 +91,6 @@
                 <property name="eventheaderimage" type="media_selection" maxOccurs="1" mandatory="true">
                     <meta>
                         <title lang="en">Event header image</title>
-                    </meta>
-                    <params>
-                        <param name="types" value="image"/>
-                    </params>
-                </property>
-                <property name="previewimage" type="media_selection" maxOccurs="1" mandatory="true">
-                    <meta>
-                        <title lang="en">Preview Image</title>
                     </meta>
                     <params>
                         <param name="types" value="image"/>

@@ -32,7 +32,7 @@
                             <div class="container">
                                 <div class="navbar-header">
                                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
-                                    <a href="{{ content.eventLink }}" class="logo-brand"><img src="/img/otto/otto-logo.png" data-at2x="/img/otto/otto-logo.png" alt="Tickets auf Eventbrite" class="logo-nav" width="148px" height="50px" style="width: 148px;height: 50px"> </a> </div>
+                                    <a href="{{ content.eventLink }}" class="logo-brand"><img src="{{ content.sponsorLogo[0].url }}" data-at2x="{{ content.sponsorLogo[0].url }}" alt="Tickets auf Eventbrite" class="logo-nav" width="148px" height="50px" style="width: 148px;height: 50px"> </a> </div>
                                 <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
                                     <ul class="nav navbar-nav navbar-right">
                                         <li><a href="#speaker">Speakers</a></li>
@@ -132,4 +132,19 @@
             </section>
         </main>
     </body>
+    <script src="/conference/js/jquery-2.1.3.min.js"></script>
+    <script src="/conference/js/bootstrap.min.js"></script>
+    <script src="/conference/js/waypoints.min.js"></script>
+    <script src="/conference/js/jquery.animateNumber.min.js"></script>
+    <script src="/conference/js/waypoints-sticky.min.js"></script>
+    <script src="/conference/js/retina.min.js"></script>
+    <script src="/conference/js/owl.carousel.min.js"></script>
+    <script src="/conference/js/jquery.ajaxchimp.min.js"></script>
+    <script src="/conference/js/jquery.form.min.js"></script>
+    <script src="/conference/js/jquery.validate.min.js"></script>
+    <script src="/conference/js/main.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+    <script>
+        var mapLocation = new google.maps.LatLng(53.600841, 10.075710);
+    </script>
 </html>
