@@ -42,9 +42,3 @@ services:
         class: \Google_Service_YouTube
         arguments:
             - '@Google_Client'
-
-    YouTubeService:
-        class: App\Service\YouTubeService
-        arguments:
-            - '@Google_Service_YouTube'
-        public: true
