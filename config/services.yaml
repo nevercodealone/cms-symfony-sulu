@@ -1,7 +1,8 @@
 # Learn more about services, parameters and containers at
 # http://symfony.com/doc/current/book/service_container.html
 parameters:
-#    parameter_name: value
+    # parameter_name: value
+    google_api_key: '%env(GOOGLE_API_KEY)%'
 
 services:
     # default configuration for services in *this* file
@@ -25,3 +26,25 @@ services:
     # please note that last definitions always *replace* previous ones
     \Twig_Extensions_Extension_Intl:
         class: Twig_Extensions_Extension_Intl
+
+    Google_Client:
+        class: \Google_Client
+        calls:
+            - method: setApplicationName
+              arguments:
+                  - 'API Samples'
+
+            - method: setDeveloperKey
+              arguments:
+                  - '%google_api_key%'
+
+    Google_Service_YouTube:
+        class: \Google_Service_YouTube
+        arguments:
+            - '@Google_Client'
+
+    YouTubeService:
+        class: App\Service\YouTubeService
+        arguments:
+            - '@Google_Service_YouTube'
+        public: true
