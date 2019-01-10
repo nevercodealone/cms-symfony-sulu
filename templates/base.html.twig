@@ -49,10 +49,23 @@
                             </button>
                             <nav class="nav-collapse pull-right">
                                 <ul class="tz-menu">
-                                    {% for item in sulu_navigation_root_tree('main') %}
+                                    {% for item in sulu_navigation_root_tree('main', 2, true) %}
                                         <li>
-                                            <a href="{{ sulu_content_path(item.url) }}"
-                                               title="{{ item.title }}">{{ item.title }}</a>
+                                            <a href="{{ sulu_content_path(item.url) }}" title="{{ item.excerpt.title|default(item.title) }}">
+                                                {{ item.excerpt.title|default(item.title) }}
+                                            </a>
+                                            {% if item.children|length > 0 %}
+                                                <ul class="sub-menu sub-menu-style-1">
+                                                    {% for child in item.children %}
+                                                        {% dump(child) %}
+                                                        <li>
+                                                            <a href="{{ sulu_content_path(child.url) }}" title="{{ child.excerpt.title|default(child.title) }}">
+                                                                {{ child.excerpt.title|default(child.title) }}
+                                                            </a>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
                                         </li>
                                     {% endfor %}
                                 </ul>
