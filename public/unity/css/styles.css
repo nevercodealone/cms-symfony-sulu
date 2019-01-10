@@ -1,0 +1,70 @@
+/* Overwrites */
+
+.spinner {
+    background-color: #5fbb28;
+}
+
+.mansory-effect .picture {
+    background-color: unset;
+}
+
+.parallax-33 {
+    background-image: url("/img/zufriedene-kunden.jpg");
+}
+
+.parallax-39 {
+    background-image: url("/img/technology.jpg");
+}
+
+.parallax-40 {
+    background-image: url("/img/kontakt.jpg");
+    background-color: #5e5e5e;
+}
+
+.testimonial-03 .description {
+    font-size: 25px;
+}
+
+#trigger-overlay span:before, #trigger-overlay span:after {
+    background: #5fbb28;
+}
+
+#trigger-overlay span, .erinyen .tp-thumb.selected .tp-thumb-over, .erinyen .tp-thumb:hover .tp-thumb-over {
+    background-color: #5fbb28;
+}
+
+.testimonial-03 .herotext h2 {
+    color: #5fbb28;
+}
+
+.home-19 .tab-style-07 .nav>li.active .caption, .home-19 .tab-style-07 .nav>li>a:focus .caption, .home-19 .tab-style-07 .nav>li>a:hover .caption,
+.home-19 .tab-style-13 .nav>li.active .caption, .home-19 .tab-style-13 .nav>li>a:focus .caption, .home-19 .tab-style-13 .nav>li>a:hover .caption {
+    border-bottom-color: #5fbb28;
+}
+
+.home-19 .team-style-06 .block .picture-overlay .icons>:first-child .icon a {
+    color: black !important;
+}
+
+@media (max-width: 768px) and (min-width: 320px) {
+    header.home-36 {
+        position: relative;
+    }
+
+    .testimonial-03 .description {
+        font-size: 16px;
+    }
+}
+
+.scrollup {
+    background-color: #5fbb28;
+}
+
+/* New styles */
+.nca-color, .home-36 .footer-09 .row1 .have-a-project span, .ncagreen, a {
+    color: #5fbb28 !important;
+}
+
+.no-margin-right {
+    margin-right: 0px;
+}

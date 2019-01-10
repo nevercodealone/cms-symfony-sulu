@@ -1,0 +1,279 @@
+@charset "utf-8";
+/* CSS Document */
+
+#switch {
+    font-family: 'Roboto', sans-serif;
+    background: #fff;
+    position: fixed;
+    display: none;
+    top: 0;
+    bottom: 0;
+    right: -22px;
+    z-index: 9999999;
+    width: 340px;
+    height: 100%;
+    padding: 6px;
+    margin-left: -200px;
+    border-radius: 0;
+    -webkit-box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+    -moz-transition: all 0.3s ease 0s;
+    -webkit-transition: all 0.3s ease 0s;
+    -o-transition: all 0.3s ease 0s;
+}
+#switch h4 {
+    text-align: center!important;
+    color: #000;
+    font-size: 16px;
+    font-weight: 400;
+    text-transform: uppercase;
+    padding-bottom: 4px;
+    padding-top: 0px;
+}
+#switch h3 {
+    text-align: center!important;
+    color: #008cd6;
+    font-size: 20px;
+    font-weight: 400;
+    text-transform: uppercase;
+    padding-bottom: 4px;
+    padding-top: 12px;
+}
+#switch ul {
+    padding: 0px;
+    margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+#switch ul li {
+    display: inline-block;
+}
+#switch ul li a {
+    text-transform: uppercase;
+    margin-bottom: 0;
+    font-size: 12px;
+    height: 32px;
+    width: 32px;
+    border-radius: 0px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+#switch .button {
+    margin-bottom: 35px;
+}
+#switch .button a {
+    margin-left: 2px;
+    margin-right: 2px;
+}
+#switch .button a.fill-blue {
+    color: #fff;
+    border: 1px solid #013696;
+    background-color: #013696;
+    text-align: center;
+    font-weight: 400!important;
+    width: 100%;
+    padding-top: 8px;
+    padding-right: 16px;
+    padding-bottom: 8px;
+    padding-left: 16px;
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0px;
+}
+#switch .button a.fill-blue:hover {
+    text-decoration: none;
+    color: #013696;
+    border: 1px solid #013696;
+    background-color: transparent;
+}
+#switch .button2 {
+    text-align: center;
+    padding-top: 12px;
+    padding-bottom: 0px;
+}
+#switch .button2 a.no-fill-black {
+    color: #000;
+    text-align: center;
+    font-weight: 400!important;
+    width: 100%;
+    border: 1px solid #000;
+    background-color: transparent;
+    padding-top: 8px;
+    padding-right: 16px;
+    padding-bottom: 8px;
+    padding-left: 16px;
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0px;
+}
+#switch .button2 a.no-fill-black:hover {
+    text-decoration: none;
+    border: 1px solid #000;
+    background-color: #000;
+    color: #fff;
+}
+#switch .demo-thumbs .picture {
+    background-color: rgba(7, 143, 210, 1);
+    margin-top: 0px;
+    margin-bottom: 5px;
+}
+#switch .demo-thumbs .picture .portfolio-overlay {
+    color: #fff;
+    margin: 15px;
+    text-align: center;
+}
+#switch .demo-thumbs .picture {
+    margin-left: 2px;
+    margin-right: 2px;
+}
+#switch .demo-thumbs .picture:hover img {
+    opacity: 0.3;
+}
+#switch .demo-thumbs .picture .portfolio-overlay a {
+    font-size: 12px;
+    text-align: center;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0px;
+    color: #fff;
+    margin: 15px;
+}
+#switch .demo-thumbs .picture .portfolio-overlay a:hover {
+    text-decoration: none;
+    opacity: 0.9;
+}
+#show {
+    width: 48px;
+    text-align: center;
+    z-index: 99999;
+    position: fixed;
+    right: 0;
+    top: 45%;
+    background: #008cd6;
+    color: #fff;
+    border-radius: 0;
+    padding: 12px;
+    cursor: pointer;
+    -webkit-box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+    -moz-transition: all 0.3s ease 0s;
+    -webkit-transition: all 0.3s ease 0s;
+    -o-transition: all 0.3s ease 0s;
+}
+#setting {
+    font-size: 22px;
+    padding: 0px;
+    margin: 0px;
+}
+.wrap_pattern,
+.switchlayout {
+    margin-bottom: 10px;
+}
+.wrap_pattern h4 {
+    margin-bottom: 5px!important;
+}
+.content-switcher {
+    padding: 20px;
+    padding-top:0px;
+    -moz-transition: all 0.3s ease 0s;
+    -webkit-transition: all 0.3s ease 0s;
+    -o-transition: all 0.3s ease 0s;
+    overflow: scroll;
+    overflow-x: hidden;
+    height: 100%;
+}
+.content-switcher .m-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    min-width: 70px;
+}
+.c-btn.small.color.switch {
+    font-size: 12px;
+    text-transform: none;
+    width: 40px;
+    margin: 5px 0px;
+    font-weight: normal;
+    font-family: 'Roboto', sans-serif;
+    text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.3) !important;
+    letter-spacing: 0;
+}
+#hide {
+    width: 48px;
+    z-index: 99999;
+    position: absolute;
+    text-align: center;
+    left: -48px;
+    top: 45%;
+    background: #008cd6;
+    color: #fff;
+    border-radius: 0;
+    padding: 12px;
+    cursor: pointer;
+    -webkit-box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+    -moz-transition: all 0.3s ease 0s;
+    -webkit-transition: all 0.3s ease 0s;
+    -o-transition: all 0.3s ease 0s;
+}
+#hide i {
+    font-size: 22px;
+    opacity: 0.8;
+    transition: all 0.3s ease 0s;
+    -moz-transition: all 0.3s ease 0s;
+    -webkit-transition: all 0.3s ease 0s;
+    -o-transition: all 0.3s ease 0s;
+}
+#hide i:hover {
+    opacity: 0.4;
+}
+.c-btn {
+    border-radius: 0px;
+    cursor: pointer;
+    display: inline-block;
+}
+#switch p {
+    margin-top: 10px;
+    margin-bottom: 0px;
+    font-size: 12px;
+}
+.styled-select select {
+    background: #f5f5f5;
+    border: #ededed 1px solid;
+    width: 200px;
+    padding: 3px;
+    font-size: 12px;
+    line-height: normal;
+    outline: none;
+    border-radius: 5px;
+    -webkit-appearance: none;
+    margin-top: 6px;
+    margin-right: 0;
+    margin-bottom: 6px;
+    margin-left: 0;
+}
+
+
+@media (min-width: 320px) and (max-width: 480px) {
+
+    #switch {
+        font-family: 'Roboto', sans-serif;
+        background: #fff;
+        position: fixed;
+        display: none;
+        top: 0;
+        bottom: 0;
+        right: -22px;
+        z-index: 9999999;
+        width: 270px;
+        height: 100%;
+        padding: 6px;
+        margin-left: -200px;
+        border-radius: 0;
+        -webkit-box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+        box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.5);
+    }
+
+
+}
