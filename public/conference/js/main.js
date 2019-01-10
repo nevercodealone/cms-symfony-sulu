@@ -38,22 +38,22 @@ $(function() {
         var comma_separator_number_step = $.animateNumber.numberStepFactories.separator(',');
         
         $('.total-number-1').animateNumber({
-            number: 4, //change value here
+            number: $('.total-number-1').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
         
         $('.total-number-2').animateNumber({
-            number: 40, //change value here
+            number: $('.total-number-2').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
         
         $('.total-number-3').animateNumber({
-            number: 10, //change value here
+            number: $('.total-number-3').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
         
         $('.total-number-4').animateNumber({
-            number: 400, //change value here
+            number: $('.total-number-4').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
     

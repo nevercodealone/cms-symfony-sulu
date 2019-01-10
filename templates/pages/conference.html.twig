@@ -51,15 +51,47 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="welcome-message">
-                                        <h1>Scala Workshop - OTTO #NCAEvent</h1>
+                                        <h1>{{ content.overviewHeadline }}</h1>
                                         <p>{{ content.date|localizeddate('long', 'none', "de") }}</p>
-                                        <p>Hamburg</p>
+                                        <p>{{ content.town }}</p>
                                     </div>
                                     <div class="action-btn"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Tickets kaufen</a> <a href="#counter" class="bttn">Event Infos</a></div>
                                 </div>
                             </div>
                         </div>
                     </header>
+                    <div class="counter text-center" id="counter">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-sm-3 col-xs-6"> <i class="fa fa-user fa-3x"></i>
+                                    <h3 class="total-number-1">
+                                        {{ content.counterSpeaker|default(4) }}
+                                    </h3>
+                                    <p>Speaker</p>
+                                </div>
+                                <div class="col-sm-3 col-xs-6"> <i class="fa fa-graduation-cap fa-3x"></i>
+                                    <h3 class="total-number-2">
+                                        {{ content.counterMember|default(40) }}
+                                    </h3>
+                                    <p>Teilnehmer</p>
+                                </div>
+                                <div class="col-sm-3 col-xs-6"> <i class="fa fa-clock-o fa-3x"></i>
+                                    <h3 class="total-number-3">
+                                        {{ content.counterHours|default(10) }}
+                                    </h3>
+                                    <p>Stunden</p>
+                                </div>
+                                <div class="col-sm-3 col-xs-6"> <i class="fa fa-hand-spock-o fa-3x"></i>
+                                    <h3>
+                                        <span class="total-number-4">
+                                            {{ content.counterDonation|default(400) }}
+                                        </span>,- Euro
+                                    </h3>
+                                    <p>Spende</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <section class="about section-spacing">
                         <div class="container">
                             <div class="row">

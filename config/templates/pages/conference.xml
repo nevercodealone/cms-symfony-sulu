@@ -98,6 +98,28 @@
                 </property>
             </properties>
         </section>
+        <section name="counter">
+            <meta>
+                <title lang="en">Counter</title>
+            </meta>
+            <properties>
+                <property name="counterSpeaker" type="text_line">
+                    <meta>
+                        <title lang="en">Speaker</title>
+                    </meta>
+                </property>
+                <property name="counterMember" type="text_line">
+                    <meta>
+                        <title lang="en">Member</title>
+                    </meta>
+                </property>
+                <property name="counterHours" type="text_line">
+                    <meta>
+                        <title lang="en">Hours</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
         <section name="overview">
             <meta>
                 <title lang="en">Overview</title>
