@@ -1,0 +1,7 @@
+.git
+.env
+vendor
+public/build
+node_modules
+tests
+var

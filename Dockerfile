@@ -14,9 +14,6 @@ WORKDIR /var/www/html
 COPY package.json /var/www/html/
 
 COPY --from=composer /var/www/html/vendor/sulu/sulu /var/www/html/vendor/sulu/sulu
-COPY assets/admin /var/www/html/assets/admin
-COPY .babelrc /var/www/html/
-COPY postcss.config.js /var/www/html/
 COPY composer.json /var/www/html/
 COPY webpack.config.js /var/www/html/
 

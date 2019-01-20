@@ -30,6 +30,7 @@
 
 # web
 /public/bundles
+/public/build
 /public/uploads
 /public/admin/translations/*
 !/public/admin/translations/.gitkeep
