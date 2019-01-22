@@ -83,5 +83,48 @@
                 </property>
             </properties>
         </section>
+        <section name="introduce">
+            <meta>
+                <title lang="en">Introduce</title>
+            </meta>
+            <properties>
+                <property name="introduce_logo" type="media_selection" maxOccurs="1" mandatory="true">
+                    <meta>
+                        <title lang="en">Logo</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <property name="introduce_address" type="text_line" mandatory="true">
+                    <meta>
+                        <title lang="en">Address</title>
+                    </meta>
+                </property>
+                <property name="introduce_phone" type="text_line" mandatory="true">
+                    <meta>
+                        <title lang="en">Phone</title>
+                    </meta>
+                </property>
+                <property name="introduce_image" type="media_selection" maxOccurs="1" mandatory="true">
+                    <meta>
+                        <title lang="en">Image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <property name="introduce_headline" type="text_line" mandatory="true">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="introduce_text" type="text_editor" mandatory="true">
+                    <meta>
+                        <title lang="en">Text</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
     </properties>
 </template>

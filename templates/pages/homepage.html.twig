@@ -39,5 +39,32 @@
             </div>
         </div>
     </section><!-- End class tz-lastest-event theme-white -->
+    <section class="tz-introduce-style-4" data-q="form-contact">
+        <div class="container">
+            <div class="tz-address-style-4">
+            <span>
+                <img src="{{ content.introduce_image[0].url }}"
+                     alt="Duisburg Never Code Alone">
+            </span>
+                <ul class="tz-phone-fax">
+                    <li><a href="#"><img src="{{ content.introduce_logo[0].url }}" alt="Never Code Alone Logo"></a></li>
+                    <li>
+                        <img src="/ethic/images/check-home4.png" alt="Adresse">
+                        <span class="theme-color-white">{{ content.introduce_address }}</span>
+                    </li>
+                    <li>
+                        <img src="/ethic/images/check-home4.png" alt="Telefon">
+                        <span class="theme-color-white">{{ content.introduce_phone }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="tz-introduce-content tz-introduce-content-style-4">
+                <h4>{{ content.introduce_headline }}</h4>
+                <p>
+                    {{ content.introduce_text|raw }}
+                </p>
+            </div>
+        </div><!-- End container class tz-home-4-introduce -->
+    </section><!-- End class tz-home-4-introduce -->
     {{ dump() }}
 {% endblock %}
