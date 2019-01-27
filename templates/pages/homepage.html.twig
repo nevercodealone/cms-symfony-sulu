@@ -11,6 +11,14 @@
             <div class="tz-event-container">
                 <div class="tz-event-wrapper owl-carousel owl-theme">
                     {% for eventCarouselItem in content.eventCarouselItems %}
+                        {% if
+                            (eventCarouselItem.excerptImages[0].url is defined and eventCarouselItem.excerptImages[0].url)
+                            and eventCarouselItem.date
+                            and eventCarouselItem.blogLink
+                            and eventCarouselItem.blogLinkText
+                            and eventCarouselItem.socialInstitutionLink
+                            and eventCarouselItem.socialInstitutionLinkText
+                        %}
                         <div class="tz-event-style-4">
                             <div class="tz-image-event-item">
                                 <img src="{{ eventCarouselItem.excerptImages[0].url }}" alt="{{ eventCarouselItem.title }}">
@@ -34,6 +42,7 @@
                                 </p>
                             </div>
                         </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>

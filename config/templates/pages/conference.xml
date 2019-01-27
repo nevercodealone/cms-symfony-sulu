@@ -103,17 +103,17 @@
                 <title lang="en">Counter</title>
             </meta>
             <properties>
-                <property name="counterSpeaker" type="text_line">
+                <property name="counterSpeaker" type="text_line" colspan="4">
                     <meta>
                         <title lang="en">Speaker</title>
                     </meta>
                 </property>
-                <property name="counterMember" type="text_line">
+                <property name="counterMember" type="text_line" colspan="4">
                     <meta>
                         <title lang="en">Member</title>
                     </meta>
                 </property>
-                <property name="counterHours" type="text_line">
+                <property name="counterHours" type="text_line" colspan="4">
                     <meta>
                         <title lang="en">Hours</title>
                     </meta>
@@ -206,6 +206,37 @@
                                 <property name="timetableSpeaker" type="text_line">
                                     <meta>
                                         <title lang="en">Speaker</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="price">
+            <meta>
+                <title lang="en">Price</title>
+            </meta>
+            <properties>
+                <property name="priceHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <block name="priceFeature" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Feature</title>
+                    </meta>
+                    <types>
+                        <type name="featureItem">
+                            <meta>
+                                <title lang="en">Feature item</title>
+                            </meta>
+                            <properties>
+                                <property name="priceFeatureItem" type="text_line" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Item</title>
                                     </meta>
                                 </property>
                             </properties>
