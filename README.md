@@ -1,7 +1,8 @@
-# Sulu Minimal Edition
+# Symfony CMS Sulu
+Hier ist das Repo für die nevercodealone.de Seite
 
-Welcome to the Sulu Minimal Edition - a fully-functional Sulu application that you can use as the skeleton for your new
-applications.
+## Blog Post Symfony CMS Sulu
+[Symfony-CMS Sulu – PHP-Training bei Core Developern](https://blog.nevercodealone.de/symfony-cms-sulu-php-training/ "Symfony-CMS Sulu – PHP-Training bei Core Developern")
 
 ## Installation
 
