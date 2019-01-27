@@ -12,6 +12,13 @@
         </meta>
         <scale x="1915" y="1215"/>
     </format>
+    <format key="270x200">
+        <meta>
+            <title lang="en">Startpage carousel image</title>
+            <title lang="de">Startpage carousel Image</title>
+        </meta>
+        <scale x="270" y="200"/>
+    </format>
 
 
 
