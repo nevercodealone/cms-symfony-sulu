@@ -245,5 +245,45 @@
                 </block>
             </properties>
         </section>
+        <section name="location">
+            <meta>
+                <title lang="en">Location</title>
+            </meta>
+            <properties>
+                <property name="locationBackgroundImage" type="media_selection" maxOccurs="1">
+                    <meta>
+                        <title lang="en">Background Image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <property name="locationUrl" type="url" colspan="4">
+                    <meta>
+                        <title>Location URL</title>
+                    </meta>
+                </property>
+                <property name="locationUrlText" type="text_line" colspan="4">
+                    <meta>
+                        <title lang="en">Location url text</title>
+                    </meta>
+                </property>
+                <property name="locationGoogleMapsLink" type="url" colspan="4">
+                    <meta>
+                        <title>Google Maps Link</title>
+                    </meta>
+                </property>
+                <property name="locationStreetAndNumber" type="text_line" colspan="6">
+                    <meta>
+                        <title lang="en">Street and number</title>
+                    </meta>
+                </property>
+                <property name="locationZipAndTown" type="text_line" colspan="6">
+                    <meta>
+                        <title lang="en">Zip and town</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
     </properties>
 </template>

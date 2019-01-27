@@ -187,6 +187,33 @@
                     <div class="action-btn-pricing"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Ticket kaufen</a></div>
                 </div>
             </section>
+            {% if (content.locationBackgroundImage[0].url is defined and content.locationBackgroundImage[0].url)
+                and content.locationUrl
+                and content.locationUrlText
+                and content.locationGoogleMapsLink
+                and content.locationStreetAndNumber
+                and content.locationZipAndTown
+            %}
+            <section class="venue section-spacing" id="venue" style="background: url('{{ content.locationBackgroundImage[0].formats['1500x1000'] }}') center center no-repeat fixed;background-size: cover;position: relative;color: #fff;">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <h2>Anfahrt</h2>
+                            <address>
+                                <p> <i class="fa fa-map-marker"></i> <a href="{{ content.locationUrl }}" target="_blank">{{ content.locationUrlText }}</a> • {{ content.locationStreetAndNumber }} • {{ content.locationZipAndTown }}</p>
+                                <p><i class="fa fa-mobile"></i> Roland: 017624747727 </p>
+                                <p class="map-link"><a target="_blank" href="https://www.google.com/maps/place/Collabor8/@53.6008446,10.0735209,17z/data=!3m1!4b1!4m5!3m4!1s0x47b18962292e34a3:0x5b3b489cd9b78ae9!8m2!3d53.6008414!4d10.0757096">Google Maps</a></p>
+                            </address>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="map">
+                                <div id="map-canvas"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
         </main>
     </body>
     <script src="/conference/js/jquery-2.1.3.min.js"></script>

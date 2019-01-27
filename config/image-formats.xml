@@ -8,16 +8,20 @@
     <format key="1915x1215">
         <meta>
             <title lang="en">Ethic slider image</title>
-            <title lang="de">Ethic Slider Image</title>
         </meta>
         <scale x="1915" y="1215"/>
     </format>
     <format key="270x200">
         <meta>
             <title lang="en">Startpage carousel image</title>
-            <title lang="de">Startpage carousel Image</title>
         </meta>
         <scale x="270" y="200"/>
+    </format>
+    <format key="1500x1000">
+        <meta>
+            <title lang="en">Location background</title>
+        </meta>
+        <scale x="1500" y="1000"/>
     </format>
 
 
