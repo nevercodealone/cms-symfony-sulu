@@ -98,6 +98,80 @@
                 </property>
             </properties>
         </section>
+        <section name="speaker">
+            <meta>
+                <title lang="en">Speaker</title>
+            </meta>
+            <properties>
+                <property name="speakerHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="speakerSubline" type="text_line">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+                <block name="speakerItem" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Speaker item</title>
+                    </meta>
+                    <types>
+                        <type name="speaker">
+                            <meta>
+                                <title lang="en">Speaker</title>
+                            </meta>
+                            <properties>
+                                <property name="speakerItemImage" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Profil image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="speakerItemName" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Name</title>
+                                    </meta>
+                                </property>
+                                <property name="speakerItemJobTitle" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Job title</title>
+                                    </meta>
+                                </property>
+                                <property name="speakerItemXingUrl" type="url" colspan="3">
+                                    <meta>
+                                        <title>Xing</title>
+                                    </meta>
+                                </property>
+                                <property name="speakerItemTwitterUrl" type="url" colspan="3">
+                                    <meta>
+                                        <title>speakeritemTwitterUrl</title>
+                                    </meta>
+                                </property>
+                                <property name="speakerItemGithubUrl" type="url" colspan="3">
+                                    <meta>
+                                        <title>GitHub</title>
+                                    </meta>
+                                </property>
+                                <property name="speakerItemLinkedinUrl" type="url" colspan="3">
+                                    <meta>
+                                        <title>Linkedin</title>
+                                    </meta>
+                                </property>
+                                <property name="speakerItemBio" type="text_editor">
+                                    <meta>
+                                        <title lang="en">Bio</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
         <section name="counter">
             <meta>
                 <title lang="en">Counter</title>

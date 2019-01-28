@@ -60,6 +60,44 @@
                             </div>
                         </div>
                     </header>
+                    <section class="speaker section-spacing text-center" id="speaker">
+                        <div class="container">
+                            <header>
+                                <h2>{{ content.speakerHeadline }}</h2>
+                                <h3>{{ content.speakerSubline }}</h3>
+                            </header>
+                            <div class="row">
+                                <div class="speaker-slider">
+                                    {% for key,speakerItem in content.speakerItem %}
+                                        <div class="item">
+                                            <div class="event-speaker">
+                                                <figure> <img src="{{ speakerItem.speakerItemImage[0].formats['340x340'] }}" alt="{{ speakerItem.speakerItemName }} {{ speakerItem.speakerItemJobTitle }}" data-no-retina>
+                                                    <figcaption>
+                                                        <h4>{{ speakerItem.speakerItemName }}</h4>
+                                                        <p>{{ speakerItem.speakerItemJobTitle }}</p>
+                                                        <ul class="social">
+                                                            {% if speakerItem.speakerItemTwitterUrl %}
+                                                                <li><a href="{{ speakerItem.speakerItemTwitterUrl }}" target="_blank" rel="noopener"><i class="fa fa-twitter"></i></a></li>
+                                                            {% endif %}
+                                                            {% if speakerItem.speakerItemGithubUrl %}
+                                                                <li><a href="{{ speakerItem.speakerItemGithubUrl }}" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li>
+                                                            {% endif %}
+                                                            {% if speakerItem.speakerItemLinkedinUrl %}
+                                                                <li><a href="{{ speakerItem.speakerItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
+                                                            {% endif %}
+                                                            {% if speakerItem.speakerItemXingUrl %}
+                                                                <li><a href="{{ speakerItem.speakerItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </figcaption>
+                                                </figure>
+                                                <a href="#0" data-type="speaker-{{ key }}" class="bttn">Profil</a> </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                     <div class="counter text-center" id="counter">
                         <div class="container">
                             <div class="row">
@@ -159,63 +197,74 @@
                             </div>
                         </div>
                     </section>
-                {% endblock %}
-                {{ dump(content) }}
-            </section>
-            <section class="pricing section-spacing text-center" id="pricing">
-                <div class="container">
-                    <header>
-                        <h2>{{ content.priceHeadline }}</h2>
-                        <h3>Wir setzen uns ein für kostenlose Weiterbildung</h3>
-                        <p>Der Ticketpreis wird zu 100% für die <b>Sternenbrücke</b> in Hamburg gespendet.</p>
-                    </header>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="plan">
-                                <div class="header">
-                                    <h4>Teilnehmer</h4>
-                                    <div class="price"><span class="currency">€</span>10,-<span class="ticket">/ Pro Ticket als Spende <b>Sternenbrücke</b></span> </div>
+                    <section class="pricing section-spacing text-center" id="pricing">
+                        <div class="container">
+                            <header>
+                                <h2>{{ content.priceHeadline }}</h2>
+                                <h3>Wir setzen uns ein für kostenlose Weiterbildung</h3>
+                                <p>Der Ticketpreis wird zu 100% für die <b>Sternenbrücke</b> in Hamburg gespendet.</p>
+                            </header>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="plan">
+                                        <div class="header">
+                                            <h4>Teilnehmer</h4>
+                                            <div class="price"><span class="currency">€</span>10,-<span class="ticket">/ Pro Ticket als Spende <b>Sternenbrücke</b></span> </div>
+                                        </div>
+                                        <ul class="plan-features">
+                                            {% for priceFeature in content.priceFeature %}
+                                                <li>{{ priceFeature.priceFeatureItem }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
                                 </div>
-                                <ul class="plan-features">
-                                    {% for priceFeature in content.priceFeature %}
-                                        <li>{{ priceFeature.priceFeatureItem }}</li>
-                                    {% endfor %}
-                                </ul>
                             </div>
+                            <div class="action-btn-pricing"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Ticket kaufen</a></div>
                         </div>
-                    </div>
-                    <div class="action-btn-pricing"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Ticket kaufen</a></div>
-                </div>
-            </section>
-            {% if (content.locationBackgroundImage[0].url is defined and content.locationBackgroundImage[0].url)
-                and content.locationUrl
-                and content.locationIframe
-                and content.locationUrlText
-                and content.locationGoogleMapsLink
-                and content.locationStreetAndNumber
-                and content.locationZipAndTown
-            %}
-            <section class="venue section-spacing" id="venue" style="background: url('{{ content.locationBackgroundImage[0].formats['1500x1000'] }}') center center no-repeat fixed;background-size: cover;position: relative;color: #fff;">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <h2>Anfahrt</h2>
-                            <address>
-                                <p> <i class="fa fa-map-marker"></i> <a href="{{ content.locationUrl }}" target="_blank">{{ content.locationUrlText }}</a> • {{ content.locationStreetAndNumber }} • {{ content.locationZipAndTown }}</p>
-                                <p><i class="fa fa-mobile"></i> Roland: 017624747727 </p>
-                                <p class="map-link"><a target="_blank" href="https://www.google.com/maps/place/Collabor8/@53.6008446,10.0735209,17z/data=!3m1!4b1!4m5!3m4!1s0x47b18962292e34a3:0x5b3b489cd9b78ae9!8m2!3d53.6008414!4d10.0757096">Google Maps</a></p>
-                            </address>
-                        </div>
-                        <div class="col-md-7">
-                            <div class="map">
-                                {{ content.locationIframe|raw }}
+                    </section>
+                    {% if (content.locationBackgroundImage[0].url is defined and content.locationBackgroundImage[0].url)
+                        and content.locationUrl
+                        and content.locationIframe
+                        and content.locationUrlText
+                        and content.locationGoogleMapsLink
+                        and content.locationStreetAndNumber
+                        and content.locationZipAndTown
+                    %}
+                        <section class="venue section-spacing" id="venue" style="background: url('{{ content.locationBackgroundImage[0].formats['1500x1000'] }}') center center no-repeat fixed;background-size: cover;position: relative;color: #fff;">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <h2>Anfahrt</h2>
+                                        <address>
+                                            <p> <i class="fa fa-map-marker"></i> <a href="{{ content.locationUrl }}" target="_blank">{{ content.locationUrlText }}</a> • {{ content.locationStreetAndNumber }} • {{ content.locationZipAndTown }}</p>
+                                            <p><i class="fa fa-mobile"></i> Roland: 017624747727 </p>
+                                            <p class="map-link"><a target="_blank" href="https://www.google.com/maps/place/Collabor8/@53.6008446,10.0735209,17z/data=!3m1!4b1!4m5!3m4!1s0x47b18962292e34a3:0x5b3b489cd9b78ae9!8m2!3d53.6008414!4d10.0757096">Google Maps</a></p>
+                                        </address>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <div class="map">
+                                            {{ content.locationIframe|raw }}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        </section>
+                    {% endif %}
+                {{ dump(content) }}
+                {% endblock %}
             </section>
-            {% endif %}
         </main>
+        <div>
+            {% for key,speakerItem in content.speakerItem %}
+                <div class="cd-speaker-bio speaker-{{ key }}">
+                    <div class="cd-bio-content">
+                        <h2>{{ speakerItem.speakerItemName }} - {{ speakerItem.speakerItemJobTitle }}</h2>
+                        {{ speakerItem.speakerItemBio|raw }}
+                    </div>
+                </div>
+            {% endfor %}
+            <a href="#0" class="cd-speaker-bio-close">Close</a>
+        </div>
     </body>
     <script src="/conference/js/jquery-2.1.3.min.js"></script>
     <script src="/conference/js/bootstrap.min.js"></script>
