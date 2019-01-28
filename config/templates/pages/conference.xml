@@ -258,17 +258,22 @@
                         <param name="types" value="image"/>
                     </params>
                 </property>
-                <property name="locationUrl" type="url" colspan="4">
+                <property name="locationUrl" type="url" colspan="3">
                     <meta>
                         <title>Location URL</title>
                     </meta>
                 </property>
-                <property name="locationUrlText" type="text_line" colspan="4">
+                <property name="locationIframe" type="text_line" colspan="3">
+                    <meta>
+                        <title lang="en">Iframe</title>
+                    </meta>
+                </property>
+                <property name="locationUrlText" type="text_line" colspan="3">
                     <meta>
                         <title lang="en">Location url text</title>
                     </meta>
                 </property>
-                <property name="locationGoogleMapsLink" type="url" colspan="4">
+                <property name="locationGoogleMapsLink" type="url" colspan="3">
                     <meta>
                         <title>Google Maps Link</title>
                     </meta>

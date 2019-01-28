@@ -189,6 +189,7 @@
             </section>
             {% if (content.locationBackgroundImage[0].url is defined and content.locationBackgroundImage[0].url)
                 and content.locationUrl
+                and content.locationIframe
                 and content.locationUrlText
                 and content.locationGoogleMapsLink
                 and content.locationStreetAndNumber
@@ -207,7 +208,7 @@
                         </div>
                         <div class="col-md-7">
                             <div class="map">
-                                <div id="map-canvas"></div>
+                                {{ content.locationIframe|raw }}
                             </div>
                         </div>
                     </div>
@@ -228,7 +229,4 @@
     <script src="/conference/js/jquery.validate.min.js"></script>
     <script src="/conference/js/main.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
-    <script>
-        var mapLocation = new google.maps.LatLng(53.600841, 10.075710);
-    </script>
 </html>
