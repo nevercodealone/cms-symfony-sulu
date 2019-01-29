@@ -1,0 +1,13 @@
+{% set seo = seo|default([])|merge(app.request.attributes.get('_seo', [])|default([])) %}
+
+{#- fallback to content title when no seo title is set -#}
+{% set seoTitle = seo.title|default(content.title|default()) %}
+{% set seoDescription = seo.description|default() %}
+{% set imgUrl = (extension.excerpt.images[0].url is defined and extension.excerpt.images[0].url) ? extension.excerpt.images[0].url :"/img/never-code-alone-roboter-org.jpg" %}
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="{{ seoTitle }}" />
+    <meta name="twitter:description" content="{{ seoDescription }}" />
+    <meta name="twitter:site" content="@nevercodealone" />
+    <meta name="twitter:image" content="{{ app.request.getSchemeAndHttpHost() }}{{ imgUrl }}" />
+    <meta name="twitter:creator" content="@nevercodealone" />

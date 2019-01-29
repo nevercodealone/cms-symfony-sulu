@@ -1,0 +1,16 @@
+{% set seo = seo|default([])|merge(app.request.attributes.get('_seo', [])|default([])) %}
+
+{#- fallback to content title when no seo title is set -#}
+{% set seoTitle = seo.title|default(content.title|default()) %}
+{% set seoDescription = seo.description|default() %}
+{% set imgUrl = (extension.excerpt.images[0].url is defined and extension.excerpt.images[0].url) ? extension.excerpt.images[0].url :"/img/never-code-alone-roboter-org.jpg" %}
+
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ seoTitle }}" />
+    <meta property="og:description" content="{{ seoDescription }}" />
+    <meta property="og:url" content="{{ app.request.uri }}" />
+    <meta property="og:site_name" content="Never Code Alone" />
+    <meta property="og:image" content="{{ app.request.getSchemeAndHttpHost() }}{{ imgUrl }}" />
+    <meta property="fb:app_id" content="473897419482601" />
+
