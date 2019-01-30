@@ -29,6 +29,12 @@
         </meta>
         <scale x="340" y="340"/>
     </format>
+    <format key="540x370">
+        <meta>
+            <title lang="en">Conference highlight</title>
+        </meta>
+        <scale x="540" y="370"/>
+    </format>
 
 
 

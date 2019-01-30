@@ -416,6 +416,111 @@
                 </block>
             </properties>
         </section>
+        <section name="highlights">
+            <meta>
+                <title lang="en">Highlights</title>
+            </meta>
+            <properties>
+                <property name="highlightsHeadline" type="text_line" colspan="6">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="highlightsSubline" type="text_line" colspan="6">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+                <block name="highlightsItemsBlock" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Highlight</title>
+                    </meta>
+                    <types>
+                        <type name="highlightsItems">
+                            <meta>
+                                <title lang="en"></title>
+                            </meta>
+                            <properties>
+                                <property name="highlightsItemImage" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="highlightsItemHeadline" type="text_line" colspan="4">
+                                    <meta>
+                                        <title lang="en">Headline</title>
+                                    </meta>
+                                </property>
+                                <property name="highlightsItemStars" type="single_select" colspan="4">
+                                    <meta>
+                                        <title lang="en">Stars</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="5"/>
+                                        <param name="values" type="collection">
+                                            <param name="five">
+                                                <meta>
+                                                    <title lang="en">5</title>
+                                                </meta>
+                                            </param>
+                                            <param name="four">
+                                                <meta>
+                                                    <title lang="en">4</title>
+                                                </meta>
+                                            </param>
+                                            <param name="three">
+                                                <meta>
+                                                    <title lang="en">3</title>
+                                                </meta>
+                                            </param>
+                                            <param name="two">
+                                                <meta>
+                                                    <title lang="en">2</title>
+                                                </meta>
+                                            </param>
+                                            <param name="one">
+                                                <meta>
+                                                    <title lang="en">1</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                                <property name="highlightsItemSubline" type="text_line" colspan="4">
+                                    <meta>
+                                        <title lang="en">Subline</title>
+                                    </meta>
+                                </property>
+                                <property name="highlightsItemBodytext" type="text_editor">
+                                    <meta>
+                                        <title lang="en">Bodytext</title>
+                                    </meta>
+
+                                    <params>
+                                        <param name="table" value="false"/>
+                                        <param name="link" value="true"/>
+                                        <param name="ui_color" value="#ffcc00"/>
+                                    </params>
+                                </property>
+                                <property name="highlightsItemUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>URL</title>
+                                    </meta>
+                                </property>
+                                <property name="highlightsItemUrlText" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">URL text</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
         <section name="location">
             <meta>
                 <title lang="en">Location</title>

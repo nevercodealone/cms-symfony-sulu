@@ -260,6 +260,29 @@
                             <div class="action-btn-pricing"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Ticket kaufen</a></div>
                         </div>
                     </section>
+                    <section class="hotels section-spacing text-center" id="highlights">
+                        <div class="container">
+                            <header class="text-center">
+                                <h2>{{ content.highlightsHeadline }}</h2>
+                                <h3>{{ content.highlightsSubline }}</h3>
+                            </header>
+                            <div class="row">
+                                {% for highlightsItem in content.highlightsItemsBlock %}
+                                    <div class="col-md-{{ 12 / content.highlightsItemsBlock|length }}">
+                                        <figure class="text-left"> <img src="{{ highlightsItem.highlightsItemImage[0].formats['540x370'] }}" alt="{{ highlightsItem.highlightsItemHeadline }}" data-no-retina>
+                                            <figcaption>
+                                                <div class="hotel-details">
+                                                    <h4>{{ highlightsItem.highlightsItemHeadline }}<span class="ratings {{ highlightsItem.highlightsItemStars }}"></span></h4>
+                                                    <p class="hotel-price">{{ highlightsItem.highlightsItemSubline }}</p>
+                                                    {{ highlightsItem.highlightsItemBodytext|raw }}
+                                                    <a class="hotel-map" href={{ highlightsItem.highlightsItemUrl }} target="_blank" rel="noopener">{{ highlightsItem.highlightsItemUrlText }}</a></div>
+                                            </figcaption>
+                                        </figure>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </section>
                     {% if (content.locationBackgroundImage[0].url is defined and content.locationBackgroundImage[0].url)
                         and content.locationUrl
                         and content.locationIframe
