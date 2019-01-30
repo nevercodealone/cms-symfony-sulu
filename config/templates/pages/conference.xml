@@ -288,6 +288,103 @@
                 </block>
             </properties>
         </section>
+        <section name="contact">
+            <meta>
+                <title lang="en">Contact</title>
+            </meta>
+            <properties>
+                <property name="contactHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="contactBodytext" type="text_editor">
+                    <meta>
+                        <title lang="en">Bodytext</title>
+                    </meta>
+
+                    <params>
+                        <param name="table" value="false"/>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content"
+                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
+                </property>
+                <property name="contactSubline" type="text_line">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+                <block name="contactJobs" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Jobs</title>
+                    </meta>
+                    <types>
+                        <type name="contactJob">
+                            <meta>
+                                <title lang="en">Job</title>
+                            </meta>
+                            <properties>
+                                <property name="contactJobTitle" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Job title</title>
+                                    </meta>
+                                </property>
+                                <property name="contactJobUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>Job URL</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+                <block name="contactPersons" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Contact person</title>
+                    </meta>
+                    <types>
+                        <type name="contactPersonItem">
+                            <meta>
+                                <title lang="en">Person</title>
+                            </meta>
+                            <properties>
+                                <property name="contactPersonItemImg" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="contactPersonItemName" type="text_line" colspan="3">
+                                    <meta>
+                                        <title lang="en">Name</title>
+                                    </meta>
+                                </property>
+                                <property name="contactPersonItemJobTitle" type="text_line" colspan="3">
+                                    <meta>
+                                        <title lang="en">Job title</title>
+                                    </meta>
+                                </property>
+                                <property name="contactPersonItemPhone" type="text_line" colspan="3">
+                                    <meta>
+                                        <title lang="en">Phone</title>
+                                    </meta>
+                                </property>
+                                <property name="contactPersonItemXingUrl" type="url">
+                                    <meta>
+                                        <title>Xing URL</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
         <section name="price">
             <meta>
                 <title lang="en">Price</title>

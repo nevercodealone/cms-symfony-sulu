@@ -199,6 +199,42 @@
                             </div>
                         </div>
                     </section>
+                    <section class="speaker section-spacing text-center" id="contact">
+                        <div class="container">
+                            <header>
+                                <h2>{{ content.contactHeadline }}</h2>
+                                {{ content.contactBodytext|raw }}
+                                <div>&nbsp;</div>
+                                <h2>{{ content.contactSubline }}</h2>
+                                <p>
+                                    {% for contactJob in content.contactJobs %}
+                                        <a href="{{ contactJob.contactJobUrl }}" target="_blank" rel="noopener">{{ contactJob.contactJobTitle }}</a>
+                                        <br>
+                                    {% endfor %}
+                                </p>
+                            </header>
+                            <div class="row">
+                                {% for contactPerson in content.contactPersons %}
+                                    <div class="col-md-{{ 12 / content.contactPersons|length }}">
+                                        <div class="event-speaker">
+                                            <figure> <img src="{{ contactPerson.contactPersonItemImg[0].formats["340x340"] }}" alt="{{ contactPerson.contactPersonItemName }} {{ contactPerson.contactPersonItemJobTitle }}" data-no-retina>
+                                                <figcaption>
+                                                    <h4>{{ contactPerson.contactPersonItemName }}</h4>
+                                                    <p>{{ contactPerson.contactPersonItemJobTitle }}</p>
+                                                    <p><a href="tel:+494064616768"><i class="fa fa-phone"></i> {{ contactPerson.contactPersonItemPhone }}</a></p>
+                                                    <ul class="social">
+                                                        <li><a href="{{ contactPerson.contactPersonItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                                    </ul>
+                                                </figcaption>
+                                            </figure>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                <div style="clear: both"></div>
+                            </div>
+                        </div>
+                    </section>
+
                     <section class="pricing section-spacing text-center" id="pricing">
                         <div class="container">
                             <header>
