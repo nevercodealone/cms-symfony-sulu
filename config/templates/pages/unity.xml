@@ -19,9 +19,9 @@
 
         <xi:include href="../includes/highlight.xml"/>
 
-        <section name="header">
+        <section name="slider">
             <meta>
-                <title lang="en">Header</title>
+                <title lang="en">Slider</title>
             </meta>
             <properties>
                 <block name="slider" default-type="slider">
@@ -35,6 +35,21 @@
                                     <params>
                                         <param name="types" value="image"/>
                                     </params>
+                                </property>
+                                <property name="layer1" type="text_line">
+                                    <meta>
+                                        <title lang="en">Layer 1</title>
+                                    </meta>
+                                </property>
+                                <property name="layer2" type="text_line">
+                                    <meta>
+                                        <title lang="en">Layer 2</title>
+                                    </meta>
+                                </property>
+                                <property name="layer3" type="text_line">
+                                    <meta>
+                                        <title lang="en">Layer 3</title>
+                                    </meta>
                                 </property>
                             </properties>
                         </type>

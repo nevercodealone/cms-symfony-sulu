@@ -21,11 +21,6 @@
     <body class="home-19">
         <!-- PRELOADER STARTSCommunity Events sind nachhaltig und persönlich.
             ========================================================================= -->
-        <div id="preloader">
-            <div class="preloader">
-                <img src="/img/never-code-alone-loader.gif" alt="Sponsoren und Teilnehmer">
-            </div>
-        </div>
         <section id="content">
             <!-- NAVIGATION STARTS ========================================================================= -->
             <!-- LOGO STARTS  -->
@@ -53,7 +48,105 @@
                 </nav>
             </div>
             <!-- /. NAVIGATION ENDS ========================================================================= -->
+            <!-- SLIDER STARTS
+    ========================================================================= -->
+            <div class="slider" id="top">
+                <div id="rev_slider_204_1_wrapper" class="rev_slider_wrapper fullwidthbanner-container" data-alias="fullscreen-button44" style="margin:0px auto;background-color:transparent;padding:0px;margin-top:0px;margin-bottom:0px;">
+                    <!-- START REVOLUTION SLIDER 5.1.1RC auto mode -->
+                    <div id="rev_slider_204_1" class="rev_slider fullwidthabanner" style="display:none;" data-version="5.1.1RC">
+                        <ul>
+                            {% for key,slide in content.slider %}
+                                <!-- SLIDE  -->
+                                <li data-index="rs-680" data-transition="zoomout" data-slotamount="default" data-easein="Power4.easeInOut" data-easeout="Power4.easeInOut" data-masterspeed="2000" data-rotate="0" data-fstransition="fade" data-fsmasterspeed="1500" data-fsslotamount="7" data-saveperformance="off" data-title="Employer Branding" data-description="">
+                                    <!-- MAIN IMAGE -->
+                                    <img src="{{ slide.sliderImage[0].formats["1500x1000"] }}" alt="{{ slide.layer1 }}" data-bgposition="center center" data-kenburns="on" data-duration="20000" data-ease="Linear.easeNone" data-scalestart="100" data-scaleend="120" data-rotatestart="0" data-rotateend="0" data-offsetstart="0 0" data-offsetend="0 0" data-bgparallax="10" class="rev-slidebg" data-no-retina>
+                                    <!-- LAYERS -->
+                                    <!-- LAYER NR. 1 -->
+                                    <div class="tp-caption NotGeneric-SubTitle tp-resizeme rs-parallaxlevel-0"
+                                         id="slide-68{{ key }}-layer-1"
+                                         data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
+                                         data-y="['top','top','top','top']" data-voffset="['100','100','100','100']"
+                                         data-fontsize="['140','140','100','60']"
+                                         data-lineheight="['120','120','85','55']"
+                                         data-width="['700','600','600','300']"
+                                         data-height="none"
+                                         data-color="#fff"
+                                         data-letter-spacing="normal"
+                                         data-transform_idle="o:1;"
+                                         data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
+                                         data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                         data-mask_out="x:inherit;y:inherit;"
+                                         data-start="1000"
+                                         data-splitin="none"
+                                         data-splitout="none"
+                                         data-responsive_offset="on"
+                                         style="z-index: 6; min-width: 600px; max-width: 700px; white-space: normal; white-space: nowrap;">
+                                        {{ slide.layer1 }}
+                                    </div>
+                                    <!-- LAYER NR. 2 -->
+                                    <div class="tp-caption NotGeneric-Title tp-resizeme rs-parallaxlevel-0"
+                                         id="slide-68{{ key }}-layer-1"
+                                         data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
+                                         data-y="['top','top','top','top']" data-voffset="['350','300','290','230']"
+                                         data-fontsize="['30','30','30','20']"
+                                         data-lineheight="['35','35','35','25']"
+                                         data-width="['600','600','500','300']"
+                                         data-whitespace="normal"
+                                         data-height="none"
+                                         data-color="#fff"
+                                         data-transform_idle="o:1;"
+                                         data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
+                                         data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                         data-mask_out="x:inherit;y:inherit;"
+                                         data-start="1500"
+                                         data-splitin="none"
+                                         data-splitout="none"
+                                         data-responsive_offset="on"
+                                         style="z-index: 6; min-width: 600px; max-width: 600px; white-space: normal; white-space: nowrap; font-weight:300; background-color: rgb(95, 187, 40, 0.6); padding: 10px;">
+                                        {{ slide.layer2 }}
+                                    </div>
+                                    <!-- LAYER NR. 3 -->
+                                    <div class="tp-caption NotGeneric-Button rev-btn red rs-parallaxlevel-0 nca-contact"
+                                         id="slide-68{{ key }}-layer-2"
+                                         data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
+                                         data-y="['center','center','center','center']" data-voffset="['90','90','120','88']"
+                                         data-fontsize="['14','14','14,'14']"
+                                         data-lineheight="['14','14','14,'14']"‚
+                                         data-width="none"
+                                         data-height="none"
+                                         data-whitespace="nowrap"
+                                         data-transform_idle="o:1;"
+                                         data-transform_hover="o:1;rX:0;rY:0;rZ:0;z:0;s:300;e:Power1.easeInOut;"
+                                         data-style_hover="c:rgba(255, 255, 255, 1.00);bc:rgba(255, 255, 255, 1.00);cursor:pointer;"
+                                         data-transform_in="y:50px;opacity:0;s:1500;e:Power4.easeInOut;"
+                                         data-transform_out="y:[175%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                         data-mask_out="x:inherit;y:inherit;"
+                                         data-start="2000"
+                                         data-splitin="none"
+                                         data-splitout="none"
+                                         data-actions='[{"event":"click","action":"jumptoslide","slide":"next","delay":""}]'
+                                         data-responsive_offset="on"
+                                         data-responsive="off"
+                                         style="z-index: 9; white-space: nowrap;outline:none;box-shadow:none;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;">
+                                        {{ slide.layer3 }}
+                                    </div>
+                                </li>
+                                <!-- /. SLIDE  -->
+                            {% endfor %}
+                        </ul>
+                        <div class="tp-bannertimer" style="height: 7px; background-color: rgba(255, 255, 255, 0.25);"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- /. SLIDER ENDS ========================================================================= -->
+            {{ dump(content) }}
+
         </section>
+        <div id="preloader">
+            <div class="preloader">
+                <img src="/img/never-code-alone-loader.gif" alt="Sponsoren und Teilnehmer">
+            </div>
+        </div>
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <script src="/unity/js/jquery-1.11.3/jquery.min.js"></script>
