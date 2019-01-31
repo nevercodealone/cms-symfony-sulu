@@ -139,6 +139,33 @@
                 </div>
             </div>
             <!-- /. SLIDER ENDS ========================================================================= -->
+            <!-- TESTIMONIAL 03 STARTS ========================================================================= -->
+            <div class="parallax-33" id="portfolio">
+                <div class="container testimonial-03">
+                    <div class="row">
+                        <div class="col-lg-10 col-lg-offset-1 herotext">
+                            <h1>{{ content.testimonialsHeadline }}</h1>
+                            <h2>{{ content.testimonialsSubline }}</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8 col-lg-offset-2">
+                            <div class="testimonial-carousel-03">
+                                {% for testimonial in content.testimonials %}
+                                    <div>
+                                        <div class="description">" {{ testimonial.testimonialDescription }}"</div>
+                                        <div class="picture"><img src="{{ testimonial.testimonialImage[0].formats["72x72"] }}" class="img-responsive center-block img-circle" alt="{{ testimonial.testimonialName }} {{ testimonial.testimonialJobCompany }}" ></div>
+                                        <div class="name">{{ testimonial.testimonialName }}</div>
+                                        <div class="company">{{ testimonial.testimonialJobCompany }}</div>
+                                        <div class="company"><a href="{{ testimonial.testimonialLink }}" target="_blank" rel="noopener">{{ testimonial.testimonialLinkText }}</a></div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- TESTIMONIAL 03 ENDS ========================================================================= -->
             {{ dump(content) }}
 
         </section>

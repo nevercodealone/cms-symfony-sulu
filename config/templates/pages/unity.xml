@@ -36,19 +36,83 @@
                                         <param name="types" value="image"/>
                                     </params>
                                 </property>
-                                <property name="layer1" type="text_line">
+                                <property name="layer1" type="text_line" colspan="4">
                                     <meta>
                                         <title lang="en">Layer 1</title>
                                     </meta>
                                 </property>
-                                <property name="layer2" type="text_line">
+                                <property name="layer2" type="text_line" colspan="4">
                                     <meta>
                                         <title lang="en">Layer 2</title>
                                     </meta>
                                 </property>
-                                <property name="layer3" type="text_line">
+                                <property name="layer3" type="text_line" colspan="4">
                                     <meta>
                                         <title lang="en">Layer 3</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="testimonials">
+            <meta>
+                <title lang="en">Testimonials</title>
+            </meta>
+            <properties>
+                <property name="testimonialsHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="testimonialsSubline" type="text_line">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+                <block name="testimonials" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Testimonials</title>
+                    </meta>
+                    <types>
+                        <type name="testimonial">
+                            <meta>
+                                <title lang="en">Testimonial</title>
+                            </meta>
+                            <properties>
+                                <property name="testimonialDescription" type="text_area" colspan="6">
+                                    <meta>
+                                        <title lang="en">Description</title>
+                                    </meta>
+                                </property>
+                                <property name="testimonialImage" type="media_selection" maxOccurs="1" colspan="6">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="testimonialName" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Name</title>
+                                    </meta>
+                                </property>
+                                <property name="testimonialJobCompany" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Job and Company</title>
+                                    </meta>
+                                </property>
+                                <property name="testimonialLink" type="url" colspan="6">
+                                    <meta>
+                                        <title>Link</title>
+                                    </meta>
+                                </property>
+                                <property name="testimonialLinkText" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Linktext</title>
                                     </meta>
                                 </property>
                             </properties>

@@ -35,11 +35,10 @@
         </meta>
         <scale x="540" y="370"/>
     </format>
-
-
-
-    <!--
-    Render an image from the media_selection in a specific format the following way:
-    <img src="{{ image.thumbnails['300x'] }}" alt="{{ image.title }}" title="{{ image.description|default(image.title) }}">
-    -->
+    <format key="72x72">
+        <meta>
+            <title lang="en">Testimonial img</title>
+        </meta>
+        <scale x="72" y="72"/>
+    </format>
 </formats>
