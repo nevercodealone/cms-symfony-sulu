@@ -60,3 +60,19 @@ Run mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && c
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
+
+FROM webserver AS toolbox
+
+LABEL description="Shipped toolboximage for nevercodealone.de."
+
+ARG RANCHER_CLI_VERSION=0.6.9
+ARG RANCHER_CLI_URL=https://github.com/rancher/cli/releases/download/v$RANCHER_CLI_VERSION/rancher-linux-amd64-v$RANCHER_CLI_VERSION.tar.gz
+ARG RANCHER_COMPOSE_VERSION=0.12.4
+ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/download/v${RANCHER_COMPOSE_VERSION}/rancher-compose-linux-amd64-v${RANCHER_COMPOSE_VERSION}.tar.gz
+
+RUN curl -sSL "$RANCHER_CLI_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2 \
+ && curl -sSL "$RANCHER_COMPOSE_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2
+
+ENTRYPOINT []
+CMD []
+
