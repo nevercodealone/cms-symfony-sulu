@@ -1,0 +1,75 @@
+---
+version: '2'
+
+services:
+  db:
+    environment:
+    - MYSQL_DATABASE_FILE=/run/secrets/sulu_nca_database_name
+    - MYSQL_PASSWORD_FILE=/run/secrets/sulu_nca_database_pass
+    - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/sulu_nca_database_root_pass
+    - MYSQL_USER_FILE=/run/secrets/sulu_nca_database_user
+    image: mariadb
+    labels:
+      io.rancher.container.pull_image: always
+    restart: always
+    secrets:
+    - sulu_nca_database_name
+    - sulu_nca_database_pass
+    - sulu_nca_database_root_pass
+    - sulu_nca_database_user
+    volumes:
+    - db_data:/var/lib/mysql
+
+  web:
+    depends_on:
+    - db
+    environment:
+    - APP_ENV_FILE=/run/secrets/sulu_nca_app_env
+    - APP_SECRET_FILE=/run/secrets/sulu_nca_app_secret
+    - DATABASE_URL_FILE=/run/secrets/sulu_nca_database_url
+    - MAIL_URL_FILE=/run/secrets/sulu_nca_mail_url
+    - SULU_ADMIN_EMAIL_FILE=/run/secrets/sulu_admin_email
+    - GOOGLE_API_KEY_FILE=/run/secrets/GOOGLE_API_KEY
+    image: $WEB_IMAGE
+    labels:
+      io.rancher.container.pull_image: always
+      traefik.docker.network: proxy
+      traefik.enable: true
+      traefik.frontend.passHostHeader: true
+      traefik.frontend.rule: 'Host:$HTTP_URL,$WWW_URL'
+      traefik.frontend.entryPoints: http,https
+      traefik.port: 80
+    restart: always
+    secrets:
+    - sulu_nca_app_env
+    - sulu_nca_app_secret
+    - sulu_nca_database_url
+    - sulu_nca_mail_url
+    - sulu_admin_email
+    - GOOGLE_API_KEY
+
+volumes:
+  db_data:
+
+secrets:
+  sulu_nca_database_name:
+    external: true
+  sulu_nca_database_pass:
+    external: true
+  sulu_nca_database_root_pass:
+    external: true
+  sulu_nca_database_user:
+    external: true
+  sulu_nca_app_env:
+    external: true
+  sulu_nca_app_secret:
+    external: true
+  sulu_nca_database_url:
+    external: true
+  sulu_nca_mail_url:
+    external: true
+  sulu_admin_email:
+    external: true
+  GOOGLE_API_KEY:
+    external: true
+
