@@ -47,4 +47,11 @@
         </meta>
         <scale x="1920" y="1080"/>
     </format>
+    <format key="1000x1150">
+        <meta>
+            <title lang="en">Unity what is NCA</title>
+        </meta>
+        <scale x="1000" y="1150"/>
+    </format>
+    
 </formats>

@@ -165,5 +165,58 @@
                 </block>
             </properties>
         </section>
+        <section name="whatIsNca">
+            <meta>
+                <title lang="en">What is NCA?</title>
+            </meta>
+            <properties>
+                <property name="whatIsNcaImage" type="media_selection" maxOccurs="1">
+                    <meta>
+                        <title lang="en">Image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <block name="whatIsNcaItems" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <types>
+                        <type name="whatIsNcaItems">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                            <properties>
+                                <property name="whatIsNcaCaption" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Caption</title>
+                                    </meta>
+                                </property>
+                                <property name="whatIsNcaHeading" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Heading</title>
+                                    </meta>
+                                </property>
+                                <property name="whatIsNcaDescription" type="text_editor">
+                                    <meta>
+                                        <title lang="en">Description</title>
+                                    </meta>
+
+                                    <params>
+                                        <param name="table" value="false"/>
+                                        <param name="link" value="true"/>
+                                        <!-- CKEditor Parameters examples: -->
+                                        <param name="extra_allowed_content"
+                                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                                        <param name="ui_color" value="#ffcc00"/>
+                                    </params>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
     </properties>
 </template>
