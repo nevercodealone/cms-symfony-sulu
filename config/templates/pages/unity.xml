@@ -218,5 +218,74 @@
                 </block>
             </properties>
         </section>
+        <section name="team">
+            <meta>
+                <title lang="en">Team</title>
+            </meta>
+            <properties>
+                <property name="teamHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="teamDescription" type="text_area">
+                    <meta>
+                        <title lang="en">Description</title>
+                    </meta>
+                </property>
+                <block name="teamMembers" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Members</title>
+                    </meta>
+                    <types>
+                        <type name="teamMembers">
+                            <meta>
+                                <title lang="en">Member</title>
+                            </meta>
+                            <properties>
+                                <property name="teamMemberImage" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="teamMemberName" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Name</title>
+                                    </meta>
+                                </property>
+                                <property name="teamMemberPosition" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Position</title>
+                                    </meta>
+                                </property>
+                                <property name="teamMemberFbUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>FB</title>
+                                    </meta>
+                                </property>
+                                <property name="teamMemberTwitterUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>Twitter</title>
+                                    </meta>
+                                </property>
+                                <property name="teamMemberInstagramUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>Instagram</title>
+                                    </meta>
+                                </property>
+                                <property name="teamMemberWebUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>Web</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
     </properties>
 </template>

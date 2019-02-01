@@ -53,5 +53,12 @@
         </meta>
         <scale x="1000" y="1150"/>
     </format>
-    
+    <format key="720x500">
+        <meta>
+            <title lang="en">Unity team member</title>
+        </meta>
+        <scale x="720" y="500"/>
+    </format>
+
+
 </formats>

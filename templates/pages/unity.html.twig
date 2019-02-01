@@ -357,6 +357,49 @@
                     </section>
                 </div>
             </div>
+            <div class="container team-style-06" id="team">
+                <div class="row">
+                    <div class="col-lg-12 herotext">
+                        <h1>{{ content.teamHeadline }}</h1>
+                        <div class="description">{{ content.teamDescription }}</div>
+                    </div>
+                </div>
+                <div class="row">
+                    {% for teamMember in content.teamMembers %}
+                        <div class="col-lg-3 col-md-3 block">
+                            <div class="picture">
+                                <img src="{{ teamMember.teamMemberImage[0].formats['720x500'] }}" class="img-responsive" alt="{{ teamMember.teamMemberName }} {{ teamMember.teamMemberPosition }}" >
+                                <!-- Picture Overlay Starts -->
+                                <div class="picture-overlay">
+                                    <div class="icons">
+                                        <div>
+                                            <span class="icon">
+                                                {% if teamMember.teamMemberFbUrl %}
+                                                    <a href="{{ teamMember.teamMemberFbUrl }}" target="_blank" rel="noopener">Facebook</a>&nbsp;
+                                                {% endif %}
+                                                {% if teamMember.teamMemberTwitterUrl %}
+                                                    <a href="{{ teamMember.teamMemberTwitterUrl }}" target="_blank" rel="noopener">Twitter</a>&nbsp;
+                                                {% endif %}
+                                                {% if teamMember.teamMemberInstagramUrl %}
+                                                    <a href="{{ teamMember.teamMemberInstagramUrl }}" target="_blank" rel="noopener">Instagram</a>&nbsp;
+                                                {% endif %}
+                                                {% if teamMember.teamMemberWebUrl %}
+                                                    <a href="{{ teamMember.teamMemberWebUrl }}" target="_blank" rel="noopener">Web</a>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Picture Overlay Ends -->
+                            </div>
+                            <div class="info">
+                                <div class="name">{{ teamMember.teamMemberName }}</div>
+                                <div class="designation">{{ teamMember.teamMemberPosition }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
 
 
             {{ dump(content) }}
