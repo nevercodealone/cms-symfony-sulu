@@ -55,3 +55,5 @@ package-lock.json
 
 # System files
 .DS_Store
+/uploads
+/db-live

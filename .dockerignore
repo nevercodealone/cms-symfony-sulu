@@ -5,3 +5,6 @@ public/build
 node_modules
 tests
 var
+db-init
+db-live
+uploads

@@ -5,7 +5,7 @@ WORKDIR /var/www/html
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
 COPY composer.* /var/www/html/
-RUN composer install --apcu-autoloader -o --no-dev --no-scripts --ignore-platform-reqs
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
 
 FROM kkarczmarczyk/node-yarn:latest AS npm
 
@@ -20,7 +20,7 @@ COPY webpack.config.js /var/www/html/
 RUN npm install && npm run build
 
 # Build actual image
-FROM php:7.2-apache
+FROM php:7.2-apache AS webserver
 
 WORKDIR /var/www/html
 
@@ -53,4 +53,10 @@ ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
 COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
 COPY --from=composer /var/www/html/vendor/ /var/www/html/vendor/
 
-COPY . /var/www/html/
+COPY --chown=www-data:www-data . /var/www/html/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+Run mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
