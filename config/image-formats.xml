@@ -41,4 +41,10 @@
         </meta>
         <scale x="72" y="72"/>
     </format>
+    <format key="1920x1080">
+        <meta>
+            <title lang="en">Unity event background</title>
+        </meta>
+        <scale x="1920" y="1080"/>
+    </format>
 </formats>

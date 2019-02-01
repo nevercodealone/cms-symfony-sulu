@@ -283,7 +283,7 @@
                             <div class="icon"><i class="pe-7s-add-user"></i></div>
                             <div class="heading">Persönlicher Kontakt</div>
                             <div class="line"></div>
-                            <div class="description">Eine ganz persönliche Möglichkeit, sich als Arbeitgeber in den eigenen Räumen zu präsentieren und über einen ganzen Tag lang kennenzulernen. So merkt man, ob man zueinander passt und die gleichen Werte und Ziele besitzt.</div>
+                            <div class="description">Eine ganz persönliche Möglichkeit, sich als Arbeitgeber in den eigenen Räumen zu präsentieren und über einen ganzen Tag lang kennenzulernen. Das macht den ganzen Prozess einfacher und effizienter.</div>
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-6 block">
                             <div class="icon"><i class="pe-7s-like2"></i></div>
@@ -305,6 +305,23 @@
                         </div>
                     </div>
                     <!-- Row Ends -->
+                </div>
+            </div>
+            <div class="parallax-39" id="events" style="background-image: url('{{ content.eventsBgImage[0].formats['1920x1080'] }}');">
+                <div class="call-to-action-03 container">
+                    <div class="row">
+                        <div class="col-lg-10 col-lg-offset-1 herotext">
+                            <div class="clothing-carousel">
+                                {% for event in content.events %}
+                                    <div>
+                                        <h1>{{ event.eventHeadline }}</h1>
+                                        <div class="description">{{ event.eventDescription }}</div>
+                                        <div class="button"><a href="#/" class="fill nca-contact">{{ event.eventContactText }}</a></div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

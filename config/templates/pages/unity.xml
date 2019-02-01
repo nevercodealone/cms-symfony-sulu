@@ -121,5 +121,49 @@
                 </block>
             </properties>
         </section>
+        <section name="events">
+            <meta>
+                <title lang="en">Events</title>
+            </meta>
+            <properties>
+                <property name="eventsBgImage" type="media_selection" maxOccurs="1">
+                    <meta>
+                        <title lang="en">Background Image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <block name="events" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Events</title>
+                    </meta>
+                    <types>
+                        <type name="events">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                            <properties>
+                                <property name="eventHeadline" type="text_line">
+                                    <meta>
+                                        <title lang="en">Headline</title>
+                                    </meta>
+                                </property>
+                                <property name="eventDescription" type="text_area">
+                                    <meta>
+                                        <title lang="en">Description</title>
+                                    </meta>
+                                </property>
+                                <property name="eventContactText" type="text_line">
+                                    <meta>
+                                        <title lang="en">Contact text</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
     </properties>
 </template>
