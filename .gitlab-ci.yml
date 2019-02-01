@@ -11,14 +11,14 @@
 stages:
   - build
   - deploy
-#  - codeanalyse
-#  - test
-#  - posttest
-#  - posttest2
-#  - teardown
-#  - release
-#  - rollout
-#  - postrollout
+  - codeanalyse
+  - test
+  - posttest
+  - posttest2
+  - teardown
+  - release
+  - rollout
+  - postrollout
 
 variables:
   LATEST_PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH
@@ -27,8 +27,8 @@ variables:
   WWW_URL: www.$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
   PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   RANCHER_PROJECT_NAME: $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG
-#  REPORT_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/reports:$CI_PIPELINE_ID
-#  TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
+  REPORT_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/reports:$CI_PIPELINE_ID
+  TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
   WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
   WEBDRIVER_URL: rancher.nevercodealone.de
   WEBSITE_URL: https://$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
@@ -71,6 +71,17 @@ build_production_image:
   only:
     - master
     - /^prod\/.*/
+  
+build_toolbox_image:
+  stage: build
+  image: docker:stable
+  before_script:
+    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
+  script:
+    - docker build -t $TOOLBOX_IMAGE --target toolbox --pull .
+    - docker push $TOOLBOX_IMAGE
+  tags:
+    - docker-executor
 
 # Stage: deploy
 
