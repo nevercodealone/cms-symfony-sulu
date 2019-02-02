@@ -29,12 +29,12 @@
         <main>
             <section id="content">
                 {% block content %}
-                    <header class="hero-section" style="background: url('{{ content.eventheaderimage[0].url }}') center center no-repeat fixed;background-size: cover;">
+                    <header class="hero-section" style="background: url('{{ content.eventheaderimage[0].formats['1500x1000'] }}') center center no-repeat fixed;background-size: cover;">
                         <nav class="navbar navbar-default">
                             <div class="container">
                                 <div class="navbar-header">
                                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
-                                    <a href="{{ content.eventLink }}" class="logo-brand"><img src="{{ content.sponsorLogo[0].url }}" data-at2x="{{ content.sponsorLogo[0].url }}" alt="Tickets auf Eventbrite" class="logo-nav" width="148px" height="50px" style="width: 148px;height: 50px"> </a> </div>
+                                    <a href="{{ content.eventLink }}" class="logo-brand"><img src="{{ content.sponsorLogo[0].url }}" data-at2x="{{ content.sponsorLogo[0].url }}" alt="Tickets auf Eventbrite" class="logo-nav" width="200px" style="width: 200px;{% if content.sponsorLogoPaddingTop %}padding-top:{{ content.sponsorLogoPaddingTop }}px{% endif %}"> </a> </div>
                                 <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
                                     <ul class="nav navbar-nav navbar-right">
                                         <li><a href="#speaker">Speakers</a></li>
@@ -171,7 +171,7 @@
                                                                     {% else %}
                                                                         <div class="col-md-3 text-center">
                                                                     {% endif %}
-                                                                        <img src="{{ timeTableItem.images[0].url }}" alt="OTTO Frederik und Sebastian" data-no-retina>
+                                                                        <img src="{{ timeTableItem.images[0].formats['340x340'] }}" alt="{% if timeTableItem.timetableSpeaker != '' %}{{ timeTableItem.timetableSpeaker }}{% endif %}" data-no-retina>
                                                                     </div>
                                                                 {% endif %}
                                                                 {% if timeTableItem.alignRight %}

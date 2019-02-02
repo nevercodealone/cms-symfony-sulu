@@ -30,6 +30,11 @@
                         <param name="types" value="image"/>
                     </params>
                 </property>
+                <property name="sponsorLogoPaddingTop" type="text_line">
+                    <meta>
+                        <title lang="en">Padding Top</title>
+                    </meta>
+                </property>
                 <property name="town" type="text_line" mandatory="true">
                     <meta>
                         <title lang="en">Town</title>
