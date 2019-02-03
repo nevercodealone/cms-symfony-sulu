@@ -384,21 +384,23 @@
         </h3>
         <div class="tz-portfolio">
             {% for blogItem in blogList %}
-                <div class="element tz-item-portfolio tz-item-portfolio-style-4">
-                    <div class="tz-image-portfolio">
-                        <img src="{{ blogItem['_embedded']['wp:featuredmedia'][0]['media_details']['sizes']['penci-thumb-vertical']['source_url'] }}" alt="{{ blogItem.title.rendered }}" width="340px" height="340px">
-                        <a href="#" class="tz-color-icon-3">
-                            <i class="fa fa-video-camera"></i>
-                        </a>
+                {% if blogItem['_embedded']['wp:featuredmedia'][0]['media_details']['sizes']['penci-thumb-vertical']['source_url'] is defined %}
+                    <div class="element tz-item-portfolio tz-item-portfolio-style-4">
+                        <div class="tz-image-portfolio">
+                            <img src="{{ blogItem['_embedded']['wp:featuredmedia'][0]['media_details']['sizes']['penci-thumb-vertical']['source_url'] }}" alt="{{ blogItem.title.rendered }}" width="340px" height="340px">
+                            <a href="#" class="tz-color-icon-3">
+                                <i class="fa fa-video-camera"></i>
+                            </a>
+                        </div>
+                        <div class="tz-portfolio-content-style-2">
+                            <h4>{{ blogItem.title.rendered }}</h4>
+                            {{ blogItem.excerpt.rendered|raw }}
+                            <span>
+                                <a href="{{ blogItem.link }}" target="_blank" rel="noopener" style="text-transform: uppercase;"><i class="fa fa-arrows-alt"></i>{{ blogItem['_embedded'].author[0].name }}</a>
+                            </span>
+                        </div>
                     </div>
-                    <div class="tz-portfolio-content-style-2">
-                        <h4>{{ blogItem.title.rendered }}</h4>
-                        {{ blogItem.excerpt.rendered|raw }}
-                        <span>
-                            <a href="{{ blogItem.link }}" target="_blank" rel="noopener" style="text-transform: uppercase;"><i class="fa fa-arrows-alt"></i>{{ blogItem['_embedded'].author[0].name }}</a>
-                        </span>
-                    </div>
-                </div>
+                {% endif %}
             {% endfor %}
         </div>
     </section>
