@@ -22,7 +22,7 @@
                 <title lang="en">Header</title>
             </meta>
             <properties>
-                <property name="sponsorLogo" type="media_selection" maxOccurs="1" mandatory="true">
+                <property name="sponsorLogo" type="media_selection" maxOccurs="1">
                     <meta>
                         <title lang="en">Sponsor Logo</title>
                     </meta>
@@ -35,12 +35,12 @@
                         <title lang="en">Padding Top</title>
                     </meta>
                 </property>
-                <property name="town" type="text_line" mandatory="true">
+                <property name="town" type="text_line">
                     <meta>
                         <title lang="en">Town</title>
                     </meta>
                 </property>
-                <property name="date" type="date" mandatory="true">
+                <property name="date" type="date">
                     <meta>
                         <title lang="en">Date</title>
                     </meta>
@@ -60,7 +60,7 @@
                         <title>Blog link</title>
                     </meta>
                 </property>
-                <property name="blogLinkText" type="text_line" mandatory="true"  colspan="6">
+                <property name="blogLinkText" type="text_line"  colspan="6">
                     <meta>
                         <title lang="en">Blog link text</title>
                     </meta>
@@ -70,7 +70,7 @@
                         <title>Social institution link</title>
                     </meta>
                 </property>
-                <property name="socialInstitutionLinkText" type="text_line" mandatory="true"  colspan="6">
+                <property name="socialInstitutionLinkText" type="text_line"  colspan="6">
                     <meta>
                         <title lang="en">Social institution link text</title>
                     </meta>
@@ -93,7 +93,7 @@
                         <param name="ui_color" value="#ffcc00"/>
                     </params>
                 </property>
-                <property name="eventheaderimage" type="media_selection" maxOccurs="1" mandatory="true">
+                <property name="eventheaderimage" type="media_selection" maxOccurs="1">
                     <meta>
                         <title lang="en">Event header image</title>
                     </meta>
@@ -209,7 +209,7 @@
                         <title lang="en">Overview left</title>
                     </meta>
                 </property>
-                <property name="overviewHeadline" type="text_line" mandatory="true">
+                <property name="overviewHeadline" type="text_line">
                     <meta>
                         <title lang="en">Overview Headline</title>
                     </meta>
@@ -234,12 +234,12 @@
                 <title lang="en">Timetable</title>
             </meta>
             <properties>
-                <property name="timeTableHeadline" type="text_line" mandatory="true">
+                <property name="timeTableHeadline" type="text_line">
                     <meta>
                         <title lang="en">Headline</title>
                     </meta>
                 </property>
-                <property name="timeTableSubline" type="text_line" mandatory="true">
+                <property name="timeTableSubline" type="text_line">
                     <meta>
                         <title lang="en">Subline</title>
                     </meta>
@@ -254,12 +254,12 @@
                                 <title lang="en">Time item</title>
                             </meta>
                             <properties>
-                                <property name="time" type="time" mandatory="true">
+                                <property name="time" type="time">
                                     <meta>
                                         <title lang="en">Time</title>
                                     </meta>
                                 </property>
-                                <property name="timetableHeadline" type="text_line" mandatory="true">
+                                <property name="timetableHeadline" type="text_line">
                                     <meta>
                                         <title lang="en">Headline</title>
                                     </meta>
@@ -410,7 +410,7 @@
                                 <title lang="en">Feature item</title>
                             </meta>
                             <properties>
-                                <property name="priceFeatureItem" type="text_line" mandatory="true">
+                                <property name="priceFeatureItem" type="text_line">
                                     <meta>
                                         <title lang="en">Item</title>
                                     </meta>
