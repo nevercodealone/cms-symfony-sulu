@@ -23,6 +23,7 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
         <link href="/conference/css/owl.carousel.css" rel="stylesheet">
         <link href="/conference/css/main.css" rel="stylesheet">
+        <link href="/css/yt.css" rel="stylesheet">
         <script src="/conference/js/modernizr.min.js"></script>
     </head>
     <body>
@@ -135,7 +136,11 @@
                     <section class="about section-spacing">
                         <div class="container">
                             <div class="row">
-                                <div class="col-md-6">{{ content.overviewLeft|raw }}</div>
+                                <div class="col-md-6">
+                                    <div class="trailer_player">
+                                        {{ content.overviewLeft|raw }}
+                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <h2>{{ content.overviewHeadline }}</h2>
                                     {{ content.overviewRight|raw }}
