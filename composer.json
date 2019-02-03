@@ -31,6 +31,7 @@
         "zendframework/zendsearch": "^2.0.0rc6"
     },
     "require-dev": {
+        "codeception/codeception": "^2.5",
         "phpcr/phpcr-shell": "~1.0",
         "symfony/debug": "^3.4 || ^4.0",
         "symfony/debug-bundle": "^3.4 || ^4.0",

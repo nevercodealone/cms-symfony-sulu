@@ -1,0 +1,53 @@
+namespace: NCATesting
+actor: Tester
+paths:
+    tests: tests
+    log: tests/_output
+    data: tests/_data
+    support: tests/_support
+    envs: tests/_envs
+settings:
+    bootstrap: _bootstrap.php
+    colors: true
+    memory_limit: 1024M
+    shuffle: true
+    restart: false:
+extensions:
+    enabled:
+        - Codeception\Extension\RunFailed
+coverage:
+    enabled: true
+    include:
+        - src/*
+    exclude:
+        - vendor/*
+        - var/*
+modules:
+    config:
+        Db:
+            dsn: 'mysql:host=%DB_HOST%;dbname=%DB_NAME%'
+            user: '%DB_USER%'
+            password: '%DB_PASS%'
+        PhpBrowser:
+            url: 'WEBSITE_URL'
+            clear_cookies: false
+            restart: false
+            curl:
+                CURLOPT_RETURNTRANSFER: true
+        REST:
+            url: 'WEBSITE_URL'
+            depends: PhpBrowser
+            part: Json
+        WebDriver:
+            host: '%WEBDRIVER_URL%'
+            url: 'WEBSITE_URL'
+            browser: chrome
+            window_size: 1600x1000
+            connection_timeout: 5
+            request_timeout: 30
+            clear_cookies: false
+            capabilities:
+                unexpectedAlertBehaviour: 'ignore'
+params:
+    - env
+
