@@ -7,7 +7,7 @@
     <key>homepage</key>
 
     <view>pages/homepage</view>
-    <controller>SuluWebsiteBundle:Default:index</controller>
+    <controller>App\Controller\PageController:wordpress</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>

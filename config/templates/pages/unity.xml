@@ -7,7 +7,7 @@
     <key>unity</key>
 
     <view>pages/unity</view>
-    <controller>App\Controller\PageController:index</controller>
+    <controller>App\Controller\PageController:youtube</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
