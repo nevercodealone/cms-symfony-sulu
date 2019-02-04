@@ -77,7 +77,10 @@
                                                 <figure> <img src="{{ speakerItem.speakerItemImage[0].formats['340x340'] }}" alt="{{ speakerItem.speakerItemName }} {{ speakerItem.speakerItemJobTitle }}" data-no-retina>
                                                     <figcaption>
                                                         <h4>{{ speakerItem.speakerItemName }}</h4>
-                                                        <p>{{ speakerItem.speakerItemJobTitle }}</p>
+                                                        <p>
+                                                            {{ speakerItem.speakerItemJobTitle }}
+                                                            <div>{{ speakerItem.speakerItemCompany }}&nbsp;</div>
+                                                        </p>
                                                         <ul class="social">
                                                             {% if speakerItem.speakerItemTwitterUrl %}
                                                                 <li><a href="{{ speakerItem.speakerItemTwitterUrl }}" target="_blank" rel="noopener"><i class="fa fa-twitter"></i></a></li>
@@ -222,13 +225,22 @@
                                 {% for contactPerson in content.contactPersons %}
                                     <div class="col-md-{{ 12 / content.contactPersons|length }}">
                                         <div class="event-speaker">
-                                            <figure> <img src="{{ contactPerson.contactPersonItemImg[0].formats["340x340"] }}" alt="{{ contactPerson.contactPersonItemName }} {{ contactPerson.contactPersonItemJobTitle }}" data-no-retina>
+                                            <figure> <img src="{{ contactPerson.contactPersonItemImg[0].formats["270x270"] }}" alt="{{ contactPerson.contactPersonItemName }} {{ contactPerson.contactPersonItemJobTitle }}" data-no-retina>
                                                 <figcaption>
                                                     <h4>{{ contactPerson.contactPersonItemName }}</h4>
                                                     <p>{{ contactPerson.contactPersonItemJobTitle }}</p>
-                                                    <p><a href="tel:+494064616768"><i class="fa fa-phone"></i> {{ contactPerson.contactPersonItemPhone }}</a></p>
+                                                    {% if contactPerson.contactPersonItemPhone %}
+                                                        <p>
+                                                            <a href="tel:+49{{ contactPerson.contactPersonItemPhone }}"><i class="fa fa-phone"></i> {{ contactPerson.contactPersonItemPhone }}</a>
+                                                        </p>
+                                                    {% endif %}
                                                     <ul class="social">
-                                                        <li><a href="{{ contactPerson.contactPersonItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                                        {% if contactPerson.contactPersonItemXingUrl %}
+                                                            <li><a href="{{ contactPerson.contactPersonItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                                        {% endif %}
+                                                        {% if contactPerson.contactPersonItemLinkedinUrl %}
+                                                            <li><a href="{{ contactPerson.contactPersonItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
+                                                        {% endif %}
                                                     </ul>
                                                 </figcaption>
                                             </figure>

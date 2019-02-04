@@ -136,14 +136,19 @@
                                         <param name="types" value="image"/>
                                     </params>
                                 </property>
-                                <property name="speakerItemName" type="text_line" colspan="6">
+                                <property name="speakerItemName" type="text_line" colspan="4">
                                     <meta>
                                         <title lang="en">Name</title>
                                     </meta>
                                 </property>
-                                <property name="speakerItemJobTitle" type="text_line" colspan="6">
+                                <property name="speakerItemJobTitle" type="text_line" colspan="4">
                                     <meta>
                                         <title lang="en">Job title</title>
+                                    </meta>
+                                </property>
+                                <property name="speakerItemCompany" type="text_line" colspan="4">
+                                    <meta>
+                                        <title lang="en">Company</title>
                                     </meta>
                                 </property>
                                 <property name="speakerItemXingUrl" type="url" colspan="3">
@@ -379,9 +384,14 @@
                                         <title lang="en">Phone</title>
                                     </meta>
                                 </property>
-                                <property name="contactPersonItemXingUrl" type="url">
+                                <property name="contactPersonItemXingUrl" type="url" colspan="6">
                                     <meta>
                                         <title>Xing URL</title>
+                                    </meta>
+                                </property>
+                                <property name="contactPersonItemLinkedinUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>Linkedin</title>
                                     </meta>
                                 </property>
                             </properties>

@@ -17,6 +17,12 @@
         </meta>
         <scale x="270" y="200"/>
     </format>
+    <format key="270x270">
+        <meta>
+            <title lang="en">Conference HR contact</title>
+        </meta>
+        <scale x="270" y="270"/>
+    </format>
     <format key="1500x1000">
         <meta>
             <title lang="en">Location background</title>
