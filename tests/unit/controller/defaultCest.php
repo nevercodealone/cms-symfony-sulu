@@ -15,6 +15,9 @@ class defaultCest
         $this->fixture = new DefaultController();
     }
 
+    /**
+     * @skip
+     */
     public function getSourceParamReturnWebsiteDefault(UnitTester $I)
     {
         $request = new Request();
@@ -22,6 +25,9 @@ class defaultCest
         $I->assertContains('aff=website', $methodReturn);
     }
 
+    /**
+     * @skip
+     */
     public function getSourceParamFromAffiliateGetParam(UnitTester $I)
     {
         $affiliate = 'testify';
