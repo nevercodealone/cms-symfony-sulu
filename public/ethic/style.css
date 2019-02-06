@@ -1734,7 +1734,7 @@ body .tz-search-input {
 .tz-menu li ul.sub-menu-style-1,
 .tz-menu-left li ul.sub-menu{
     left: -2px;
-    width: 250px;
+    width: 280px;
     background: #ffffff;
 }
 .tz-menu li:hover .sub-menu,
@@ -4199,7 +4199,7 @@ body .tz-item-portfolio-style-4 .tz-portfolio-content-style-2:hover{
 .tz-hidden {
     display: none;
 }
-#tz-sidemenu li a.tz-open {    
+#tz-sidemenu li a.tz-open {
 	background:rgba(238, 238, 238, 1);
 }
 .tz-tab-slider-img {
