@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Service\TwitterService;
 use App\Service\WordpressService;
 use App\Service\YouTubeService;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,18 +12,23 @@ class PageController extends WebsiteController
 {
     /**
      * @param StructureInterface $structure
-     * @param YouTubeService $service
+     * @param YouTubeService $youTubeService
      * @param bool $preview
      * @param bool $partial
      * @return Response
      */
-    public function youtube(StructureInterface $structure, YouTubeService $service, $preview = false, $partial = false)
+    public function employerBranding(
+        StructureInterface $structure,
+        YouTubeService $youTubeService,
+        $preview = false,
+        $partial = false
+    )
     {
         $response = $this->renderStructure(
             $structure,
             [
                 // here you can add some custom data for your template
-                'videoList' => $service->getItemsFromChannel()
+                'videoList' => $youTubeService->getItemsFromChannel()
             ],
             $preview,
             $partial
