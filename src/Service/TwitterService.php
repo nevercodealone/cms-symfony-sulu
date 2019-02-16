@@ -9,9 +9,12 @@ class TwitterService
     /** @var Twitter */
     private $twitter;
 
+    public $testify;
+
     public function __construct(Twitter $twitter)
     {
         $this->twitter = $twitter;
+        $this->testify = 'testify';
     }
 
     public function statusesShowId($id)
@@ -22,6 +25,7 @@ class TwitterService
 
     public function getEmbedCodeByUrl($url)
     {
-        return '<h1>Twitter HTML</h1>';
+        $res = $this->twitter->request('statuses/oembed', 'GET', ['url' => $url, 'maxwidth' => '670']);
+        return $res->html;
     }
 }

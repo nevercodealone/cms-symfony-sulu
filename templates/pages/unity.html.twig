@@ -171,6 +171,55 @@
                 </div>
             </div>
             <!-- TESTIMONIAL 03 ENDS ========================================================================= -->
+            <div class="col-lg-10 col-lg-offset-1" id="socialmediamarketing">
+                <!-- Portfolio Nav Starts -->
+                <div id="options">
+                    <ul id="filters" class="option-set clearfix" data-option-key="filter">
+                        <li><a href="#filter" data-option-value="*" class="selected">ALL</a></li>
+                        <li><a href="#filter" data-option-value=".youtube">YouTube</a></li>
+                        <li><a href="#filter" data-option-value=".twitter">Twitter</a></li>
+                        <li><a href="#filter" data-option-value=".facebook">Facebook</a></li>
+                        <li><a href="#filter" data-option-value=".xing">Xing</a></li>
+                    </ul>
+                </div>
+                <!-- Portfolio Nav Ends -->
+                <!-- Portfolio Thumbs Starts -->
+                <div class="make2columns mansory-effect">
+                    {% for video in videoList %}
+                        <figure class="item youtube">
+                            <div class="picture">
+                                <iframe title="{{ video['snippet']['title'] }}" width="560" height="315" src="https://www.youtube.com/embed/{{ video['snippet']['resourceId']['videoId'] }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                            </div>
+                        </figure>
+                    {% endfor %}
+                    {% for tweet in content.socialMediaTweets %}
+                        <figure class="item twitter">
+                            <div class="picture">
+                                {{ twitter_service.getEmbedCodeByUrl(tweet.socialMediaTweetUrl)|raw }}
+                            </div>
+                        </figure>
+                    {% endfor %}
+                    {% for facebook in content.socialMediaFacebook %}
+                        <figure class="item facebook">
+                            <div class="picture">
+                                <a href="{{ facebook.socialMediaFacebookUrl }}" target="_blank">
+                                    <img src="{{ facebook.socialMediaFacebookImage[0].url }}" alt="Facebook NCA Event">
+                                </a>
+                            </div>
+                        </figure>
+                    {% endfor %}
+                    {% for xing in content.socialMediaXing %}
+                        <figure class="item xing">
+                            <div class="picture">
+                                <a href="{{ xing.socialMediaXingUrl }}" target="_blank">
+                                    <img src="{{ xing.socialMediaXingImage[0].url }}" alt="Xing NCA Event">
+                                </a>
+                            </div>
+                        </figure>
+                    {% endfor %}
+                </div>
+                <!-- Portfolio Thumbs Ends -->
+            </div>
             <div class="container tab-style-07" id="employerbranding">
                 <div class="row">
                     <div class="col-lg-10 col-lg-offset-1 herotext">
