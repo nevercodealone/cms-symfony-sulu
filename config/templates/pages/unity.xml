@@ -7,7 +7,7 @@
     <key>unity</key>
 
     <view>pages/unity</view>
-    <controller>App\Controller\PageController:youtube</controller>
+    <controller>App\Controller\PageController:employerBranding</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
@@ -113,6 +113,86 @@
                                 <property name="testimonialLinkText" type="text_line" colspan="6">
                                     <meta>
                                         <title lang="en">Linktext</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="socialMedia">
+            <meta>
+                <title lang="en">Social Media</title>
+            </meta>
+            <properties>
+                <block name="socialMediaTweets" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Tweets</title>
+                    </meta>
+                    <types>
+                        <type name="socialMediaTweet">
+                            <meta>
+                                <title lang="en">Tweet</title>
+                            </meta>
+                            <properties>
+                                <property name="socialMediaTweetUrl" type="url">
+                                    <meta>
+                                        <title>Url</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+                <block name="socialMediaFacebook" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Facebook</title>
+                    </meta>
+                    <types>
+                        <type name="socialMediaFacebook">
+                            <meta>
+                                <title lang="en">Facebook</title>
+                            </meta>
+                            <properties>
+                                <property name="socialMediaFacebookImage" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="socialMediaFacebookUrl" type="url">
+                                    <meta>
+                                        <title>Url</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+                <block name="socialMediaXing" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Xing</title>
+                    </meta>
+                    <types>
+                        <type name="socialMediaXing">
+                            <meta>
+                                <title lang="en">Xing</title>
+                            </meta>
+                            <properties>
+                                <property name="socialMediaXingImage" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="socialMediaXingUrl" type="url">
+                                    <meta>
+                                        <title>Url</title>
                                     </meta>
                                 </property>
                             </properties>

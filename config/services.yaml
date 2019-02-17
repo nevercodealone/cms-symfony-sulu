@@ -3,6 +3,10 @@
 parameters:
     # parameter_name: value
     google_api_key: '%env(GOOGLE_API_KEY)%'
+    twitter_api_key: '%env(TWITTER_API_KEY)%'
+    twitter_api_secret: '%env(TWITTER_API_SECRET)%'
+    twitter_access_token: '%env(TWITTER_ACCESS_TOKEN)%'
+    twitter_access_secret: '%env(TWITTER_ACCESS_SECRET)%'
 
 services:
     # default configuration for services in *this* file
@@ -42,3 +46,16 @@ services:
         class: \Google_Service_YouTube
         arguments:
             - '@Google_Client'
+
+    Twitter:
+        class: DG\Twitter\Twitter
+        arguments:
+            - '%twitter_api_key%'
+            - '%twitter_api_secret%'
+            - '%twitter_access_token%'
+            - '%twitter_access_secret%'
+
+    Twitter_Service:
+        class: App\Service\TwitterService
+        arguments:
+            - '@Twitter'

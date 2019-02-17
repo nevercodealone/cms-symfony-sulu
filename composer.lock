@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "53c96166d20c8eb38cf09670d40e94df",
+    "content-hash": "cf2cb99010162be56a1f0c26197e33fe",
     "packages": [
         {
             "name": "aferrandini/urlizer",
@@ -355,6 +355,54 @@
             ],
             "description": "PHPCR migrations bundle",
             "time": "2018-09-19T08:52:05+00:00"
+        },
+        {
+            "name": "dg/twitter-php",
+            "version": "v4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dg/twitter-php.git",
+                "reference": "e9b38579d71dbe2a23a491dd7591bb4be0bc7ca5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dg/twitter-php/zipball/e9b38579d71dbe2a23a491dd7591bb4be0bc7ca5",
+                "reference": "e9b38579d71dbe2a23a491dd7591bb4be0bc7ca5",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=7.1"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.0-dev"
+                }
+            },
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "David Grudl",
+                    "homepage": "https://davidgrudl.com"
+                }
+            ],
+            "description": "Small and easy Twitter library for PHP",
+            "homepage": "https://github.com/dg/twitter-php",
+            "keywords": [
+                "oauth",
+                "twitter"
+            ],
+            "time": "2019-02-08T16:34:42+00:00"
         },
         {
             "name": "doctrine/annotations",
