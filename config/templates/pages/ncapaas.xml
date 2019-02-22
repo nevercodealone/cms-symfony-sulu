@@ -4,15 +4,16 @@
           xmlns:xi="http://www.w3.org/2001/XInclude"
           xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
 
-    <key>unity</key>
+    <key>ncapaas</key>
 
-    <view>pages/unity</view>
+    <view>pages/ncapaas</view>
+    <controller>SuluWebsiteBundle:Default:index</controller>
     <controller>App\Controller\PageController:employerBranding</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
-        <title lang="en">Unity</title>
-        <title lang="de">Unity</title>
+        <title lang="en">NCA PaaS</title>
+        <title lang="de">NCA PaaS</title>
     </meta>
 
     <properties>
@@ -50,6 +51,32 @@
                         </type>
                     </types>
                 </block>
+            </properties>
+        </section>
+        <section name="digitalCreatives">
+            <meta>
+                <title lang="en">Digital creatives</title>
+            </meta>
+            <properties>
+                <property name="digitalCreativesTitle" type="text_line">
+                    <meta>
+                        <title lang="en">Title</title>
+                    </meta>
+                </property>
+                <property name="digitalCreativesBodytext" type="text_editor">
+                    <meta>
+                        <title lang="en">Bodytext</title>
+                    </meta>
+
+                    <params>
+                        <param name="table" value="false"/>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content"
+                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
+                </property>
             </properties>
         </section>
         <section name="team">
