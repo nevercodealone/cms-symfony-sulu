@@ -95,24 +95,63 @@
 
                 <!-- /. SLIDER ENDS ========================================================================= -->
             </header>
-            {% if content.digitalCreativesTitle != '' and content.digitalCreativesBodytext != '' %}
+            {% if
+                (content.digitalCreativesTitle != '' and content.digitalCreativesBodytext != '')
+                or
+                (content.ideology) != ''
+            %}
                 <div class="parallax-71">
-                    <!-- DIGITAL CREATIVES STARTS
-                        ========================================================================= -->
-                    <div class="container digital-creatives">
-                        <div class="row">
-                            <div class="col-lg-8 col-lg-offset-2 herotext">
-                                <h2 class="animated" data-animation="fadeInUp" data-animation-delay="200">
-                                    {{ content.digitalCreativesTitle }}
-                                </h2>
-                                <div class="description animated" data-animation="fadeInUp" data-animation-delay="400">
-                                    {{ content.digitalCreativesBodytext|raw }}
+                    {% if (content.digitalCreativesTitle != '' and content.digitalCreativesBodytext != '')  %}
+                        <!-- DIGITAL CREATIVES STARTS
+                            ========================================================================= -->
+                        <div class="container digital-creatives">
+                            <div class="row">
+                                <div class="col-lg-8 col-lg-offset-2 herotext">
+                                    <h2 class="animated" data-animation="fadeInUp" data-animation-delay="200">
+                                        {{ content.digitalCreativesTitle }}
+                                    </h2>
+                                    <div class="description animated" data-animation="fadeInUp" data-animation-delay="400">
+                                        {{ content.digitalCreativesBodytext|raw }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <!-- ./ DIGITAL CREATIVES ENDS
-                        ========================================================================= -->
+
+                        <!-- ./ DIGITAL CREATIVES ENDS
+                            ========================================================================= -->
+                    {% endif %}
+                    {% if (content.ideology) != '' %}
+                        <!-- OUR IDEALOGY STARTS
+                            ========================================================================= -->
+                        {% for item in content.ideology %}
+                            {% set oddOrEven = cycle(['odd', 'even'], loop.index) %}
+                            <div class="container-fluid our-ideology bg">
+                                <div class="row no-gutter-5">
+                                    {% dump(oddOrEven) %}
+                                    {% if oddOrEven == 'even' %}
+                                    <div class="col-lg-5 picture animated" data-animation="fadeInLeft" data-animation-delay="200">
+                                        <img src="{{ item.ideologyImage[0].formats['800x800'] }}" alt="{{ item.ideologyTitle }}" title="{{ item.ideologyTitle }}" class="img-responsive">
+                                    </div>
+                                    {% endif %}
+                                    <div class="col-lg-7 herotext">
+                                        <h2 class="animated" data-animation="fadeInUp" data-animation-delay="400">
+                                            {{ item.ideologyTitle }}
+                                        </h2>
+                                        <h1 class="animated" data-animation="fadeInUp" data-animation-delay="600">
+                                            {{ item.ideologyBodytext|raw }}
+                                        </h1>
+                                    </div>
+                                    {% if oddOrEven == 'odd' %}
+                                        <div class="col-lg-5 picture animated" data-animation="fadeInLeft" data-animation-delay="200">
+                                            <img src="{{ item.ideologyImage[0].formats['800x800'] }}" alt="{{ item.ideologyTitle }}" title="{{ item.ideologyTitle }}" class="img-responsive">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <!-- ./ OUR IDEALOGY ENDS
+                            ========================================================================= -->
+                    {% endif %}
                 </div>
             {% endif %}
 

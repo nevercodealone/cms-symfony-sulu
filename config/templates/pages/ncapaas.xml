@@ -63,20 +63,50 @@
                         <title lang="en">Title</title>
                     </meta>
                 </property>
-                <property name="digitalCreativesBodytext" type="text_editor">
+                <property name="digitalCreativesBodytext" type="text_area">
                     <meta>
                         <title lang="en">Bodytext</title>
                     </meta>
-
-                    <params>
-                        <param name="table" value="false"/>
-                        <param name="link" value="true"/>
-                        <!-- CKEditor Parameters examples: -->
-                        <param name="extra_allowed_content"
-                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
-                        <param name="ui_color" value="#ffcc00"/>
-                    </params>
                 </property>
+            </properties>
+        </section>
+        <section name="ideology">
+            <meta>
+                <title lang="en">Ideology</title>
+            </meta>
+            <properties>
+                <block name="ideology" default-type="editor" minOccurs="0">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <types>
+                        <type name="ideology">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                            <properties>
+                                <property name="ideologyImage" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="ideologyTitle" type="text_line">
+                                    <meta>
+                                        <title lang="en">Title</title>
+                                    </meta>
+                                </property>
+                                <property name="ideologyBodytext" type="text_area">
+                                    <meta>
+                                        <title lang="en"></title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
             </properties>
         </section>
         <section name="team">

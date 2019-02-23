@@ -5,11 +5,11 @@
 
     <!-- See: http://docs.sulu.io/en/latest/book/image-formats.html how to define image-formats -->
 
-    <format key="1915x1215">
+    <format key="72x72">
         <meta>
-            <title lang="en">Ethic slider image</title>
+            <title lang="en">Testimonial img</title>
         </meta>
-        <scale x="1915" y="1215"/>
+        <scale x="72" y="72"/>
     </format>
     <format key="270x200">
         <meta>
@@ -23,12 +23,6 @@
         </meta>
         <scale x="270" y="270"/>
     </format>
-    <format key="1500x1000">
-        <meta>
-            <title lang="en">Location background</title>
-        </meta>
-        <scale x="1500" y="1000"/>
-    </format>
     <format key="340x340">
         <meta>
             <title lang="en">Conference speaker</title>
@@ -41,17 +35,24 @@
         </meta>
         <scale x="540" y="370"/>
     </format>
-    <format key="72x72">
+    <format key="720x500">
         <meta>
-            <title lang="en">Testimonial img</title>
+            <title lang="en">Unity team member</title>
         </meta>
-        <scale x="72" y="72"/>
+        <scale x="720" y="500"/>
     </format>
-    <format key="1920x1080">
+    <format key="800x800">
         <meta>
-            <title lang="en">Unity event background</title>
+            <title lang="en">Ideology</title>
         </meta>
-        <scale x="1920" y="1080"/>
+        <scale x="800" y="800"/>
+    </format>
+
+    <format key="1500x1000">
+        <meta>
+            <title lang="en">Location background</title>
+        </meta>
+        <scale x="1500" y="1000"/>
     </format>
     <format key="1000x1150">
         <meta>
@@ -59,12 +60,16 @@
         </meta>
         <scale x="1000" y="1150"/>
     </format>
-    <format key="720x500">
+    <format key="1915x1215">
         <meta>
-            <title lang="en">Unity team member</title>
+            <title lang="en">Ethic slider image</title>
         </meta>
-        <scale x="720" y="500"/>
+        <scale x="1915" y="1215"/>
     </format>
-
-
+    <format key="1920x1080">
+        <meta>
+            <title lang="en">Unity event background</title>
+        </meta>
+        <scale x="1920" y="1080"/>
+    </format>
 </formats>
