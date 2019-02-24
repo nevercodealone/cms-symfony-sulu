@@ -11,6 +11,12 @@
         </meta>
         <scale x="72" y="72"/>
     </format>
+    <format key="183x183">
+        <meta>
+            <title lang="en">NCA PaaS Team member</title>
+        </meta>
+        <scale x="183" y="183"/>
+    </format>
     <format key="270x200">
         <meta>
             <title lang="en">Startpage carousel image</title>

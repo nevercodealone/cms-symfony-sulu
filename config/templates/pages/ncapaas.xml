@@ -152,24 +152,19 @@
                                         <title lang="en">Position</title>
                                     </meta>
                                 </property>
-                                <property name="teamMemberFbUrl" type="url" colspan="6">
-                                    <meta>
-                                        <title>FB</title>
-                                    </meta>
-                                </property>
-                                <property name="teamMemberTwitterUrl" type="url" colspan="6">
+                                <property name="teamMemberTwitterUrl" type="url" colspan="4">
                                     <meta>
                                         <title>Twitter</title>
                                     </meta>
                                 </property>
-                                <property name="teamMemberInstagramUrl" type="url" colspan="6">
+                                <property name="teamMemberFbUrl" type="url" colspan="4">
                                     <meta>
-                                        <title>Instagram</title>
+                                        <title>FB</title>
                                     </meta>
                                 </property>
-                                <property name="teamMemberWebUrl" type="url" colspan="6">
+                                <property name="teamMemberGitHubUrl" type="url" colspan="4">
                                     <meta>
-                                        <title>Web</title>
+                                        <title>GitHub</title>
                                     </meta>
                                 </property>
                             </properties>

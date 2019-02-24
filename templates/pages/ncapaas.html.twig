@@ -154,11 +154,104 @@
                     {% endif %}
                 </div>
             {% endif %}
-
-            {{ dump() }}
+            <!-- OUR TEAM STARTS
+                ========================================================================= -->
+            <div class="container-fluid team-style-13  parallax-72">
+                <div class="row">
+                    <div class="col-lg-10 col-lg-offset-1 herotext">
+                        <h2 class="animated" data-animation="fadeInUp" data-animation-delay="300">
+                            {{ content.teamHeadline }}
+                        </h2>
+                        <h1 class="animated" data-animation="fadeInUp" data-animation-delay="600">
+                            {{ content.teamDescription|raw }}
+                        </h1>
+                    </div>
+                    <div class="col-lg-10 col-lg-offset-1">
+                        <div class="row animated" data-animation="fadeInUp" data-animation-delay="900">
+                            {% for teamMember in content.teamMembers %}
+                                <!-- Column Starts -->
+                                <div class="col-lg-4 col-md-4 col-sm-6 block">
+                                    <div class="row no-gutter-5 no-gutter-7 row-lg-height  row-md-height  row-sm-height">
+                                        <div class="col-lg-5 col-md-5 col-sm-5 col-lg-height col-md-height col-sm-height col-middle">
+                                            <div class="picture">
+                                                <img src="{{ teamMember.teamMemberImage[0].formats['183x183'] }}" alt="{{ teamMember.teamMemberName }} {{ teamMember.teamMemberPosition }}" class="img-responsive">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-7 col-md-7 col-sm-7 col-lg-height col-md-height col-sm-height col-middle info">
+                                            <div class="name">{{ teamMember.teamMemberName }}</div>
+                                            <div class="designation">{{ teamMember.teamMemberPosition }}</div>
+                                            <ul class="social-icons">
+                                                {% if teamMember.teamMemberTwitterUrl != '' %}
+                                                    <li>
+                                                        <a href="{{ teamMember.teamMemberTwitterUrl }}" target="_blank" rel="noopener"><i class="fa fa-twitter"></i></a>
+                                                    </li>
+                                                {% endif %}
+                                                {% if teamMember.teamMemberFbUrl != '' %}
+                                                    <li>
+                                                        <a href="{{ teamMember.teamMemberFbUrl }}" target="_blank" rel="noopener"><i class="fa fa-facebook"></i></a>
+                                                    </li>
+                                                {% endif %}
+                                                {% if teamMember.teamMemberGitHubUrl != '' %}
+                                                    <li>
+                                                        <a href="{{ teamMember.teamMemberGitHubUrl }}" target="_blank" rel="noopener"><i class="fa fa-github"></i></a>
+                                                    </li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Column Ends -->
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ./ OUR TEAM ENDS
+                ========================================================================= -->
 
         </section>
-
+        <!-- FOOTER 08 STARTS
+    ========================================================================= -->
+        <div class="footer-08">
+            <div class="container">
+                <!-- Row 1 Starts -->
+                <div class="row row1">
+                    <div class="col-lg-12 footer-logo"><img src="/img/logo.png" alt="Never Code Alone"></div>
+                </div>
+                <!-- Row 1 Ends -->
+                <!-- Row 2 Starts -->
+                <div class="row row2">
+                    <!-- Social Icons Starts -->
+                    <div class="col-lg-12">
+                        <ul class="social-icons">
+                            <li><a href="https://www.youtube.com/c/NeverCodeAlone" target="_blank"><i class="fa fa-youtube"></i></a>
+                            </li>
+                            <li><a href="https://www.facebook.com/nevercodealone/" target="_blank"><i
+                                            class="fa fa-facebook"></i></a></li>
+                            <li><a href="https://www.instagram.com/nevercodealone/" target="_blank"><i
+                                            class="fa fa-instagram"></i></a></li>
+                            <li><a href="https://twitter.com/nevercodealone" target="_blank"><i class="fa fa-twitter"></i></a>
+                            </li>
+                            <li><a href="https://www.xing.com/companies/nevercodealone" target="_blank"><i
+                                            class="fa fa-xing"></i></a></li>
+                        </ul>
+                    </div>
+                    <!-- Social Icons Ends -->
+                    <div class="col-lg-6 col-md-6 col-sm-6 call-now">
+                        <i class="fa fa-phone"></i> Jetzt anrufen: <a href="">0176 24 74 77 27</a>
+                    </div>
+                    <div class="col-lg-6 col-md-6 col-sm-6 mail">
+                        <i class="fa fa-envelope"></i>Mail: <a href="">nevercodealone@gmail.com</a>
+                    </div>
+                    <div>
+                        <a href="/impressum/">Impressum</a>
+                    </div>
+                </div>
+                <!-- Row 2 Ends -->
+            </div>
+        </div>
+        <!-- FOOTER 08 ENDS
+            ========================================================================= -->
         <a href="#" class="scrollup">Scroll</a>
         <!-- /. TO TOP ENDS
             ========================================================================= -->
