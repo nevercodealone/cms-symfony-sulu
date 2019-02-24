@@ -1,0 +1,48 @@
+<div id="switch">
+    <div class="content-switcher">
+        <h3 class="ncagreen">Kontakt</h3>
+        <div>
+            <div class="row no-gutter-6 demo-thumbz-2 no-margin-right">
+                <form method="post" class="ContactForm-03" id="nca-form" aria-live='assertive'>
+                    <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3">
+                        <div class="form-group">
+                            <label for="reason">Wie möchtest du mit mir in Kontakt treten?</label>
+                            <select id="reason" class="form-control">
+                                <option value="email">E-Mail</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="call">Rückruf</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="namefield">Name:*</label>
+                            <input id="namefield" type="text" class="form-control" placeholder="Max Mustermann" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="emailfield">E-Mail:*</label>
+                            <input id="emailfield" class="form-control" type="email" placeholder="max.mustermann@web.de" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Telefonnummer:</label>
+                            <input id="phone" type="text" class="form-control" placeholder="017624747727">
+                        </div>
+                        <div class="form-group">
+                            <label for="messagefield">Deine Nachricht:</label>
+                            <textarea id="messagefield" rows="3" class="form-control" style="height:100px" placeholder="Ruf mich mal an"></textarea>
+                        </div>
+                        <div class="button">
+                            <button type="submit" class="btn btn-success submitf-03" value='SUBMIT' name='submitf-03'>
+                                senden
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="hide"><i class="fa fa-times"></i></div>
+</div>
+<button id="show" style="display: block; border: 2px solid green;">
+    <span class="visuallyhidden">Kontakt Formular öffnen</span>
+    <div id="setting"><i class="fa fa-comment"></i></div>
+</button>
