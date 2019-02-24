@@ -1,4 +1,3 @@
-
 #--------------------------------------------------------------------------------------------------
 # STAGES
 #--------------------------------------------------------------------------------------------------
@@ -27,6 +26,7 @@ variables:
   WWW_URL: www.$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
   PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   RANCHER_PROJECT_NAME: $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG
+  RANCHER_URL: https://rancher.nevercodealone.de:8080
   REPORT_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/reports:$CI_PIPELINE_ID
   TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
   WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
@@ -117,15 +117,15 @@ deploy_production_image_to_stage:
   stage: deploy
   image: $TOOLBOX_IMAGE
   variables:
-    HTTP_URL: stage.nevercodealone.de
-    WWW_URL: www.stage.nevercodealone.de
+    HTTP_URL: stage-cms.nevercodealone.de
+    WWW_URL: www.stage-cms.nevercodealone.de
   before_script:
-    - rancher rm --type stack --stop stage-nevercodealone-de || true
+    - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
     # todo: actually clone the production environment with data
-    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-nevercodealone-de -d --pull
+    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
   script:
-    - rancher up -s stage-nevercodealone-de -d --pull --prune --upgrade
+    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
   tags:
     - docker-executor
   only:
@@ -226,7 +226,7 @@ confirm_stage_upgrade:
     - docker-executor
   variables:
     RANCHER_OPTIONS: --confirm-upgrade
-    RANCHER_PROJECT_NAME: stage-nevercodealone-de
+    RANCHER_PROJECT_NAME: stage-cms-nevercodealone-de
   only:
     - master
   when: on_success
@@ -253,7 +253,7 @@ rollback_stage_upgrade:
     - docker-executor
   variables:
     RANCHER_OPTIONS: --rollback
-    RANCHER_PROJECT_NAME: stage-nevercodealone-de
+    RANCHER_PROJECT_NAME: stage-cms-nevercodealone-de
   only:
     - master
   when: on_failure
