@@ -2,7 +2,6 @@
     "license": "MIT",
     "repository": "https://github.com/sulu/sulu-minimal.git",
     "scripts": {
-        "preinstall": "node vendor/sulu/sulu/preinstall.js",
         "build": "webpack --mode production",
         "watch": "webpack --mode development -w"
     },
@@ -12,7 +11,6 @@
         "react": "^16.2.0",
         "react-dom": "^16.2.0",
         "sulu-admin-bundle": "file:vendor/sulu/sulu/src/Sulu/Bundle/AdminBundle/Resources/js",
-        "sulu-contact-bundle": "file:vendor/sulu/sulu/src/Sulu/Bundle/ContactBundle/Resources/js",
         "sulu-media-bundle": "file:vendor/sulu/sulu/src/Sulu/Bundle/MediaBundle/Resources/js",
         "sulu-page-bundle": "file:vendor/sulu/sulu/src/Sulu/Bundle/PageBundle/Resources/js",
         "sulu-preview-bundle": "file:vendor/sulu/sulu/src/Sulu/Bundle/PreviewBundle/Resources/js",
@@ -27,7 +25,7 @@
         "babel-plugin-transform-object-rest-spread": "^6.23.0",
         "babel-preset-env": "^1.6.1",
         "babel-preset-react": "^6.24.1",
-        "clean-webpack-plugin": "^1.0.0",
+        "clean-webpack-plugin": "^1.0.1",
         "core-js": "^2.5.1",
         "css-loader": "^0.28.4",
         "file-loader": "^1.1.11",
@@ -40,6 +38,7 @@
         "postcss-nested": "^2.1.0",
         "postcss-simple-vars": "^4.0.0",
         "raw-loader": "^0.5.1",
+        "rimraf": "^2.6.2",
         "url-search-params-polyfill": "^2.0.0",
         "webpack": "^4.20.2",
         "webpack-clean-obsolete-chunks": "^0.4.0",
