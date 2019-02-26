@@ -119,7 +119,7 @@ deploy_production_image_to_stage:
     HTTP_URL: stage-cms.nevercodealone.de
     WWW_URL: www.stage-cms.nevercodealone.de
   before_script:
-    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
+    - docker login registry.nevercodealone.de -u gitlab+deploy-token-1 -p jwwsv-LzWfzcmMZxQzWR 2>/dev/null
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
     # todo: actually clone the production environment with data
