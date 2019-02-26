@@ -221,93 +221,104 @@
                                     {{ content.contactBodytext|raw }}
                                     <div>&nbsp;</div>
                                     <h2>{{ content.contactSubline }}</h2>
-                                    <p>
-                                        {% for contactJob in content.contactJobs %}
-                                            <a href="{{ contactJob.contactJobUrl }}" target="_blank" rel="noopener">{{ contactJob.contactJobTitle }}</a>
-                                            <br>
-                                        {% endfor %}
-                                    </p>
+                                    {% if content.contactJobs is not empty %}
+                                        <p>
+                                            {% for contactJob in content.contactJobs %}
+                                                <a href="{{ contactJob.contactJobUrl }}" target="_blank" rel="noopener">{{ contactJob.contactJobTitle }}</a>
+                                                <br>
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
                                 </header>
-                                <div class="row">
-                                    {% for contactPerson in content.contactPersons %}
-                                        <div class="col-md-{{ 12 / content.contactPersons|length }}">
-                                            <div class="event-speaker">
-                                                <figure> <img src="{{ contactPerson.contactPersonItemImg[0].formats["270x270"] }}" alt="{{ contactPerson.contactPersonItemName }} {{ contactPerson.contactPersonItemJobTitle }}" data-no-retina>
-                                                    <figcaption>
-                                                        <h4>{{ contactPerson.contactPersonItemName }}</h4>
-                                                        <p>{{ contactPerson.contactPersonItemJobTitle }}</p>
-                                                        {% if contactPerson.contactPersonItemPhone %}
-                                                            <p>
-                                                                <a href="tel:+49{{ contactPerson.contactPersonItemPhone }}"><i class="fa fa-phone"></i> {{ contactPerson.contactPersonItemPhone }}</a>
-                                                            </p>
-                                                        {% endif %}
-                                                        <ul class="social">
-                                                            {% if contactPerson.contactPersonItemXingUrl %}
-                                                                <li><a href="{{ contactPerson.contactPersonItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                {% if content.contactPersons is not empty %}
+                                    <div class="row">
+                                        {% for contactPerson in content.contactPersons %}
+                                            <div class="col-md-{{ 12 / content.contactPersons|length }}">
+                                                <div class="event-speaker">
+                                                    <figure> <img src="{{ contactPerson.contactPersonItemImg[0].formats["270x270"] }}" alt="{{ contactPerson.contactPersonItemName }} {{ contactPerson.contactPersonItemJobTitle }}" data-no-retina>
+                                                        <figcaption>
+                                                            <h4>{{ contactPerson.contactPersonItemName }}</h4>
+                                                            <p>{{ contactPerson.contactPersonItemJobTitle }}</p>
+                                                            {% if contactPerson.contactPersonItemPhone %}
+                                                                <p>
+                                                                    <a href="tel:+49{{ contactPerson.contactPersonItemPhone }}"><i class="fa fa-phone"></i> {{ contactPerson.contactPersonItemPhone }}</a>
+                                                                </p>
                                                             {% endif %}
-                                                            {% if contactPerson.contactPersonItemLinkedinUrl %}
-                                                                <li><a href="{{ contactPerson.contactPersonItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
-                                                            {% endif %}
-                                                        </ul>
-                                                    </figcaption>
-                                                </figure>
+                                                            <ul class="social">
+                                                                {% if contactPerson.contactPersonItemXingUrl %}
+                                                                    <li><a href="{{ contactPerson.contactPersonItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                                                {% endif %}
+                                                                {% if contactPerson.contactPersonItemLinkedinUrl %}
+                                                                    <li><a href="{{ contactPerson.contactPersonItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
+                                                                {% endif %}
+                                                            </ul>
+                                                        </figcaption>
+                                                    </figure>
+                                                </div>
                                             </div>
-                                        </div>
-                                    {% endfor %}
-                                    <div style="clear: both"></div>
-                                </div>
+                                        {% endfor %}
+                                        <div style="clear: both"></div>
+                                    </div>
+                                {% endif %}
                             </div>
                         </section>
                     {% endif %}
-
-                    <section class="pricing section-spacing text-center" id="pricing">
-                        <div class="container">
-                            <header>
-                                <h2>{{ content.priceHeadline }}</h2>
-                                <h3>Wir setzen uns ein für kostenlose Weiterbildung</h3>
-                                <p>Der Ticketpreis wird zu 100% für die <b>Sternenbrücke</b> in Hamburg gespendet.</p>
-                            </header>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="plan">
-                                        <div class="header">
-                                            <h4>Teilnehmer</h4>
-                                            <div class="price"><span class="currency">€</span>10,-<span class="ticket">/ Pro Ticket als Spende <b>Sternenbrücke</b></span> </div>
+                    {% if content.priceHeadline != '' or content.priceSubline != '' or content.priceBodytext != '' %}
+                        <section class="pricing section-spacing text-center" id="pricing">
+                            <div class="container">
+                                <header>
+                                    <h2>{{ content.priceHeadline }}</h2>
+                                    <h3>{{ content.priceSubline }}</h3>
+                                    <p>{{ content.priceBodytext|raw }}</p>
+                                </header>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="plan">
+                                            <div class="header">
+                                                <h4>Teilnehmer</h4>
+                                                <div class="price"><span class="currency">€</span>10,-<span class="ticket">/ Pro Ticket als Spende <b>Sternenbrücke</b></span> </div>
+                                            </div>
+                                            {% if content.priceFeature is not empty %}
+                                                <ul class="plan-features">
+                                                    {% for priceFeature in content.priceFeature %}
+                                                        <li>{{ priceFeature.priceFeatureItem }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
                                         </div>
-                                        <ul class="plan-features">
-                                            {% for priceFeature in content.priceFeature %}
-                                                <li>{{ priceFeature.priceFeatureItem }}</li>
-                                            {% endfor %}
-                                        </ul>
                                     </div>
                                 </div>
+                                <div class="action-btn-pricing"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Ticket kaufen</a></div>
                             </div>
-                            <div class="action-btn-pricing"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Ticket kaufen</a></div>
-                        </div>
-                    </section>
-                    <section class="hotels section-spacing text-center" id="highlights">
-                        <div class="container">
-                            <header class="text-center">
-                                <h2>{{ content.highlightsHeadline }}</h2>
-                                <h3>{{ content.highlightsSubline }}</h3>
-                            </header>
-                            <div class="row">
-                                {% for highlightsItem in content.highlightsItemsBlock %}
-                                    <div class="col-md-{{ 12 / content.highlightsItemsBlock|length }}">
-                                        <figure class="text-left"> <img src="{{ highlightsItem.highlightsItemImage[0].formats['540x370'] }}" alt="{{ highlightsItem.highlightsItemHeadline }}" data-no-retina>
-                                            <figcaption>
-                                                <div class="hotel-details">
-                                                    <h4>{{ highlightsItem.highlightsItemHeadline }}<span class="ratings {{ highlightsItem.highlightsItemStars }}"></span></h4>
-                                                    <p class="hotel-price">{{ highlightsItem.highlightsItemSubline }}</p>
-                                                    {{ highlightsItem.highlightsItemBodytext|raw }}
-                                                    <a class="hotel-map" href={{ highlightsItem.highlightsItemUrl }} target="_blank" rel="noopener">{{ highlightsItem.highlightsItemUrlText }}</a></div>
-                                            </figcaption>
-                                        </figure>
+                        </section>
+                    {% endif %}
+                    {% if content.highlightsHeadline != '' and content.highlightsSubline != '' %}
+                        <section class="hotels section-spacing text-center" id="highlights">
+                            <div class="container">
+                                <header class="text-center">
+                                    <h2>{{ content.highlightsHeadline }}</h2>
+                                    <h3>{{ content.highlightsSubline }}</h3>
+                                </header>
+                                {% if content.highlightsItemsBlock is not empty %}
+                                    <div class="row">
+                                        {% for highlightsItem in content.highlightsItemsBlock %}
+                                            <div class="col-md-{{ 12 / content.highlightsItemsBlock|length }}">
+                                                <figure class="text-left"> <img src="{{ highlightsItem.highlightsItemImage[0].formats['540x370'] }}" alt="{{ highlightsItem.highlightsItemHeadline }}" data-no-retina>
+                                                    <figcaption>
+                                                        <div class="hotel-details">
+                                                            <h4>{{ highlightsItem.highlightsItemHeadline }}<span class="ratings {{ highlightsItem.highlightsItemStars }}"></span></h4>
+                                                            <p class="hotel-price">{{ highlightsItem.highlightsItemSubline }}</p>
+                                                            {{ highlightsItem.highlightsItemBodytext|raw }}
+                                                            <a class="hotel-map" href={{ highlightsItem.highlightsItemUrl }} target="_blank" rel="noopener">{{ highlightsItem.highlightsItemUrlText }}</a></div>
+                                                    </figcaption>
+                                                </figure>
+                                            </div>
+                                        {% endfor %}
                                     </div>
-                                {% endfor %}
+                                {% endif %}
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    {% endif %}
                     {% if (content.locationBackgroundImage[0].url is defined and content.locationBackgroundImage[0].url)
                         and content.locationUrl
                         and content.locationIframe

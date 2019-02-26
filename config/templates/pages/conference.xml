@@ -410,6 +410,16 @@
                         <title lang="en">Headline</title>
                     </meta>
                 </property>
+                <property name="priceSubline" type="text_line">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+                <property name="priceBodytext" type="text_area">
+                    <meta>
+                        <title lang="en">Bodytext</title>
+                    </meta>
+                </property>
                 <block name="priceFeature" default-type="editor" minOccurs="0">
                     <meta>
                         <title lang="en">Feature</title>
