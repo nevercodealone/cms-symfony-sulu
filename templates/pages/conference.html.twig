@@ -54,7 +54,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="welcome-message">
-                                        <h1>{{ content.overviewHeadline }}</h1>
+                                        <h1>{{ content.title }}</h1>
                                         <p>{{ content.date|localizeddate('long', 'none', "de") }}</p>
                                         <p>{{ content.town }}</p>
                                     </div>
@@ -63,47 +63,49 @@
                             </div>
                         </div>
                     </header>
-                    <section class="speaker section-spacing text-center" id="speaker">
-                        <div class="container">
-                            <header>
-                                <h2>{{ content.speakerHeadline }}</h2>
-                                <h3>{{ content.speakerSubline }}</h3>
-                            </header>
-                            <div class="row">
-                                <div class="speaker-slider">
-                                    {% for key,speakerItem in content.speakerItem %}
-                                        <div class="item">
-                                            <div class="event-speaker">
-                                                <figure> <img src="{{ speakerItem.speakerItemImage[0].formats['340x340'] }}" alt="{{ speakerItem.speakerItemName }} {{ speakerItem.speakerItemJobTitle }}" data-no-retina>
-                                                    <figcaption>
-                                                        <h4>{{ speakerItem.speakerItemName }}</h4>
-                                                        <p>
-                                                            {{ speakerItem.speakerItemJobTitle }}
-                                                            <div>{{ speakerItem.speakerItemCompany }}&nbsp;</div>
-                                                        </p>
-                                                        <ul class="social">
-                                                            {% if speakerItem.speakerItemTwitterUrl %}
-                                                                <li><a href="{{ speakerItem.speakerItemTwitterUrl }}" target="_blank" rel="noopener"><i class="fa fa-twitter"></i></a></li>
-                                                            {% endif %}
-                                                            {% if speakerItem.speakerItemGithubUrl %}
-                                                                <li><a href="{{ speakerItem.speakerItemGithubUrl }}" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li>
-                                                            {% endif %}
-                                                            {% if speakerItem.speakerItemLinkedinUrl %}
-                                                                <li><a href="{{ speakerItem.speakerItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
-                                                            {% endif %}
-                                                            {% if speakerItem.speakerItemXingUrl %}
-                                                                <li><a href="{{ speakerItem.speakerItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
-                                                            {% endif %}
-                                                        </ul>
-                                                    </figcaption>
-                                                </figure>
-                                                <a href="#0" data-type="speaker-{{ key }}" class="bttn">Profil</a> </div>
-                                        </div>
-                                    {% endfor %}
+                    {% if content.speakerItem is not empty %}
+                        <section class="speaker section-spacing text-center" id="speaker">
+                            <div class="container">
+                                <header>
+                                    <h2>{{ content.speakerHeadline }}</h2>
+                                    <h3>{{ content.speakerSubline }}</h3>
+                                </header>
+                                <div class="row">
+                                    <div class="speaker-slider">
+                                        {% for key,speakerItem in content.speakerItem %}
+                                            <div class="item">
+                                                <div class="event-speaker">
+                                                    <figure> <img src="{{ speakerItem.speakerItemImage[0].formats['340x340'] }}" alt="{{ speakerItem.speakerItemName }} {{ speakerItem.speakerItemJobTitle }}" data-no-retina>
+                                                        <figcaption>
+                                                            <h4>{{ speakerItem.speakerItemName }}</h4>
+                                                            <p>
+                                                                {{ speakerItem.speakerItemJobTitle }}
+                                                                <div>{{ speakerItem.speakerItemCompany }}&nbsp;</div>
+                                                            </p>
+                                                            <ul class="social">
+                                                                {% if speakerItem.speakerItemTwitterUrl %}
+                                                                    <li><a href="{{ speakerItem.speakerItemTwitterUrl }}" target="_blank" rel="noopener"><i class="fa fa-twitter"></i></a></li>
+                                                                {% endif %}
+                                                                {% if speakerItem.speakerItemGithubUrl %}
+                                                                    <li><a href="{{ speakerItem.speakerItemGithubUrl }}" target="_blank" rel="noopener"><i class="fa fa-github"></i></a></li>
+                                                                {% endif %}
+                                                                {% if speakerItem.speakerItemLinkedinUrl %}
+                                                                    <li><a href="{{ speakerItem.speakerItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
+                                                                {% endif %}
+                                                                {% if speakerItem.speakerItemXingUrl %}
+                                                                    <li><a href="{{ speakerItem.speakerItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                                                {% endif %}
+                                                            </ul>
+                                                        </figcaption>
+                                                    </figure>
+                                                    <a href="#0" data-type="speaker-{{ key }}" class="bttn">Profil</a> </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    {% endif %}
                     <div class="counter text-center" id="counter">
                         <div class="container">
                             <div class="row">
@@ -136,121 +138,127 @@
                             </div>
                         </div>
                     </div>
-                    <section class="about section-spacing">
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="trailer_player">
-                                        {{ content.overviewLeft|raw }}
+                    {% if content.overviewLeft != '' and content.overviewRight != '' %}
+                        <section class="about section-spacing">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="trailer_player">
+                                            {{ content.overviewLeft|raw }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h2>{{ content.overviewHeadline }}</h2>
+                                        {{ content.overviewRight|raw }}
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <h2>{{ content.overviewHeadline }}</h2>
-                                    {{ content.overviewRight|raw }}
-                                </div>
                             </div>
-                        </div>
-                    </section>
-                    <section class="schedule section-spacing" id="schedule">
-                        <div class="container">
-                            <header class="text-center">
-                                <h2>{{ content.timeTableHeadline }}</h2>
-                                <h3>{{ content.timeTableSubline }}</h3>
-                            </header>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div role="tabpanel" id="schedule-days">
-                                        <ul class="nav nav-tabs content-tabs" role="tablist">
-                                            <li role="presentation" class="active">
-                                                <a href="#day-1" aria-controls="day-1" role="tab" data-toggle="tab">
-                                                    <i class="fa fa-calendar"></i>{{ content.date|localizeddate('full', 'none', "de") }}
-                                                </a>
-                                            </li>
-                                        </ul>
-                                        <div class="tab-content">
-                                            <div role="tabpanel" class="tab-pane fade in active" id="day-1">
-                                                <ul class="timeline">
-                                                    {% for timeTableItem in content.timeTableItems %}
-                                                        <li class="event">
-                                                            <div class="row">
-                                                                {% if timeTableItem.images is not empty %}
+                        </section>
+                    {% endif %}
+                    {% if content.timeTableItems is not empty %}
+                        <section class="schedule section-spacing" id="schedule">
+                            <div class="container">
+                                <header class="text-center">
+                                    <h2>{{ content.timeTableHeadline }}</h2>
+                                    <h3>{{ content.timeTableSubline }}</h3>
+                                </header>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div role="tabpanel" id="schedule-days">
+                                            <ul class="nav nav-tabs content-tabs" role="tablist">
+                                                <li role="presentation" class="active">
+                                                    <a href="#day-1" aria-controls="day-1" role="tab" data-toggle="tab">
+                                                        <i class="fa fa-calendar"></i>{{ content.date|localizeddate('full', 'none', "de") }}
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                            <div class="tab-content">
+                                                <div role="tabpanel" class="tab-pane fade in active" id="day-1">
+                                                    <ul class="timeline">
+                                                        {% for timeTableItem in content.timeTableItems %}
+                                                            <li class="event">
+                                                                <div class="row">
+                                                                    {% if timeTableItem.images is not empty %}
                                                                     {% if timeTableItem.alignRight %}
-                                                                        <div class="col-md-3 col-md-push-9 text-center">
-                                                                    {% else %}
+                                                                    <div class="col-md-3 col-md-push-9 text-center">
+                                                                        {% else %}
                                                                         <div class="col-md-3 text-center">
-                                                                    {% endif %}
-                                                                        <img src="{{ timeTableItem.images[0].formats['340x340'] }}" alt="{% if timeTableItem.timetableSpeaker != '' %}{{ timeTableItem.timetableSpeaker }}{% endif %}" data-no-retina>
-                                                                    </div>
-                                                                {% endif %}
-                                                                {% if timeTableItem.alignRight %}
-                                                                    <div class="col-md-9 col-md-pull-3">
-                                                                {% else %}
-                                                                    <div class="col-md-9">
-                                                                {% endif %}
-                                                                    <p>{{ timeTableItem.time|date('H:i') }} Uhr</p>
-                                                                    <h4>{{ timeTableItem.timetableHeadline }}</h4>
-                                                                    {% if timeTableItem.timetableDescription != '' %}
-                                                                        {{ timeTableItem.timetableDescription|raw }}
-                                                                    {% endif %}
-                                                                    {% if timeTableItem.timetableSpeaker != '' %}
-                                                                        <p class="event-speaker">- Mit {{ timeTableItem.timetableSpeaker }}</p>
-                                                                    {% endif %}
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
+                                                                            {% endif %}
+                                                                            <img src="{{ timeTableItem.images[0].formats['340x340'] }}" alt="{% if timeTableItem.timetableSpeaker != '' %}{{ timeTableItem.timetableSpeaker }}{% endif %}" data-no-retina>
+                                                                        </div>
+                                                                        {% endif %}
+                                                                        {% if timeTableItem.alignRight %}
+                                                                        <div class="col-md-9 col-md-pull-3">
+                                                                            {% else %}
+                                                                            <div class="col-md-9">
+                                                                                {% endif %}
+                                                                                <p>{{ timeTableItem.time|date('H:i') }} Uhr</p>
+                                                                                <h4>{{ timeTableItem.timetableHeadline }}</h4>
+                                                                                {% if timeTableItem.timetableDescription != '' %}
+                                                                                    {{ timeTableItem.timetableDescription|raw }}
+                                                                                {% endif %}
+                                                                                {% if timeTableItem.timetableSpeaker != '' %}
+                                                                                    <p class="event-speaker">- Mit {{ timeTableItem.timetableSpeaker }}</p>
+                                                                                {% endif %}
+                                                                            </div>
+                                                                        </div>
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
-                    <section class="speaker section-spacing text-center" id="contact">
-                        <div class="container">
-                            <header>
-                                <h2>{{ content.contactHeadline }}</h2>
-                                {{ content.contactBodytext|raw }}
-                                <div>&nbsp;</div>
-                                <h2>{{ content.contactSubline }}</h2>
-                                <p>
-                                    {% for contactJob in content.contactJobs %}
-                                        <a href="{{ contactJob.contactJobUrl }}" target="_blank" rel="noopener">{{ contactJob.contactJobTitle }}</a>
-                                        <br>
-                                    {% endfor %}
-                                </p>
-                            </header>
-                            <div class="row">
-                                {% for contactPerson in content.contactPersons %}
-                                    <div class="col-md-{{ 12 / content.contactPersons|length }}">
-                                        <div class="event-speaker">
-                                            <figure> <img src="{{ contactPerson.contactPersonItemImg[0].formats["270x270"] }}" alt="{{ contactPerson.contactPersonItemName }} {{ contactPerson.contactPersonItemJobTitle }}" data-no-retina>
-                                                <figcaption>
-                                                    <h4>{{ contactPerson.contactPersonItemName }}</h4>
-                                                    <p>{{ contactPerson.contactPersonItemJobTitle }}</p>
-                                                    {% if contactPerson.contactPersonItemPhone %}
-                                                        <p>
-                                                            <a href="tel:+49{{ contactPerson.contactPersonItemPhone }}"><i class="fa fa-phone"></i> {{ contactPerson.contactPersonItemPhone }}</a>
-                                                        </p>
-                                                    {% endif %}
-                                                    <ul class="social">
-                                                        {% if contactPerson.contactPersonItemXingUrl %}
-                                                            <li><a href="{{ contactPerson.contactPersonItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                        </section>
+                    {% endif %}
+                    {% if content.contactHeadline != '' and content.contactBodytext != '' %}
+                        <section class="speaker section-spacing text-center" id="contact">
+                            <div class="container">
+                                <header>
+                                    <h2>{{ content.contactHeadline }}</h2>
+                                    {{ content.contactBodytext|raw }}
+                                    <div>&nbsp;</div>
+                                    <h2>{{ content.contactSubline }}</h2>
+                                    <p>
+                                        {% for contactJob in content.contactJobs %}
+                                            <a href="{{ contactJob.contactJobUrl }}" target="_blank" rel="noopener">{{ contactJob.contactJobTitle }}</a>
+                                            <br>
+                                        {% endfor %}
+                                    </p>
+                                </header>
+                                <div class="row">
+                                    {% for contactPerson in content.contactPersons %}
+                                        <div class="col-md-{{ 12 / content.contactPersons|length }}">
+                                            <div class="event-speaker">
+                                                <figure> <img src="{{ contactPerson.contactPersonItemImg[0].formats["270x270"] }}" alt="{{ contactPerson.contactPersonItemName }} {{ contactPerson.contactPersonItemJobTitle }}" data-no-retina>
+                                                    <figcaption>
+                                                        <h4>{{ contactPerson.contactPersonItemName }}</h4>
+                                                        <p>{{ contactPerson.contactPersonItemJobTitle }}</p>
+                                                        {% if contactPerson.contactPersonItemPhone %}
+                                                            <p>
+                                                                <a href="tel:+49{{ contactPerson.contactPersonItemPhone }}"><i class="fa fa-phone"></i> {{ contactPerson.contactPersonItemPhone }}</a>
+                                                            </p>
                                                         {% endif %}
-                                                        {% if contactPerson.contactPersonItemLinkedinUrl %}
-                                                            <li><a href="{{ contactPerson.contactPersonItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
-                                                        {% endif %}
-                                                    </ul>
-                                                </figcaption>
-                                            </figure>
+                                                        <ul class="social">
+                                                            {% if contactPerson.contactPersonItemXingUrl %}
+                                                                <li><a href="{{ contactPerson.contactPersonItemXingUrl }}" target="_blank" rel="noopener"><i class="fa fa-xing"></i></a></li>
+                                                            {% endif %}
+                                                            {% if contactPerson.contactPersonItemLinkedinUrl %}
+                                                                <li><a href="{{ contactPerson.contactPersonItemLinkedinUrl }}" target="_blank" rel="noopener"><i class="fa fa-linkedin"></i></a></li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </figcaption>
+                                                </figure>
+                                            </div>
                                         </div>
-                                    </div>
-                                {% endfor %}
-                                <div style="clear: both"></div>
+                                    {% endfor %}
+                                    <div style="clear: both"></div>
+                                </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    {% endif %}
 
                     <section class="pricing section-spacing text-center" id="pricing">
                         <div class="container">
@@ -329,6 +337,8 @@
                         </section>
                     {% endif %}
                 {% endblock %}
+                {{ dump() }}
+
             </section>
             <footer class="site-footer section-spacing text-center">
                 <div class="container">
