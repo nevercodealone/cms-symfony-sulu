@@ -29,7 +29,7 @@ services:
     - DATABASE_URL_FILE=/run/secrets/sulu_nca_database_url
     - MAIL_URL_FILE=/run/secrets/sulu_nca_mail_url
     - SULU_ADMIN_EMAIL_FILE=/run/secrets/sulu_admin_email
-    - GOOGLE_API_KEY_FILE=/run/secrets/GOOGLE_API_KEY
+    - GOOGLE_API_KEY_FILE=/run/secrets/sulu_GOOGLE_API_KEY
     image: $WEB_IMAGE
     labels:
       io.rancher.container.pull_image: always
@@ -46,7 +46,7 @@ services:
     - sulu_nca_database_url
     - sulu_nca_mail_url
     - sulu_admin_email
-    - GOOGLE_API_KEY
+    - sulu_GOOGLE_API_KEY
 
 volumes:
   db_data:
