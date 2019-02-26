@@ -38,11 +38,17 @@
                                     <a href="{{ content.eventLink }}" class="logo-brand"><img src="{{ content.sponsorLogo[0].url }}" data-at2x="{{ content.sponsorLogo[0].url }}" alt="Tickets auf Eventbrite" class="logo-nav" width="200px" style="width: 200px;{% if content.sponsorLogoPaddingTop %}padding-top:{{ content.sponsorLogoPaddingTop }}px{% endif %}"> </a> </div>
                                 <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
                                     <ul class="nav navbar-nav navbar-right">
-                                        <li><a href="#speaker">Speakers</a></li>
-                                        <li><a href="#schedule">Zeitplan</a></li>
+                                        {% if content.speakerItem is not empty %}
+                                            <li><a href="#speaker">Speakers</a></li>
+                                        {% endif %}
+                                        {% if content.timeTableItems is not empty %}
+                                            <li><a href="#schedule">Zeitplan</a></li>
+                                        {% endif %}
                                         <li><a href="#contact">Kontakt</a></li>
                                         <li><a href="#pricing">Preise</a></li>
+                                        {% if content.highlightsHeadline != '' and content.highlightsSubline != '' %}
                                         <li><a href="#highlights">Highlights</a></li>
+                                        {% endif %}
                                         <li><a href="#venue">Location</a></li>
                                         <li><a href="#faq">FAQ</a></li>
                                         <li><a href="{{ content.eventLink }}" target="_blank" class="bttn">Tickets</a></li>
@@ -348,8 +354,40 @@
                         </section>
                     {% endif %}
                 {% endblock %}
-                {{ dump() }}
-
+            </section>
+            <section class="faq section-spacing" id="faq">
+                <div class="container">
+                    <header class="text-center">
+                        <h2>FAQ</h2>
+                        <h3>Fragen und Antworten zu dem Event</h3>
+                    </header>
+                    <div class="row">
+                        <div class="col-md-10 center-block">
+                            <ul class="cd-faq-group">
+                                <li> <a class="cd-faq-trigger" href="#0">Brauche ich einen Laptop</a>
+                                    <div class="cd-faq-content">
+                                        <p>Nein, es reicht da zu sein. Hier hat auch nicht jeder einen Schreibtisch. Man kann aber gerne ein Gerät mitbringen. Steckdosen sind vorhanden.</p>
+                                    </div>
+                                </li>
+                                <li> <a class="cd-faq-trigger" href="#0">Kann ich kostenlos parken?</a>
+                                    <div class="cd-faq-content">
+                                        <p>Das klären wir noch.</p>
+                                    </div>
+                                </li>
+                                <li> <a class="cd-faq-trigger" href="#0">Live-Coding - Muß ich an die Tastatur?</a>
+                                    <div class="cd-faq-content">
+                                        <p>Keiner muß an die Tastatur. Sie wird Reihenweise an Freiwillige weiter gegeben. Alles ist ganz entspannt und freundlich. Darauf legen wir großen Wert und moderieren hier auch.</p>
+                                    </div>
+                                </li>
+                                <li> <a class="cd-faq-trigger" href="#0">Gibt es vegetarisches Essen?</a>
+                                    <div class="cd-faq-content">
+                                        <p>Ja das wird auf jeden Fall berücksichtigt.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </section>
             <footer class="site-footer section-spacing text-center">
                 <div class="container">
