@@ -118,7 +118,7 @@
                         <title lang="en">Subline</title>
                     </meta>
                 </property>
-                <block name="speakerItem" default-type="editor" minOccurs="0">
+                <block name="speakerItem" default-type="speaker" minOccurs="0">
                     <meta>
                         <title lang="en">Speaker item</title>
                     </meta>
@@ -249,7 +249,7 @@
                         <title lang="en">Subline</title>
                     </meta>
                 </property>
-                <block name="timeTableItems" default-type="editor" minOccurs="0">
+                <block name="timeTableItems" default-type="editor_image" minOccurs="0">
                     <meta>
                         <title lang="en">Time table</title>
                     </meta>
@@ -327,7 +327,7 @@
                         <title lang="en">Subline</title>
                     </meta>
                 </property>
-                <block name="contactJobs" default-type="editor" minOccurs="0">
+                <block name="contactJobs" default-type="contactJob" minOccurs="0">
                     <meta>
                         <title lang="en">Jobs</title>
                     </meta>
@@ -351,7 +351,7 @@
                         </type>
                     </types>
                 </block>
-                <block name="contactPersons" default-type="editor" minOccurs="0">
+                <block name="contactPersons" default-type="contactPersonItem" minOccurs="0">
                     <meta>
                         <title lang="en">Contact person</title>
                     </meta>
@@ -420,7 +420,7 @@
                         <title lang="en">Bodytext</title>
                     </meta>
                 </property>
-                <block name="priceFeature" default-type="editor" minOccurs="0">
+                <block name="priceFeature" default-type="featureItem" minOccurs="0">
                     <meta>
                         <title lang="en">Feature</title>
                     </meta>
@@ -456,7 +456,7 @@
                         <title lang="en">Subline</title>
                     </meta>
                 </property>
-                <block name="highlightsItemsBlock" default-type="editor" minOccurs="0">
+                <block name="highlightsItemsBlock" default-type="highlightsItems" minOccurs="0">
                     <meta>
                         <title lang="en">Highlight</title>
                     </meta>

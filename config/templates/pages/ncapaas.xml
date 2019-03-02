@@ -75,7 +75,7 @@
                 <title lang="en">Ideology</title>
             </meta>
             <properties>
-                <block name="ideology" default-type="editor" minOccurs="0">
+                <block name="ideology" default-type="ideology" minOccurs="0">
                     <meta>
                         <title lang="en">Items</title>
                     </meta>
@@ -124,7 +124,7 @@
                         <title lang="en">Description</title>
                     </meta>
                 </property>
-                <block name="teamMembers" default-type="editor" minOccurs="0">
+                <block name="teamMembers" default-type="teamMembers" minOccurs="0">
                     <meta>
                         <title lang="en">Members</title>
                     </meta>

@@ -72,7 +72,7 @@
                         <title lang="en">Subline</title>
                     </meta>
                 </property>
-                <block name="testimonials" default-type="editor" minOccurs="0">
+                <block name="testimonials" default-type="testimonial" minOccurs="0">
                     <meta>
                         <title lang="en">Testimonials</title>
                     </meta>
@@ -126,7 +126,7 @@
                 <title lang="en">Social Media</title>
             </meta>
             <properties>
-                <block name="socialMediaTweets" default-type="editor" minOccurs="0">
+                <block name="socialMediaTweets" default-type="socialMediaTweet" minOccurs="0">
                     <meta>
                         <title lang="en">Tweets</title>
                     </meta>
@@ -145,7 +145,7 @@
                         </type>
                     </types>
                 </block>
-                <block name="socialMediaFacebook" default-type="editor" minOccurs="0">
+                <block name="socialMediaFacebook" default-type="socialMediaFacebook" minOccurs="0">
                     <meta>
                         <title lang="en">Facebook</title>
                     </meta>
@@ -172,7 +172,7 @@
                         </type>
                     </types>
                 </block>
-                <block name="socialMediaXing" default-type="editor" minOccurs="0">
+                <block name="socialMediaXing" default-type="socialMediaXing" minOccurs="0">
                     <meta>
                         <title lang="en">Xing</title>
                     </meta>
@@ -214,7 +214,7 @@
                         <param name="types" value="image"/>
                     </params>
                 </property>
-                <block name="events" default-type="editor" minOccurs="0">
+                <block name="events" default-type="events" minOccurs="0">
                     <meta>
                         <title lang="en">Events</title>
                     </meta>
@@ -258,7 +258,7 @@
                         <param name="types" value="image"/>
                     </params>
                 </property>
-                <block name="whatIsNcaItems" default-type="editor" minOccurs="0">
+                <block name="whatIsNcaItems" default-type="whatIsNcaItems" minOccurs="0">
                     <meta>
                         <title lang="en">Items</title>
                     </meta>
@@ -313,7 +313,7 @@
                         <title lang="en">Description</title>
                     </meta>
                 </property>
-                <block name="teamMembers" default-type="editor" minOccurs="0">
+                <block name="teamMembers" default-type="teamMembers" minOccurs="0">
                     <meta>
                         <title lang="en">Members</title>
                     </meta>
