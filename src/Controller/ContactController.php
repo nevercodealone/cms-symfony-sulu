@@ -11,13 +11,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 
-class MessagesController extends AbstractController
+class ContactController extends AbstractController
 {
     /**
-     * @Route("/api/messages")
+     * @Route("/api/contact")
      * @Method("POST")
      */
-    public function messagesAction(Request $request, SpamProtection $spamProtection)
+    public function contactAction(Request $request, SpamProtection $spamProtection)
     {
 
         $data = json_decode((string) $request->getContent(), true);
@@ -32,7 +32,7 @@ class MessagesController extends AbstractController
         $name = $data['name'];
         $email = $data['email'];
         $message = $data['message'];
-        $ip = $data['ip'] = $request->getClientIp();;
+        $ip = $data['ip'] = $request->getClientIp();
 
         if($name === '' || $email === '' || $message === '' || $ip === '') {
             return new JsonResponse(

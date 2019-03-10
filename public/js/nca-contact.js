@@ -3,7 +3,7 @@ $(function() {
 
     $("#nca-form").submit(function (e) {
         e.preventDefault();
-        var url = "/api/messages"; // the script where you handle the form input.
+        var url = "/api/contact"; // the script where you handle the form input.
 
         var message = $('#reason').val() + '|' + $('#phone').val() + '|' + $('#messagefield').val();
 
