@@ -51,7 +51,7 @@
                                         {% endif %}
                                         <li><a href="#venue">Location</a></li>
                                         <li><a href="#faq">FAQ</a></li>
-                                        <li><a href="{{ content.eventLink }}" target="_blank" class="bttn">Tickets</a></li>
+                                        <li><a href="{{ content.eventLink }}{{ sourceParam }}" target="_blank" class="bttn">Tickets</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                         <p>{{ content.date|localizeddate('long', 'none', "de") }}</p>
                                         <p>{{ content.town }}</p>
                                     </div>
-                                    <div class="action-btn"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Tickets kaufen</a> <a href="#counter" class="bttn">Event Infos</a></div>
+                                    <div class="action-btn"><a href="{{ content.eventLink }}{{ sourceParam }}" target="_blank" class="bttn">Tickets kaufen</a> <a href="#counter" class="bttn">Event Infos</a></div>
                                 </div>
                             </div>
                         </div>
@@ -294,7 +294,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="action-btn-pricing"><a href="{{ content.eventLink }}" target="_blank" class="bttn">Ticket kaufen</a></div>
+                                <div class="action-btn-pricing"><a href="{{ content.eventLink }}{{ sourceParam }}" target="_blank" class="bttn">Ticket kaufen</a></div>
                             </div>
                         </section>
                     {% endif %}
@@ -421,17 +421,17 @@
             {% endfor %}
             <a href="#0" class="cd-speaker-bio-close">Close</a>
         </div>
+        <script src="/conference/js/jquery-2.1.3.min.js"></script>
+        <script src="/conference/js/bootstrap.min.js"></script>
+        <script src="/conference/js/waypoints.min.js"></script>
+        <script src="/conference/js/jquery.animateNumber.min.js"></script>
+        <script src="/conference/js/waypoints-sticky.min.js"></script>
+        <script src="/conference/js/retina.min.js"></script>
+        <script src="/conference/js/owl.carousel.min.js"></script>
+        <script src="/conference/js/jquery.ajaxchimp.min.js"></script>
+        <script src="/conference/js/jquery.form.min.js"></script>
+        <script src="/conference/js/jquery.validate.min.js"></script>
+        <script src="/conference/js/main.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
     </body>
-    <script src="/conference/js/jquery-2.1.3.min.js"></script>
-    <script src="/conference/js/bootstrap.min.js"></script>
-    <script src="/conference/js/waypoints.min.js"></script>
-    <script src="/conference/js/jquery.animateNumber.min.js"></script>
-    <script src="/conference/js/waypoints-sticky.min.js"></script>
-    <script src="/conference/js/retina.min.js"></script>
-    <script src="/conference/js/owl.carousel.min.js"></script>
-    <script src="/conference/js/jquery.ajaxchimp.min.js"></script>
-    <script src="/conference/js/jquery.form.min.js"></script>
-    <script src="/conference/js/jquery.validate.min.js"></script>
-    <script src="/conference/js/main.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 </html>

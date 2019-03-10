@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Service\TwitterService;
 use App\Service\WordpressService;
 use App\Service\YouTubeService;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Sulu\Bundle\WebsiteBundle\Controller\WebsiteController;
 use Sulu\Component\Content\Compat\StructureInterface;
@@ -27,8 +28,28 @@ class PageController extends WebsiteController
         $response = $this->renderStructure(
             $structure,
             [
-                // here you can add some custom data for your template
                 'videoList' => $youTubeService->getItemsFromChannel()
+            ],
+            $preview,
+            $partial
+        );
+
+        return $response;
+    }
+
+    /**
+     * @param StructureInterface $structure
+     * @param WordpressService $service
+     * @param bool $preview
+     * @param bool $partial
+     * @return Response
+     */
+    public function conferencePage(StructureInterface $structure, Request $request, $preview = false, $partial = false)
+    {
+        $response = $this->renderStructure(
+            $structure,
+            [
+                'sourceParam' => $this->getSourceParam($request)
             ],
             $preview,
             $partial
@@ -57,6 +78,23 @@ class PageController extends WebsiteController
         );
 
         return $response;
+    }
+
+    /**
+     * @param Request $request
+     * @return string
+     */
+    protected function getSourceParam(Request $request): string
+    {
+        $aff = 'website';
+
+        $queryGet = $request->query->get('aff');
+        if ($queryGet !== null && $queryGet !== '') {
+            $aff = $queryGet;
+        }
+
+        $sourceParam = '?aff=' . $aff;
+        return $sourceParam;
     }
 
 }

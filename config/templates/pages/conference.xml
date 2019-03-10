@@ -7,7 +7,7 @@
     <key>conference</key>
 
     <view>pages/conference</view>
-    <controller>SuluWebsiteBundle:Default:index</controller>
+    <controller>App\Controller\PageController:conferencePage</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
