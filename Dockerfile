@@ -14,6 +14,7 @@ WORKDIR /var/www/html
 COPY package.json /var/www/html/
 
 COPY --from=composer /var/www/html/vendor/sulu/sulu /var/www/html/vendor/sulu/sulu
+COPY --from=composer /var/www/html/vendor/friendsofsymfony/jsrouting-bundle /var/www/html/vendor/friendsofsymfony/jsrouting-bundle
 COPY composer.json /var/www/html/
 COPY webpack.config.js /var/www/html/
 
