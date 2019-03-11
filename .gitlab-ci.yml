@@ -125,6 +125,8 @@ deploy_production_image_to_stage:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
     # todo: actually clone the production environment with data
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker pull $LATEST_PROD_WEB_IMAGE
     - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
   script:
     - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
