@@ -57,3 +57,5 @@ package-lock.json
 .DS_Store
 /uploads
 /db-live
+
+export.sh
