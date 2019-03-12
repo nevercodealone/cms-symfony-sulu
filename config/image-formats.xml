@@ -17,6 +17,12 @@
         </meta>
         <scale x="183" y="183"/>
     </format>
+    <format key="212x130">
+        <meta>
+            <title lang="en"></title>
+        </meta>
+        <scale x="212" y="130"/>
+    </format>
     <format key="270x200">
         <meta>
             <title lang="en">Startpage carousel image</title>
@@ -53,7 +59,12 @@
         </meta>
         <scale x="800" y="800"/>
     </format>
-
+    <format key="1170x292">
+        <meta>
+            <title lang="en">Start form contact</title>
+        </meta>
+        <scale x="1170" y="292"/>
+    </format>
     <format key="1500x1000">
         <meta>
             <title lang="en">Location background</title>
