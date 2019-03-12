@@ -138,7 +138,6 @@
                             {% set oddOrEven = cycle(['odd', 'even'], loop.index) %}
                             <div class="container-fluid our-ideology bg">
                                 <div class="row no-gutter-5">
-                                    {% dump(oddOrEven) %}
                                     {% if oddOrEven == 'even' %}
                                     <div class="col-lg-5 picture animated" data-animation="fadeInLeft" data-animation-delay="200">
                                         <img src="{{ item.ideologyImage[0].formats['800x800'] }}" alt="{{ item.ideologyTitle }}" title="{{ item.ideologyTitle }}" class="img-responsive">
