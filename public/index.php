@@ -28,7 +28,10 @@ if (SULU_MAINTENANCE) {
 
 require __DIR__.'/../vendor/autoload.php';
 
-$_SERVER['APP_ENV'] = 'prod';
+if($_SERVER['HTTP_HOST'] !== '127.0.0.1:8000')
+{
+    $_SERVER['APP_ENV'] = 'prod';
+}
 
 // The check is to ensure we don't use .env in production
 if (!isset($_SERVER['APP_ENV'])) {
