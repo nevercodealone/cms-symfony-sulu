@@ -62,6 +62,14 @@
                 <title lang="en">Testimonials</title>
             </meta>
             <properties>
+                <property name="testimonialsBgImage" type="media_selection" maxOccurs="1">
+                    <meta>
+                        <title lang="en">Background image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
                 <property name="testimonialsHeadline" type="text_line">
                     <meta>
                         <title lang="en">Headline</title>
