@@ -7,7 +7,7 @@ services:
     - db
     image: adminer
     ports:
-    - 8081:8080/tcp
+    - 8091:8080/tcp
 
   db:
     environment:
@@ -31,15 +31,18 @@ services:
     depends_on:
     - db
     environment:
-    - APP_ENV=dev
+    - APP_ENV=prod
     - APP_SECRET=a59875c7c3b45ab6b56f3a3a45af10e4
     - DATABASE_URL=mysql://nca_sulu:nca_sulu@db:3306/nca_sulu
     - MAIL_URL=null://localhost
     - SULU_ADMIN_EMAIL=
     - GOOGLE_API_KEY=AIzaSyCDyn1yCKlutlT5dDkLFavE4iK3FOidL7I
+    - TWITTER_API_KEY=6H4utR432JaKeIvbKNC9GFE6m
+    - TWITTER_API_SECRET=1HvIkps1bfI4S9iXBYhNyEzDkXRQqSkW2b2mNLYXtJmOREGgye
+    - TWITTER_ACCESS_TOKEN=705422510343507969-oNsBYtY1bephayFP5C7JMRr0VAhOYmk
+    - TWITTER_ACCESS_SECRET=aXSvKAqzeqgXU5DqaRbj9k8pgErq2YyzSGdLkcKK3FEDJ
     volumes:
-      - ./uploads:/var/www/html/var/uploads
+      - ./uploads:/var/www/html/public/uploads
     ports:
-    - 8080:80/tcp
+    - 8090:80/tcp
     restart: always
-    env_file: .env

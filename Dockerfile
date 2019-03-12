@@ -5,7 +5,7 @@ WORKDIR /var/www/html
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
 COPY composer.* /var/www/html/
-RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
 
 FROM kkarczmarczyk/node-yarn:latest AS npm
 
@@ -57,7 +57,7 @@ COPY --from=composer /var/www/html/vendor/ /var/www/html/vendor/
 COPY --chown=www-data:www-data . /var/www/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-Run mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
+RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
@@ -73,8 +73,6 @@ ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/down
 
 RUN curl -sSL "$RANCHER_CLI_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2 \
  && curl -sSL "$RANCHER_COMPOSE_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2
-
-RUN which docker
 
 ENTRYPOINT []
 CMD []
