@@ -1,7 +1,7 @@
 {% set seo = (extension.seo is defined) ? extension.seo : [] %}
 {% set seoTitle = seo.title|default(content.title|default()) %}
 {% set seoDescription = seo.description|default(content.description|default()) %}
-{% set imgUrl = (extension.excerpt.images[0].url is defined and extension.excerpt.images[0].url) ? extension.excerpt.images[0].url :"/img/never-code-alone-roboter-org.jpg" %}
+{% set imgUrl = (extension.excerpt.images[0].url is defined and extension.excerpt.images[0].url) ? extension.excerpt.images[0].formats['1920x1080'] :"/img/never-code-alone-roboter-org.jpg" %}
 
     <meta property="og:locale" content="de_DE" />
     <meta property="og:type" content="website" />
