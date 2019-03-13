@@ -67,6 +67,7 @@
                         <param name="page_parameter" value="p"/>
                         <param name="properties" type="collection">
                             <param name="article" value="article"/>
+                            <param name="url" value="url"/>
                             <param name="excerptTitle" value="excerpt.title"/>
                             <param name="excerptTags" value="excerpt.tags"/>
                             <param name="excerptImages" value="excerpt.images"/>
