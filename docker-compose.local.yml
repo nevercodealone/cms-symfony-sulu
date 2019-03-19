@@ -43,6 +43,8 @@ services:
     - TWITTER_ACCESS_SECRET=aXSvKAqzeqgXU5DqaRbj9k8pgErq2YyzSGdLkcKK3FEDJ
     volumes:
       - ./uploads:/var/www/html/public/uploads
+      - ./var/uploads:/var/www/html/var/uploads
+      - ./var/indexes:/var/www/html/var/indexes
     ports:
     - 8090:80/tcp
     restart: always
