@@ -62,13 +62,13 @@
                         <ul>
                             {% for key,slide in content.slider %}
                                 <!-- SLIDE  -->
-                                <li data-index="rs-68{{ key }}" data-transition="zoomout" data-slotamount="default" data-easein="Power4.easeInOut" data-easeout="Power4.easeInOut" data-masterspeed="2000" data-rotate="0" data-fstransition="fade" data-fsmasterspeed="1500" data-fsslotamount="7" data-saveperformance="off" data-title="Employer Branding" data-description="">
+                                <li data-index="rs-68{{ key }}" data-transition="zoomout" data-slotamount="default" data-easein="Power4.easeInOut" data-easeout="Power4.easeInOut" data-masterspeed="2000" data-rotate="0" data-fstransition="fade" data-fsmasterspeed="1500" data-fsslotamount="7" data-saveperformance="off" data-title="{{ slide.layer1 }}" data-description="">
                                     <!-- MAIN IMAGE -->
                                     <img src="{{ slide.sliderImage[0].formats["1500x1000"] }}" alt="{{ slide.layer1 }}" data-bgposition="center center" data-kenburns="on" data-duration="20000" data-ease="Linear.easeNone" data-scalestart="100" data-scaleend="120" data-rotatestart="0" data-rotateend="0" data-offsetstart="0 0" data-offsetend="0 0" data-bgparallax="10" class="rev-slidebg" data-no-retina>
                                     <!-- LAYERS -->
                                     <!-- LAYER NR. 1 -->
                                     <div class="tp-caption NotGeneric-SubTitle tp-resizeme rs-parallaxlevel-0"
-                                         id="slide-68{{ key }}-layer-1"
+                                         id="slide-68{{ key }}-layer-2"
                                          data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
                                          data-y="['top','top','top','top']" data-voffset="['100','100','100','100']"
                                          data-fontsize="['140','140','100','60']"
@@ -112,7 +112,7 @@
                                     </div>
                                     <!-- LAYER NR. 3 -->
                                     <div class="tp-caption NotGeneric-Button rev-btn red rs-parallaxlevel-0 nca-contact"
-                                         id="slide-68{{ key }}-layer-2"
+                                         id="slide-68{{ key }}-layer-3"
                                          data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
                                          data-y="['center','center','center','center']" data-voffset="['90','90','120','88']"
                                          data-fontsize="['14','14','14,'14']"
