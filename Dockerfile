@@ -31,8 +31,7 @@ RUN apt-get update && apt-get install -y \
         git \
         unzip \
         libicu-dev \
-        libmagickwand-dev \
-        ssmtp
+        libmagickwand-dev
 
 # install PHP extensions
 RUN docker-php-ext-configure intl && docker-php-ext-install -j$(nproc) \
@@ -50,9 +49,6 @@ COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
 
 # php config
 ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
-
-# ssmtp config
-ADD ./deploy/config/ssmtp.conf /etc/ssmtp/ssmtp.conf
 
 # copy needed files from build containers
 COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
