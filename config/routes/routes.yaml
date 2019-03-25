@@ -22,3 +22,9 @@ otto:
   defaults:
     path: /ncaevents/otto
     permanent: true
+apollo:
+  path: /apollo
+  controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController::urlRedirectAction
+  defaults:
+    path: /ncaevents/apollo
+    permanent: true
