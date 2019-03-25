@@ -6,7 +6,7 @@ class contactCest
 {
     public function _before(AcceptanceTester $I)
     {
-        $I->amOnPage('/nca-paas-startup/');
+        $I->amOnPage('/ncapaas');
         $I->waitForPageLoad();
         $I->waitForElementNotVisible("#preloader");
         $I->waitForElement('#setting > i');
@@ -26,12 +26,12 @@ class contactCest
         $I->click('#setting > i');
         $I->wait(1);
         $I->selectOption('#reason', 'lunch');
-        $I->fillField('#namefield', $inputData['name']);
-        $I->fillField('#emailfield', $inputData['email']);
+        $I->fillField('#name', $inputData['name']);
+        $I->fillField('#email', $inputData['email']);
         $I->fillField('#phone', '112');
-        $I->fillField('#messagefield', $inputData['message']);
+        $I->fillField('#message', $inputData['message']);
 
-        $I->click('#nca-form > div > div.button > button');
+        $I->click('#sent');
         $I->waitForText('Danke wir melden uns');
 
         $inputData['message'] = 'lunch|112|Testify right here';
