@@ -39,7 +39,7 @@ modules:
             depends: PhpBrowser
             part: Json
         WebDriver:
-            host: '%WEBDRIVER_URL=%'
+            host: '%WEBDRIVER_URL%'
             url: '%WEBSITE_URL%'
             browser: chrome
             window_size: 1600x1000
