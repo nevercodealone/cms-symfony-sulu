@@ -4,7 +4,7 @@ use NCATesting\ApiTester;
 
 class securityCest
 {
-    private $route = '/api/messages';
+    private $route = '/api/contact';
 
     // tests
     public function messagesDeleteNotPublic(ApiTester $I)
