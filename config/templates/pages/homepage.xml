@@ -120,7 +120,7 @@
                         <title lang="en">Headline</title>
                     </meta>
                 </property>
-                <property name="introduce_text" type="text_editor" mandatory="true">
+                <property name="introduce_text" type="text_area" mandatory="true">
                     <meta>
                         <title lang="en">Text</title>
                     </meta>
