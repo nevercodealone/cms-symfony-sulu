@@ -1,8 +1,8 @@
 <?php
 namespace NCATesting\controller;
-use App\Controller\DefaultController;
+
+use App\Controller\PageController;
 use NCATesting\UnitTester;
-use Mockery as m;
 
 use Symfony\Component\HttpFoundation\Request;
 
@@ -12,12 +12,9 @@ class defaultCest
 
     public function _before(UnitTester $I)
     {
-        $this->fixture = new DefaultController();
+        $this->fixture = new PageController();
     }
 
-    /**
-     * @skip
-     */
     public function getSourceParamReturnWebsiteDefault(UnitTester $I)
     {
         $request = new Request();
@@ -25,9 +22,6 @@ class defaultCest
         $I->assertContains('aff=website', $methodReturn);
     }
 
-    /**
-     * @skip
-     */
     public function getSourceParamFromAffiliateGetParam(UnitTester $I)
     {
         $affiliate = 'testify';

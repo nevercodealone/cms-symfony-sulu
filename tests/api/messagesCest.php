@@ -24,7 +24,7 @@ class messagesCest
 
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST(
-            '/api/messages',
+            '/api/contact',
             json_encode($messagePost)
         );
 
@@ -60,7 +60,7 @@ class messagesCest
 
             $I->haveHttpHeader('Content-Type', 'application/json');
             $I->sendPOST(
-                '/api/messages',
+                '/api/contact',
                 json_encode($postArray)
             );
 
@@ -97,7 +97,7 @@ class messagesCest
 
             $I->haveHttpHeader('Content-Type', 'application/json');
             $I->sendPOST(
-                '/api/messages',
+                '/api/contact',
                 json_encode($postArray)
             );
 

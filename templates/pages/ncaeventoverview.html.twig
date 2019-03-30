@@ -1,0 +1,107 @@
+{% extends "base.html.twig" %}
+{% block additionalstyle %}
+    <link href="/unity/css/all-stylesheets.css" rel="stylesheet">
+    <link href="/unity/css/styles.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+    <section class="tz-introduce-style-4" data-q="form-contact">
+        <div class="container">
+            <div class="tz-introduce-content tz-introduce-content-style-4">
+                <h4>{{ content.introduce_headline }}</h4>
+                <p>
+                    {{ content.introduce_text|raw }}
+                </p>
+            </div>
+        </div>
+    </section>
+    <section id="content">
+        <!-- TESTIMONIAL 03 ENDS ========================================================================= -->
+        <div class="col-lg-10 col-lg-offset-1" id="socialmediamarketing">
+            <!-- Portfolio Nav Starts -->
+            <div id="options">
+                <ul id="filters" class="option-set clearfix" data-option-key="filter">
+                    <li><a href="#filter" data-option-value="*" class="selected">ALL</a></li>
+                    <li><a href="#filter" data-option-value=".2019">2019</a></li>
+                    <li><a href="#filter" data-option-value=".2018">2018</a></li>
+                    <li><a href="#filter" data-option-value=".2017">2017</a></li>
+                </ul>
+            </div>
+            <!-- Portfolio Nav Ends -->
+            <!-- Portfolio Thumbs Starts -->
+            <div class="make2columns mansory-effect">
+                {% for eventCarouselItem in content.eventCarouselItems %}
+                    {% if
+                        (eventCarouselItem.excerptImages[0].url is defined and eventCarouselItem.excerptImages[0].url)
+                        and eventCarouselItem.date
+                        and eventCarouselItem.blogLink
+                        and eventCarouselItem.blogLinkText
+                        and eventCarouselItem.socialInstitutionLink
+                        and eventCarouselItem.socialInstitutionLinkText
+                    %}
+                        <figure class="item {{ eventCarouselItem.date|date('Y') }}">
+                            <div class="picture">
+                                <a href="{{ eventCarouselItem.url }}">
+                                    <h3>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} - {{ eventCarouselItem.title }}</h3>
+                                    <img src="{{ eventCarouselItem.excerptImages[0].formats['690x480'] }}" alt="{{ eventCarouselItem.title }}">
+                                </a>
+                            </div>
+                        </figure>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Portfolio Thumbs Ends -->
+        </div>
+    </section>
+{% endblock %}
+{% block additionaljavascripts %}
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/unity/js/jquery-1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="/unity/js/bootstrap.min.js"></script>
+    <!-- MENU -->
+    <script src="/unity/js/overlay-menu/js/snap.svg-min.js"></script>
+    <script src="/unity/js/overlay-menu/js/modernizr.custom.js"></script>
+    <script src="/unity/js/overlay-menu/js/classie.js"></script>
+    <script src="/unity/js/overlay-menu/js/overlay-main.js"></script>
+    <!-- REVOLUTION JS FILES -->
+    <script type="text/javascript" src="/unity/revolution/js/jquery.themepunch.tools.min.js"></script>
+    <script type="text/javascript" src="/unity/revolution/js/jquery.themepunch.revolution.min.js"></script>
+    <!-- SLIDER REVOLUTION 5.0 EXTENSIONS
+        (Load Extensions only on Local File Systems !
+        The following part can be removed on Server for On Demand Loading) -->
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.actions.min.js"></script>
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.carousel.min.js"></script>
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.kenburn.min.js"></script>
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.layeranimation.min.js"></script>
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.migration.min.js"></script>
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.navigation.min.js"></script>
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.parallax.min.js"></script>
+    <script type="text/javascript"
+            src="/unity/revolution/js/extensions/revolution.extension.slideanims.min.js"></script>
+    <script type="text/javascript" src="/unity/revolution/js/extensions/revolution.extension.video.min.js"></script>
+    <!-- Parallax -->
+    <script type="text/javascript" src="/unity/js/parallax/jquery.parallax-1.1.3.js"></script>
+    <script type="text/javascript" src="/unity/js/parallax/jquery.localscroll-1.2.7-min.js"></script>
+    <script type="text/javascript" src="/unity/js/parallax/jquery.scrollTo-1.4.2-min.js"></script>
+    <!-- FitVids -->
+    <script type="text/javascript" src="/unity/js/fitvids/jquery.fitvids.js"></script>
+    <!-- Owl Carousel -->
+    <script type="text/javascript" src="/unity/js/owl-carousel/owl.carousel.js"></script>
+    <!-- Isotope -->
+    <script type="text/javascript" src="/unity/js/isotope/jquery.isotope.min.js"></script>
+    <script type="text/javascript" src="/unity/js/isotope/custom-isotope-mansory.js"></script>
+    <!-- Magnific Popup core JS file -->
+    <script type="text/javascript" src="/unity/js/magnific-popup/jquery.magnific-popup.js"></script>
+    <!-- FlexSlider -->
+    <script defer src="/unity/js/flexslider/jquery.flexslider.js"></script>
+    <!-- Custom JS -->
+    <script src="/unity/js/custom/custom.js"></script>
+    <script src="/js/nca-contact.js"></script>
+{% endblock %}
