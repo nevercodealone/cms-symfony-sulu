@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+    <key>ncaeventoverview</key>
+
+    <view>pages/ncaeventoverview</view>
+    <controller>SuluWebsiteBundle:Default:index</controller>
+    <cacheLifetime>604800</cacheLifetime>
+
+    <meta>
+        <title lang="en">NCAEvent overview</title>
+    </meta>
+
+    <properties>
+        <xi:include href="../includes/highlight.xml"/>
+
+
+    </properties>
+</template>

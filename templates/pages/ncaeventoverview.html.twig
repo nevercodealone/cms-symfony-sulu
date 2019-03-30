@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <!-- All Stylesheets -->
+        <link href="/unity/css/all-stylesheets.css" rel="stylesheet">
+        <link href="/unity/css/styles.css" rel="stylesheet">
+        <link href="/css/nca-contact.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+        <script src="//oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="//oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+        <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+    </head>
+    <body class="home-19">
+        <div id="preloader">
+            <div class="preloader">
+                <img src="/img/never-code-alone-loader.gif" alt="Sponsoren und Teilnehmer">
+            </div>
+        </div>
+        <!-- PRELOADER STARTSCommunity Events sind nachhaltig und persönlich.
+            ========================================================================= -->
+        <section id="content">
+            <!-- TESTIMONIAL 03 ENDS ========================================================================= -->
+            <div class="col-lg-10 col-lg-offset-1" id="socialmediamarketing">
+                <!-- Portfolio Nav Starts -->
+                <div id="options">
+                    <ul id="filters" class="option-set clearfix" data-option-key="filter">
+                        <li><a href="#filter" data-option-value="*" class="selected">ALL</a></li>
+                        <li><a href="#filter" data-option-value=".youtube">YouTube</a></li>
+                        <li><a href="#filter" data-option-value=".twitter">Twitter</a></li>
+                        <li><a href="#filter" data-option-value=".facebook">Facebook</a></li>
+                        <li><a href="#filter" data-option-value=".xing">Xing</a></li>
+                    </ul>
+                </div>
+                <!-- Portfolio Nav Ends -->
+                <!-- Portfolio Thumbs Starts -->
+                <div class="make2columns mansory-effect">
+                    {% for video in videoList %}
+                        <figure class="item youtube">
+                            <div class="picture">
+                                <iframe title="{{ video['snippet']['title'] }}" width="560" height="315" src="https://www.youtube.com/embed/{{ video['snippet']['resourceId']['videoId'] }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                            </div>
+                        </figure>
+                    {% endfor %}
+                    {% for tweet in content.socialMediaTweets %}
+                        <figure class="item twitter">
+                            <div class="picture">
+                                {{ twitter_service.getEmbedCodeByUrl(tweet.socialMediaTweetUrl)|raw }}
+                            </div>
+                        </figure>
+                    {% endfor %}
+                    {% for facebook in content.socialMediaFacebook %}
+                        <figure class="item facebook">
+                            <div class="picture">
+                                <a href="{{ facebook.socialMediaFacebookUrl }}" target="_blank">
+                                    <img src="{{ facebook.socialMediaFacebookImage[0].formats['450x521'] }}" alt="Facebook NCA Event">
+                                </a>
+                            </div>
+                        </figure>
+                    {% endfor %}
+                    {% for xing in content.socialMediaXing %}
+                        <figure class="item xing">
+                            <div class="picture">
+                                <a href="{{ xing.socialMediaXingUrl }}" target="_blank">
+                                    <img src="{{ xing.socialMediaXingImage[0].formats['500x320'] }}" alt="Xing NCA Event">
+                                </a>
+                            </div>
+                        </figure>
+                    {% endfor %}
+                </div>
+                <!-- Portfolio Thumbs Ends -->
+            </div>
+        </section>
+
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="/unity/js/jquery-1.11.3/jquery.min.js"></script>
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="/unity/js/bootstrap.min.js"></script>
+        <!-- MENU -->
+        <script src="/unity/js/overlay-menu/js/snap.svg-min.js"></script>
+        <script src="/unity/js/overlay-menu/js/modernizr.custom.js"></script>
+        <script src="/unity/js/overlay-menu/js/classie.js"></script>
+        <script src="/unity/js/overlay-menu/js/overlay-main.js"></script>
+        <!-- REVOLUTION JS FILES -->
+        <script type="text/javascript" src="/unity/revolution/js/jquery.themepunch.tools.min.js"></script>
+        <script type="text/javascript" src="/unity/revolution/js/jquery.themepunch.revolution.min.js"></script>
+        <!-- SLIDER REVOLUTION 5.0 EXTENSIONS
+            (Load Extensions only on Local File Systems !
+            The following part can be removed on Server for On Demand Loading) -->
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.actions.min.js"></script>
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.carousel.min.js"></script>
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.kenburn.min.js"></script>
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.layeranimation.min.js"></script>
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.migration.min.js"></script>
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.navigation.min.js"></script>
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.parallax.min.js"></script>
+        <script type="text/javascript"
+                src="/unity/revolution/js/extensions/revolution.extension.slideanims.min.js"></script>
+        <script type="text/javascript" src="/unity/revolution/js/extensions/revolution.extension.video.min.js"></script>
+        <!-- Parallax -->
+        <script type="text/javascript" src="/unity/js/parallax/jquery.parallax-1.1.3.js"></script>
+        <script type="text/javascript" src="/unity/js/parallax/jquery.localscroll-1.2.7-min.js"></script>
+        <script type="text/javascript" src="/unity/js/parallax/jquery.scrollTo-1.4.2-min.js"></script>
+        <!-- FitVids -->
+        <script type="text/javascript" src="/unity/js/fitvids/jquery.fitvids.js"></script>
+        <!-- Owl Carousel -->
+        <script type="text/javascript" src="/unity/js/owl-carousel/owl.carousel.js"></script>
+        <!-- Isotope -->
+        <script type="text/javascript" src="/unity/js/isotope/jquery.isotope.min.js"></script>
+        <script type="text/javascript" src="/unity/js/isotope/custom-isotope-mansory.js"></script>
+        <!-- Magnific Popup core JS file -->
+        <script type="text/javascript" src="/unity/js/magnific-popup/jquery.magnific-popup.js"></script>
+        <!-- FlexSlider -->
+        <script defer src="/unity/js/flexslider/jquery.flexslider.js"></script>
+        <!-- Custom JS -->
+        <script src="/unity/js/custom/custom.js"></script>
+        <script src="/js/nca-contact.js"></script>
+        {% include 'partial/analytics.html.twig' %}
+    </body>
+</html>
