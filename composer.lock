@@ -88,16 +88,16 @@
         },
         {
             "name": "api-platform/core",
-            "version": "v2.4.0",
+            "version": "v2.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/core.git",
-                "reference": "294afdcb8a279eb26166b221bc4c031cb4d342ce"
+                "reference": "76a47b73bdeca31bec647bb2f4e018f3dc29a3d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/core/zipball/294afdcb8a279eb26166b221bc4c031cb4d342ce",
-                "reference": "294afdcb8a279eb26166b221bc4c031cb4d342ce",
+                "url": "https://api.github.com/repos/api-platform/core/zipball/76a47b73bdeca31bec647bb2f4e018f3dc29a3d7",
+                "reference": "76a47b73bdeca31bec647bb2f4e018f3dc29a3d7",
                 "shasum": ""
             },
             "require": {
@@ -226,7 +226,7 @@
                 "rest",
                 "swagger"
             ],
-            "time": "2019-03-22T11:00:36+00:00"
+            "time": "2019-03-28T20:16:27+00:00"
         },
         {
             "name": "behat/transliterator",
@@ -2314,16 +2314,16 @@
         },
         {
             "name": "gedmo/doctrine-extensions",
-            "version": "v2.4.36",
+            "version": "v2.4.37",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Atlantic18/DoctrineExtensions.git",
-                "reference": "87c78ff9fd4b90460386f753d95622f6fbbfcb27"
+                "reference": "5dd471f656e46d815f063bf3f12c667649ec7ffb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Atlantic18/DoctrineExtensions/zipball/87c78ff9fd4b90460386f753d95622f6fbbfcb27",
-                "reference": "87c78ff9fd4b90460386f753d95622f6fbbfcb27",
+                "url": "https://api.github.com/repos/Atlantic18/DoctrineExtensions/zipball/5dd471f656e46d815f063bf3f12c667649ec7ffb",
+                "reference": "5dd471f656e46d815f063bf3f12c667649ec7ffb",
                 "shasum": ""
             },
             "require": {
@@ -2391,7 +2391,7 @@
                 "tree",
                 "uploadable"
             ],
-            "time": "2018-07-26T12:16:35+00:00"
+            "time": "2019-03-17T18:16:12+00:00"
         },
         {
             "name": "goodby/csv",
@@ -3245,16 +3245,16 @@
         },
         {
             "name": "jms/serializer-bundle",
-            "version": "2.4.3",
+            "version": "2.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/schmittjoh/JMSSerializerBundle.git",
-                "reference": "e5231652ce24b8673b2ac70bc76b0cabaf35deea"
+                "reference": "92ee808c64c1c180775a0e57d00e3be0674668fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/schmittjoh/JMSSerializerBundle/zipball/e5231652ce24b8673b2ac70bc76b0cabaf35deea",
-                "reference": "e5231652ce24b8673b2ac70bc76b0cabaf35deea",
+                "url": "https://api.github.com/repos/schmittjoh/JMSSerializerBundle/zipball/92ee808c64c1c180775a0e57d00e3be0674668fb",
+                "reference": "92ee808c64c1c180775a0e57d00e3be0674668fb",
                 "shasum": ""
             },
             "require": {
@@ -3315,20 +3315,20 @@
                 "serialization",
                 "xml"
             ],
-            "time": "2018-12-09T07:52:19+00:00"
+            "time": "2019-03-30T10:26:09+00:00"
         },
         {
             "name": "layershifter/tld-database",
-            "version": "1.0.66",
+            "version": "1.0.67",
             "source": {
                 "type": "git",
                 "url": "https://github.com/layershifter/TLDDatabase.git",
-                "reference": "0a4fc0c3053d18aa532377d4f3e00aa7c1babae8"
+                "reference": "df901dd81106030e7f89da830641d870d68e2282"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/layershifter/TLDDatabase/zipball/0a4fc0c3053d18aa532377d4f3e00aa7c1babae8",
-                "reference": "0a4fc0c3053d18aa532377d4f3e00aa7c1babae8",
+                "url": "https://api.github.com/repos/layershifter/TLDDatabase/zipball/df901dd81106030e7f89da830641d870d68e2282",
+                "reference": "df901dd81106030e7f89da830641d870d68e2282",
                 "shasum": ""
             },
             "require": {
@@ -3366,7 +3366,7 @@
                 "domain database",
                 "tld database"
             ],
-            "time": "2019-02-26T09:42:31+00:00"
+            "time": "2019-03-29T15:38:50+00:00"
         },
         {
             "name": "layershifter/tld-extract",
@@ -5678,12 +5678,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sulu/sulu.git",
-                "reference": "adc4a0403414dc37d73f99bb024129fb0b88d5ee"
+                "reference": "e82880fa4074aa17efe94c8da2b6e43070f4fdf0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sulu/sulu/zipball/adc4a0403414dc37d73f99bb024129fb0b88d5ee",
-                "reference": "adc4a0403414dc37d73f99bb024129fb0b88d5ee",
+                "url": "https://api.github.com/repos/sulu/sulu/zipball/e82880fa4074aa17efe94c8da2b6e43070f4fdf0",
+                "reference": "e82880fa4074aa17efe94c8da2b6e43070f4fdf0",
                 "shasum": ""
             },
             "require": {
@@ -5856,7 +5856,7 @@
                 "core",
                 "sulu"
             ],
-            "time": "2019-03-25T12:51:17+00:00"
+            "time": "2019-03-26T17:57:19+00:00"
         },
         {
             "name": "swiftmailer/swiftmailer",
@@ -11010,16 +11010,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.5.7",
+            "version": "7.5.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "eb343b86753d26de07ecba7868fa983104361948"
+                "reference": "c29c0525cf4572c11efe1db49a8b8aee9dfac58a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/eb343b86753d26de07ecba7868fa983104361948",
-                "reference": "eb343b86753d26de07ecba7868fa983104361948",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c29c0525cf4572c11efe1db49a8b8aee9dfac58a",
+                "reference": "c29c0525cf4572c11efe1db49a8b8aee9dfac58a",
                 "shasum": ""
             },
             "require": {
@@ -11090,7 +11090,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-03-16T07:31:17+00:00"
+            "time": "2019-03-26T13:23:54+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
