@@ -59,6 +59,12 @@
         </meta>
         <scale x="540" y="370"/>
     </format>
+    <format key="690x480">
+        <meta>
+            <title lang="en">mansory item</title>
+        </meta>
+        <scale x="690" y="480"/>
+    </format>
     <format key="720x500">
         <meta>
             <title lang="en">Unity team member</title>
