@@ -60,7 +60,7 @@
                                 <title lang="en">Description</title>
                             </meta>
                         </property>
-                        <property name="slider_link" type="internal_links">
+                        <property name="slider_link" type="page_selection">
                             <meta>
                                 <title lang="en">Link</title>
                             </meta>
