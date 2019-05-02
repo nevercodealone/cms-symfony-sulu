@@ -27,3 +27,9 @@ HTTPDUSER=`ps axo user,comm | grep -E '[a]pache|[h]ttpd|[_]www|[w]ww-data|[n]gin
 sudo setfacl -R -m u:"$HTTPDUSER":rwX -m u:`whoami`:rwX var/cache var/logs var/uploads var/uploads/* public/uploads public/uploads/* var/indexes var/sessions
 sudo setfacl -dR -m u:"$HTTPDUSER":rwX -m u:`whoami`:rwX var/cache var/logs var/uploads var/uploads/* public/uploads public/uploads/* var/indexes var/sessions
 ```
+
+## Deploy
+```
+docker-compose -f docker-compose.local.yml build
+docker-compose -f docker-compose.local.yml up -d
+```
