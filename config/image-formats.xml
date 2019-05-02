@@ -5,6 +5,12 @@
 
     <!-- See: http://docs.sulu.io/en/latest/book/image-formats.html how to define image-formats -->
 
+    <format key="y42">
+        <meta>
+            <title lang="en">Conference logo</title>
+        </meta>
+        <scale y="42"/>
+    </format>
     <format key="72x72">
         <meta>
             <title lang="en">Testimonial img</title>
