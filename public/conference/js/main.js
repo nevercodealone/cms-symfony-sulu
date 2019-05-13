@@ -5,18 +5,18 @@ $(function() {
 
 
     /* ==========================================================================
-   Sub Form   
+   Sub Form
    ========================================================================== */
-    
-    
-    
+
+
+
     $('#mc-form').ajaxChimp({
         language: 'cm',
         url: 'http://csmthemes.us3.list-manage.com/subscribe/post?u=9666c25a337f497687875a388&id=5b881a50fb'
     //http://xxx.xxx.list-manage.com/subscribe/post?u=xxx&id=xxx
     });
-    
-    
+
+
     $.ajaxChimp.translations.cm = {
         'submit': 'Submitting...',
         0: '<i class="fa fa-envelope"></i> Awesome! We have sent you a confirmation email',
@@ -31,44 +31,44 @@ $(function() {
     /* ==========================================================================
        Number animation
        ========================================================================== */
-    
-    
+
+
     $('.counter').waypoint(function() {
-        
+
         var comma_separator_number_step = $.animateNumber.numberStepFactories.separator(',');
-        
+
         $('.total-number-1').animateNumber({
             number: $('.total-number-1').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
-        
+
         $('.total-number-2').animateNumber({
             number: $('.total-number-2').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
-        
+
         $('.total-number-3').animateNumber({
             number: $('.total-number-3').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
-        
+
         $('.total-number-4').animateNumber({
             number: $('.total-number-4').text(), //change value here
             numberStep: comma_separator_number_step
         }, 2000);
-    
-    
-    
+
+
+
     }, {
         offset: '80%'
-    
+
     });
 
 
     /* ==========================================================================
    sticky nav
    ========================================================================== */
-    
+
     $('.navbar-default').waypoint('sticky', {
         offset: 30
     });
@@ -79,7 +79,7 @@ $(function() {
     /* ==========================================================================
    Tabs
    ========================================================================== */
-    
+
     $('#schedule-days a').click(function(e) {
         e.preventDefault()
         $(this).tab('show')
@@ -89,20 +89,20 @@ $(function() {
     /* ==========================================================================
    team
    ========================================================================== */
-    
+
     $(".speaker-slider").owlCarousel({
-        
-        items: 3,
-        itemsDesktop: [1199, 3],
+
+        items: 4,
+        itemsDesktop: [1199, 4],
         itemsDesktopSmall: [979, 2]
-    
+
     });
 
 
     /* ==========================================================================
    Smooth Scroll
    ========================================================================== */
-    
+
     $('a[href*=#]:not([href=#], #schedule-days a, .event-speaker a)').click(function() {
         if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
             var target = $(this.hash);
@@ -121,18 +121,18 @@ $(function() {
     /* ==========================================================================
    Speaker bio
    ========================================================================== */
-    
-    
+
+
     var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
-    
-    
+
+
     $('#speaker').find('.event-speaker a[data-type*="speaker-"]').on('click', function(event) {
         event.preventDefault();
         var selected_member = $(this).data('type');
         $('.cd-speaker-bio.' + selected_member + '').addClass('slide-in');
         $('.cd-speaker-bio-close').addClass('is-visible');
-        
-        
+
+
         if (is_firefox) {
             $('main').addClass('slide-out').one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function() {
                 $('body').addClass('overflow-hidden');
@@ -141,15 +141,15 @@ $(function() {
             $('main').addClass('slide-out');
             $('body').addClass('overflow-hidden');
         }
-    
+
     });
-    
-    
+
+
     $(document).on('click', '.cd-overlay, .cd-speaker-bio-close', function(event) {
         event.preventDefault();
         $('.cd-speaker-bio').removeClass('slide-in');
         $('.cd-speaker-bio-close').removeClass('is-visible');
-        
+
         if (is_firefox) {
             $('main').removeClass('slide-out').one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function() {
                 $('body').removeClass('overflow-hidden');
@@ -168,22 +168,22 @@ $(function() {
     /* ==========================================================================
    FAQ accordion
    ========================================================================== */
-    
-    
-    var MqM = 768, 
+
+
+    var MqM = 768,
     MqL = 1024;
-    
-    var faqsSections = $('.cd-faq-group'), 
-    faqTrigger = $('.cd-faq-trigger'), 
-    faqsContainer = $('.cd-faq-items'), 
-    faqsCategoriesContainer = $('.cd-faq-categories'), 
-    faqsCategories = faqsCategoriesContainer.find('a'), 
+
+    var faqsSections = $('.cd-faq-group'),
+    faqTrigger = $('.cd-faq-trigger'),
+    faqsContainer = $('.cd-faq-items'),
+    faqsCategoriesContainer = $('.cd-faq-categories'),
+    faqsCategories = faqsCategoriesContainer.find('a'),
     closeFaqsContainer = $('.cd-close-panel');
-    
-    
+
+
     faqsCategories.on('click', function(event) {
         event.preventDefault();
-        var selectedHref = $(this).attr('href'), 
+        var selectedHref = $(this).attr('href'),
         target = $(selectedHref);
         if ($(window).width() < MqM) {
             faqsContainer.scrollTop(0).addClass('slide-in').children('ul').removeClass('selected').end().children(selectedHref).addClass('selected');
@@ -193,8 +193,8 @@ $(function() {
             $('body,html').animate({'scrollTop': target.offset().top - 19}, 200);
         }
     });
-    
-    
+
+
     $('body').bind('click touchstart', function(event) {
         if ($(event.target).is('body.cd-overlay') || $(event.target).is('.cd-close-panel')) {
             closePanel(event);
@@ -203,8 +203,8 @@ $(function() {
     faqsContainer.on('swiperight', function(event) {
         closePanel(event);
     });
-    
-    
+
+
     faqTrigger.on('click', function(event) {
         event.preventDefault();
         $(this).next('.cd-faq-content').slideToggle(200).end().parent('li').toggleClass('content-visible');
@@ -216,8 +216,8 @@ $(function() {
     /* ==========================================================================
        Contact Form
        ========================================================================== */
-    
-    
+
+
     $('#contact-form').validate({
         rules: {
             name: {
@@ -228,7 +228,7 @@ $(function() {
                 required: true,
                 email: true
             },
-            
+
             message: {
                 required: true,
                 minlength: 10
@@ -268,8 +268,8 @@ $(function() {
     /* ==========================================================================
    ScrollTop Button
    ========================================================================== */
-    
-    
+
+
     $(window).scroll(function() {
         if ($(this).scrollTop() > 200) {
             $('.scroll-top a').fadeIn(200);
@@ -277,11 +277,11 @@ $(function() {
             $('.scroll-top a').fadeOut(200);
         }
     });
-    
-    
+
+
     $('.scroll-top a').click(function(event) {
         event.preventDefault();
-        
+
         $('html, body').animate({
             scrollTop: 0
         }, 1000);
