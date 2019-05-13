@@ -113,11 +113,21 @@
                         <title lang="en">Headline</title>
                     </meta>
                 </property>
-                <property name="speakerSubline" type="text_line">
+                <property name="speakerSubline" type="text_editor">
                     <meta>
-                        <title lang="en">Subline</title>
+                        <title lang="en"></title>
                     </meta>
+
+                    <params>
+                        <param name="table" value="false"/>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content"
+                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
                 </property>
+
                 <block name="speakerItem" default-type="speaker" minOccurs="0">
                     <meta>
                         <title lang="en">Speaker item</title>
