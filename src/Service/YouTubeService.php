@@ -14,7 +14,7 @@ class YouTubeService
     public function getItemsFromChannel()
     {
         $params = [
-            'maxResults' => 100,
+            'maxResults' => 50,
             'playlistId' => 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF'
         ];
 
