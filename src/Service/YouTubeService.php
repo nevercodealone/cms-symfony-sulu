@@ -14,12 +14,13 @@ class YouTubeService
     public function getItemsFromChannel()
     {
         $params = [
-            'maxResults' => 10,
+            'maxResults' => 100,
             'playlistId' => 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF'
         ];
 
         $videoList = $this->playlistItemsListByPlaylistId('snippet',$params);
         $videos = array_reverse($videoList['items']);
+        $videos = array_slice($videos, 0, 9);
 
         return $videos;
     }
