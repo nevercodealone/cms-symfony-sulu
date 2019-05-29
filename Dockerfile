@@ -20,6 +20,8 @@ COPY webpack.config.js /var/www/html/
 
 RUN npm install && npm run build
 
+RUN bin/console phpcr:migrations:migrate
+
 # Build actual image
 FROM php:7.2-apache AS webserver
 
