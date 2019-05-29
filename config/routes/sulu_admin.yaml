@@ -35,7 +35,7 @@ sulu_media_website:
 sulu_media_api:
     type: rest
     resource: "@SuluMediaBundle/Resources/config/routing_api.yml"
-    prefix: /admin/apif
+    prefix: /admin/api
 
 sulu_category_api:
     type: rest
