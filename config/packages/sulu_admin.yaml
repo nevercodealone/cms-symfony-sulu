@@ -3,3 +3,6 @@ sulu_admin:
     forms:
         directories:
             - "%kernel.project_dir%/config/forms"
+    lists:
+        directories:
+            - "%kernel.project_dir%/config/lists"

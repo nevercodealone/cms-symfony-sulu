@@ -28,12 +28,12 @@
                     <types>
                         <type name="slider">
                             <properties>
-                                <property name="snippets" type="snippet"/>
+                                <property name="snippets" type="snippet_selection"/>
                             </properties>
                         </type>
                         <type name="carousel">
                             <properties>
-                                <property name="snippets" type="snippet"/>
+                                <property name="snippets" type="snippet_selection"/>
                             </properties>
                         </type>
                         <type name="text_media">

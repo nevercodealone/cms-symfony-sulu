@@ -33,6 +33,7 @@
         <link href='//fonts.googleapis.com/css?family=Varela' rel='stylesheet' type='text/css'>
         <link href='/css/nca-contact.css' rel='stylesheet' type='text/css'>
         <link href="/ethic/style.css" rel="stylesheet"/>
+        <link href="/css/costum-ethic.css" rel="stylesheet"/>
         {% block additionalstyle %}
 
         {% endblock %}
@@ -54,22 +55,59 @@
                             <nav class="nav-collapse pull-right">
                                 <ul class="tz-menu">
                                     {% for item in sulu_navigation_root_tree('main', 2, true) %}
-                                        <li>
-                                            <a href="{{ sulu_content_path(item.url) }}" title="{{ item.excerpt.title|default(item.title) }}">
-                                                {{ item.excerpt.title|default(item.title) }}
-                                            </a>
-                                            {% if item.children|length > 0 %}
-                                                <ul class="sub-menu sub-menu-style-1">
-                                                    {% for child in item.children|sulu_util_multisort('[published]', 'desc') %}
-                                                        <li>
-                                                            <a href="{{ sulu_content_path(child.url) }}" title="{{ child.excerpt.title|default(child.title) }}">
-                                                                {{ child.excerpt.title|default(child.title) }}
-                                                            </a>
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
-                                            {% endif %}
-                                        </li>
+                                        {% if loop.first %}
+                                            <li class="tz-point-static">
+                                                <a href="#">#NCAEvents</a>
+                                                <div class="sub-menu sub-menu-style-2">
+                                                    <div class="tz-submenu-2-wrapper">
+                                                        <div class="row">
+                                                            {% set years = ['2019', '2018', '2017'] %}
+                                                            {% for year in years %}
+                                                                <div class="col-md-3 sub-menu-2-item">
+                                                                    <h3>
+                                                                        {% if loop.first %}
+                                                                            Upcoming
+                                                                        {% else %}
+                                                                            {{ year }}
+                                                                        {% endif %}
+                                                                    </h3>
+                                                                    <ul>
+                                                                        {% for eventCarouselItem in content.eventCarouselItems%}
+                                                                            {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
+                                                                            {% if year in date  %}
+                                                                                <li>
+                                                                                    <a href="{{ eventCarouselItem.url }}">
+                                                                                        {{ date }} - {{ eventCarouselItem.title }}
+                                                                                    </a>
+                                                                                </li>
+                                                                            {% endif %}
+                                                                        {% endfor %}
+                                                                    </ul>
+                                                                </div>
+                                                            {% endfor %}
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        {% else %}
+                                            <li>
+                                                <a href="{{ sulu_content_path(item.url) }}" title="{{ item.excerpt.title|default(item.title) }}">
+                                                    {{ item.excerpt.title|default(item.title) }}
+                                                </a>
+                                                {% if item.children|length > 0 %}
+                                                    <ul class="sub-menu sub-menu-style-1">
+                                                        {% for child in item.children|sulu_util_multisort('[published]', 'desc') %}
+                                                            <li>
+                                                                <a href="{{ sulu_content_path(child.url) }}" title="{{ child.excerpt.title|default(child.title) }}">
+                                                                    {{ child.excerpt.title|default(child.title) }}
+                                                                </a>
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% endif %}
+                                            </li>
+                                        {% endif %}
                                     {% endfor %}
                                 </ul>
                             </nav>
