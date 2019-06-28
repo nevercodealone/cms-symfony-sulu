@@ -61,20 +61,31 @@
                                                 <div class="sub-menu sub-menu-style-2">
                                                     <div class="tz-submenu-2-wrapper">
                                                         <div class="row">
+                                                            <div class="col-md-3 sub-menu-2-item">
+                                                                <h3>Upcoming</h3>
+                                                                <ul>
+                                                                    {% for eventCarouselItem in content.eventCarouselItems%}
+                                                                        {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
+                                                                        {% if date(eventCarouselItem.date) > date()  %}
+                                                                            <li>
+                                                                                <a href="{{ eventCarouselItem.url }}">
+                                                                                    {{ date }} - {{ eventCarouselItem.title }}
+                                                                                </a>
+                                                                            </li>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </div>
                                                             {% set years = ['2019', '2018', '2017'] %}
                                                             {% for year in years %}
                                                                 <div class="col-md-3 sub-menu-2-item">
                                                                     <h3>
-                                                                        {% if loop.first %}
-                                                                            Upcoming
-                                                                        {% else %}
-                                                                            {{ year }}
-                                                                        {% endif %}
+                                                                        {{ year }}
                                                                     </h3>
                                                                     <ul>
                                                                         {% for eventCarouselItem in content.eventCarouselItems%}
                                                                             {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
-                                                                            {% if year in date  %}
+                                                                            {% if year in date and date(eventCarouselItem.date) < date() %}
                                                                                 <li>
                                                                                     <a href="{{ eventCarouselItem.url }}">
                                                                                         {{ date }} - {{ eventCarouselItem.title }}
