@@ -90,10 +90,13 @@ $(function() {
    team
    ========================================================================== */
 
-    $(".speaker-slider").owlCarousel({
+    let itemsShow = $('.speaker-slider .item').length;
 
-        items: 4,
-        itemsDesktop: [1199, 4],
+    console.log('itemsShow', itemsShow);
+
+    $(".speaker-slider").owlCarousel({
+        items: itemsShow,
+        itemsDesktop: [1199, itemsShow],
         itemsDesktopSmall: [979, 2]
 
     });
