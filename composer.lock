@@ -6088,12 +6088,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sulu/sulu.git",
-                "reference": "b8f6e6dacf9d4d68f67d3d977658ea3e5a007954"
+                "reference": "d385921a34eb0ee5cf33230528aea3832f33a151"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sulu/sulu/zipball/b8f6e6dacf9d4d68f67d3d977658ea3e5a007954",
-                "reference": "b8f6e6dacf9d4d68f67d3d977658ea3e5a007954",
+                "url": "https://api.github.com/repos/sulu/sulu/zipball/d385921a34eb0ee5cf33230528aea3832f33a151",
+                "reference": "d385921a34eb0ee5cf33230528aea3832f33a151",
                 "shasum": ""
             },
             "require": {
@@ -6267,7 +6267,7 @@
                 "core",
                 "sulu"
             ],
-            "time": "2019-05-29T15:51:58+00:00"
+            "time": "2019-06-25T13:39:24+00:00"
         },
         {
             "name": "superbalist/flysystem-google-storage",
@@ -9736,6 +9736,7 @@
                 "MIT"
             ],
             "description": "A pack for Symfony Encore",
+            "abandoned": "symfony/webpack-encore-bundle",
             "time": "2018-07-16T10:15:28+00:00"
         },
         {
