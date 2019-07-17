@@ -10,7 +10,8 @@
         <div class="container">
             <div class="tz-event-container">
                 <div class="tz-event-wrapper owl-carousel owl-theme">
-                    {% for eventCarouselItem in content.eventCarouselItems %}
+                    {% for eventCarouselItem in content.eventCarouselItems | sulu_util_multisort('[date]', 'desc') %}
+                        {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
                         {% if
                             (eventCarouselItem.excerptImages[0].url is defined and eventCarouselItem.excerptImages[0].url)
                             and eventCarouselItem.date
@@ -19,7 +20,14 @@
                             and eventCarouselItem.socialInstitutionLink
                             and eventCarouselItem.socialInstitutionLinkText
                         %}
-                        <div class="tz-event-style-4">
+                        <div class="tz-event-style-4 {% if date(eventCarouselItem.date) > date()  %}upcoming{% endif %}">
+                            <h2>
+                                {% if date(eventCarouselItem.date) > date()  %}
+                                    Aktuell
+                                {% else %}
+                                    {{ eventCarouselItem.date | date("Y") }}
+                                {% endif %}
+                            </h2>
                             <div class="tz-image-event-item">
                                 <img src="{{ eventCarouselItem.excerptImages[0].formats['270x200'] }}" alt="{{ eventCarouselItem.title }}">
                                 <a href="{{ eventCarouselItem.url }}"><i class="fa fa-arrows-alt"></i></a>

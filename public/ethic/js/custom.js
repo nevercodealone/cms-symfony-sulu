@@ -185,7 +185,7 @@ $( window ).on( "load", function() {
     },100);
 
     jQuery(".tz-event-wrapper").owlCarousel({
-        loop:true,
+        loop:false,
         margin:10,
         responsive:{
             0:{
