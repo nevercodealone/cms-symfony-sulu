@@ -4,7 +4,7 @@
 # build:        build docker image
 # deploy:       deploy application to environment
 # test:         run tests on deployed environment
-# posttest:     confirm or rollback 
+# posttest:     confirm or rollback
 # final:        remove environment / deploy to production
 
 stages:
@@ -73,7 +73,7 @@ build_production_image:
   only:
     - master
     - /^prod\/.*/
-  
+
 build_toolbox_image:
   stage: build
   image: docker:stable
@@ -125,8 +125,6 @@ deploy_production_image_to_stage:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
     # todo: actually clone the production environment with data
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker pull $LATEST_PROD_WEB_IMAGE
     - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
   script:
     - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
