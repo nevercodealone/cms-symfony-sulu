@@ -32,7 +32,7 @@ WORKDIR /var/www/html
 RUN apt-get update && apt-get install -y \
         openssl \
         git \
-        ssmtp \
+        msmtp \
         unzip \
         libicu-dev \
         libmagickwand-dev
@@ -55,7 +55,7 @@ COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
 ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
 
 # SSMTP config
-ADD ./deploy/config/ssmtp.conf /etc/ssmtp/ssmtp.conf
+ADD ./deploy/config/msmtprc /etc/msmtprc
 
 # copy needed files from build containers
 COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
