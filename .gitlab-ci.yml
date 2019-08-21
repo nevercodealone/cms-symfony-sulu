@@ -11,10 +11,10 @@ stages:
   - build
   - deploy
   - codeanalyse
-  - test
-  - posttest
-  - posttest2
-  - teardown
+#  - test
+#  - posttest
+#  - posttest2
+#  - teardown
   - release
   - rollout
   - postrollout
