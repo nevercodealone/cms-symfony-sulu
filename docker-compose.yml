@@ -30,6 +30,7 @@ services:
     - MAIL_URL_FILE=/run/secrets/sulu_nca_mail_url
     - SULU_ADMIN_EMAIL_FILE=/run/secrets/sulu_admin_email
     - GOOGLE_API_KEY_FILE=/run/secrets/sulu_GOOGLE_API_KEY
+    - TWITTER_API_KEY_FILE=/run/secrets/sulu_nca_twitter_api_key
     image: $WEB_IMAGE
     labels:
       io.rancher.container.pull_image: always
@@ -47,6 +48,7 @@ services:
     - sulu_nca_mail_url
     - sulu_admin_email
     - sulu_GOOGLE_API_KEY
+    - sulu_nca_twitter_api_key
 
 volumes:
   db_data:
@@ -70,6 +72,9 @@ secrets:
     external: true
   sulu_admin_email:
     external: true
+  sulu_nca_twitter_api_key:
+    external: true
+
   GOOGLE_API_KEY:
     external: true
 
