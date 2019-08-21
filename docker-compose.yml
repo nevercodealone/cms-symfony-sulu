@@ -32,6 +32,8 @@ services:
     - GOOGLE_API_KEY_FILE=/run/secrets/sulu_GOOGLE_API_KEY
     - TWITTER_API_KEY_FILE=/run/secrets/sulu_nca_twitter_api_key
     - TWITTER_API_SECRET=/run/secrets/sulu_nca_twitter_api_secret
+    - TWITTER_ACCESS_KEY_FILE=/run/secrets/sulu_nca_twitter_access_key
+    - TWITTER_ACCESS_SECRET=/run/secrets/sulu_nca_twitter_access_secret
     image: $WEB_IMAGE
     labels:
       io.rancher.container.pull_image: always
@@ -51,9 +53,14 @@ services:
     - sulu_GOOGLE_API_KEY
     - sulu_nca_twitter_api_key
     - sulu_nca_twitter_api_secret
+    - sulu_nca_twitter_access_key
+    - sulu_nca_twitter_access_secret
+    volumes:
+    - web_data:/var/www/html/uploads
 
 volumes:
   db_data:
+  web_data:
 
 secrets:
   sulu_nca_database_name:
@@ -78,6 +85,11 @@ secrets:
     external: true
   sulu_nca_twitter_api_secret:
     external: true
+  sulu_nca_twitter_access_key:
+    external: true
+  sulu_nca_twitter_access_secret:
+    external: true
+
   GOOGLE_API_KEY:
     external: true
 
