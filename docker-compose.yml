@@ -42,7 +42,7 @@ services:
       traefik.frontend.passHostHeader: true
       traefik.frontend.rule: 'Host:$HTTP_URL,$WWW_URL'
       traefik.frontend.entryPoints: http,https
-#      traefik.port: 80
+      traefik.port: 80
     restart: always
     secrets:
     - sulu_nca_app_env
