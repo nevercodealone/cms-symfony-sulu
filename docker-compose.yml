@@ -74,7 +74,6 @@ secrets:
     external: true
   sulu_nca_twitter_api_key:
     external: true
-
   GOOGLE_API_KEY:
     external: true
 
