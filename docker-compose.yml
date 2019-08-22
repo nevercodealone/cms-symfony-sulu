@@ -18,7 +18,8 @@ services:
     - sulu_nca_database_root_pass
     - sulu_nca_database_user
     volumes:
-    - db_data:/var/lib/mysql
+    - sulu_db_data:/var/lib/mysql
+    - sulu_db_transfer:/docker-entrypoint-initdb.d
 
   web:
     depends_on:
@@ -56,11 +57,20 @@ services:
     - sulu_nca_twitter_access_token
     - sulu_nca_twitter_access_secret
     volumes:
-    - web_data:/var/www/html/uploads
+    - sulu_web_data:/var/www/html/uploads
+    - sulu_web_transfer:/var/www/transfer
 
 volumes:
-  db_data:
-  web_data:
+  sulu_db_data:
+    driver: local
+  sulu_web_data:
+    driver: local
+  sulu_web_transfer:
+    driver: local
+    external: true
+  sulu_db_transfer:
+    driver: local
+    external: true
 
 secrets:
   sulu_nca_database_name:
