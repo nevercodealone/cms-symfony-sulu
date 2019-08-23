@@ -128,10 +128,12 @@ deploy_production_image_to_stage:
   script:
     - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
   after_script:
-    - rancher exec -i -t www-nevercodealone-de/web rm -rf /var/www/transfer/var /var/www/transfer/uploads
-    - rancher exec -i -t www-nevercodealone-de/web cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/
-    - rancher exec -i -t stage-cms-nevercodealone-de/web cp -a /var/www/transfer/var/* /var/www/html/var/
-    - rancher exec -i -t stage-cms-nevercodealone-de/web cp -a /var/www/transfer/uploads/* /var/www/html/uploads/
+    - rancher ps
+    - rancher exec -i -t www-nevercodealone-de/web ls
+#    - rancher exec -i -t www-nevercodealone-de/web rm -rf /var/www/transfer/var /var/www/transfer/uploads
+#    - rancher exec -i -t www-nevercodealone-de/web cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/
+#    - rancher exec -i -t stage-cms-nevercodealone-de/web cp -a /var/www/transfer/var/* /var/www/html/var/
+#    - rancher exec -i -t stage-cms-nevercodealone-de/web cp -a /var/www/transfer/uploads/* /var/www/html/uploads/
   tags:
     - docker-executor
   only:
