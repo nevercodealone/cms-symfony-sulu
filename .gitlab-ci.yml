@@ -120,7 +120,6 @@ deploy_production_image_to_stage:
   image: $TOOLBOX_IMAGE
   variables:
     HTTP_URL: stage-cms.nevercodealone.de
-    WWW_URL: stage-cms.nevercodealone.de
   before_script:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
@@ -333,8 +332,7 @@ deploy_production_image_to_prod:
   stage: rollout
   image: $TOOLBOX_IMAGE
   variables:
-    HTTP_URL: nevercodealone.de
-    WWW_URL: www.nevercodealone.de
+    HTTP_URL: nevercodealone.de,www.nevercodealone.de
     WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   script:
     - rancher up -s www-nevercodealone-de -d --pull --prune --upgrade

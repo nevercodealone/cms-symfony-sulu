@@ -41,7 +41,7 @@ services:
       traefik.docker.network: proxy
       traefik.enable: true
       traefik.frontend.passHostHeader: true
-      traefik.frontend.rule: 'Host:$HTTP_URL,$WWW_URL'
+      traefik.frontend.rule: 'Host:$HTTP_URL'
       traefik.frontend.entryPoints: http,https
       traefik.port: 80
       traefik.frontend.headers.SSLRedirect: true
