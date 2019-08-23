@@ -44,6 +44,7 @@ services:
       traefik.frontend.rule: 'Host:$HTTP_URL,$WWW_URL'
       traefik.frontend.entryPoints: http,https
       traefik.port: 80
+      traefik.frontend.headers.SSLRedirect: true
     restart: always
     secrets:
     - sulu_nca_app_env
@@ -57,13 +58,16 @@ services:
     - sulu_nca_twitter_access_token
     - sulu_nca_twitter_access_secret
     volumes:
-    - sulu_web_data:/var/www/html/uploads
+    - sulu_web_uploads:/var/www/html/uploads
+    - sulu_web_var:/var/www/html/var
     - sulu_web_transfer:/var/www/transfer
 
 volumes:
   sulu_db_data:
     driver: local
-  sulu_web_data:
+  sulu_web_uploads:
+    driver: local
+  sulu_web_var:
     driver: local
   sulu_web_transfer:
     driver: local
