@@ -75,7 +75,7 @@ FROM webserver AS toolbox
 
 LABEL description="Shipped toolboximage for nevercodealone.de."
 
-ARG RANCHER_CLI_VERSION=0.6.9
+ARG RANCHER_CLI_VERSION=0.6.13
 ARG RANCHER_CLI_URL=https://github.com/rancher/cli/releases/download/v$RANCHER_CLI_VERSION/rancher-linux-amd64-v$RANCHER_CLI_VERSION.tar.gz
 ARG RANCHER_COMPOSE_VERSION=0.12.4
 ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/download/v${RANCHER_COMPOSE_VERSION}/rancher-compose-linux-amd64-v${RANCHER_COMPOSE_VERSION}.tar.gz
