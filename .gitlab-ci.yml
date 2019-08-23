@@ -124,9 +124,9 @@ deploy_production_image_to_stage:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
     # todo: actually clone the production environment with data
-    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
+    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull -c
   script:
-    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
+    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade -c
   after_script:
     - rancher --debug exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'ls'
 #    - rancher exec -t www-nevercodealone-de/web rm -rf /var/www/transfer/var /var/www/transfer/uploads
