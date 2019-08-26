@@ -21,8 +21,6 @@ COPY package.json /var/www/html/
 COPY webpack.config.js /var/www/html/
 COPY assets/admin /var/www/html/assets/admin
 
-RUN npm install && npm run build
-
 # Build actual image
 FROM php:7.2-apache AS webserver
 
