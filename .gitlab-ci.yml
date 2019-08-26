@@ -196,6 +196,8 @@ run_tests_against_final_prod_environment:
   image: $TOOLBOX_IMAGE
   variables:
     WEBSITE_URL: https://stage-cms.nevercodealone.de
+  before_script:
+    - sleep 120s
   script:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db
   artifacts:
