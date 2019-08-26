@@ -49,5 +49,5 @@ modules:
             capabilities:
                 unexpectedAlertBehaviour: 'ignore'
 params:
-    - .env
+    - env
 
