@@ -32,7 +32,7 @@ WORKDIR /var/www/html
 RUN apt-get update && apt-get install -y \
         openssl \
         git \
-        ssmtp \
+        msmtp \
         unzip \
         libicu-dev \
         libmagickwand-dev
@@ -55,7 +55,7 @@ COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
 ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
 
 # SSMTP config
-ADD ./deploy/config/ssmtp.conf /etc/ssmtp/ssmtp.conf
+ADD ./deploy/config/msmtprc /etc/msmtprc
 
 # copy needed files from build containers
 COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
@@ -65,7 +65,7 @@ COPY --chown=www-data:www-data . /var/www/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
-
+RUN touch /var/www/html/.env
 
 
 ENTRYPOINT ["/entrypoint.sh"]
@@ -75,13 +75,16 @@ FROM webserver AS toolbox
 
 LABEL description="Shipped toolboximage for nevercodealone.de."
 
-ARG RANCHER_CLI_VERSION=0.6.9
+ARG RANCHER_CLI_VERSION=0.6.13
 ARG RANCHER_CLI_URL=https://github.com/rancher/cli/releases/download/v$RANCHER_CLI_VERSION/rancher-linux-amd64-v$RANCHER_CLI_VERSION.tar.gz
 ARG RANCHER_COMPOSE_VERSION=0.12.4
 ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/download/v${RANCHER_COMPOSE_VERSION}/rancher-compose-linux-amd64-v${RANCHER_COMPOSE_VERSION}.tar.gz
 
 RUN curl -sSL "$RANCHER_CLI_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2 \
  && curl -sSL "$RANCHER_COMPOSE_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2
+
+RUN mkdir -p /builds/nevercodealone/sulu/
+RUN touch /builds/nevercodealone/sulu/.env
 
 ENTRYPOINT []
 CMD []

@@ -18,7 +18,8 @@ services:
     - sulu_nca_database_root_pass
     - sulu_nca_database_user
     volumes:
-    - db_data:/var/lib/mysql
+    - sulu_db_data:/var/lib/mysql
+    - sulu_db_transfer:/docker-entrypoint-initdb.d
 
   web:
     depends_on:
@@ -30,15 +31,20 @@ services:
     - MAIL_URL_FILE=/run/secrets/sulu_nca_mail_url
     - SULU_ADMIN_EMAIL_FILE=/run/secrets/sulu_admin_email
     - GOOGLE_API_KEY_FILE=/run/secrets/sulu_GOOGLE_API_KEY
+    - TWITTER_API_KEY_FILE=/run/secrets/sulu_nca_twitter_api_key
+    - TWITTER_API_SECRET=/run/secrets/sulu_nca_twitter_api_secret
+    - TWITTER_ACCESS_TOKEN_FILE=/run/secrets/sulu_nca_twitter_access_token
+    - TWITTER_ACCESS_SECRET=/run/secrets/sulu_nca_twitter_access_secret
     image: $WEB_IMAGE
     labels:
       io.rancher.container.pull_image: always
       traefik.docker.network: proxy
       traefik.enable: true
       traefik.frontend.passHostHeader: true
-      traefik.frontend.rule: 'Host:$HTTP_URL,$WWW_URL'
+      traefik.frontend.rule: 'Host:$HTTP_URL'
       traefik.frontend.entryPoints: http,https
       traefik.port: 80
+      traefik.frontend.headers.SSLRedirect: true
     restart: always
     secrets:
     - sulu_nca_app_env
@@ -47,9 +53,28 @@ services:
     - sulu_nca_mail_url
     - sulu_admin_email
     - sulu_GOOGLE_API_KEY
+    - sulu_nca_twitter_api_key
+    - sulu_nca_twitter_api_secret
+    - sulu_nca_twitter_access_token
+    - sulu_nca_twitter_access_secret
+    volumes:
+    - sulu_web_uploads:/var/www/html/uploads
+    - sulu_web_var:/var/www/html/var
+    - sulu_web_transfer:/var/www/transfer
 
 volumes:
-  db_data:
+  sulu_db_data:
+    driver: local
+  sulu_web_uploads:
+    driver: local
+  sulu_web_var:
+    driver: local
+  sulu_web_transfer:
+    driver: local
+    external: true
+  sulu_db_transfer:
+    driver: local
+    external: true
 
 secrets:
   sulu_nca_database_name:
@@ -70,6 +95,15 @@ secrets:
     external: true
   sulu_admin_email:
     external: true
+  sulu_nca_twitter_api_key:
+    external: true
+  sulu_nca_twitter_api_secret:
+    external: true
+  sulu_nca_twitter_access_token:
+    external: true
+  sulu_nca_twitter_access_secret:
+    external: true
+
   GOOGLE_API_KEY:
     external: true
 

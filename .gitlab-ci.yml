@@ -29,8 +29,7 @@ variables:
   REPORT_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/reports:$CI_PIPELINE_ID
   TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
   WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
-  WEB_IMAGE2: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG
-  WEBDRIVER_URL: rancher.nevercodealone.de
+  WEBDRIVER_URL: 213.203.219.159
   WEBSITE_URL: https://$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
 
 
@@ -64,10 +63,8 @@ build_production_image:
   script:
     - docker build -t $WEB_IMAGE --target webserver --pull --build-arg APP_ENV=prod .
     - docker tag $WEB_IMAGE $LATEST_WEB_IMAGE
-    - docker tag $WEB_IMAGE $WEB_IMAGE2
     - docker push $WEB_IMAGE
     - docker push $LATEST_WEB_IMAGE
-    - docker push $WEB_IMAGE2
   tags:
     - docker-executor
   only:
@@ -120,14 +117,19 @@ deploy_production_image_to_stage:
   image: $TOOLBOX_IMAGE
   variables:
     HTTP_URL: stage-cms.nevercodealone.de
-    WWW_URL: www.stage-cms.nevercodealone.de
   before_script:
+    - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
     # todo: actually clone the production environment with data
-    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
+    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull -c
   script:
-    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
+    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade -c
+  after_script:
+    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/var /var/www/transfer/uploads' || true
+    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/' || true
+    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/var/* /var/www/html/var/' || true
+    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/uploads/* /var/www/html/uploads/' || true
   tags:
     - docker-executor
   only:
@@ -190,7 +192,9 @@ run_tests_against_final_prod_environment:
   stage: test
   image: $TOOLBOX_IMAGE
   variables:
-    WEBSITE_URL: https://stage.nevercodealone.de
+    WEBSITE_URL: https://stage-cms.nevercodealone.de
+  before_script:
+    - sleep 120s
   script:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db
   artifacts:
@@ -219,20 +223,6 @@ build_reports_image:
     - master
     - /^prod\/.*/
 
-confirm_stage_upgrade:
-  stage: posttest
-  image: $TOOLBOX_IMAGE
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
-  tags:
-    - docker-executor
-  variables:
-    RANCHER_OPTIONS: --confirm-upgrade
-    RANCHER_PROJECT_NAME: stage-cms-nevercodealone-de
-  only:
-    - master
-  when: on_success
-
 confirm_prod_upgrade:
   stage: posttest
   image: $TOOLBOX_IMAGE
@@ -245,20 +235,6 @@ confirm_prod_upgrade:
   only:
     - /^prod\/.*/
   when: on_success
-
-rollback_stage_upgrade:
-  stage: posttest
-  image: $TOOLBOX_IMAGE
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
-  tags:
-    - docker-executor
-  variables:
-    RANCHER_OPTIONS: --rollback
-    RANCHER_PROJECT_NAME: stage-cms-nevercodealone-de
-  only:
-    - master
-  when: on_failure
 
 rollback_prod_upgrade:
   stage: posttest
@@ -333,8 +309,7 @@ deploy_production_image_to_prod:
   stage: rollout
   image: $TOOLBOX_IMAGE
   variables:
-    HTTP_URL: nevercodealone.de
-    WWW_URL: www.nevercodealone.de
+    HTTP_URL: nevercodealone.de,www.nevercodealone.de
     WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   script:
     - rancher up -s www-nevercodealone-de -d --pull --prune --upgrade
