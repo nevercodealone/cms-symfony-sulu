@@ -226,20 +226,6 @@ build_reports_image:
     - master
     - /^prod\/.*/
 
-confirm_stage_upgrade:
-  stage: posttest
-  image: $TOOLBOX_IMAGE
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
-  tags:
-    - docker-executor
-  variables:
-    RANCHER_OPTIONS: --confirm-upgrade
-    RANCHER_PROJECT_NAME: stage-cms-nevercodealone-de
-  only:
-    - master
-  when: on_success
-
 confirm_prod_upgrade:
   stage: posttest
   image: $TOOLBOX_IMAGE
@@ -252,20 +238,6 @@ confirm_prod_upgrade:
   only:
     - /^prod\/.*/
   when: on_success
-
-rollback_stage_upgrade:
-  stage: posttest
-  image: $TOOLBOX_IMAGE
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
-  tags:
-    - docker-executor
-  variables:
-    RANCHER_OPTIONS: --rollback
-    RANCHER_PROJECT_NAME: stage-cms-nevercodealone-de
-  only:
-    - master
-  when: on_failure
 
 rollback_prod_upgrade:
   stage: posttest
