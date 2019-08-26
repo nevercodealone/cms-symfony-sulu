@@ -1,6 +1,5 @@
 
 ###> symfony/framework-bundle ###
-.env
 /.env.local
 /.env.local.php
 /.env.*.local
@@ -43,8 +42,7 @@
 /vendor
 
 # npm
-package-lock.json
-node_modules
+node_modules/
 
 # phpunit
 .phpunit
@@ -58,7 +56,6 @@ node_modules
 
 # System files
 .DS_Store
-/uploads
 /db-live
 
 export.sh
