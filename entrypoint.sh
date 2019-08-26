@@ -7,6 +7,7 @@
 [ -n "$DATABASE_URL_FILE" ] && export DATABASE_URL="$(cat $DATABASE_URL_FILE)"
 [ -n "$MAIL_USER_FILE" ] && export MAIL_USER="$(cat $MAIL_USER_FILE)"
 [ -n "$MAIL_PASS_FILE" ] && export MAIL_PASS="$(cat $MAIL_PASS_FILE)"
+[ -n "$SULU_ADMIN_EMAIL_FILE" ] && export SULU_ADMIN_EMAIL="$(cat $SULU_ADMIN_EMAIL_FILE)"
 [ -n "$MAIL_HUB_FILE" ] && export MAIL_HUB="$(cat $MAIL_HUB_FILE)"
 [ -n "$GOOGLE_API_KEY_FILE" ] && export GOOGLE_API_KEY="$(cat $GOOGLE_API_KEY_FILE)"
 [ -n "$TWITTER_API_KEY_FILE" ] && export TWITTER_API_KEY="$(cat $TWITTER_API_KEY_FILE)"
