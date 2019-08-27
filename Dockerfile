@@ -5,7 +5,7 @@ WORKDIR /var/www/html
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
 COPY composer.* /var/www/html/
-RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
 
 FROM kkarczmarczyk/node-yarn:latest AS npm
 
