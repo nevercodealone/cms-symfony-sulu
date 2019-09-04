@@ -56,15 +56,13 @@ ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
 ADD ./deploy/config/msmtprc /etc/msmtprc
 
 # copy needed files from build containers
-COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
+#COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
 COPY --from=composer /var/www/html/vendor/ /var/www/html/vendor/
 
 COPY --chown=www-data:www-data . /var/www/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
-
-
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
