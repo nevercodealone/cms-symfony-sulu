@@ -93,26 +93,11 @@ deploy_development_image_to_branch:
   before_script:
     - rancher rm --type stack --stop $RANCHER_PROJECT_NAME || true
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.dev.yml -e .env.dist -d --pull
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.yml -d --pull
   tags:
     - docker-executor
   except:
     - master
-    - /^prod\/.*/
-
-deploy_production_image_to_branch:
-  stage: deploy
-  image: $TOOLBOX_IMAGE
-  before_script:
-    - rancher rm --type stack --stop $RANCHER_PROJECT_NAME || true
-    # create the stack with the latest known working image and upgrade from there
-    # todo: actually clone the production environment with data
-    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s $RANCHER_PROJECT_NAME -d --pull
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d --pull --prune --upgrade
-  tags:
-    - docker-executor
-  only:
     - /^prod\/.*/
 
 deploy_production_image_to_stage:
