@@ -28,6 +28,10 @@ services:
     - APP_ENV_FILE=/run/secrets/sulu_nca_app_env
     - APP_SECRET_FILE=/run/secrets/sulu_nca_app_secret
     - DATABASE_URL_FILE=/run/secrets/sulu_nca_database_url
+    - DATABASE_HOST_FILE=/run/secrets/sulu_nca_database_host
+    - DATABASE_NAME_FILE=/run/secrets/sulu_nca_database_name
+    - DATABASE_PASS_FILE=/run/secrets/sulu_nca_database_pass
+    - DATABASE_USER_FILE=/run/secrets/sulu_nca_database_user
     - MAIL_URL_FILE=/run/secrets/sulu_nca_mail_url
     - SULU_ADMIN_EMAIL_FILE=/run/secrets/sulu_admin_email
     - GOOGLE_API_KEY_FILE=/run/secrets/sulu_GOOGLE_API_KEY
@@ -50,6 +54,10 @@ services:
     - sulu_nca_app_env
     - sulu_nca_app_secret
     - sulu_nca_database_url
+    - sulu_nca_database_host
+    - sulu_nca_database_name
+    - sulu_nca_database_pass
+    - sulu_nca_database_user
     - sulu_nca_mail_url
     - sulu_admin_email
     - sulu_GOOGLE_API_KEY
@@ -84,6 +92,8 @@ secrets:
   sulu_nca_database_root_pass:
     external: true
   sulu_nca_database_user:
+    external: true
+  sulu_nca_database_host:
     external: true
   sulu_nca_app_env:
     external: true

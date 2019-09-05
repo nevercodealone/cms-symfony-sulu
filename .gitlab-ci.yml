@@ -140,10 +140,6 @@ run_code_analyses_against_dev_environment:
 run_tests_against_dev_environment:
   stage: test
   image: $TOOLBOX_IMAGE
-  variables:
-    DB_USER: nca
-    DB_NAME: nca
-    DB_PASS: nca
   script:
     - /var/www/html/vendor/bin/codecept run --skip acceptance --html -vvv
   artifacts:
