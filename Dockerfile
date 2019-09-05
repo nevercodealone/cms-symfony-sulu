@@ -53,6 +53,7 @@ COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
 
 # php config
 ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # SSMTP config
 ADD ./deploy/config/msmtprc /etc/msmtprc
