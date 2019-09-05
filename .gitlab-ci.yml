@@ -129,7 +129,7 @@ run_code_analyses_against_dev_environment:
   stage: codeanalyse
   image: $TOOLBOX_IMAGE
   script:
-    - /var/www/html/vendor/bin/phpstan analyse src --level max
+    - /var/www/html/vendor/bin/phpstan analyse src --level 1
   tags:
     - docker-executor
   except:
