@@ -99,6 +99,7 @@ deploy_development_image_to_branch:
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/var/* /var/www/html/var/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/uploads/* /var/www/html/uploads/' || true
+    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'rm -rf /var/www/html/var/cache/* && chown www-data.www-data -R /var/www/html/' || true
   tags:
     - docker-executor
   except:
@@ -143,13 +144,6 @@ run_tests_against_dev_environment:
     DB_USER: nca
     DB_NAME: nca
     DB_PASS: nca
-  before_script:
-    - export CONTAINERID=$(rancher ps | grep $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG/db | awk '{ print $1 }')
-    - export DB_PORT=$(rancher inspect $CONTAINERID | jq -r .publicEndpoints[0].port)
-    - export DATABASE_URL=mysql://nca:nca@$HTTP_URL:$DB_PORT/nca
-    - "echo \"DATABASE_URL=${DATABASE_URL}\""
-    - export DB_HOST=$HTTP_URL:$DB_PORT
-    - "echo \"DB_HOST=${DB_HOST}\""
   script:
     - /var/www/html/vendor/bin/codecept run --skip acceptance --html -vvv
   artifacts:
