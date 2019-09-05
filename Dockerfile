@@ -5,7 +5,17 @@ WORKDIR /var/www/html
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
 COPY composer.* /var/www/html/
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
+
+FROM composer AS composer-dev
+
+WORKDIR /var/www/html
+
+RUN composer global require hirak/prestissimo --no-plugins --no-scripts
+
+COPY composer.* /var/www/html/
 RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
+
 
 FROM kkarczmarczyk/node-yarn:latest AS npm
 
@@ -71,6 +81,8 @@ CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
 FROM webserver AS toolbox
 
 LABEL description="Shipped toolboximage for nevercodealone.de."
+
+COPY --from=composer-dev /var/www/html/vendor/ /var/www/html/vendor/
 
 ARG RANCHER_CLI_VERSION=0.6.13
 ARG RANCHER_CLI_URL=https://github.com/rancher/cli/releases/download/v$RANCHER_CLI_VERSION/rancher-linux-amd64-v$RANCHER_CLI_VERSION.tar.gz
