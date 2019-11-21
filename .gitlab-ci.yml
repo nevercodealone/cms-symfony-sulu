@@ -169,7 +169,7 @@ run_tests_against_final_prod_environment:
   variables:
     WEBSITE_URL: https://stage.nevercodealone.de
   script:
-    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db
+    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
   artifacts:
     paths:
       - ./tests/_output/*
