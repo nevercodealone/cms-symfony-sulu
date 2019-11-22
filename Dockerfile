@@ -5,7 +5,17 @@ WORKDIR /var/www/html
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
 COPY composer.* /var/www/html/
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
+
+FROM composer AS composer-dev
+
+WORKDIR /var/www/html
+
+RUN composer global require hirak/prestissimo --no-plugins --no-scripts
+
+COPY composer.* /var/www/html/
 RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
+
 
 FROM kkarczmarczyk/node-yarn:latest AS npm
 
@@ -16,12 +26,10 @@ COPY --from=composer /var/www/html/vendor/sulu/sulu /var/www/html/vendor/sulu/su
 COPY --from=composer /var/www/html/vendor/friendsofsymfony/jsrouting-bundle /var/www/html/vendor/friendsofsymfony/jsrouting-bundle
 COPY composer.json /var/www/html/
 
-COPY assets/admin/.babelrc /var/www/html/
-COPY assets/admin/package.json /var/www/html/
-COPY assets/admin/webpack.config.js /var/www/html/
+COPY .babelrc /var/www/html/
+COPY package.json /var/www/html/
+COPY webpack.config.js /var/www/html/
 COPY assets/admin /var/www/html/assets/admin
-
-RUN npm install && npm run build
 
 # Build actual image
 FROM php:7.2-apache AS webserver
@@ -53,13 +61,12 @@ COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
 
 # php config
 ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# SSMTP config
+# MSMTP config
 ADD ./deploy/config/msmtprc /etc/msmtprc
 
 # copy needed files from build containers
-COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
+#COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
 COPY --from=composer /var/www/html/vendor/ /var/www/html/vendor/
 
 COPY --chown=www-data:www-data . /var/www/html/
@@ -68,13 +75,14 @@ RUN chmod +x /entrypoint.sh
 RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
 RUN touch /var/www/html/.env
 
-
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
 
 FROM webserver AS toolbox
 
 LABEL description="Shipped toolboximage for nevercodealone.de."
+
+COPY --from=composer-dev /var/www/html/vendor/ /var/www/html/vendor/
 
 ARG RANCHER_CLI_VERSION=0.6.13
 ARG RANCHER_CLI_URL=https://github.com/rancher/cli/releases/download/v$RANCHER_CLI_VERSION/rancher-linux-amd64-v$RANCHER_CLI_VERSION.tar.gz
@@ -84,9 +92,6 @@ ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/down
 RUN curl -sSL "$RANCHER_CLI_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2 \
  && curl -sSL "$RANCHER_COMPOSE_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2
 
-RUN mkdir -p /builds/nevercodealone/sulu/
-RUN touch /builds/nevercodealone/sulu/.env
-
-ENTRYPOINT []
+ENTRYPOINT ["/entrypoint.sh"]
 CMD []
 

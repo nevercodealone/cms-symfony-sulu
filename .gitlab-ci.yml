@@ -29,7 +29,7 @@ variables:
   REPORT_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/reports:$CI_PIPELINE_ID
   TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
   WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
-  WEBDRIVER_URL: 213.203.219.159
+  WEBDRIVER_URL: rancher.nevercodealone.de
   WEBSITE_URL: https://$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
 
 
@@ -90,26 +90,18 @@ deploy_development_image_to_branch:
   before_script:
     - rancher rm --type stack --stop $RANCHER_PROJECT_NAME || true
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.dev.yml -e .env.dist -d --pull
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.yml -d --pull
+  after_script:
+    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/var /var/www/transfer/uploads' || true
+    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/' || true
+    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/var/* /var/www/html/var/' || true
+    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/uploads/* /var/www/html/uploads/' || true
+    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'rm -rf /var/www/html/var/cache/* && chown www-data.www-data -R /var/www/html/' || true
+    - sleep 120s
   tags:
     - docker-executor
   except:
     - master
-    - /^prod\/.*/
-
-deploy_production_image_to_branch:
-  stage: deploy
-  image: $TOOLBOX_IMAGE
-  before_script:
-    - rancher rm --type stack --stop $RANCHER_PROJECT_NAME || true
-    # create the stack with the latest known working image and upgrade from there
-    # todo: actually clone the production environment with data
-    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s $RANCHER_PROJECT_NAME -d --pull
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d --pull --prune --upgrade
-  tags:
-    - docker-executor
-  only:
     - /^prod\/.*/
 
 deploy_production_image_to_stage:
@@ -117,19 +109,14 @@ deploy_production_image_to_stage:
   image: $TOOLBOX_IMAGE
   variables:
     HTTP_URL: stage-cms.nevercodealone.de
+    WWW_URL: www.stage-cms.nevercodealone.de
   before_script:
-    - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
     # create the stack with the latest known working image and upgrade from there
     # todo: actually clone the production environment with data
-    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull -c
+    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
   script:
-    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade -c
-  after_script:
-    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/var /var/www/transfer/uploads' || true
-    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/' || true
-    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/var/* /var/www/html/var/' || true
-    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/uploads/* /var/www/html/uploads/' || true
+    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
   tags:
     - docker-executor
   only:
@@ -141,7 +128,7 @@ run_code_analyses_against_dev_environment:
   stage: codeanalyse
   image: $TOOLBOX_IMAGE
   script:
-    - /var/www/html/vendor/bin/phpstan analyse src --level max
+    - /var/www/html/vendor/bin/phpstan analyse src --level 1
   tags:
     - docker-executor
   except:
@@ -151,17 +138,6 @@ run_code_analyses_against_dev_environment:
 run_tests_against_dev_environment:
   stage: test
   image: $TOOLBOX_IMAGE
-  variables:
-    DB_USER: nca
-    DB_NAME: nca
-    DB_PASS: nca
-  before_script:
-    - export CONTAINERID=$(rancher ps | grep $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG/db | awk '{ print $1 }')
-    - export DB_PORT=$(rancher inspect $CONTAINERID | jq -r .publicEndpoints[0].port)
-    - export DATABASE_URL=mysql://nca:nca@$HTTP_URL:$DB_PORT/nca
-    - "echo \"DATABASE_URL=${DATABASE_URL}\""
-    - export DB_HOST=$HTTP_URL:$DB_PORT
-    - "echo \"DB_HOST=${DB_HOST}\""
   script:
     - /var/www/html/vendor/bin/codecept run --skip acceptance --html -vvv
   artifacts:
@@ -192,9 +168,7 @@ run_tests_against_final_prod_environment:
   stage: test
   image: $TOOLBOX_IMAGE
   variables:
-    WEBSITE_URL: https://stage-cms.nevercodealone.de
-  before_script:
-    - sleep 120s
+    WEBSITE_URL: https://stage.nevercodealone.de
   script:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db
   artifacts:
@@ -309,7 +283,8 @@ deploy_production_image_to_prod:
   stage: rollout
   image: $TOOLBOX_IMAGE
   variables:
-    HTTP_URL: nevercodealone.de,www.nevercodealone.de
+    HTTP_URL: nevercodealone.de
+    WWW_URL: www.nevercodealone.de
     WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   script:
     - rancher up -s www-nevercodealone-de -d --pull --prune --upgrade
