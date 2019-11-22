@@ -1,6 +1,6 @@
 FROM composer AS composer
 
-WORKDIR /var/www/html
+WORKDIR /var/www/html/
 
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
@@ -16,11 +16,9 @@ RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 COPY composer.* /var/www/html/
 RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
 
-
 FROM kkarczmarczyk/node-yarn:latest AS npm
 
-WORKDIR /var/www/html
-
+WORKDIR /var/www/html/
 
 COPY --from=composer /var/www/html/vendor/sulu/sulu /var/www/html/vendor/sulu/sulu
 COPY --from=composer /var/www/html/vendor/friendsofsymfony/jsrouting-bundle /var/www/html/vendor/friendsofsymfony/jsrouting-bundle
