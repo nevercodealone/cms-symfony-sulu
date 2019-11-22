@@ -68,6 +68,11 @@
                                 </param>
                             </params>
                         </property>
+                        <property name="slider_url" type="url">
+                            <meta>
+                                <title>URL</title>
+                            </meta>
+                        </property>
                     </properties>
                 </type>
             </types>

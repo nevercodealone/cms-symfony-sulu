@@ -161,22 +161,22 @@
                                         <title lang="en">Company</title>
                                     </meta>
                                 </property>
-                                <property name="speakerItemXingUrl" type="url" colspan="3">
+                                <property name="speakerItemXingUrl" type="url">
                                     <meta>
                                         <title>Xing</title>
                                     </meta>
                                 </property>
-                                <property name="speakerItemTwitterUrl" type="url" colspan="3">
+                                <property name="speakerItemTwitterUrl" type="url">
                                     <meta>
                                         <title>speakeritemTwitterUrl</title>
                                     </meta>
                                 </property>
-                                <property name="speakerItemGithubUrl" type="url" colspan="3">
+                                <property name="speakerItemGithubUrl" type="url">
                                     <meta>
                                         <title>GitHub</title>
                                     </meta>
                                 </property>
-                                <property name="speakerItemLinkedinUrl" type="url" colspan="3">
+                                <property name="speakerItemLinkedinUrl" type="url">
                                     <meta>
                                         <title>Linkedin</title>
                                     </meta>
