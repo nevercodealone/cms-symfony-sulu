@@ -13,13 +13,11 @@ stages:
   - codeanalyse
   - test
   - posttest
-  - release
   - rollout
   - postrollout
 
 variables:
   LATEST_PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH
-  LATEST_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG
   HTTP_URL: $CI_COMMIT_REF_SLUG.develop.nevercodealone.de
   WWW_URL: www.$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
   PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
@@ -44,9 +42,7 @@ build_development_image:
     - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
   script:
     - docker build -t $WEB_IMAGE --target webserver --pull .
-    - docker tag $WEB_IMAGE $LATEST_WEB_IMAGE
     - docker push $WEB_IMAGE
-    - docker push $LATEST_WEB_IMAGE
   tags:
     - docker-executor
   except:
@@ -60,9 +56,7 @@ build_production_image:
     - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
   script:
     - docker build -t $WEB_IMAGE --target webserver --pull --build-arg APP_ENV=prod .
-    - docker tag $WEB_IMAGE $LATEST_WEB_IMAGE
     - docker push $WEB_IMAGE
-    - docker push $LATEST_WEB_IMAGE
   tags:
     - docker-executor
   only:
@@ -207,28 +201,6 @@ rollback_prod_upgrade:
   only:
     - /^prod\/.*/
   when: on_failure
-
-# Stage: release
-
-release_image:
-  stage: release
-  image: docker:stable
-  variables:
-    GIT_STRATEGY: none
-  before_script:
-    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
-  script:
-    - docker pull $LATEST_WEB_IMAGE
-    - docker tag $LATEST_WEB_IMAGE $LATEST_PROD_WEB_IMAGE
-    - docker tag $LATEST_WEB_IMAGE $PROD_WEB_IMAGE
-    - docker push $LATEST_PROD_WEB_IMAGE
-    - docker push $PROD_WEB_IMAGE
-  tags:
-    - docker-executor
-  only:
-    - master
-  when: manual
-
 
 # Stage: rollout
 

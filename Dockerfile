@@ -5,29 +5,14 @@ WORKDIR /var/www/html
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
 COPY composer.* /var/www/html/
-RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
-#RUN composer require symfony/dotenv
 
-RUN ls vendor/symfony
+FROM composer AS composer-web
+
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
 
 FROM composer AS composer-dev
 
-WORKDIR /var/www/html
-
-RUN composer global require hirak/prestissimo --no-plugins --no-scripts
-
-COPY composer.* /var/www/html/
 RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
-
-FROM kkarczmarczyk/node-yarn:latest AS npm
-
-WORKDIR /var/www/html/
-
-COPY --from=composer /var/www/html/vendor/sulu/sulu /var/www/html/vendor/sulu/sulu
-COPY --from=composer /var/www/html/vendor/friendsofsymfony/jsrouting-bundle /var/www/html/vendor/friendsofsymfony/jsrouting-bundle
-COPY composer.json /var/www/html/
-
-COPY assets/admin /var/www/html/assets/admin
 
 # Build actual image
 FROM php:7.2-apache AS webserver
@@ -64,16 +49,15 @@ ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
 ADD ./deploy/config/msmtprc /etc/msmtprc
 
 # copy needed files from build containers
-#COPY --from=npm /var/www/html/public/build/admin/ /var/www/html/public/build/admin/
-COPY --from=composer /var/www/html/vendor/ /var/www/html/vendor/
+COPY --from=composer-web /var/www/html/vendor/ /var/www/html/vendor/
+
+COPY assets/admin /var/www/html/assets/admin
 
 COPY --chown=www-data:www-data . /var/www/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
 RUN touch /var/www/html/.env
-
-RUN ls vendor/symfony
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
@@ -91,8 +75,6 @@ ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/down
 
 RUN curl -sSL "$RANCHER_CLI_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2 \
  && curl -sSL "$RANCHER_COMPOSE_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2
-
-RUN ls vendor/symfony
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD []
