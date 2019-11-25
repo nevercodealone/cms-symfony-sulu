@@ -1,6 +1,6 @@
 FROM composer AS composer
 
-WORKDIR /var/www/html/
+WORKDIR /var/www/html
 
 RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 
