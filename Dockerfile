@@ -92,6 +92,8 @@ ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/down
 RUN curl -sSL "$RANCHER_CLI_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2 \
  && curl -sSL "$RANCHER_COMPOSE_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2
 
+RUN ls vendor/symfony
+
 ENTRYPOINT ["/entrypoint.sh"]
 CMD []
 
