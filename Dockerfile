@@ -8,7 +8,8 @@ COPY composer.* /var/www/html/
 
 FROM composer AS composer-web
 
-RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
+# Application docker
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
 
 FROM composer AS composer-dev
 
