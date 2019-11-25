@@ -84,6 +84,7 @@ deploy_development_image_to_branch:
   script:
     - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.yml -d --pull
   after_script:
+    - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/var /var/www/transfer/uploads' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/var/* /var/www/html/var/' || true
