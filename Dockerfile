@@ -7,6 +7,8 @@ RUN composer global require hirak/prestissimo --no-plugins --no-scripts
 COPY composer.* /var/www/html/
 RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
 
+RUN ls vendor/symfony
+
 FROM composer AS composer-dev
 
 WORKDIR /var/www/html
@@ -69,6 +71,8 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
 RUN touch /var/www/html/.env
+
+RUN ls vendor/symfony
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
