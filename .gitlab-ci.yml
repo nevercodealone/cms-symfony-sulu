@@ -162,7 +162,7 @@ run_tests_against_final_prod_environment:
   stage: test
   image: $TOOLBOX_IMAGE
   variables:
-    WEBSITE_URL: https://stage.nevercodealone.de
+    WEBSITE_URL: https://stage-cms.nevercodealone.de
   script:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
   artifacts:
