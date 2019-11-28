@@ -167,7 +167,7 @@ run_tests_against_final_prod_environment:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
   artifacts:
     paths:
-      - ./tests/_output/*
+      - /builds/nevercodealone/sulu/tests/_output/*
     expire_in: 1 week
   tags:
     - docker-executor
