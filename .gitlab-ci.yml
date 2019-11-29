@@ -135,6 +135,7 @@ run_tests_against_dev_environment:
 #    - /var/www/html/vendor/bin/codecept run --skip acceptance --html -vvv
     - echo true
   artifacts:
+    when: always
     paths:
       - ./tests/_output/*
     expire_in: 1 week
@@ -150,6 +151,7 @@ run_tests_against_prod_environment:
   script:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
   artifacts:
+    when: always
     paths:
       - ./tests/_output/*
     expire_in: 1 week
@@ -166,7 +168,7 @@ run_tests_against_final_prod_environment:
   script:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
   artifacts:
-    when: on_failure
+    when: always
     paths:
       - /builds/nevercodealone/sulu/tests/_output/*
     expire_in: 1 week
