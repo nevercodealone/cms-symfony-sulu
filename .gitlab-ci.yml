@@ -173,11 +173,11 @@ run_tests_against_final_prod_environment:
     WEBSITE_URL: https://stage-cms.nevercodealone.de
   script:
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
-  artifacts:
-    when: always
-    paths:
-      - /builds/nevercodealone/sulu/tests/_output/*
-    expire_in: 1 week
+#  artifacts:
+#    when: always
+#    paths:
+#      - /builds/nevercodealone/sulu/tests/_output/*
+#    expire_in: 1 week
   tags:
     - docker-executor
   only:
