@@ -12,6 +12,6 @@ class startpageCest
 
     public function titleContainsOpenSource(AcceptanceTester $I)
     {
-        $I->canSeeInTitle('Open Source');
+        $I->canSeeInTitle('Open Source fail test');
     }
 }
