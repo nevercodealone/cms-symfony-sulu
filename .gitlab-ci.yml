@@ -138,12 +138,14 @@ run_tests_against_dev_environment:
   stage: test
   image: $TOOLBOX_IMAGE
   script:
-#    - /var/www/html/vendor/bin/codecept run --skip acceptance --html -vvv
+#    - /var/www/html/vendor/bin/codecept run --skip acceptance --html --xml -vvv
     - echo true
   artifacts:
     when: always
     paths:
       - ./tests/_output/*
+    reports:
+      junit: report.xml
     expire_in: 1 week
   tags:
     - docker-executor
