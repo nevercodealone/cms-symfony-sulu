@@ -145,7 +145,7 @@ run_tests_against_dev_environment:
     paths:
       - ./tests/_output/*
     reports:
-      junit: report.xml
+      junit: /builds/nevercodealone/sulu/tests/_output/report.xml
     expire_in: 1 week
   tags:
     - docker-executor
