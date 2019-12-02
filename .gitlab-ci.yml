@@ -17,12 +17,10 @@ stages:
   - postrollout
 
 variables:
-  LATEST_PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH
   HTTP_URL: $CI_COMMIT_REF_SLUG.develop.nevercodealone.de
   WWW_URL: www.$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
   PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   RANCHER_PROJECT_NAME: $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG
-  REPORT_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/reports:$CI_PIPELINE_ID
   TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
   WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
   WEBDRIVER_URL: rancher.nevercodealone.de
@@ -105,7 +103,6 @@ deploy_production_image_to_stage:
     WWW_URL: www.stage-cms.nevercodealone.de
   before_script:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
-#    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
   script:
     - rancher up -s stage-cms-nevercodealone-de -f docker-compose.yml -d --pull
   after_script:
@@ -144,8 +141,6 @@ run_tests_against_dev_environment:
     when: always
     paths:
       - ./tests/_output/*
-    reports:
-      junit: /builds/nevercodealone/sulu/tests/_output/report.xml
     expire_in: 1 week
   tags:
     - docker-executor
