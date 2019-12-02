@@ -19,7 +19,6 @@ stages:
 variables:
   HTTP_URL: $CI_COMMIT_REF_SLUG.develop.nevercodealone.de
   WWW_URL: www.$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
-  PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   RANCHER_PROJECT_NAME: $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG
   TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
   WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
@@ -171,11 +170,11 @@ run_tests_against_final_prod_environment:
   script:
     - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
-#  artifacts:
-#    when: always
-#    paths:
-#      - /builds/nevercodealone/sulu/tests/_output/*
-#    expire_in: 1 week
+  artifacts:
+    when: always
+    paths:
+      - /builds/nevercodealone/sulu/tests/_output/*
+    expire_in: 1 week
   tags:
     - docker-executor
   only:
@@ -218,7 +217,6 @@ deploy_production_image_to_prod:
   variables:
     HTTP_URL: nevercodealone.de
     WWW_URL: www.nevercodealone.de
-    WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   script:
     - rancher up -s www-nevercodealone-de -d --pull --prune --upgrade
   tags:
