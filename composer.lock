@@ -1,10 +1,10 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "436bf4c62f08d2859d47da92fb9be447",
+    "content-hash": "7332bae56e0479e21a96fbe64b81f42f",
     "packages": [
         {
             "name": "aferrandini/urlizer",
@@ -11573,6 +11573,7 @@
                 "lucene",
                 "zf2"
             ],
+            "abandoned": true,
             "time": "2015-01-21T16:24:14+00:00"
         }
     ],
@@ -14423,16 +14424,16 @@
         },
         {
             "name": "symfony/web-server-bundle",
-            "version": "v4.4.0",
+            "version": "v4.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/web-server-bundle.git",
-                "reference": "83202a9dae60b29eb55ae1a0c6696c586de3ce0b"
+                "reference": "301dad4563b21a791a796da9a736408215b9e9fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/web-server-bundle/zipball/83202a9dae60b29eb55ae1a0c6696c586de3ce0b",
-                "reference": "83202a9dae60b29eb55ae1a0c6696c586de3ce0b",
+                "url": "https://api.github.com/repos/symfony/web-server-bundle/zipball/301dad4563b21a791a796da9a736408215b9e9fc",
+                "reference": "301dad4563b21a791a796da9a736408215b9e9fc",
                 "shasum": ""
             },
             "require": {
@@ -14478,7 +14479,7 @@
             ],
             "description": "Symfony WebServerBundle",
             "homepage": "https://symfony.com",
-            "time": "2019-10-12T00:35:04+00:00"
+            "time": "2019-11-26T23:16:41+00:00"
         },
         {
             "name": "theseer/tokenizer",

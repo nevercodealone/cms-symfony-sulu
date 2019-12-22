@@ -52,7 +52,8 @@
         "symfony/inflector": "^3.4 || ^4.0",
         "symfony/phpunit-bridge": "^3.4 || ^4.0",
         "symfony/var-dumper": "^3.4 || ^4.0",
-        "symfony/web-profiler-bundle": "^3.4 || ^4.0"
+        "symfony/web-profiler-bundle": "^3.4 || ^4.0",
+        "symfony/web-server-bundle": "^4.4"
     },
     "autoload": {
         "psr-4": {
