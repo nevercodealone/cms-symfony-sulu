@@ -960,6 +960,9 @@ li{
     padding-top: 10px;
     padding-bottom: 10px;
 }
+.tz-header-2 ul.tz-menu > li {
+    padding: 49px 0;
+}
 .tz-header-2 .tz-menu li:first-child a{
     border-left:1px solid rgba(255,255,255,0.2) ;
 }
