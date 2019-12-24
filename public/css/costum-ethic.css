@@ -10,3 +10,7 @@ div.sub-menu-2-item > h3 {
 .upcoming {
     border-color: red;
 }
+
+.tz-header-2 ul.tz-menu > li {
+    padding: 49px 0;
+}

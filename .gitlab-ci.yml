@@ -17,12 +17,8 @@ stages:
   - postrollout
 
 variables:
-  LATEST_PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH
   HTTP_URL: $CI_COMMIT_REF_SLUG.develop.nevercodealone.de
-  WWW_URL: www.$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
-  PROD_WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   RANCHER_PROJECT_NAME: $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG
-  REPORT_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/reports:$CI_PIPELINE_ID
   TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
   WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
   WEBDRIVER_URL: rancher.nevercodealone.de
@@ -34,7 +30,6 @@ variables:
 #--------------------------------------------------------------------------------------------------
 
 # Stage: build
-
 build_development_image:
   stage: build
   image: docker:stable
@@ -47,7 +42,6 @@ build_development_image:
     - docker-executor
   except:
     - master
-    - /^prod\/.*/
 
 build_production_image:
   stage: build
@@ -61,7 +55,6 @@ build_production_image:
     - docker-executor
   only:
     - master
-    - /^prod\/.*/
 
 build_toolbox_image:
   stage: build
@@ -75,7 +68,6 @@ build_toolbox_image:
     - docker-executor
 
 # Stage: deploy
-
 deploy_development_image_to_branch:
   stage: deploy
   image: $TOOLBOX_IMAGE
@@ -95,28 +87,30 @@ deploy_development_image_to_branch:
     - docker-executor
   except:
     - master
-    - /^prod\/.*/
 
 deploy_production_image_to_stage:
   stage: deploy
   image: $TOOLBOX_IMAGE
   variables:
     HTTP_URL: stage-cms.nevercodealone.de
-    WWW_URL: www.stage-cms.nevercodealone.de
   before_script:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
-    # create the stack with the latest known working image and upgrade from there
-    # todo: actually clone the production environment with data
-    - WEB_IMAGE=$LATEST_PROD_WEB_IMAGE rancher up -s stage-cms-nevercodealone-de -d --pull
   script:
-    - rancher up -s stage-cms-nevercodealone-de -d --pull --prune --upgrade
+    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.yml -d --pull
+  after_script:
+    - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
+    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/var /var/www/transfer/uploads' || true
+    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/' || true
+    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/var/* /var/www/html/var/' || true
+    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/uploads/* /var/www/html/uploads/' || true
+    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/html/var/cache/* && chown www-data.www-data -R /var/www/html/' || true
+    - sleep 360s
   tags:
     - docker-executor
   only:
     - master
 
 # Stage: test
-
 run_code_analyses_against_dev_environment:
   stage: codeanalyse
   image: $TOOLBOX_IMAGE
@@ -126,15 +120,14 @@ run_code_analyses_against_dev_environment:
     - docker-executor
   except:
     - master
-    - /^prod\/.*/
 
 run_tests_against_dev_environment:
   stage: test
   image: $TOOLBOX_IMAGE
   script:
-#    - /var/www/html/vendor/bin/codecept run --skip acceptance --html -vvv
-    - echo true
+    - /var/www/html/vendor/bin/codecept run --skip acceptance --html --skip-group db -vvv
   artifacts:
+    when: always
     paths:
       - ./tests/_output/*
     expire_in: 1 week
@@ -142,76 +135,31 @@ run_tests_against_dev_environment:
     - docker-executor
   except:
     - master
-    - /^prod\/.*/
-
-run_tests_against_prod_environment:
-  stage: test
-  image: $TOOLBOX_IMAGE
-  script:
-    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
-  artifacts:
-    paths:
-      - ./tests/_output/*
-    expire_in: 1 week
-  tags:
-    - docker-executor
-  only:
-    - /^prod\/.*/
 
 run_tests_against_final_prod_environment:
   stage: test
   image: $TOOLBOX_IMAGE
   variables:
-    WEBSITE_URL: https://stage.nevercodealone.de
+    WEBSITE_URL: https://stage-cms.nevercodealone.de
   script:
+    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
     - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
   artifacts:
+    when: always
     paths:
-      - ./tests/_output/*
+      - /builds/nevercodealone/sulu/tests/_output/*
     expire_in: 1 week
   tags:
     - docker-executor
   only:
     - master
 
-
 # Stage: posttest
-
-confirm_prod_upgrade:
-  stage: posttest
-  image: $TOOLBOX_IMAGE
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
-  tags:
-    - docker-executor
-  variables:
-    RANCHER_OPTIONS: --confirm-upgrade
-  only:
-    - /^prod\/.*/
-  when: on_success
-
-rollback_prod_upgrade:
-  stage: posttest
-  image: $TOOLBOX_IMAGE
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
-  tags:
-    - docker-executor
-  variables:
-    RANCHER_OPTIONS: --rollback
-  only:
-    - /^prod\/.*/
-  when: on_failure
-
-# Stage: rollout
-
 deploy_production_image_to_prod:
   stage: rollout
   image: $TOOLBOX_IMAGE
   variables:
     HTTP_URL: nevercodealone.de
-    WWW_URL: www.nevercodealone.de
-    WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_PIPELINE_ID
   script:
     - rancher up -s www-nevercodealone-de -d --pull --prune --upgrade
   tags:
@@ -220,10 +168,7 @@ deploy_production_image_to_prod:
     - master
   when: manual
 
-
 # Stage: postrollout
-
-
 confirm_upgrade:
   image: $TOOLBOX_IMAGE
   script:
@@ -251,4 +196,3 @@ rollback_upgrade:
   only:
     - master
   when: manual
-
