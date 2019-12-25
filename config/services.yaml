@@ -64,3 +64,6 @@ services:
         class: App\Service\TwitterService
         arguments:
             - '@Twitter'
+
+    Unirest\Request:
+        class: Unirest\Request

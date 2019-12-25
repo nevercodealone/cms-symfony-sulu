@@ -1,6 +1,7 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
+    {% dump(meetupNextEvents) %}
     {% for block in content.blocks %}
         {% include "includes/ethic/" ~ block.type ~ ".html.twig" with {content: block}%}
     {% endfor %}
