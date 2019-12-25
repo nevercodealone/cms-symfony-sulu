@@ -65,7 +65,7 @@ class PageController extends WebsiteController
      * @param bool $partial
      * @return Response
      */
-    public function wordpress(StructureInterface $structure, WordpressService $service, $preview = false, $partial = false)
+    public function homepage(StructureInterface $structure, WordpressService $service, $preview = false, $partial = false)
     {
         $response = $this->renderStructure(
             $structure,

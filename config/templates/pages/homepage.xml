@@ -7,7 +7,7 @@
     <key>homepage</key>
 
     <view>pages/homepage</view>
-    <controller>App\Controller\PageController:wordpress</controller>
+    <controller>App\Controller\PageController:homepage</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
