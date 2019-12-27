@@ -24,8 +24,7 @@ class PageController extends WebsiteController
         YouTubeService $youTubeService,
         $preview = false,
         $partial = false
-    )
-    {
+    ) {
         $response = $this->renderStructure(
             $structure,
             [
@@ -59,8 +58,13 @@ class PageController extends WebsiteController
         return $response;
     }
 
-    public function homepage(StructureInterface $structure, WordpressService $wordpressService, MeetupService $meetupService, $preview = false, $partial = false)
-    {
+    public function homepage(
+        StructureInterface $structure,
+        WordpressService $wordpressService,
+        MeetupService $meetupService,
+        $preview = false,
+        $partial = false
+    ) {
         return $this->renderStructure(
             $structure,
             [
@@ -88,6 +92,4 @@ class PageController extends WebsiteController
         $sourceParam = '?aff=' . $aff;
         return $sourceParam;
     }
-
 }
-
