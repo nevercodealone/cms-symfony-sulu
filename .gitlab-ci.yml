@@ -79,7 +79,7 @@ deploy_development_image_to_branch:
     - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/var /var/www/transfer/uploads' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/html/var /var/www/html/uploads /var/www/transfer/' || true
-    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/var/* /var/www/html/var/' || true
+    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/var/uploads /var/www/html/var/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/uploads/* /var/www/html/uploads/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'rm -rf /var/www/html/var/cache/* && chown www-data.www-data -R /var/www/html/' || true
     - sleep 360s
