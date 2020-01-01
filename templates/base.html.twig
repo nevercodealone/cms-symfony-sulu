@@ -62,7 +62,7 @@
                                                     <div class="tz-submenu-2-wrapper">
                                                         <div class="row">
                                                             <div class="col-md-3 sub-menu-2-item">
-                                                                <h3>Upcoming</h3>
+                                                                <h3>2020</h3>
                                                                 <ul>
                                                                     {% for eventCarouselItem in content.eventCarouselItems%}
                                                                         {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
@@ -76,7 +76,7 @@
                                                                     {% endfor %}
                                                                 </ul>
                                                             </div>
-                                                            {% set years = ['2019', '2018', '2017'] %}
+                                                            {% set years = ['2019', '2018'] %}
                                                             {% for year in years %}
                                                                 <div class="col-md-3 sub-menu-2-item">
                                                                     <h3>

@@ -18,14 +18,15 @@ class YouTubeService
             'playlistId' => 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF'
         ];
 
-        $videoList = $this->playlistItemsListByPlaylistId('snippet',$params);
+        $videoList = $this->playlistItemsListByPlaylistId('snippet', $params);
         $videos = array_reverse($videoList['items']);
         $videos = array_slice($videos, 0, 9);
 
         return $videos;
     }
 
-    private function playlistItemsListByPlaylistId($part, $params) {
+    private function playlistItemsListByPlaylistId($part, $params)
+    {
         $params = array_filter($params);
         $response = $this->youtubeService->playlistItems->listPlaylistItems(
             $part,

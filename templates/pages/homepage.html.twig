@@ -4,51 +4,99 @@
     {% for block in content.blocks %}
         {% include "includes/ethic/" ~ block.type ~ ".html.twig" with {content: block}%}
     {% endfor %}
-
     <section class="tz-lastest-event tz-lastest-event-style-4">
         <h3 class="tz-event-title">{{ content.eventCarouselHeadline }}</h3>
         <div class="container">
             <div class="tz-event-container">
                 <div class="tz-event-wrapper owl-carousel owl-theme">
-                    {% for eventCarouselItem in content.eventCarouselItems | sulu_util_multisort('[date]', 'desc') %}
-                        {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
-                        {% if
-                            (eventCarouselItem.excerptImages[0].url is defined and eventCarouselItem.excerptImages[0].url)
-                            and eventCarouselItem.date
-                            and eventCarouselItem.blogLink
-                            and eventCarouselItem.blogLinkText
-                            and eventCarouselItem.socialInstitutionLink
-                            and eventCarouselItem.socialInstitutionLinkText
+                    {% set eventCarouselItems = [] %}
+                    {% for key, eventCarouselItem in content.eventCarouselItems | sulu_util_multisort('[date]', 'desc') %}
+
+                        {% if (
+                            eventCarouselItem.excerptImages[0].url is defined
+                            and eventCarouselItem.excerptImages[0].url
+                           )
                         %}
-                        <div class="tz-event-style-4 {% if date(eventCarouselItem.date) > date()  %}upcoming{% endif %}">
-                            <h2>
-                                {% if date(eventCarouselItem.date) > date()  %}
-                                    Aktuell
-                                {% else %}
+                            {%
+                                set fields = [
+                                    {
+                                        'date': eventCarouselItem.date | date(),
+                                        'imageSrc': '',
+                                        'town': eventCarouselItem.town is defined ? eventCarouselItem.town : null,
+                                        'url': eventCarouselItem.url is defined ? eventCarouselItem.url : null,
+                                        'blogUrl': eventCarouselItem.blogLink is defined ? eventCarouselItem.blogLink : null,
+                                        'blogUrlText': eventCarouselItem.blogLinkText is defined ? eventCarouselItem.blogLinkText : null,
+                                        'title': eventCarouselItem.title is defined ? eventCarouselItem.title : null,
+                                        'description': eventCarouselItem.description is defined ? eventCarouselItem.description : null,
+                                        'donation': eventCarouselItem.donation is defined ? eventCarouselItem.donation : null,
+                                        'donationUrl': eventCarouselItem.socialInstitutionLink is defined ? eventCarouselItem.socialInstitutionLink : null,
+                                        'donationUrlText': eventCarouselItem.socialInstitutionLinkText is defined ? eventCarouselItem.socialInstitutionLinkText : null,
+                                        'key': key
+                                    }
+                                ]
+                            %}
+                            {% set eventCarouselItems = eventCarouselItems|merge(fields) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% for meetupNextEvent in meetupNextEvents %}
+                        {%
+                            set fields = [
+                            {
+                                'date': meetupNextEvent.local_date | date(),
+                                'town': meetupNextEvent.venue.city is defined ?: null,
+                                'url': meetupNextEvent.link is defined ?: null,
+                                'title': meetupNextEvent.name is defined ?: null,
+                                'description': meetupNextEvent.description is defined ?: null,
+                                'imageSrc': meetupNextEvent.featured_photo.photo_link,
+                                'source': 'meetup',
+                                'blogUrl': '',
+                                'blogUrlText': '',
+                                'donation': '',
+                                'donationUrl': '',
+                                'donationUrlText': ''
+                            }
+                        ]
+                        %}
+                        {% set eventCarouselItems = eventCarouselItems|merge(fields) %}
+                    {% endfor %}
+
+                    {% set eventCarouselItems = eventCarouselItems | sulu_util_multisort('[dates]', 'desc') %}
+
+                    {% for key, eventCarouselItem in eventCarouselItems %}
+                        {% if content.eventCarouselItems[key].excerptImages['0'] is defined %}
+                            <div class="tz-event-style-4 {% if date(eventCarouselItem.date) > date()  %}upcoming{% endif %}">
+                                <h2>
                                     {{ eventCarouselItem.date | date("Y") }}
-                                {% endif %}
-                            </h2>
-                            <div class="tz-image-event-item">
-                                <a href="{{ eventCarouselItem.url }}"><img src="{{ eventCarouselItem.excerptImages[0].formats['270x200'] }}" alt="{{ eventCarouselItem.title }}"></a>
-                            </div>
-                            <div class="tz-content-event-item">
-                                <h6>{{ eventCarouselItem.title }}</h6>
-                                <strong>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} @ 9:00 am</strong>
-                                <img src="/ethic/images/check-01-home1.png" style="display: unset; width: unset" alt="{{ eventCarouselItem.title }}">
-                                <p>
-                                    <strong><a href="{{ eventCarouselItem.blogLink }}" target="_blank" rel="noopener">{{ eventCarouselItem.blogLinkText }}</a></strong>
-                                    {{ eventCarouselItem.description }}
-                                    <br>
-                                    <strong>
-                                        Spende {{ eventCarouselItem.donation }},- Euro
+                                </h2>
+                                <div class="tz-image-event-item">
+                                    <a href="{{ eventCarouselItem.url }}">
+                                        {% if eventCarouselItem.imageSrc starts with ('https://secure.meetupstatic.com/photos') %}
+                                            {% set source = eventCarouselItem.imageSrc %}
+                                        {% else %}
+                                            {% set source = content.eventCarouselItems[key].excerptImages['0'].formats['270x200'] %}
+                                        {% endif %}
+                                        <img src="{{ source }}" alt="{{ eventCarouselItem.title }}">
+                                    </a>
+                                </div>
+                                <div class="tz-content-event-item">
+                                    <h6>{{ eventCarouselItem.title }}</h6>
+                                    <strong>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} @ 9:00 am</strong>
+                                    <img src="/ethic/images/check-01-home1.png" style="display: unset; width: unset" alt="{{ eventCarouselItem.title }}">
+                                    <p>
+                                        <strong><a href="{{ eventCarouselItem.blogUrl }}" target="_blank" rel="noopener">{{ eventCarouselItem.blogUrlText }}</a></strong>
+                                        {{ eventCarouselItem.description }}
                                         <br>
-                                        <a href="{{ eventCarouselItem.socialInstitutionLink }}" target="_blank" rel="noopener">
-                                            {{ eventCarouselItem.socialInstitutionLinkText }}
-                                        </a>
-                                    </strong>
-                                </p>
+                                        <strong>
+                                            Spende {{ eventCarouselItem.donation }},- Euro
+                                            <br>
+                                            <a href="{{ eventCarouselItem.donationUrl }}" target="_blank" rel="noopener">
+                                                {{ eventCarouselItem.donationUrlText }}
+                                            </a>
+                                        </strong>
+                                    </p>
+                                </div>
                             </div>
-                        </div>
                         {% endif %}
                     {% endfor %}
                 </div>
