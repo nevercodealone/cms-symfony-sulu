@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Service\MeetupService;
 use App\Service\TwitterService;
 use App\Service\WordpressService;
 use App\Service\YouTubeService;
@@ -23,8 +24,7 @@ class PageController extends WebsiteController
         YouTubeService $youTubeService,
         $preview = false,
         $partial = false
-    )
-    {
+    ) {
         $response = $this->renderStructure(
             $structure,
             [
@@ -58,26 +58,22 @@ class PageController extends WebsiteController
         return $response;
     }
 
-    /**
-     * @param StructureInterface $structure
-     * @param WordpressService $service
-     * @param bool $preview
-     * @param bool $partial
-     * @return Response
-     */
-    public function wordpress(StructureInterface $structure, WordpressService $service, $preview = false, $partial = false)
-    {
-        $response = $this->renderStructure(
+    public function homepage(
+        StructureInterface $structure,
+        WordpressService $wordpressService,
+        MeetupService $meetupService,
+        $preview = false,
+        $partial = false
+    ) {
+        return $this->renderStructure(
             $structure,
             [
-                // here you can add some custom data for your template
-                'blogList' => $service->getItemsFromBlog()
+                'blogList' => $wordpressService->getItemsFromBlog(),
+                'meetupNextEvents' => $meetupService->getNextEvents()
             ],
             $preview,
             $partial
         );
-
-        return $response;
     }
 
     /**
@@ -96,6 +92,4 @@ class PageController extends WebsiteController
         $sourceParam = '?aff=' . $aff;
         return $sourceParam;
     }
-
 }
-

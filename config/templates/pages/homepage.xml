@@ -7,7 +7,7 @@
     <key>homepage</key>
 
     <view>pages/homepage</view>
-    <controller>App\Controller\PageController:wordpress</controller>
+    <controller>App\Controller\PageController:homepage</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
@@ -77,6 +77,7 @@
                             <param name="socialInstitutionLink" value="socialInstitutionLink"/>
                             <param name="socialInstitutionLinkText" value="socialInstitutionLinkText"/>
                             <param name="date" value="date"/>
+                            <param name="town" value="town"/>
                             <param name="donation" value="donation"/>
                             <param name="description" value="description"/>
                         </param>

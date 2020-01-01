@@ -137,5 +137,4 @@ class Message
     {
         $this->ip = $ip;
     }
-
 }

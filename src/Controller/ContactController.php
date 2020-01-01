@@ -22,7 +22,7 @@ class ContactController extends AbstractController
 
         $data = json_decode((string) $request->getContent(), true);
 
-        if(!isset($data['name']) || !isset($data['email']) || !isset($data['message'])) {
+        if (!isset($data['name']) || !isset($data['email']) || !isset($data['message'])) {
             return new JsonResponse(
                 'messagesAction has not set values',
                 401
@@ -34,14 +34,14 @@ class ContactController extends AbstractController
         $message = $data['message'];
         $ip = $data['ip'] = $request->getClientIp();
 
-        if($name === '' || $email === '' || $message === '' || $ip === '') {
+        if ($name === '' || $email === '' || $message === '' || $ip === '') {
             return new JsonResponse(
                 'messagesAction has empty values',
                 400
             );
         }
 
-        if(!$spamProtection->validateUserInputs($data)) {
+        if (!$spamProtection->validateUserInputs($data)) {
             return new JsonResponse(
                 'messagesAction detected as spam',
                 402

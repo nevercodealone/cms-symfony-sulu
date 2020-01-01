@@ -2,7 +2,6 @@
 namespace App\Service;
 
 use Unirest\Request;
-use Unirest\Request\Body;
 
 class WordpressService
 {
