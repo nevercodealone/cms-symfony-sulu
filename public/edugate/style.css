@@ -1,1 +1,2 @@
 header .header-main .logo .header-logo img {max-width: 150px}
+.course-price-widget .title-widget p:before {content: '€';}
