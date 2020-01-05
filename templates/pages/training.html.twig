@@ -1,50 +1,40 @@
 {% extends "base-edugate.html.twig" %}
 
 {% block content %}
+    {% dump(content) %}
     <div class="section section-padding courses-detail">
         <div class="container">
             <div class="courses-detail-wrapper">
                 <div class="row">
-                    <div class="col-md-9 layout-left"><h1 class="course-title">GETTING STARTED WITH DJANGO</h1>
+                    <div class="col-md-9 layout-left">
+                        <h1 class="course-title">{{ content.headline }}</h1>
                         <div class="course-video">
-                            <iframe src="https://www.youtube.com/embed/xo1VInw-SKc?list=PL7JgdmQ0zTfatnGhUnRBnhMwYEraSIRdD" allowfullscreen="allowfullscreen"></iframe>
+                            {{ content.youTubeIframe | raw }}
                             <div class="clearfix"></div>
                         </div>
                         <div class="course-des">
-                            <div class="course-des-title underline">Courses Info</div>
-                            <div class="course-des-content"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed varius ultricies metus. Donec ac ex porta libero venenatis sodales. Sed efficitur eget risus sed molestie. Nulla blandit bibendum metus ut sagittis. Etiam quis semper justo. Sed tristique facilisis felis ut tincidunt. Phasellus auctor convallis nisl ut accumsan. Suspendisse ullamcorper fermentum lectus, vel tincidunt ligula mollis sit amet. Aliquam at ante at elit efficitur tincidunt a quis neque. Donec ut pulvinar metus. Pellentesque lobortis volutpat eros sed sagittis. Nunc rutrum ex eu auctor tristique. Maecenas suscipit vestibulum nunc nec placerat. Phasellus blandit augue nunc, consequat consectetur augue placerat sed. Aenean fermentum scelerisque lectus, sit amet ultricies ex interdum bibendum. Quisque porttitor, enim maximus convallis gravida, dui
-                                    arcu lacinia libero, quis ornare nibh elit pharetra massa.</p>
-
-                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed varius ultricies metus. Donec ac ex porta libero venenatis sodales. Sed efficitur eget risus sed molestie. Nulla blandit bibendum metus ut sagittis. Etiam quis semper justo. Sed tristique facilisis felis ut tincidunt. Phasellus auctor convallis nisl ut accumsan. Suspendisse ullamcorper fermentum lectus, vel tincidunt ligula mollis sit amet. Aliquam at ante at elit efficitur tincidunt a quis neque. Donec ut pulvinar metus. Pellentesque lobortis volutpat eros sed sagittis.</p>
+                            <div class="course-des-title underline">{{ content.courseInfoHeadline }}</div>
+                            <div class="course-des-content">
+                                {{ content.courseInfoDescription | raw }}
                                 <blockquote>
-                                    <div class="main-quote">Video courses to build new skills from start to finish.</div>
-                                    <div class="sub-quote">Lorem ipsum dolor sit amet, feugiat delicata liberavisse id cum, no quo maiorum intellegebat, liber regione eu sit. Mea cu case ludus integre.</div>
-                                    <footer>Amber Ivy&nbsp;
-                                        <small>(Grancie Company)</small>
+                                    <div class="main-quote">{{ content.courseInfoQuoteHeadline }}</div>
+                                    <div class="sub-quote">{{ content.courseInfoQuoteContent }}</div>
+                                    <footer>{{ content.courseInfoQuoteName }}
+                                        <small>({{ content.courseInfoQuoteCompany }})</small>
                                     </footer>
                                 </blockquote>
                             </div>
                             <div class="news-list">
-                                <div class="list-expand-title">Requirements</div>
+                                <div class="list-expand-title">{{ content.requirementsHeadline }}</div>
                                 <div class="row">
                                     <div class="col-md-6 col-sm-6 col-xs-6">
                                         <ul class="list-unstyled list-detail">
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Phasellus sit amet velit auctor turpis rhoncus.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Phasellus sed dolor sodales, eleifend ipsum eu.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Nullam id dolor in ex eleifend tempus.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Etiam id lorem vel neque faucibus fermentum.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Nunc tincidunt augue in enim sollicitudin feugiat.</a></li>
+                                            {% for requirementsItem in content.requirementsItems %}
+                                                <li><i class="fa fa-angle-right"></i><a href="#">{{ requirementsItem.requirementsItemText }}</a></li>
+                                            {% endfor %}
                                         </ul>
                                     </div>
-                                    <div class="col-md-6 col-sm-6 col-xs-6">
-                                        <ul class="list-unstyled list-detail">
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Phasellus sit amet velit auctor turpis rhoncus.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Phasellus sed dolor sodales, eleifend ipsum eu.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Nullam id dolor in ex eleifend tempus.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Etiam id lorem vel neque faucibus fermentum.</a></li>
-                                            <li><i class="fa fa-angle-right"></i><a href="#">Nunc tincidunt augue in enim sollicitudin feugiat.</a></li>
-                                        </ul>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -236,17 +226,17 @@
                     <div class="col-md-3 sidebar layout-right">
                         <div class="row">
                             <div class="course-price-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
-                                <div class="title-widget"><p>35</p></div>
+                                <div class="title-widget"><p>{{ content.price }}</p></div>
                                 <div class="content-widget">
                                     <div class="course-price-widget-wrapper">
                                         <div class="row">
                                             <div class="col-md-12 info-row col-sm-12 col-xs-12">
                                                 <div class="pull-left title">Dauer:</div>
-                                                <div class="pull-right length">4.2</div>
+                                                <div class="pull-right length">{{ content.duration }}</div>
                                             </div>
                                             <div class="col-md-12 info-row col-sm-12 col-xs-12">
                                                 <div class="pull-left title">Level:</div>
-                                                <div class="pull-right level">Advanced</div>
+                                                <div class="pull-right level">{{ content.level }}</div>
                                             </div>
                                             <div class="col-md-12 info-row col-sm-12 col-xs-12">
                                                 <div class="pull-left title">Rate:</div>
@@ -260,16 +250,33 @@
                             <div class="author-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
                                 <div class="title-widget">Webdevelopment Trainer</div>
                                 <div class="content-widget">
-                                    <div class="staff-item author-widget-wrapper customize">
-                                        <div class="staff-item-wrapper">
-                                            <div class="staff-info"><a href="#" class="staff-avatar"><img src="assets/images/people-avatar-3.jpg" alt="" class="img-responsive"/></a><a href="#" class="staff-name">lana simth</a>
+                                    {% for trainer in content.trainerItems %}
+                                        <div class="staff-item author-widget-wrapper customize">
+                                            <div class="staff-item-wrapper">
+                                                <div class="staff-info">
+                                                    <a href="#" class="staff-avatar">
+                                                        <img src="{{ trainer.trainerImage[0].formats['400x400'] }}" alt="{{ trainer.trainerName }}" class="img-responsive"/>
+                                                    </a>
+                                                    <a href="#" class="staff-name">
+                                                        {{ trainer.trainerName }}
+                                                    </a>
 
-                                                <div class="staff-job">vice head teacher</div>
-                                                <div class="staff-desctiption">Nam libelo tempore, cum soluta nobis est eligendi optio cumque nilhi impedil quo minus end maximie fade posimus the end.</div>
+                                                    <div class="staff-job">{{ trainer.trainerJobTitle }}</div>
+                                                    <div class="staff-desctiption">
+                                                        {{ trainer.trainerDescription }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="staff-socials">
+                                                <a href="{{ trainer.trainerFacebook }}" class="facebook">
+                                                    <i class="fa fa-facebook"></i>
+                                                </a>
+                                                <a href="{{ trainer.trainerTwitter }}" class="twitter">
+                                                    <i class="fa fa-twitter"></i>
+                                                </a>
                                             </div>
                                         </div>
-                                        <div class="staff-socials"><a href="#" class="facebook"><i class="fa fa-facebook"></i></a><a href="#" class="google"><i class="fa fa-google-plus"></i></a><a href="#" class="twitter"><i class="fa fa-twitter"></i></a></div>
-                                    </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <div class="clearfix"></div>

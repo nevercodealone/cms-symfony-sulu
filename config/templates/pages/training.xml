@@ -17,6 +17,168 @@
     <properties>
         <xi:include href="../includes/highlight.xml"/>
 
-        
+        <property name="headline" type="text_line">
+            <meta>
+                <title lang="en">Course Title</title>
+            </meta>
+        </property>
+        <property name="price" type="text_line" colspan="4">
+            <meta>
+                <title lang="en">Price</title>
+            </meta>
+        </property>
+        <property name="duration" type="text_line" colspan="4">
+            <meta>
+                <title lang="en">Duration</title>
+            </meta>
+        </property>
+        <property name="level" type="text_line" colspan="4">
+            <meta>
+                <title lang="en">Level</title>
+            </meta>
+        </property>
+        <property name="youTubeIframe" type="text_line">
+            <meta>
+                <title lang="en">YouTubeIframe</title>
+            </meta>
+        </property>
+        <section name="trainer">
+            <meta>
+                <title lang="en">Trainer</title>
+            </meta>
+            <properties>
+                <block name="trainerItems" default-type="trainers" minOccurs="0">
+                    <meta>
+                        <title lang="en">Trainers</title>
+                    </meta>
+                    <types>
+                        <type name="trainers">
+                            <meta>
+                                <title lang="en">Trainer</title>
+                            </meta>
+                            <properties>
+                                <property name="trainerImage" type="media_selection" maxOccurs="1">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="types" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="trainerName" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Name</title>
+                                    </meta>
+                                </property>
+                                <property name="trainerJobTitle" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Job Title</title>
+                                    </meta>
+                                </property>
+                                <property name="trainerDescription" type="text_line">
+                                    <meta>
+                                        <title lang="en">Description</title>
+                                    </meta>
+                                </property>
+                                <property name="trainerFacebook" type="url" colspan="6">
+                                    <meta>
+                                        <title>Facebook</title>
+                                    </meta>
+                                </property>
+                                <property name="trainerTwitter" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Twitter</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="courseInfo">
+            <meta>
+                <title lang="en">Course Info</title>
+            </meta>
+            <properties>
+                <property name="courseInfoHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="courseInfoDescription" type="text_editor">
+                    <meta>
+                        <title lang="en">Description</title>
+                    </meta>
+
+                    <params>
+                        <param name="table" value="false"/>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content"
+                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
+        <section name="courseInfoQuote">
+            <meta>
+                <title lang="en">Quote</title>
+            </meta>
+            <properties>
+                <property name="courseInfoQuoteHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="courseInfoQuoteContent" type="text_line">
+                    <meta>
+                        <title lang="en">Content</title>
+                    </meta>
+                </property>
+                <property name="courseInfoQuoteName" type="text_line" colspan="6">
+                    <meta>
+                        <title lang="en">Name</title>
+                    </meta>
+                </property>
+                <property name="courseInfoQuoteCompany" type="text_line" colspan="6">
+                    <meta>
+                        <title lang="en">Company</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+        <section name="requirements">
+            <meta>
+                <title lang="en">Requirements</title>
+            </meta>
+            <properties>
+                <property name="requirementsHeadline" type="text_line">
+                    <meta>
+                        <title>Requirements</title>
+                    </meta>
+                </property>
+                <block name="requirementsItems" default-type="requirementsItem" minOccurs="0">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <types>
+                        <type name="requirementsItem">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                            <properties>
+                                <property name="requirementsItemText" type="text_line">
+                                    <meta>
+                                        <title lang="en">Text</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
     </properties>
 </template>

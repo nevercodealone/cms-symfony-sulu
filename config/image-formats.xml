@@ -47,6 +47,12 @@
         </meta>
         <scale x="340" y="340"/>
     </format>
+    <format key="400x400">
+        <meta>
+            <title lang="en">Trainer image</title>
+        </meta>
+        <scale x="400" y="400"/>
+    </format>
     <format key="450x521">
         <meta>
             <title lang="en">employer branding fb</title>
