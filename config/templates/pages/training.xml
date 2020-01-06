@@ -180,5 +180,260 @@
                 </block>
             </properties>
         </section>
+        <section name="dayOne">
+            <meta>
+                <title lang="en">Day 1</title>
+            </meta>
+            <properties>
+                <property name="dayOneHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <block name="dayOneItems" default-type="dayOneItems" minOccurs="0">
+                    <meta>
+                        <title lang="en">Schedule</title>
+                    </meta>
+                    <types>
+                        <type name="dayOneItems">
+                            <meta>
+                                <title lang="en">Items</title>
+                            </meta>
+                            <properties>
+                                <property name="title" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Title</title>
+                                    </meta>
+                                </property>
+                                <property name="status" type="single_select" colspan="6">
+                                    <meta>
+                                        <title lang="en">Status</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="theory"/>
+                                        <param name="values" type="collection">
+                                            <param name="theory">
+                                                <meta>
+                                                    <title lang="en">Theory</title>
+                                                </meta>
+                                            </param>
+                                            <param name="team">
+                                                <meta>
+                                                    <title lang="en">Team</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="dayTwo">
+            <meta>
+                <title lang="en">Day 2</title>
+            </meta>
+            <properties>
+                <property name="dayTwoHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <block name="dayTwoItems" default-type="dayTwoItems" minOccurs="0">
+                    <meta>
+                        <title lang="en">Schedule</title>
+                    </meta>
+                    <types>
+                        <type name="dayTwoItems">
+                            <meta>
+                                <title lang="en">Items</title>
+                            </meta>
+                            <properties>
+                                <property name="title" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Title</title>
+                                    </meta>
+                                </property>
+                                <property name="status" type="single_select" colspan="6">
+                                    <meta>
+                                        <title lang="en">Status</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="theory"/>
+                                        <param name="values" type="collection">
+                                            <param name="theory">
+                                                <meta>
+                                                    <title lang="en">Theory</title>
+                                                </meta>
+                                            </param>
+                                            <param name="team">
+                                                <meta>
+                                                    <title lang="en">Team</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="dayThree">
+            <meta>
+                <title lang="en">Day 3</title>
+            </meta>
+            <properties>
+                <property name="dayThreeHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <block name="dayThreeItems" default-type="dayThreeItems" minOccurs="0">
+                    <meta>
+                        <title lang="en">Schedule</title>
+                    </meta>
+                    <types>
+                        <type name="dayThreeItems">
+                            <meta>
+                                <title lang="en">Items</title>
+                            </meta>
+                            <properties>
+                                <property name="title" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Title</title>
+                                    </meta>
+                                </property>
+                                <property name="status" type="single_select" colspan="6">
+                                    <meta>
+                                        <title lang="en">Status</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="theory"/>
+                                        <param name="values" type="collection">
+                                            <param name="theory">
+                                                <meta>
+                                                    <title lang="en">Theory</title>
+                                                </meta>
+                                            </param>
+                                            <param name="team">
+                                                <meta>
+                                                    <title lang="en">Team</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="dayFour">
+            <meta>
+                <title lang="en">Day 4</title>
+            </meta>
+            <properties>
+                <property name="dayFourHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <block name="dayFourItems" default-type="dayFourItems" minOccurs="0">
+                    <meta>
+                        <title lang="en">Schedule</title>
+                    </meta>
+                    <types>
+                        <type name="dayFourItems">
+                            <meta>
+                                <title lang="en">Items</title>
+                            </meta>
+                            <properties>
+                                <property name="title" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Title</title>
+                                    </meta>
+                                </property>
+                                <property name="status" type="single_select" colspan="6">
+                                    <meta>
+                                        <title lang="en">Status</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="theory"/>
+                                        <param name="values" type="collection">
+                                            <param name="theory">
+                                                <meta>
+                                                    <title lang="en">Theory</title>
+                                                </meta>
+                                            </param>
+                                            <param name="team">
+                                                <meta>
+                                                    <title lang="en">Team</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="dayFive">
+            <meta>
+                <title lang="en">Day 5</title>
+            </meta>
+            <properties>
+                <property name="dayFiveHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <block name="dayFiveItems" default-type="dayFiveItems" minOccurs="0">
+                    <meta>
+                        <title lang="en">Schedule</title>
+                    </meta>
+                    <types>
+                        <type name="dayFiveItems">
+                            <meta>
+                                <title lang="en">Items</title>
+                            </meta>
+                            <properties>
+                                <property name="title" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Title</title>
+                                    </meta>
+                                </property>
+                                <property name="status" type="single_select" colspan="6">
+                                    <meta>
+                                        <title lang="en">Status</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="theory"/>
+                                        <param name="values" type="collection">
+                                            <param name="theory">
+                                                <meta>
+                                                    <title lang="en">Theory</title>
+                                                </meta>
+                                            </param>
+                                            <param name="team">
+                                                <meta>
+                                                    <title lang="en">Team</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
     </properties>
 </template>
