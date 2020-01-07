@@ -58,7 +58,7 @@
                                                 <tbody>
                                                     {% if content.dayOneHeadline != '' and content.dayOneItems is not empty %}
                                                         <tr class="heading-content">
-                                                            <td colspan="4" class="left heading-content">1. content.dayOneHeadline</td>
+                                                            <td colspan="4" class="left heading-content">1. {{ content.dayOneHeadline }}</td>
                                                         </tr>
                                                         {% for dayOneItem in content.dayOneItems %}
                                                             <tr class="table-row">
