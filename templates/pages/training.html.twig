@@ -72,9 +72,10 @@
                                                                 </td>
                                                                 <td class="green-color col-4">
                                                                     {% set faIconClass = dayOneItem.status == 'team' ? 'w27 fa fa-users' : 'fas fa-chalkboard-teacher' %}
+                                                                    {% set status = dayOneItem.status == 'team' ? 'Team' : 'Theorie' %}
                                                                     <i class="{{ faIconClass }}"></i>
                                                                     <span>
-                                                                        {{ dayOneItem.status }}
+                                                                        {{ status }}
                                                                     </span>
                                                                 </td>
                                                             </tr>
