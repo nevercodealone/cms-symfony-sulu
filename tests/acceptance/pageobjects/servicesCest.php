@@ -39,6 +39,9 @@ class servicesCest
         }
     }
 
+    /**
+     * @skip
+     */
     public function onClickElementIsVisibleAndAllOthersNot(AcceptanceTester $I, startpage $startpage)
     {
         $I->scrollTo($startpage::$serviceSection);
