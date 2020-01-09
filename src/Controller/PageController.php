@@ -39,7 +39,7 @@ class PageController extends WebsiteController
 
     /**
      * @param StructureInterface $structure
-     * @param WordpressService $service
+     * @param Request $request
      * @param bool $preview
      * @param bool $partial
      * @return Response
