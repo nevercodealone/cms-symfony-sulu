@@ -44,14 +44,14 @@
                             set fields = [
                             {
                                 'date': meetupNextEvent.local_date | date(),
-                                'town': meetupNextEvent.venue.city is defined ?: null,
-                                'url': meetupNextEvent.link is defined ?: null,
-                                'title': meetupNextEvent.name is defined ?: null,
-                                'description': meetupNextEvent.description is defined ?: null,
+                                'town': meetupNextEvent.venue.city is defined ? meetupNextEvent.venue.city : null,
+                                'url': meetupNextEvent.link is defined ? meetupNextEvent.link : null,
+                                'title': meetupNextEvent.name is defined ? meetupNextEvent.name : null,
+                                'description': meetupNextEvent.description is defined ? meetupNextEvent.description|slice(0, 85) ~ '...' : null,
                                 'imageSrc': meetupNextEvent.featured_photo.photo_link,
                                 'source': 'meetup',
-                                'blogUrl': '',
-                                'blogUrlText': '',
+                                'blogUrl': meetupNextEvent.link is defined ? meetupNextEvent.link : null,
+                                'blogUrlText': 'Meetup Link',
                                 'donation': '',
                                 'donationUrl': '',
                                 'donationUrlText': ''
@@ -85,7 +85,7 @@
                                     <img src="/ethic/images/check-01-home1.png" style="display: unset; width: unset" alt="{{ eventCarouselItem.title }}">
                                     <p>
                                         <strong><a href="{{ eventCarouselItem.blogUrl }}" target="_blank" rel="noopener">{{ eventCarouselItem.blogUrlText }}</a></strong>
-                                        {{ eventCarouselItem.description }}
+                                        {{ eventCarouselItem.description|striptags }}
                                         <br>
                                         <strong>
                                             Spende {{ eventCarouselItem.donation }},- Euro
