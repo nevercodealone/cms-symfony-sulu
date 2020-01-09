@@ -1,3 +1,4 @@
 header .header-main .logo .header-logo img {max-width: 150px}
 .course-price-widget .title-widget p:before {content: '€';}
 .course-price-widget-wrapper .length:after {content: 'Stunden'}
+blockquote:before {font-family: "Font Awesome 5 Free"; font-weight: 900}
