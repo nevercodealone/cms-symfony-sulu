@@ -77,12 +77,11 @@
                             <param name="courseInfoDescription" value="courseInfoDescription"/>
                             <param name="trainerItems" value="trainerItems"/>
                             <param name="categories" value="excerpt.categories"/>
-                            <param name="image" value="headerImage"/>
+                            <param name="image" value="excerpt.images"/>
                         </param>
                     </params>
                 </property>
             </properties>
         </section>
-
     </properties>
 </template>
