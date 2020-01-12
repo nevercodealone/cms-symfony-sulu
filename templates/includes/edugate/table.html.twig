@@ -1,19 +1,19 @@
 <tr class="heading-content">
-    <td colspan="4" class="left heading-content">1. {{ content.dayOneHeadline }}</td>
+    <td colspan="4" class="left heading-content">{{ day }}. {{ headline }}</td>
 </tr>
-{% for dayOneItem in content.dayOneItems %}
+{% for item in items %}
     <tr class="table-row">
         <td class="left col-1">
             <a href="#">
                 <i class="bg-green mr25 fa fa-caret-right"></i>
                 <span>
-                    1.1 {{ dayOneItem.title }}
+                    {{ day }}.1 {{ item.title }}
                 </span>
             </a>
         </td>
         <td class="green-color col-4">
-            {% set faIconClass = dayOneItem.status == 'team' ? 'w27 fa fa-users' : 'fas fa-chalkboard-teacher' %}
-            {% set status = dayOneItem.status == 'team' ? 'Team' : 'Theorie' %}
+            {% set faIconClass = item.status == 'team' ? 'w27 fa fa-users' : 'fas fa-chalkboard-teacher' %}
+            {% set status = item.status == 'team' ? 'Team' : 'Theorie' %}
             <i class="{{ faIconClass }}"></i>
             <span>
                 {{ status }}

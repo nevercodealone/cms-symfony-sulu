@@ -62,32 +62,43 @@
                                             <table class="edu-table-responsive table-hover">
                                                 <tbody>
                                                     {% if content.dayOneHeadline != '' and content.dayOneItems is not empty %}
-                                                        <tr class="heading-content">
-                                                            <td colspan="4" class="left heading-content">1. {{ content.dayOneHeadline }}</td>
-                                                        </tr>
-                                                        {% for dayOneItem in content.dayOneItems %}
-                                                            <tr class="table-row">
-                                                                <td class="left col-1">
-                                                                    <a href="#">
-                                                                        <i class="bg-green mr25 fa fa-caret-right"></i>
-                                                                        <span>
-                                                                            1.1 {{ dayOneItem.title }}
-                                                                        </span>
-                                                                    </a>
-                                                                </td>
-                                                                <td class="green-color col-4">
-                                                                    {% set faIconClass = dayOneItem.status == 'team' ? 'w27 fa fa-users' : 'fas fa-chalkboard-teacher' %}
-                                                                    {% set status = dayOneItem.status == 'team' ? 'Team' : 'Theorie' %}
-                                                                    <i class="{{ faIconClass }}"></i>
-                                                                    <span>
-                                                                        {{ status }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        {% endfor %}
-                                                        <tr class="spacing-table">
-                                                            <td colspan="4"></td>
-                                                        </tr>
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 1,
+                                                            "headline": content.dayOneHeadline,
+                                                            "items": content.dayOneItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayTwoHeadline != '' and content.dayTwoItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 2,
+                                                            "headline": content.dayTwoHeadline,
+                                                            "items": content.dayTwoItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayThreeHeadline != '' and content.dayThreeItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 3,
+                                                            "headline": content.dayThreeHeadline,
+                                                            "items": content.dayThreeItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayFourHeadline != '' and content.dayFourItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 4,
+                                                            "headline": content.dayFourHeadline,
+                                                            "items": content.dayFourItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayFiveHeadline != '' and content.dayFiveItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 5,
+                                                            "headline": content.dayFiveHeadline,
+                                                            "items": content.dayFiveItems
+                                                        } %}
                                                     {% endif %}
                                                 </tbody>
                                             </table>
