@@ -1,13 +1,17 @@
 {% extends "base-edugate.html.twig" %}
 
 {% block content %}
+    {{ dump(content) }}
     <div class="section background-opacity page-title set-height-top">
         <div class="container">
                 <div class="page-title-wrapper">
                     <h2 class="captions">{{ content.headline }}</h2>
                     <ol class="breadcrumb">
-                        <li><a href="index.html">Home</a></li>
-                        <li class="active"><a href="#">Categories</a></li>
+                        {% for subPoint in content.subPoints %}
+                            <li>
+                                <a href="#">{{ subPoint.subPointsItem }}</a>
+                            </li>
+                        {% endfor %}
                     </ol>
                 </div>
         </div>

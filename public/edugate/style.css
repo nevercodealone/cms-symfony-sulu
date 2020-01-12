@@ -1,7 +1,7 @@
 header .header-main .logo .header-logo img {max-width: 150px}
 .course-price-widget .title-widget p:before {content: '€';}
 .course-price-widget-wrapper .length:after {content: 'Stunden'}
-blockquote:before, .star-rating span:before, .star-rating:before {font-family: "Font Awesome 5 Free"; font-weight: 900}
+blockquote:before, .star-rating span:before, .star-rating:before, .page-title .breadcrumb li + li:before {font-family: "Font Awesome 5 Free"; font-weight: 900}
 a.color-white {color: #ffffff}
 .star-rating {width: 80px}
 .star-rating:before {content: ''}

@@ -22,11 +22,25 @@
                 <title lang="en">Headline</title>
             </meta>
         </property>
-        <property name="subline" type="text_line">
+        <block name="subPoints" default-type="subPoints" minOccurs="0">
             <meta>
-                <title lang="en">Subline</title>
+                <title lang="en">Sub points</title>
             </meta>
-        </property>
+            <types>
+                <type name="subPoints">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <properties>
+                        <property name="subPointsItem" type="text_line">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                        </property>
+                    </properties>
+                </type>
+            </types>
+        </block>
         <section name="course">
             <meta>
                 <title lang="en">Courses</title>
