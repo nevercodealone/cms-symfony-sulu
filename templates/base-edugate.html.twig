@@ -75,15 +75,12 @@
                             {% for item in sulu_navigation_root_tree('main', 2, true) %}
                                 {% if item.children|length > 0 %}
                                     <li class="dropdown">
-                                        <a href="javascript:void(0)" class="main-menu">
-                                            {{ item.excerpt.title|default(item.title) }}<span class="fa fa-angle-down icons-dropdown"></span>
-                                        </a>
                                 {% else %}
                                     <li>
+                                {% endif %}
                                         <a href="{{ sulu_content_path(item.url) }}" title="{{ item.excerpt.title|default(item.title) }}" class="main-menu">
                                             {{ item.excerpt.title|default(item.title) }}
                                         </a>
-                                {% endif %}
                                         {% if item.children|length > 0 %}
                                             <ul class="dropdown-menu edugate-dropdown-menu-1">
                                             {% for child in item.children|sulu_util_multisort('[published]', 'desc') %}
