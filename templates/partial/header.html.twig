@@ -1,0 +1,13 @@
+{% block meta %}
+    {% include "SuluWebsiteBundle:Extension:seo.html.twig" with {
+        "seo": extension.seo|default([]),
+        "content": content|default([]),
+        "urls": urls|default([]),
+        "shadowBaseLocale": shadowBaseLocale|default(),
+        "defaultLocale": app.request.locale
+    } %}
+    {% include "meta/meta-facebook.html.twig" %}
+    {% include "meta/meta-twitter.html.twig" %}
+{% endblock %}
+<link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/img/favicon.ico" type="image/x-icon">

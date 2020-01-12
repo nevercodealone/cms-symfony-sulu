@@ -42,14 +42,6 @@
                 <title lang="en">YouTubeIframe</title>
             </meta>
         </property>
-        <property name="headerImage" type="media_selection" maxOccurs="1">
-            <meta>
-                <title lang="en">Header image</title>
-            </meta>
-            <params>
-                <param name="types" value="image"/>
-            </params>
-        </property>
         <section name="trainer">
             <meta>
                 <title lang="en">Trainer</title>
