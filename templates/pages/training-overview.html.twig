@@ -1,35 +1,39 @@
 {% extends "base-edugate.html.twig" %}
 
 {% block content %}
+    {% dump(content) %}
     <div class="section background-opacity page-title set-height-top">
         <div class="container">
-                <div class="page-title-wrapper"><!--.page-title-content--><h2 class="captions">{{ content.headline }}</h2>
-                <ol class="breadcrumb">
-                    <li><a href="index.html">Home</a></li>
-                    <li class="active"><a href="#">Categories</a></li>
-                </ol>
-            </div>
+                <div class="page-title-wrapper">
+                    <h2 class="captions">{{ content.headline }}</h2>
+                    <ol class="breadcrumb">
+                        <li><a href="index.html">Home</a></li>
+                        <li class="active"><a href="#">Categories</a></li>
+                    </ol>
+                </div>
         </div>
     </div>
     <div class="section section-padding courses">
         <div class="container">
-            <div class="group-title-index"><h2 class="center-title">{{ content.coursesHeadline }}</h2><h4 class="top-title">Having over
-                    <b>7 million students</b> worldwide and more than <b>30,000 online courses</b></h4>
+            <div class="group-title-index">
+                <h2 class="center-title">{{ content.coursesHeadline }}</h2>
+                <h4 class="top-title">{{ content.coursesSubline }}</h4>
                 <!--.bottom-title<i class="bottom-icon icon-a-1-01"></i>--></div>
             <div class="courses-wrapper"><!-- Nav tabs-->
                 <div class="row top-content">
                     <div class="col-md-3">
-                        <div class="result-output text-left"><p class="result-count">Showing <strong>1-6</strong> of total
-                                <strong>12</strong> courses</p></div>
+                        <div class="result-output text-left">
+                            <p class="result-count">Kategorien</p>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <ul role="tablist" class="nav nav-tabs edugate-tabs">
-                            <li role="presentation" class="active"><a href="#campus" data-toggle="tab"
-                                                                      class="text">Campus</a></li>
-                            <li role="presentation"><a href="#education" data-toggle="tab" class="text">Education</a></li>
-                            <li role="presentation"><a href="#building" data-toggle="tab" class="text">Building</a></li>
-                            <li role="presentation"><a href="#teachers" data-toggle="tab" class="text">Teachers</a></li>
-                            <li role="presentation"><a href="#students" data-toggle="tab" class="text">Students</a></li>
+                            {% for category in sulu_categories('en') %}
+                                {% set class = loop.first ? 'active' : '' %}
+                                <li role="presentation" class="{{ class }}">
+                                    <a href="#{{ category.key }}" data-toggle="tab" class="text">{{ category.name }}</a>
+                                </li>
+                            {% endfor %}
                         </ul>
                     </div>
                     <div class="col-md-3">
@@ -47,42 +51,38 @@
                 <div class="tab-content courses-content">
                     <div id="campus" role="tabpanel" class="tab-pane fade in active">
                         <div class="style-show style-grid row">
-                            <div class="col-style">
-                                <div class="edugate-layout-2">
-                                    <div class="edugate-layout-2-wrapper">
-                                        <div class="edugate-content"><a href="courses-detail.html" class="title">Photoghaphy
-                                                Master</a>
+                            {% for coursesOverviewItem in content.coursesOverviewItems %}
+                                <div class="col-style">
+                                    <div class="edugate-layout-2">
+                                        <div class="edugate-layout-2-wrapper">
+                                            <div class="edugate-content">
+                                                <a href="{{ coursesOverviewItem.url }}" class="title">
+                                                    {{ coursesOverviewItem.headline }}
+                                                </a>
 
-                                            <div class="info">
-                                                <div class="author item"><a href="#">By Admin</a></div>
-                                                <div class="date-time item"><a href="#">17 sep 2015</a></div>
+                                                <div class="info">
+                                                    <div class="author item">
+                                                        {% for trainers in coursesOverviewItem.trainerItems %}
+                                                            {{ trainers.trainerName }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div title="Rated 5.00 out of 5" class="star-rating">
+                                                    <span class="width-100">
+                                                        <strong class="rating">5.00</strong> out of 5
+                                                    </span>
+                                                </div>
+                                                <div class="description">
+                                                    {{ coursesOverviewItem.courseInfoDescription|raw }}
+                                                </div>
+                                                <a href="{{ coursesOverviewItem.url }}" class="btn btn-green"><span>Zum Kurs</span></a>
                                             </div>
-                                            <div class="info-more">
-                                                <div class="view item"><i class="fa fa-user"></i>
-
-                                                    <p> 56</p></div>
-                                                <div class="comment item"><i class="fa fa-comment"></i>
-
-                                                    <p> 239</p></div>
-                                            </div>
-                                            <div title="Rated 5.00 out of 5" class="star-rating"><span
-                                                        class="width-80"><strong
-                                                            class="rating">5.00</strong> out of 5</span></div>
-                                            <div class="description">It is a long established fact that a reader will be
-                                                distracted by the readable content of a page when looking at its layout. The
-                                                point of using. It is a long established fact that a reader will be
-                                                distracted by the readable content of a page when l ooking at its layout.
-                                                The point of using. Dalmatian hello amazing the rmore flung as thanks a
-                                                manta dealt to under emu some the and one baldbe dear sobbingly save and
-                                                spitefully less
-                                            </div>
-                                            <button class="btn btn-green"><span>learn now</span></button>
+                                            <div class="edugate-image">
+                                                <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.headline }}" class="img-responsive"/></div>
                                         </div>
-                                        <div class="edugate-image"><img src="assets/images/courses/courses-4.jpg" alt=""
-                                                                        class="img-responsive"/></div>
                                     </div>
                                 </div>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>

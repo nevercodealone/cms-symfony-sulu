@@ -1,6 +1,7 @@
 {% extends "base-edugate.html.twig" %}
 
 {% block content %}
+    {% dump(content) %}
     <div class="section background-opacity page-title set-height-top" style="background-image: url('{{ content.headerImage[0].formats['1920x1080'] }}')">
         <div class="container">
             <div class="page-title-wrapper">
