@@ -47,6 +47,12 @@
         </meta>
         <scale x="340" y="340"/>
     </format>
+    <format key="400x300">
+        <meta>
+            <title lang="en">Courses overview</title>
+        </meta>
+        <scale x="400" y="300"/>
+    </format>
     <format key="400x400">
         <meta>
             <title lang="en">Trainer image</title>

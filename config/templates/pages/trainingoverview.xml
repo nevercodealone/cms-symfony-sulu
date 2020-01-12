@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+    <key>trainingoverview</key>
+
+    <view>pages/training-overview</view>
+    <controller>SuluWebsiteBundle:Default:index</controller>
+    <cacheLifetime>604800</cacheLifetime>
+
+    <meta>
+        <title lang="en">Training overview</title>
+    </meta>
+
+    <properties>
+        <xi:include href="../includes/highlight.xml"/>
+
+        <property name="headline" type="text_line">
+            <meta>
+                <title lang="en">Headline</title>
+            </meta>
+        </property>
+        <block name="subPoints" default-type="subPoints" minOccurs="0">
+            <meta>
+                <title lang="en">Sub points</title>
+            </meta>
+            <types>
+                <type name="subPoints">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <properties>
+                        <property name="subPointsItem" type="text_line">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                        </property>
+                    </properties>
+                </type>
+            </types>
+        </block>
+        <section name="course">
+            <meta>
+                <title lang="en">Courses</title>
+            </meta>
+            <properties>
+                <property name="coursesHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="coursesSubline" type="text_line">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+        <section name="coursesOverview">
+            <meta>
+                <title lang="en">Course Overview</title>
+            </meta>
+            <properties>
+                <property name="coursesOverviewItems" type="smart_content">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <params>
+                        <param name="provider" value="pages"/>
+                        <param name="max_per_page" value="50"/>
+                        <param name="page_parameter" value="p"/>
+                        <param name="properties" type="collection">
+                            <param name="url" value="url"/>
+                            <param name="headline" value="headline"/>
+                            <param name="courseInfoDescription" value="courseInfoDescription"/>
+                            <param name="trainerItems" value="trainerItems"/>
+                            <param name="categories" value="excerpt.categories"/>
+                            <param name="image" value="excerpt.images"/>
+                        </param>
+                    </params>
+                </property>
+            </properties>
+        </section>
+    </properties>
+</template>

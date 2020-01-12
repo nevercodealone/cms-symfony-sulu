@@ -1,0 +1,96 @@
+{% extends "base-edugate.html.twig" %}
+
+{% block content %}
+    <div class="section background-opacity page-title set-height-top" style="background-image: url('{{ extension.excerpt.images[0].formats['1920x1080'] }}')">
+        <div class="container">
+                <div class="page-title-wrapper">
+                    <h2 class="captions">{{ content.headline }}</h2>
+                    <ol class="breadcrumb">
+                        {% for subPoint in content.subPoints %}
+                            <li>
+                                <a href="#">{{ subPoint.subPointsItem }}</a>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+        </div>
+    </div>
+    <div class="section section-padding courses">
+        <div class="container">
+            <div class="group-title-index">
+                <h2 class="center-title">{{ content.coursesHeadline }}</h2>
+                <h4 class="top-title">{{ content.coursesSubline }}</h4>
+                <!--.bottom-title<i class="bottom-icon icon-a-1-01"></i>--></div>
+            <div class="courses-wrapper"><!-- Nav tabs-->
+                <div class="row top-content">
+                    <div class="col-md-3">
+                        <div class="result-output text-left">
+                            <p class="result-count">Kategorien</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <ul role="tablist" class="nav nav-tabs edugate-tabs">
+                            {% for category in sulu_categories('en') %}
+                                {% set class = loop.first ? 'active' : '' %}
+                                <li role="presentation" class="{{ class }}">
+                                    <a href="#{{ category.key }}" data-toggle="tab" class="text">{{ category.name }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <ul class="btn-list-grid list-unstyled text-right">
+                            <li class="active">
+                                <button class="btn-grid"><i class="fa fa-th-large"></i></button>
+                            </li>
+                            <li>
+                                <button class="btn-list"><i class="fa fa-th-list"></i></button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Tab panes-->
+                <div class="tab-content courses-content">
+                    <div id="campus" role="tabpanel" class="tab-pane fade in active">
+                        <div class="style-show style-grid row">
+                            {% for coursesOverviewItem in content.coursesOverviewItems %}
+                                <div class="col-style">
+                                    <div class="edugate-layout-2">
+                                        <div class="edugate-layout-2-wrapper">
+                                            <div class="edugate-content">
+                                                <a href="{{ coursesOverviewItem.url }}" class="title">
+                                                    {{ coursesOverviewItem.headline }}
+                                                </a>
+
+                                                <div class="info">
+                                                    <div class="author item">
+                                                        {% for trainers in coursesOverviewItem.trainerItems %}
+                                                            {{ trainers.trainerName }}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div class="star-rating">
+                                                    <span class="width-100"></span>
+                                                </div>
+                                                <div class="description">
+                                                    {{ coursesOverviewItem.courseInfoDescription|raw }}
+                                                </div>
+                                                <a href="{{ coursesOverviewItem.url }}" class="btn btn-green"><span>Zum Kurs</span></a>
+                                            </div>
+                                            <div class="edugate-image">
+                                                <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.headline }}" class="img-responsive"/></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block javascript %}
+    <script src="/edugate/assets/js/pages/courses.js"></script>
+{% endblock %}
+

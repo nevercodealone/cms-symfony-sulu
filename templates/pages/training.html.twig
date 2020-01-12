@@ -1,16 +1,21 @@
 {% extends "base-edugate.html.twig" %}
 
 {% block content %}
-    {% dump(content) %}
+    <div class="section background-opacity page-title set-height-top" style="background-image: url('{{ extension.excerpt.images[0].formats['1920x1080'] }}')">
+        <div class="container">
+            <div class="page-title-wrapper">
+                <h2 class="captions">Kurs Inhalt</h2>
+            </div>
+        </div>
+    </div>
     <div class="section section-padding courses-detail">
         <div class="container">
             <div class="courses-detail-wrapper">
                 <div class="row">
                     <div class="col-md-9 layout-left">
                         <h1 class="course-title">{{ content.headline }}</h1>
-                        <div class="course-video">
+                        <div class="video-container">
                             {{ content.youTubeIframe | raw }}
-                            <div class="clearfix"></div>
                         </div>
                         <div class="course-des">
                             <div class="course-des-title underline">{{ content.courseInfoHeadline }}</div>
@@ -39,7 +44,7 @@
                             </div>
                         </div>
                         <div class="course-syllabus">
-                            <div class="course-syllabus-title underline">Courses syllabus</div>
+                            <div class="course-syllabus-title underline">Ablaufplan</div>
                             <div class="course-table">
                                 <div class="outer-container">
                                     <div class="inner-container">
@@ -47,10 +52,8 @@
                                             <table class="edu-table-responsive">
                                                 <thead>
                                                 <tr class="heading-table">
-                                                    <th class="col-1">title</th>
-                                                    <th class="col-2">estimate time</th>
-                                                    <th class="col-3">spent time</th>
-                                                    <th class="col-4">status</th>
+                                                    <th class="col-1">Inhalt</th>
+                                                    <th class="col-4">Art</th>
                                                 </tr>
                                                 </thead>
                                             </table>
@@ -58,163 +61,45 @@
                                         <div class="table-body">
                                             <table class="edu-table-responsive table-hover">
                                                 <tbody>
-                                                <tr class="heading-content">
-                                                    <td colspan="4" class="left heading-content">1. Introduction</td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>1.1 Introduction</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"><i class="w20 fa fa-clock-o"></i><span>40:20</span></td>
-                                                    <td class="green-color col-4"><i class="w27 fa fa-check-square"></i><span>Complete</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>1.1 Creating your project</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"><i class="w20 fa fa-clock-o"></i><span>20:20</span></td>
-                                                    <td class="bold-color col-4"><i class="w27 fa fa-pencil-square-o"></i><span>Learning</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>1.1 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="col-4">
-                                                        <div class="bg-yellow">FREE</div>
-                                                    </td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>1.1 Introduction</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="spacing-table">
-                                                    <td colspan="4"></td>
-                                                </tr>
-                                                <tr class="heading-content">
-                                                    <td colspan="4" class="left heading-content">2. Creating your project</td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>2.1 Introduction</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"><i class="w20 fa fa-clock-o"></i><span>40:20</span></td>
-                                                    <td class="green-color col-4"><i class="w27 fa fa-check-square"></i><span>Complete</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>2.2 Creating your project</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"><i class="w20 fa fa-clock-o"></i><span>20:20</span></td>
-                                                    <td class="bold-color col-4"><i class="w27 fa fa-pencil-square-o"></i><span>Learning</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>2.3 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="col-4">
-                                                        <div class="bg-yellow">FREE</div>
-                                                    </td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>2.4 Introduction</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>2.5 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>2.6 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="col-4">
-                                                        <div class="bg-yellow">FREE</div>
-                                                    </td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>2.7 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>2.8 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="spacing-table">
-                                                    <td colspan="4"></td>
-                                                </tr>
-                                                <tr class="heading-content">
-                                                    <td colspan="4" class="left heading-content">3. Creating your apps</td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>3.1 Introduction</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"><i class="w20 fa fa-clock-o"></i><span>40:20</span></td>
-                                                    <td class="green-color col-4"><i class="w27 fa fa-check-square"></i><span>Complete</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>3.2 Creating your project</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"><i class="w20 fa fa-clock-o"></i><span>20:20</span></td>
-                                                    <td class="bold-color col-4"><i class="w27 fa fa-pencil-square-o"></i><span>Learning</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>3.3 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="col-4">
-                                                        <div class="bg-yellow">FREE</div>
-                                                    </td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>3.4 Introduction</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>3.5 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="mr18 fa fa-file-text"></i><span>3.6 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="col-4">
-                                                        <div class="bg-yellow">FREE</div>
-                                                    </td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>3.7 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row col-4">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>3.8 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>3.9 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
-                                                <tr class="table-row">
-                                                    <td class="left col-1"><a href="#"><i class="bg-green mr25 fa fa-caret-right"></i><span>3.10 Document setup and background</span></a></td>
-                                                    <td class="col-2"><i class="w20 fa fa-clock-o"></i><span>50:20</span></td>
-                                                    <td class="col-3"></td>
-                                                    <td class="bolder-color col-4"><i class="w27 fa fa-lock"></i><span>Private</span></td>
-                                                </tr>
+                                                    {% if content.dayOneHeadline != '' and content.dayOneItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 1,
+                                                            "headline": content.dayOneHeadline,
+                                                            "items": content.dayOneItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayTwoHeadline != '' and content.dayTwoItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 2,
+                                                            "headline": content.dayTwoHeadline,
+                                                            "items": content.dayTwoItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayThreeHeadline != '' and content.dayThreeItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 3,
+                                                            "headline": content.dayThreeHeadline,
+                                                            "items": content.dayThreeItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayFourHeadline != '' and content.dayFourItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 4,
+                                                            "headline": content.dayFourHeadline,
+                                                            "items": content.dayFourItems
+                                                        } %}
+                                                    {% endif %}
+
+                                                    {% if content.dayFiveHeadline != '' and content.dayFiveItems is not empty %}
+                                                        {% include "includes/edugate/table.html.twig" with {
+                                                            "day": 5,
+                                                            "headline": content.dayFiveHeadline,
+                                                            "items": content.dayFiveItems
+                                                        } %}
+                                                    {% endif %}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -239,11 +124,10 @@
                                                 <div class="pull-right level">{{ content.level }}</div>
                                             </div>
                                             <div class="col-md-12 info-row col-sm-12 col-xs-12">
-                                                <div class="pull-left title">Rate:</div>
-                                                <div title="Rated 5.00 out of 5" class="pull-right star-rating"><span class="width-80"><strong class="rating">5.00</strong> out of 5</span></div>
+                                                <div>Max 6 Teilnehmer empfohlen</div>
                                             </div>
                                         </div>
-                                        <button class="btn btn-green"><span>Jetzt buchen</span></button>
+                                        <a href="mailto:rolandgolla@gmail.com" class="btn btn-green color-white"><span>Jetzt buchen</span></a>
                                     </div>
                                 </div>
                             </div>
@@ -268,11 +152,11 @@
                                                 </div>
                                             </div>
                                             <div class="staff-socials">
-                                                <a href="{{ trainer.trainerFacebook }}" class="facebook">
-                                                    <i class="fa fa-facebook"></i>
+                                                <a href="{{ trainer.trainerFacebook }}" class="facebook" rel="nofollow">
+                                                    <i class="fab fa-facebook"></i>
                                                 </a>
-                                                <a href="{{ trainer.trainerTwitter }}" class="twitter">
-                                                    <i class="fa fa-twitter"></i>
+                                                <a href="{{ trainer.trainerTwitter }}" class="twitter" rel="nofollow">
+                                                    <i class="fab fa-twitter"></i>
                                                 </a>
                                             </div>
                                         </div>
