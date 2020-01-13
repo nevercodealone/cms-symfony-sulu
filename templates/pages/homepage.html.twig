@@ -10,7 +10,7 @@
             <div class="tz-event-container">
                 <div class="tz-event-wrapper owl-carousel owl-theme">
                     {% set eventCarouselItems = [] %}
-                    {% for key, eventCarouselItem in content.eventCarouselItems | sulu_util_multisort('[date]', 'desc') %}
+                    {% for key, eventCarouselItem in content.eventCarouselItems | sulu_util_multisort('[date]', 'asc') %}
 
                         {% if (
                             eventCarouselItem.excerptImages[0].url is defined
