@@ -63,41 +63,39 @@
 
                     {% set eventCarouselItems = eventCarouselItems | sulu_util_multisort('[dates]', 'desc') %}
 
-                    {% for key, eventCarouselItem in eventCarouselItems %}
-                        {% if content.eventCarouselItems[key].excerptImages['0'] is defined %}
-                            <div class="tz-event-style-4 {% if date(eventCarouselItem.date) > date()  %}upcoming{% endif %}">
-                                <h2>
-                                    {{ eventCarouselItem.date | date("Y") }}
-                                </h2>
-                                <div class="tz-image-event-item">
-                                    <a href="{{ eventCarouselItem.url }}">
-                                        {% if eventCarouselItem.imageSrc starts with ('https://secure.meetupstatic.com/photos') %}
-                                            {% set source = eventCarouselItem.imageSrc %}
-                                        {% else %}
-                                            {% set source = content.eventCarouselItems[key].excerptImages['0'].formats['270x200'] %}
-                                        {% endif %}
-                                        <img src="{{ source }}" alt="{{ eventCarouselItem.title }}">
-                                    </a>
-                                </div>
-                                <div class="tz-content-event-item">
-                                    <h6>{{ eventCarouselItem.title }}</h6>
-                                    <strong>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} @ 9:00 am</strong>
-                                    <img src="/ethic/images/check-01-home1.png" style="display: unset; width: unset" alt="{{ eventCarouselItem.title }}">
-                                    <p>
-                                        <strong><a href="{{ eventCarouselItem.blogUrl }}" target="_blank" rel="noopener">{{ eventCarouselItem.blogUrlText }}</a></strong>
-                                        {{ eventCarouselItem.description|striptags }}
-                                        <br>
-                                        <strong>
-                                            Spende {{ eventCarouselItem.donation }},- Euro
-                                            <br>
-                                            <a href="{{ eventCarouselItem.donationUrl }}" target="_blank" rel="noopener">
-                                                {{ eventCarouselItem.donationUrlText }}
-                                            </a>
-                                        </strong>
-                                    </p>
-                                </div>
+                    {% for eventCarouselItem in eventCarouselItems %}
+                        <div class="tz-event-style-4 {% if date(eventCarouselItem.date) > date()  %}upcoming{% endif %}">
+                            <h2>
+                                {{ eventCarouselItem.date | date("Y") }}
+                            </h2>
+                            <div class="tz-image-event-item">
+                                <a href="{{ eventCarouselItem.url }}">
+                                    {% if eventCarouselItem.imageSrc starts with ('https://secure.meetupstatic.com/photos') %}
+                                        {% set source = eventCarouselItem.imageSrc %}
+                                    {% else %}
+                                        {% set source = content.eventCarouselItems[eventCarouselItem.key].excerptImages['0'].formats['270x200'] %}
+                                    {% endif %}
+                                    <img src="{{ source }}" alt="{{ eventCarouselItem.title }}">
+                                </a>
                             </div>
-                        {% endif %}
+                            <div class="tz-content-event-item">
+                                <h6>{{ eventCarouselItem.title }}</h6>
+                                <strong>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} @ 9:00 am</strong>
+                                <img src="/ethic/images/check-01-home1.png" style="display: unset; width: unset" alt="{{ eventCarouselItem.title }}">
+                                <p>
+                                    <strong><a href="{{ eventCarouselItem.blogUrl }}" target="_blank" rel="noopener">{{ eventCarouselItem.blogUrlText }}</a></strong>
+                                    {{ eventCarouselItem.description|striptags }}
+                                    <br>
+                                    <strong>
+                                        Spende {{ eventCarouselItem.donation }},- Euro
+                                        <br>
+                                        <a href="{{ eventCarouselItem.donationUrl }}" target="_blank" rel="noopener">
+                                            {{ eventCarouselItem.donationUrlText }}
+                                        </a>
+                                    </strong>
+                                </p>
+                            </div>
+                        </div>
                     {% endfor %}
                 </div>
             </div>
