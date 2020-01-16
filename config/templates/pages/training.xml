@@ -47,53 +47,11 @@
                 <title lang="en">Trainer</title>
             </meta>
             <properties>
-                <block name="trainerItems" default-type="trainers" minOccurs="0">
+                <property name="trainerItems" type="contact_account_selection">
                     <meta>
                         <title lang="en">Trainers</title>
                     </meta>
-                    <types>
-                        <type name="trainers">
-                            <meta>
-                                <title lang="en">Trainer</title>
-                            </meta>
-                            <properties>
-                                <property name="trainerImage" type="media_selection" maxOccurs="1">
-                                    <meta>
-                                        <title lang="en">Image</title>
-                                    </meta>
-                                    <params>
-                                        <param name="types" value="image"/>
-                                    </params>
-                                </property>
-                                <property name="trainerName" type="text_line" colspan="6">
-                                    <meta>
-                                        <title lang="en">Name</title>
-                                    </meta>
-                                </property>
-                                <property name="trainerJobTitle" type="text_line" colspan="6">
-                                    <meta>
-                                        <title lang="en">Job Title</title>
-                                    </meta>
-                                </property>
-                                <property name="trainerDescription" type="text_line">
-                                    <meta>
-                                        <title lang="en">Description</title>
-                                    </meta>
-                                </property>
-                                <property name="trainerFacebook" type="url" colspan="6">
-                                    <meta>
-                                        <title>Facebook</title>
-                                    </meta>
-                                </property>
-                                <property name="trainerTwitter" type="text_line" colspan="6">
-                                    <meta>
-                                        <title lang="en">Twitter</title>
-                                    </meta>
-                                </property>
-                            </properties>
-                        </type>
-                    </types>
-                </block>
+                </property>
             </properties>
         </section>
         <section name="courseInfo">
