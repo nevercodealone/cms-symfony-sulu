@@ -89,6 +89,22 @@
             </div>
         </div>
     </div>
+    <div class="section gallery-page gallery-3column">
+        <div class="container">
+            <div class="group-title-index">
+                <h4 class="top-title">{{ content.youTubeHeadline }}</h4>
+                <h2 class="center-title">{{ content.youTubeSubline }}</h2>
+                <div class="bottom-title"><i class="fab fa-youtube" style="font-size: 40px"></i></div>
+            </div>
+            <div class="grid">
+                {% for video in videoList %}
+                    <div class="grid-item">
+                        <iframe title="{{ video['snippet']['title'] }}" width="370" height="250" src="https://www.youtube.com/embed/{{ video['snippet']['resourceId']['videoId'] }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block javascript %}
     <script src="/edugate/assets/js/pages/courses.js"></script>

@@ -11,15 +11,15 @@ class YouTubeService
         $this->youtubeService = $youtubeService;
     }
 
-    public function getItemsFromChannel()
+    public function getItemsFromChannel($playlistId = 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF')
     {
         $params = [
-            'maxResults' => 50,
-            'playlistId' => 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF'
+            'maxResults' => 20,
+            'playlistId' => $playlistId
         ];
 
         $videoList = $this->playlistItemsListByPlaylistId('snippet', $params);
-        $videos = array_reverse($videoList['items']);
+        $videos = $videoList['items'];
         $videos = array_slice($videos, 0, 9);
 
         return $videos;
