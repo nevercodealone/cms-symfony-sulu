@@ -19,6 +19,31 @@ class PageController extends WebsiteController
      * @param bool $partial
      * @return Response
      */
+    public function trainingOverview(
+        StructureInterface $structure,
+        YouTubeService $youTubeService,
+        $preview = false,
+        $partial = false
+    ) {
+        $response = $this->renderStructure(
+            $structure,
+            [
+                'videoList' => $youTubeService->getItemsFromChannel('PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X')
+            ],
+            $preview,
+            $partial
+        );
+
+        return $response;
+    }
+
+    /**
+     * @param StructureInterface $structure
+     * @param YouTubeService $youTubeService
+     * @param bool $preview
+     * @param bool $partial
+     * @return Response
+     */
     public function employerBranding(
         StructureInterface $structure,
         YouTubeService $youTubeService,

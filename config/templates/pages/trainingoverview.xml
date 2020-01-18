@@ -7,7 +7,7 @@
     <key>trainingoverview</key>
 
     <view>pages/training-overview</view>
-    <controller>SuluWebsiteBundle:Default:index</controller>
+    <controller>App\Controller\PageController:trainingOverview</controller>
     <cacheLifetime>604800</cacheLifetime>
 
     <meta>
