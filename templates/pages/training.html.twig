@@ -35,11 +35,21 @@
                                     <div class="col-md-6 col-sm-6 col-xs-6">
                                         <ul class="list-unstyled list-detail">
                                             {% for requirementsItem in content.requirementsItems %}
-                                                <li><i class="fa fa-angle-right"></i><a href="#">{{ requirementsItem.requirementsItemText }}</a></li>
+                                                {% if loop.index is not divisible by(2) %}
+                                                    <li><i class="fa fa-angle-right"></i><a href="#">{{ requirementsItem.requirementsItemText }}</a></li>
+                                                {% endif %}
                                             {% endfor %}
                                         </ul>
                                     </div>
-
+                                    <div class="col-md-6 col-sm-6 col-xs-6">
+                                        <ul class="list-unstyled list-detail">
+                                            {% for requirementsItem in content.requirementsItems %}
+                                                {% if loop.index is divisible by(2) %}
+                                                    <li><i class="fa fa-angle-right"></i><a href="#">{{ requirementsItem.requirementsItemText }}</a></li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
