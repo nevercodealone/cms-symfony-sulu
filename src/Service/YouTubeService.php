@@ -19,7 +19,7 @@ class YouTubeService
         ];
 
         $videoList = $this->playlistItemsListByPlaylistId('snippet', $params);
-        $videos = array_reverse($videoList['items']);
+        $videos = $videoList['items'];
         $videos = array_slice($videos, 0, 9);
 
         return $videos;
