@@ -83,5 +83,22 @@
                 </property>
             </properties>
         </section>
+        <section name="youTube">
+            <meta>
+                <title lang="en">YouTube</title>
+            </meta>
+            <properties>
+                <property name="youTubeHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                </property>
+                <property name="youTubeSubline" type="text_line">
+                    <meta>
+                        <title lang="en">Subline</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
     </properties>
 </template>
