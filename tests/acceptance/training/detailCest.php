@@ -11,7 +11,7 @@ class detailCest
         $I->amOnPage('/');
         $I->waitForElement($page::$navigationFirstCourse);
         $url = $I->grabAttributeFrom($page::$navigationFirstCourse, 'href');
-        $I->amOnPage($url);
+        $I->amOnUrl($url);
     }
 
     public function hOneIsUnique(AcceptanceTester $I, Training $page)
