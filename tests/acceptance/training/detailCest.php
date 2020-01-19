@@ -14,6 +14,6 @@ class detailCest
 
     public function hOneIsUnique(AcceptanceTester $I, Training $page)
     {
-        $I->seeNumberOfElements('h1');
+        $I->seeNumberOfElements('h1', 1);
     }
 }
