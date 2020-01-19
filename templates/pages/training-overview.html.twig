@@ -93,8 +93,12 @@
         <div class="container">
             <div class="group-title-index">
                 <h4 class="top-title">{{ content.youTubeHeadline }}</h4>
-                <h2 class="center-title">{{ content.youTubeSubline }}</h2>
-                <div class="bottom-title"><i class="fab fa-youtube" style="font-size: 40px"></i></div>
+                <h2>{{ content.youTubeSubline }}</h2>
+                <div class="bottom-title">
+                    <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X" target="_blank" rel="nofollow">
+                        <i class="fab fa-youtube" style="font-size: 40px"></i>
+                    </a>
+                </div>
             </div>
             <div class="grid">
                 {% for video in videoList %}

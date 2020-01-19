@@ -13,7 +13,8 @@
             <div class="courses-detail-wrapper">
                 <div class="row">
                     <div class="col-md-9 layout-left">
-                        <h1 class="course-title">{{ content.headline }}</h1>
+                        {% dump(content) %}
+                        <h1 class="course-title">{{ content.title }}</h1>
                         <div class="video-container">
                             {{ content.youTubeIframe | raw }}
                         </div>
