@@ -2,7 +2,7 @@
 
 namespace NCATesting\training;
 use NCATesting\AcceptanceTester;
-use NCATesting\Page\training;
+use NCATesting\Page\Training;
 
 class overviewCest
 {
