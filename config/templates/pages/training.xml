@@ -17,11 +17,6 @@
     <properties>
         <xi:include href="../includes/highlight.xml"/>
 
-        <property name="headline" type="text_line">
-            <meta>
-                <title lang="en">Course Title</title>
-            </meta>
-        </property>
         <property name="price" type="text_line" colspan="4">
             <meta>
                 <title lang="en">Price</title>
