@@ -54,7 +54,7 @@
                     <div id="campus" role="tabpanel" class="tab-pane fade in active">
                         <div class="style-show style-grid row">
                             {% for coursesOverviewItem in content.coursesOverviewItems %}
-                                <div class="col-style" data-cc="list-item">
+                                <div class="col-style" data-q="list-item">
                                     <div class="edugate-layout-2">
                                         <div class="edugate-layout-2-wrapper">
                                             <div class="edugate-content">
@@ -102,7 +102,7 @@
             </div>
             <div class="grid">
                 {% for video in videoList %}
-                    <div class="grid-item" data-cc="yt-item">
+                    <div class="grid-item" data-q="yt-item">
                         <iframe title="{{ video['snippet']['title'] }}" width="370" height="250" src="https://www.youtube.com/embed/{{ video['snippet']['resourceId']['videoId'] }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                     </div>
                 {% endfor %}
