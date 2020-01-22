@@ -41,7 +41,6 @@ services:
     - TWITTER_ACCESS_SECRET=/run/secrets/sulu_nca_twitter_access_secret
     image: $WEB_IMAGE
     labels:
-      io.rancher.container.pull_image: always
       traefik.docker.network: proxy
       traefik.enable: true
       traefik.frontend.passHostHeader: true
