@@ -8,6 +8,7 @@ services:
     - MYSQL_PASSWORD_FILE=/run/secrets/sulu_nca_database_pass
     - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/sulu_nca_database_root_pass
     - MYSQL_USER_FILE=/run/secrets/sulu_nca_database_user
+    - MYSQL_INITDB_SKIP_TZINFO=true
     image: mariadb
     labels:
       io.rancher.container.pull_image: always
