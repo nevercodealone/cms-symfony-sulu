@@ -86,7 +86,6 @@ deploy_development_image_to_branch:
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/uploads /var/www/html/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'chown www-data.www-data -R /var/www/html/' || true
     - sleep 180s
-    - curl -s $HTTP_URL > /dev/null||true
   tags:
     - docker-executor
   except:
@@ -112,7 +111,6 @@ deploy_production_image_to_stage:
     - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/uploads /var/www/html/' || true
     - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'chown www-data.www-data -R /var/www/html/' || true
     - sleep 180s
-    - curl -s $HTTP_URL > /dev/null||true
   tags:
     - docker-executor
   only:
