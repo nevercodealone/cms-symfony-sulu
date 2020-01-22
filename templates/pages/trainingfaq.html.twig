@@ -1,0 +1,10 @@
+{% extends "base-edugate.html.twig" %}
+
+{% block content %}
+    {% dump(content) %}
+    <div class="group-title-index">
+        <h4 class="top-title">{{ content.headerSubline }}</h4>
+        <h2 class="center-title">{{ content.headerHeadline }}</h2>
+        <div class="bottom-title"><i class="bottom-icon icon-icon-05"></i></div>
+    </div>
+{% endblock %}
