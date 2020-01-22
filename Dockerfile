@@ -68,9 +68,9 @@ LABEL description="Shipped toolboximage for nevercodealone.de."
 
 COPY --from=composer-dev /var/www/html/vendor/ /var/www/html/vendor/
 
-ARG RANCHER_CLI_VERSION=0.6.13
+ARG RANCHER_CLI_VERSION=0.6.14
 ARG RANCHER_CLI_URL=https://github.com/rancher/cli/releases/download/v$RANCHER_CLI_VERSION/rancher-linux-amd64-v$RANCHER_CLI_VERSION.tar.gz
-ARG RANCHER_COMPOSE_VERSION=0.12.4
+ARG RANCHER_COMPOSE_VERSION=0.12.5
 ARG RANCHER_COMPOSE_URL=https://github.com/rancher/rancher-compose/releases/download/v${RANCHER_COMPOSE_VERSION}/rancher-compose-linux-amd64-v${RANCHER_COMPOSE_VERSION}.tar.gz
 
 RUN curl -sSL "$RANCHER_CLI_URL" | tar -xzp -C /usr/local/bin/ --strip-components=2 \
