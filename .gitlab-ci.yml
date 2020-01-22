@@ -75,6 +75,8 @@ deploy_development_image_to_branch:
     - rancher rm --type stack --stop $RANCHER_PROJECT_NAME || true
   script:
     - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.yml -d --pull
+    - sleep 10
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.yml -d --pull
   after_script:
     - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/*' || true
@@ -83,7 +85,7 @@ deploy_development_image_to_branch:
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/var/uploads /var/www/html/var/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/uploads /var/www/html/' || true
     - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'chown www-data.www-data -R /var/www/html/' || true
-    - sleep 360s
+    - sleep 180s
   tags:
     - docker-executor
   except:
@@ -108,7 +110,7 @@ deploy_production_image_to_stage:
     - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/var/uploads /var/www/html/var/' || true
     - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/uploads /var/www/html/' || true
     - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'chown www-data.www-data -R /var/www/html/' || true
-    - sleep 360s
+    - sleep 180s
   tags:
     - docker-executor
   only:
