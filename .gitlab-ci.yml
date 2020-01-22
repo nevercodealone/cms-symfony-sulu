@@ -98,6 +98,8 @@ deploy_production_image_to_stage:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
   script:
     - rancher up -s stage-cms-nevercodealone-de -f docker-compose.yml -d --pull
+    - sleep 10
+    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.yml -d --pull
   after_script:
     - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/*' || true
