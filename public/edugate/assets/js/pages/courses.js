@@ -3,7 +3,7 @@
     $(function(){
         // efect button list - grid for page courses
         $('.btn-list-grid .btn-grid').click(function(){
-            //alert('true');
+            //console.log('true');
             if ($('.style-show').hasClass('style-list')){
                 $('.style-show').removeClass('style-list');
                 $('.style-show').addClass('style-grid');
@@ -13,7 +13,7 @@
         });
 
         $('.btn-list-grid .btn-list').click(function(){
-            //alert('false');
+            //console.log('false');
             if ($('.style-show').hasClass('style-grid')){
                 $('.style-show').removeClass('style-grid');
                 $('.style-show').addClass('style-list');
