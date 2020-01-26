@@ -25,6 +25,12 @@
                 "options": [],
                 "conditions": []
             }
+        ,
+            {
+                "action": "vendor/bin/xmllint config -v",
+                "options": [],
+                "conditions": []
+            }
         ]
     },
     "prepare-commit-msg": {
