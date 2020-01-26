@@ -62,7 +62,7 @@
                         <param name="headline" value="true"/>
                     </params>
                 </property>
-                <property name="courseInfoDescription" type="text_editor"l>
+                <property name="courseInfoDescription" type="text_editor">
                     <meta>
                         <title lang="en">Description</title>
                     </meta>
