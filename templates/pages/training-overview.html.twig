@@ -78,7 +78,8 @@
                                                 <a href="{{ coursesOverviewItem.url }}" class="btn btn-green"><span>Zum Kurs</span></a>
                                             </div>
                                             <div class="edugate-image">
-                                                <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.headline }}" class="img-responsive"/></div>
+                                                <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive"/>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
