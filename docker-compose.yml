@@ -4,38 +4,36 @@ version: '3.6'
 services:
   adminer:
     depends_on:
-    - db
+      - db
     image: adminer
     ports:
-    - 8091:8080/tcp
+      - 8091:8080/tcp
+    links:
+      - db:db
 
   db:
-    environment:
-    - MYSQL_DATABASE=nca_sulu
-    - MYSQL_PASSWORD=nca_sulu
-    - MYSQL_ROOT_PASSWORD=aex5iejaeTh3ongo4chu
-    - MYSQL_USER=nca_sulu
-    - TZ=Europe/Berlin
     image: mariadb
-    ports:
-    - 3306:3306/tcp
-    volumes:
-    - './db-live:/var/lib/mysql'
-    - './db-init:/docker-entrypoint-initdb.d'
     restart: always
+    volumes:
+      - './db-live:/var/lib/mysql'
+      - './db-init:/docker-entrypoint-initdb.d'
+    restart: always
+    env_file:
+      - .env
 
   web:
     build:
       context: .
-      target: webserver
+      target: dev
     depends_on:
-    - db
-    environment:
-    - DATABASE_URL=mysql://nca_sulu:nca_sulu@db:3306/nca_sulu
-    - MAIL_URL=null://localhost
-    - SULU_ADMIN_EMAIL=
+      - db
+    env_file:
+      - .env
     volumes:
-      - './:/var/www/html'
+      - './uploads:/var/www/html/uploads'
+      - './var:/var/www/html/var'
     ports:
-    - 8090:80/tcp
+      - 8090:80/tcp
+    links:
+      - db:db
     restart: always

@@ -7,7 +7,7 @@
 /public/bundles/
 /var/
 /vendor/
-/uploads/
+/uploads
 ###< symfony/framework-bundle ###
 
 ###> symfony/phpunit-bridge ###
@@ -62,6 +62,7 @@ node_modules/
 # System files
 .DS_Store
 /db-live
+db-init
 
 export.sh
 
