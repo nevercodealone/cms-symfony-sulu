@@ -21,4 +21,15 @@ class overviewCest
     {
         $I->seeElement($page::$overviewYTItem);
     }
+
+    public function validateTrainingItems(AcceptanceTester $I, Training $page)
+    {
+        $items = $I->grabMultiple($page::$overviewListItem);
+
+        foreach ($items as $key => $item) {
+            $title = $I->grabTextFrom($page::$overviewListItem . '[' . ($key + 1) . ']');
+            $I->comment('Key: ' . $key);
+            $I->assertNotEmpty($title, 'Title');
+        }
+    }
 }
