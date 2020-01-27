@@ -178,7 +178,7 @@ deploy_production_image_to_prod:
   variables:
     HTTP_URL: nevercodealone.de
   script:
-    - rancher up -s www-nevercodealone-de -d --pull --prune --upgrade
+    - rancher up -s www-nevercodealone-de -f docker-compose.rancher.yml  -d --pull --prune --upgrade
   tags:
     - docker-executor
   only:
@@ -189,7 +189,7 @@ deploy_production_image_to_prod:
 confirm_upgrade:
   image: $TOOLBOX_IMAGE
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d $RANCHER_OPTIONS
   tags:
     - docker-executor
   stage: postrollout
@@ -203,7 +203,7 @@ confirm_upgrade:
 rollback_upgrade:
   image: $TOOLBOX_IMAGE
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d $RANCHER_OPTIONS
   tags:
     - docker-executor
   stage: postrollout
