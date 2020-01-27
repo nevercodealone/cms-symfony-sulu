@@ -74,9 +74,9 @@ deploy_development_image_to_branch:
   before_script:
     - rancher rm --type stack --stop $RANCHER_PROJECT_NAME || true
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.yml -d --pull
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d --pull
     - sleep 10
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.yml -d --pull
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d --pull
   after_script:
     - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/*' || true
@@ -99,9 +99,9 @@ deploy_production_image_to_stage:
   before_script:
     - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
   script:
-    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.yml -d --pull
+    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.rancher.yml -d --pull
     - sleep 10
-    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.yml -d --pull
+    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.rancher.yml -d --pull
   after_script:
     - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
     - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/*' || true
@@ -178,7 +178,7 @@ deploy_production_image_to_prod:
   variables:
     HTTP_URL: nevercodealone.de
   script:
-    - rancher up -s www-nevercodealone-de -d --pull --prune --upgrade
+    - rancher up -s www-nevercodealone-de -f docker-compose.rancher.yml  -d --pull --prune --upgrade
   tags:
     - docker-executor
   only:
@@ -189,7 +189,7 @@ deploy_production_image_to_prod:
 confirm_upgrade:
   image: $TOOLBOX_IMAGE
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d $RANCHER_OPTIONS
   tags:
     - docker-executor
   stage: postrollout
@@ -203,7 +203,7 @@ confirm_upgrade:
 rollback_upgrade:
   image: $TOOLBOX_IMAGE
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -d $RANCHER_OPTIONS
+    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d $RANCHER_OPTIONS
   tags:
     - docker-executor
   stage: postrollout
