@@ -30,7 +30,6 @@ services:
     env_file:
       - .env
     volumes:
-      - './uploads:/var/www/html/uploads'
       - './var:/var/www/html/var'
     ports:
       - 8090:80/tcp
