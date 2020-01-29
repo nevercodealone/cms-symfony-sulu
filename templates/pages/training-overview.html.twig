@@ -60,12 +60,12 @@
                                             <div class="edugate-layout-2">
                                                 <div class="edugate-layout-2-wrapper">
                                                     <div class="edugate-content">
-                                                        <a href="{{ coursesOverviewItem.url }}" class="title">
+                                                        <a href="{{ coursesOverviewItem.url }}" class="title" data-q="list-item-title">
                                                             {{ coursesOverviewItem.title }}
                                                         </a>
 
                                                         <div class="info">
-                                                            <div class="author item">
+                                                            <div class="author item" data-q="list-item-trainer">
                                                                 {% for trainers in coursesOverviewItem.trainerItems %}
                                                                     {{ trainers.fullName }}
                                                                 {% endfor %}
@@ -74,13 +74,13 @@
                                                         <div class="star-rating">
                                                             <span class="width-100"></span>
                                                         </div>
-                                                        <div class="description">
+                                                        <div class="description" data-q="list-item-description">
                                                             {{ coursesOverviewItem.seoDescription }}
                                                         </div>
-                                                        <a href="{{ coursesOverviewItem.url }}" class="btn btn-green"><span>Zum Kurs</span></a>
+                                                        <a href="{{ coursesOverviewItem.url }}" class="btn btn-green" data-q="list-item-url"><span>Zum Kurs</span></a>
                                                     </div>
                                                     <div class="edugate-image">
-                                                        <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive"/>
+                                                        <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive" data-q="list-item-img"/>
                                                     </div>
                                                 </div>
                                             </div>
