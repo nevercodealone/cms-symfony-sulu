@@ -7,7 +7,7 @@ services:
       - db
     image: adminer
     ports:
-      - 8091:8080/tcp
+      - ${ADMINER_PORT}:8080/tcp
     links:
       - db:db
 
@@ -44,7 +44,7 @@ services:
       - './tests:/var/www/html/tests'
       - './var:/var/www/html/var'
     ports:
-      - 8090:80/tcp
+      - ${WEB_PORT}:80/tcp
     links:
       - db:db
     restart: always
