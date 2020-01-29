@@ -43,6 +43,8 @@ services:
       - './templates:/var/www/html/templates'
       - './tests:/var/www/html/tests'
       - './var:/var/www/html/var'
+      - '/etc/passwd:/etc/passwd'
+      - '/etc/group:/etc/group'
     ports:
       - ${WEB_PORT}:80/tcp
     links:
