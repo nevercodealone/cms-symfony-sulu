@@ -1,34 +1,35 @@
 {% if content.snippets|length > 0 %}
     {% set content = content.snippets[0] %}
-
     <section class="tz-banner">
         <!-- Begin class banner style-3 -->
         <div class="tz-banner-style4">
             <div class="owl-carousel owl-theme tz-slider-banner">
                 {% for slider_item in content.slider %}
-                    <div class="tz-items">
-                        <div class="tz-slider-images">
-                            <img src="{{ slider_item.slider_image[0].formats['1915x1215'] }}" alt="#NCAEvents Employer Branding">
-                        </div>
-                        <div class="tz-banner-content">
-                            <div class="container">
-                                <small>{{ slider_item.slider_small }}</small>
-                                <h1>{{ slider_item.slider_headline }}</h1>
-                                <span class="tz-under-line"></span>
-                                <h6>{{ slider_item.slider_subline }}</h6>
-                                {%  set sliderUrl = slider_item.slider_url ? slider_item.slider_url : slider_item.slider_link[0].path %}
-                                <a class="tz-item-more-details" href="{{ sliderUrl }}">
-                                    <span><i class="fa fa-thumbs-o-up"></i>{{ slider_item.slider_button }}</span>
-                                </a>
+                    {% if slider_item.slider_url or slider_item.slider_link[0].path is defined %}
+                        <div class="tz-items">
+                            <div class="tz-slider-images">
+                                <img src="{{ slider_item.slider_image[0].formats['1915x1215'] }}" alt="#NCAEvents Employer Branding">
                             </div>
+                            <div class="tz-banner-content">
+                                <div class="container">
+                                    <small>{{ slider_item.slider_small }}</small>
+                                    <h1>{{ slider_item.slider_headline }}</h1>
+                                    <span class="tz-under-line"></span>
+                                    <h6>{{ slider_item.slider_subline }}</h6>
+                                    {%  set sliderUrl = slider_item.slider_url ? slider_item.slider_url : slider_item.slider_link[0].path %}
+                                    <a class="tz-item-more-details" href="{{ sliderUrl }}">
+                                        <span><i class="fa fa-thumbs-o-up"></i>{{ slider_item.slider_button }}</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <button class="tz-button-left">
+                                <i class="fa fa-angle-left"></i>
+                            </button>
+                            <button class="tz-button-right">
+                                <i class="fa fa-angle-right"></i>
+                            </button>
                         </div>
-                        <button class="tz-button-left">
-                            <i class="fa fa-angle-left"></i>
-                        </button>
-                        <button class="tz-button-right">
-                            <i class="fa fa-angle-right"></i>
-                        </button>
-                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>
