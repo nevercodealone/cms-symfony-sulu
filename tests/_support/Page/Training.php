@@ -4,11 +4,16 @@ namespace NCATesting\Page;
 class Training
 {
     public static $URL = '/php-training';
-    public static $navigationFirstCourse = 'body > header > div > div > div > nav > ul > li:nth-child(3) > ul > li > a';
 
     public static $overviewListItem = '//*[@data-q="list-item"]';
+    public static $overviewListClassTitle = '//*[@data-q="list-item-title"]';
+    public static $overviewListClassCategory = '//*[@data-q="list-item-category"]';
+    public static $overviewListClassTrainer = '//*[@data-q="list-item-trainer"]';
+    public static $overviewListClassDescription = '//*[@data-q="list-item-description"]';
+    public static $overviewListClassUrl = '//*[@data-q="list-item-url"]';
+    public static $overviewListClassImg = '//*[@data-q="list-item-img"]';
+
     public static $overviewYTItem = '//*[@data-q="yt-item"]';
 
     public static $detailURL = '/php-training/codeception';
-    public static $detailHeadline = 'h1.course-title';
 }

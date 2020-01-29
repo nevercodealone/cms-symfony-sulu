@@ -74,7 +74,7 @@
                         <param name="properties" type="collection">
                             <param name="url" value="url"/>
                             <param name="headline" value="headline"/>
-                            <param name="courseInfoDescription" value="courseInfoDescription"/>
+                            <param name="seoDescription" value="seo.description"/>
                             <param name="trainerItems" value="trainerItems"/>
                             <param name="categories" value="excerpt.categories"/>
                             <param name="image" value="excerpt.images"/>

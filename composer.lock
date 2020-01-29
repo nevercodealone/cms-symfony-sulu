@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "d5da7a58537f083db3a2cd9689289a8d",
+    "content-hash": "3dd3f89799da8e11469cb0514c41650c",
     "packages": [
         {
             "name": "aferrandini/urlizer",
@@ -2954,6 +2954,7 @@
                 }
             ],
             "description": "Provides a simple API and specification that abstracts away the details of HTTP into a single PHP function.",
+            "abandoned": true,
             "time": "2018-07-31T13:22:33+00:00"
         },
         {
@@ -3004,6 +3005,7 @@
                 "Guzzle",
                 "stream"
             ],
+            "abandoned": true,
             "time": "2014-10-12T19:18:40+00:00"
         },
         {
@@ -4441,6 +4443,7 @@
                 }
             ],
             "description": "Support package for TLDDatabase and TLDExtract",
+            "abandoned": true,
             "time": "2016-06-18T12:28:04+00:00"
         },
         {
@@ -4814,6 +4817,7 @@
                 "cron",
                 "schedule"
             ],
+            "abandoned": "dragonmantank/cron-expression",
             "time": "2017-01-23T04:29:33+00:00"
         },
         {
@@ -11386,6 +11390,7 @@
                 "code",
                 "zf"
             ],
+            "abandoned": "laminas/laminas-code",
             "time": "2019-12-10T19:21:15+00:00"
         },
         {
@@ -11440,6 +11445,7 @@
                 "events",
                 "zf2"
             ],
+            "abandoned": "laminas/laminas-eventmanager",
             "time": "2018-04-25T15:33:34+00:00"
         },
         {
@@ -11498,6 +11504,7 @@
                 "hydrator",
                 "zf2"
             ],
+            "abandoned": "laminas/laminas-hydrator",
             "time": "2016-02-18T22:38:26+00:00"
         },
         {
@@ -11557,6 +11564,7 @@
                 "stdlib",
                 "zf2"
             ],
+            "abandoned": "laminas/laminas-stdlib",
             "time": "2016-04-12T21:17:31+00:00"
         },
         {
@@ -13810,6 +13818,57 @@
                 "xunit"
             ],
             "time": "2019-12-25T14:49:39+00:00"
+        },
+        {
+            "name": "sclable/xml-lint",
+            "version": "0.2.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sclable/xml-lint.git",
+                "reference": "6a9e88dec4b3960f1afc3a9ab96d31be94d10b2f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sclable/xml-lint/zipball/6a9e88dec4b3960f1afc3a9ab96d31be94d10b2f",
+                "reference": "6a9e88dec4b3960f1afc3a9ab96d31be94d10b2f",
+                "shasum": ""
+            },
+            "require": {
+                "symfony/console": "^2.7|3.*|4.*",
+                "symfony/finder": "^2.7|3.*|4.*"
+            },
+            "require-dev": {
+                "behat/behat": "^3.0",
+                "phpunit/phpunit": "^4.8"
+            },
+            "bin": [
+                "bin/xmllint"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "sclable\\xmlLint\\": "src/php/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Rutz",
+                    "email": "michael.rutz@sclable.com"
+                }
+            ],
+            "description": "A php cli tool to lint and validate xml files.",
+            "keywords": [
+                "cli",
+                "lint",
+                "xml",
+                "xml schema",
+                "xsd"
+            ],
+            "time": "2018-03-22T08:31:23+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",

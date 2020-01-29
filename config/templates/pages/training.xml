@@ -17,22 +17,22 @@
     <properties>
         <xi:include href="../includes/highlight.xml"/>
 
-        <property name="price" type="text_line" colspan="4">
+        <property name="price" type="text_line" colspan="4" mandatory="true">
             <meta>
                 <title lang="en">Price</title>
             </meta>
         </property>
-        <property name="duration" type="text_line" colspan="4">
+        <property name="duration" type="text_line" colspan="4" mandatory="true">
             <meta>
                 <title lang="en">Duration</title>
             </meta>
         </property>
-        <property name="level" type="text_line" colspan="4">
+        <property name="level" type="text_line" colspan="4" mandatory="true">
             <meta>
                 <title lang="en">Level</title>
             </meta>
         </property>
-        <property name="youTubeIframe" type="text_line">
+        <property name="youTubeIframe" type="text_line" mandatory="true">
             <meta>
                 <title lang="en">YouTubeIframe</title>
             </meta>
@@ -54,10 +54,13 @@
                 <title lang="en">Course Info</title>
             </meta>
             <properties>
-                <property name="courseInfoHeadline" type="text_line">
+                <property name="courseInfoHeadline" type="text_line" mandatory="true">
                     <meta>
                         <title lang="en">Headline</title>
                     </meta>
+                    <params>
+                        <param name="headline" value="true"/>
+                    </params>
                 </property>
                 <property name="courseInfoDescription" type="text_editor">
                     <meta>

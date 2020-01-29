@@ -21,4 +21,29 @@ class overviewCest
     {
         $I->seeElement($page::$overviewYTItem);
     }
+
+    public function validateTrainingItems(AcceptanceTester $I, Training $page)
+    {
+        $titles = $I->grabMultiple($page::$overviewListClassTitle);
+        $categories = $I->grabMultiple($page::$overviewListClassCategory);
+        $trainer = $I->grabMultiple($page::$overviewListClassTrainer);
+        $descriptions = $I->grabMultiple($page::$overviewListClassDescription);
+        $hrefs = $I->grabMultiple($page::$overviewListClassUrl, 'href');
+        $srces = $I->grabMultiple($page::$overviewListClassImg, 'src');
+        $alts = $I->grabMultiple($page::$overviewListClassImg, 'alt');
+        $imgTitles = $I->grabMultiple($page::$overviewListClassImg, 'title');
+
+        foreach ($titles as $key => $title) {
+            $I->comment('key: ' . $key);
+            $I->assertNotEmpty($title, 'Title');
+            $I->assertNotEmpty($categories[$key], 'Category');
+            $I->assertNotEmpty($trainer[$key], 'Trainer');
+            $I->assertNotEmpty($descriptions[$key], 'Description');
+            $I->assertNotEmpty($hrefs[$key], 'href');
+            $I->assertNotEmpty($srces[$key], 'src');
+            $I->assertContains('400x300', $srces[$key], 'img 400x300');
+            $I->assertNotEmpty($alts[$key], 'alt');
+            $I->assertNotEmpty($imgTitles[$key], 'Img title');
+        }
+    }
 }
