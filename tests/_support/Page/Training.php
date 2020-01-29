@@ -7,6 +7,7 @@ class Training
 
     public static $overviewListItem = '//*[@data-q="list-item"]';
     public static $overviewListClassTitle = '//*[@data-q="list-item-title"]';
+    public static $overviewListClassCategory = '//*[@data-q="list-item-category"]';
     public static $overviewListClassTrainer = '//*[@data-q="list-item-trainer"]';
     public static $overviewListClassDescription = '//*[@data-q="list-item-description"]';
     public static $overviewListClassUrl = '//*[@data-q="list-item-url"]';
