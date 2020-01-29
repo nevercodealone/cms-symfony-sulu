@@ -51,41 +51,45 @@
                 </div>
                 <!-- Tab panes-->
                 <div class="tab-content courses-content">
-                    <div id="campus" role="tabpanel" class="tab-pane fade in active">
-                        <div class="style-show style-grid row">
-                            {% for coursesOverviewItem in content.coursesOverviewItems %}
-                                <div class="col-style" data-q="list-item">
-                                    <div class="edugate-layout-2">
-                                        <div class="edugate-layout-2-wrapper">
-                                            <div class="edugate-content">
-                                                <a href="{{ coursesOverviewItem.url }}" class="title">
-                                                    {{ coursesOverviewItem.title }}
-                                                </a>
+                    {% for category in sulu_categories('en') %}
+                        <div id="{{ category.key }}" role="tabpanel" class="tab-pane fade in active">
+                            <div class="style-show style-grid row">
+                                {% for coursesOverviewItem in content.coursesOverviewItems %}
+                                    {% for itemCategory in coursesOverviewItem.categories if itemCategory.key == category.key %}
+                                        <div class="col-style" data-q="list-item">
+                                            <div class="edugate-layout-2">
+                                                <div class="edugate-layout-2-wrapper">
+                                                    <div class="edugate-content">
+                                                        <a href="{{ coursesOverviewItem.url }}" class="title">
+                                                            {{ coursesOverviewItem.title }}
+                                                        </a>
 
-                                                <div class="info">
-                                                    <div class="author item">
-                                                        {% for trainers in coursesOverviewItem.trainerItems %}
-                                                            {{ trainers.fullName }}
-                                                        {% endfor %}
+                                                        <div class="info">
+                                                            <div class="author item">
+                                                                {% for trainers in coursesOverviewItem.trainerItems %}
+                                                                    {{ trainers.fullName }}
+                                                                {% endfor %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="star-rating">
+                                                            <span class="width-100"></span>
+                                                        </div>
+                                                        <div class="description">
+                                                            {{ coursesOverviewItem.seoDescription }}
+                                                        </div>
+                                                        <a href="{{ coursesOverviewItem.url }}" class="btn btn-green"><span>Zum Kurs</span></a>
+                                                    </div>
+                                                    <div class="edugate-image">
+                                                        <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive"/>
                                                     </div>
                                                 </div>
-                                                <div class="star-rating">
-                                                    <span class="width-100"></span>
-                                                </div>
-                                                <div class="description">
-                                                    {{ coursesOverviewItem.seoDescription }}
-                                                </div>
-                                                <a href="{{ coursesOverviewItem.url }}" class="btn btn-green"><span>Zum Kurs</span></a>
-                                            </div>
-                                            <div class="edugate-image">
-                                                <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive"/>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
