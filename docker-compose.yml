@@ -30,6 +30,18 @@ services:
     env_file:
       - .env
     volumes:
+      - './appveyor.yml:/var/www/html/appveyor.yml'
+      - './assets:/var/www/html/assets'
+      - './bin:/var/www/html/bin'
+      - './captainhook.json:/var/www/html/captainhook.json'
+      - './codeception.yml:/var/www/html/codeception.yml'
+      - './config:/var/www/html/config'
+      - './phpcs.xml:/var/www/html/phpcs.xml'
+      - './phpstan.neon:/var/www/html/phpstan.neon'
+      - './public:/var/www/html/public'
+      - './src:/var/www/html/src'
+      - './templates:/var/www/html/templates'
+      - './tests:/var/www/html/tests'
       - './var:/var/www/html/var'
     ports:
       - 8090:80/tcp
