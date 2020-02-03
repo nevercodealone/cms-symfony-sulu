@@ -35,8 +35,16 @@
                         <nav class="navbar navbar-default">
                             <div class="container">
                                 <div class="navbar-header">
-                                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
-                                    <a href="{{ content.eventLink }}" class="logo-brand"><img src="{{ content.sponsorLogo[0].formats['y42'] }}" data-at2x="{{ content.sponsorLogo[0].formats['y42'] }}" alt="Tickets auf Eventbrite" class="logo-nav" width="200px" style="width: 200px;{% if content.sponsorLogoPaddingTop %}padding-top:{{ content.sponsorLogoPaddingTop }}px{% endif %}"> </a> </div>
+                                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1">
+                                        <span class="sr-only">Toggle navigation</span>
+                                        <span class="icon-bar"></span>
+                                        <span class="icon-bar"></span>
+                                        <span class="icon-bar"></span>
+                                    </button>
+                                    <a href="{{ content.eventLink }}" class="logo-brand">
+                                        <img src="{{ content.sponsorLogo[0].formats['y42'] }}" data-at2x="{{ content.sponsorLogo[0].formats['y42'] }}" alt="Tickets auf Eventbrite" class="logo-nav" style="{% if content.sponsorLogoPaddingTop %}padding-top:{{ content.sponsorLogoPaddingTop }}px{% endif %}">
+                                    </a>
+                                </div>
                                 <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
                                     <ul class="nav navbar-nav navbar-right">
                                         {% if content.speakerItem is not empty %}
