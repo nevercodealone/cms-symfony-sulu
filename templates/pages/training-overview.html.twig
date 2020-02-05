@@ -110,12 +110,43 @@
                     </a>
                 </div>
             </div>
-            <div class="grid">
-                {% for video in videoList %}
-                    <div class="grid-item" data-q="yt-item">
-                        <iframe title="{{ video['snippet']['title'] }}" width="370" height="250" src="https://www.youtube.com/embed/{{ video['snippet']['resourceId']['videoId'] }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                    </div>
-                {% endfor %}
+
+            <div class="col-md-12">
+                <div class="row news-page-wrapper">
+                    {% for video in videoList %}
+                        {% set url = 'https://www.youtube.com/watch?v=%s'|format(video.snippet.resourceId.videoId) %}
+                        <div class="col-sm-4" data-q="yt-item">
+                            <div class="edugate-layout-3 news-gird">
+                                <div class="edugate-layout-3-wrapper">
+                                    <a href="{{ url }}" class="edugate-image" title="{{ video['snippet']['title'] }}" target="_blank">
+                                        <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}" alt="{{ video['snippet']['title'] }}" class="img-responsive"/>
+                                    </a>
+                                    <div class="edugate-content">
+                                        <a href="{{ url }}" class="title" target="_blank" title="{{ video['snippet']['title'] }}">
+                                            {{ video['snippet']['title'] }}
+                                        </a>
+
+                                        <div class="info">
+                                            <div class="author item">
+                                                #NCAVideo
+                                            </div>
+                                            <div class="date-time item">
+                                                {{ video['snippet']['publishedAt']|localizeddate('none', 'none', 'de_DE', null, "cccc, d MMMM Y")  }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>Review PHP-Schulung</strong>
+                                        </div>
+                                        <div class="description">
+                                            {{ video['snippet']['description'] }}
+                                        </div>
+                                        <a href="{{ url }}" title="{{ video['snippet']['title'] }}" class="btn btn-green"><span>YouTube</span></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
