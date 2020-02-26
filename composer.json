@@ -39,7 +39,8 @@
         "symfony/webpack-encore-pack": "^1.0",
         "twig/extensions": "^1.0",
         "zendframework/zend-stdlib": "^2.3",
-        "zendframework/zendsearch": "^2.0.0rc6"
+        "zendframework/zendsearch": "^2.0.0rc6",
+        "sulu/sulu-form-bundle": "^2.0@dev"
     },
     "require-dev": {
         "captainhook/captainhook": "^4.5",
