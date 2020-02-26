@@ -8,7 +8,7 @@
 
     <view>pages/conference</view>
     <controller>App\Controller\PageController:conferencePage</controller>
-    <cacheLifetime>86400</cacheLifetime>
+    <cacheLifetime>86400</cacheLifetime>uhfduihd
 
     <meta>
         <title lang="en">Conference</title>

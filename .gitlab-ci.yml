@@ -137,6 +137,16 @@ phpcs_code_analyses_against_dev_environment:
   except:
     - master
 
+xml_code_analyses_against_dev_environment:
+  stage: codeanalyse
+  image: $TOOLBOX_IMAGE
+  script:
+    - vendor/bin/xmllint config -v
+  tags:
+    - docker-executor
+  except:
+    - master
+
 run_tests_against_dev_environment:
   stage: test
   image: $TOOLBOX_IMAGE
