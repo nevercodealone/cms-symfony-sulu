@@ -28,8 +28,7 @@ sudo setfacl -R -m u:"$HTTPDUSER":rwX -m u:`whoami`:rwX var/cache var/logs var/u
 sudo setfacl -dR -m u:"$HTTPDUSER":rwX -m u:`whoami`:rwX var/cache var/logs var/uploads var/uploads/* public/uploads public/uploads/* var/indexes var/sessions
 ```
 
-## Deploy
+## Connect to container
 ```
-docker-compose -f docker-compose.local.yml build
-docker-compose -f docker-compose.local.yml up -d
+docker-compose exec web bash
 ```
