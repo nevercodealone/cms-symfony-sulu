@@ -29,6 +29,12 @@
         </meta>
         <scale x="212" y="130"/>
     </format>
+    <format key="200x130">
+        <meta>
+            <title lang="en">Training teaser town</title>
+        </meta>
+        <scale x="200" y="130"/>
+    </format>
     <format key="270x200">
         <meta>
             <title lang="en">Startpage carousel image</title>
