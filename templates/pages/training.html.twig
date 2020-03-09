@@ -121,13 +121,17 @@
                     <div class="col-md-3 sidebar layout-right">
                         <div class="row">
                             <div class="course-price-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
-                                <div class="title-widget"><p>{{ content.price }}</p></div>
+                                <div class="title-widget"><p>{{ content.priceInhouse }}</p></div>
                                 <div class="content-widget">
                                     <div class="course-price-widget-wrapper">
                                         <div class="row">
                                             <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                <div class="pull-left title">Art:</div>
+                                                <div class="pull-right level">Inhouse Schulung</div>
+                                            </div>
+                                            <div class="col-md-12 info-row col-sm-12 col-xs-12">
                                                 <div class="pull-left title">Dauer:</div>
-                                                <div class="pull-right length">{{ content.duration }}</div>
+                                                <div class="pull-right level">{{ content.duration }} Stunden</div>
                                             </div>
                                             <div class="col-md-12 info-row col-sm-12 col-xs-12">
                                                 <div class="pull-left title">Level:</div>
@@ -141,6 +145,57 @@
                                     </div>
                                 </div>
                             </div>
+                            {% if content.datesItems is not empty %}
+                                <div class="course-price-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
+                                    <div class="title-widget"><p>{{ content.pricePublic }}</p></div>
+                                    <div class="content-widget">
+                                        <div class="course-price-widget-wrapper">
+                                            <div class="row">
+                                                <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                    {% set source = content.datesImage[0].formats['200x130'] %}
+                                                    <img src="{{ source }}" alt="">
+                                                </div>
+                                                <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                    <div class="pull-left title">Art:</div>
+                                                    <div class="pull-right level">Öffentliche Schulung</div>
+                                                </div>
+                                                <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                    <div class="pull-left title">Dauer:</div>
+                                                    <div class="pull-right level">{{ content.duration }} Stunden</div>
+                                                </div>
+                                                <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                    <div class="pull-left title">Level:</div>
+                                                    <div class="pull-right level">{{ content.level }}</div>
+                                                </div>
+                                                <h3>Termine:</h3>
+                                                {% for item in content.datesItems %}
+                                                    <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                        <div class="pull-left title">{{ item.date|date("d.m.yy") }}</div>
+                                                        <div class="pull-right level">{{ item.town }}</div>
+                                                    </div>
+                                                    <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                        <div class="pull-left title">Location:</div>
+                                                        <div class="pull-right level">
+                                                            <a href="{{ item.locationUrl }}" target="_blank" rel="nofollow">
+                                                                {{ item.locationText }}
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <h3>Angebot anfordern:</h3>
+                                            {% if content.datesForm %}
+                                                {% if app.request.get('send') != 'true' %}
+                                                    {% form_theme content.datesForm 'form/dynamic.html.twig' %}
+                                                    {{ form(content.datesForm) }}
+                                                {% else %}
+                                                    {{ view.datesForm.entity.successText|raw }}
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
                             <div class="author-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
                                 <div class="title-widget">Webdevelopment Trainer</div>
                                 <div class="content-widget">
