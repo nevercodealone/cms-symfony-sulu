@@ -55,6 +55,7 @@ class linksCest
         foreach($internalLinks as $internalLink) {
             $I->amOnPage($internalLink);
             $I->waitForElement('body');
+            $I->canSee('Error 500');
         }
     }
 }
