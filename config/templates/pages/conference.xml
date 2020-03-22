@@ -75,11 +75,22 @@
                         <title lang="en">Social institution link text</title>
                     </meta>
                 </property>
-                <property name="donation" type="text_line">
+                <property name="donation" type="text_line" colspan="4">
                     <meta>
                         <title lang="en">Donation</title>
                     </meta>
                 </property>
+                <property name="optionalPrice" type="text_line" colspan="4">
+                    <meta>
+                        <title lang="en">Optional Price</title>
+                    </meta>
+                </property>
+                <property name="optinalButtonText" type="text_line" colspan="4">
+                    <meta>
+                        <title lang="en">Optional button text</title>
+                    </meta>
+                </property>
+
                 <property name="description" type="text_area">
                     <meta>
                         <title lang="en">Description</title>
@@ -598,6 +609,22 @@
                     <meta>
                         <title lang="en">Zip and town</title>
                     </meta>
+                </property>
+            </properties>
+        </section>
+        <section name="faq">
+            <meta>
+                <title lang="en">FAQ</title>
+            </meta>
+            <properties>
+                <property name="faqVisible" type="checkbox">
+                    <meta>
+                        <title lang="en">Visible</title>
+                    </meta>
+                    <params>
+                        <param name="type" value="toggler"/>
+                        <param name="default_value" value="true"/>
+                    </params>
                 </property>
             </properties>
         </section>
