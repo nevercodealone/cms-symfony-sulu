@@ -617,9 +617,9 @@
                 <title lang="en">FAQ</title>
             </meta>
             <properties>
-                <property name="faqVisible" type="checkbox">
+                <property name="faqInvisible" type="checkbox">
                     <meta>
-                        <title lang="en">Visible</title>
+                        <title lang="en">Invisible</title>
                     </meta>
                     <params>
                         <param name="type" value="toggler"/>
