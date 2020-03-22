@@ -3,6 +3,7 @@ namespace NCATesting\Page;
 
 class startpage
 {
+    public static $URL = '/';
     public static $navMain = '//ul[@data-q="navMain"]/li/a';
 
     public static $serviceSection = '//*[@data-q="services-section"]';
