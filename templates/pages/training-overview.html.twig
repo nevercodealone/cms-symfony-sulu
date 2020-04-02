@@ -15,6 +15,29 @@
                 </div>
         </div>
     </div>
+    {% if content.whyImage[0] is defined
+        and content.whyImage[0] is not empty
+        and content.whyHeadline is not empty
+        and content.whyDescription is not empty
+    %}
+        <div class="section why-choose-us">
+            <div class="why-choose-us-wrapper-top">
+                <div class="container">
+                    <div class="why-choose-us-wrapper">
+                        <h2 class="title-2">{{ content.whyHeadline }}</h2>
+                        {{ content.whyDescription|raw }}
+                        {% if content.whyButtonLink is not empty and content.whyButtonText is not empty %}
+                            {% set target = sulu_content_load(content.whyButtonLink).path %}
+                            <button onclick="window.location.href='{{ target }}'" class="btn btn-green-2"><span>{{ content.whyButtonText }}</span></button>
+                        {% endif %}
+                    </div>
+                    <div data-wow-delay="0.2s" data-wow-duration="1.2s" class="background-girl-1 wow fadeInUp">
+                        <img src="{{ extension.excerpt.images[0].formats['350x450'] }}" alt="" class="img-responsive"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
     <div class="section section-padding courses">
         <div class="container">
             <div class="group-title-index">

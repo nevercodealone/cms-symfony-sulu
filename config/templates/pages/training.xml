@@ -16,36 +16,70 @@
 
     <properties>
         <xi:include href="../includes/highlight.xml"/>
-        <section name="information">
+        <property name="youTubeIframe" type="text_line" mandatory="true">
             <meta>
-                <title lang="en">Information</title>
+                <title lang="en">YouTubeIframe</title>
+            </meta>
+        </property>
+        <section name="prices">
+            <meta>
+                <title lang="en">Prices</title>
             </meta>
             <properties>
-                <property name="priceInhouse" type="text_line" colspan="6" mandatory="true">
+                <block name="priceItems" default-type="items" minOccurs="0">
                     <meta>
-                        <title lang="en">Price inhose</title>
+                        <title lang="en">Items</title>
                     </meta>
-                </property>
-                <property name="pricePublic" type="text_line" colspan="6">
-                    <meta>
-                        <title lang="en">Price public</title>
-                    </meta>
-                </property>
-                <property name="duration" type="text_line" colspan="6" mandatory="true">
-                    <meta>
-                        <title lang="en">Duration</title>
-                    </meta>
-                </property>
-                <property name="level" type="text_line" colspan="6" mandatory="true">
-                    <meta>
-                        <title lang="en">Level</title>
-                    </meta>
-                </property>
-                <property name="youTubeIframe" type="text_line" mandatory="true">
-                    <meta>
-                        <title lang="en">YouTubeIframe</title>
-                    </meta>
-                </property>
+                    <types>
+                        <type name="items">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                            <properties>
+                                <property name="kind" type="single_select" colspan="3">
+                                    <meta>
+                                        <title lang="en">Kind</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="Remote"/>
+                                        <param name="values" type="collection">
+                                            <param name="Remote">
+                                                <meta>
+                                                    <title lang="en">Remote</title>
+                                                </meta>
+                                            </param>
+                                            <param name="Inhouse">
+                                                <meta>
+                                                    <title lang="en">Inhouse</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                                <property name="price" type="text_line" colspan="3" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Price</title>
+                                    </meta>
+                                </property>
+                                <property name="duration" type="text_line" colspan="3" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Duration</title>
+                                    </meta>
+                                </property>
+                                <property name="level" type="text_line" colspan="3" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Level</title>
+                                    </meta>
+                                </property>
+                                <property name="date" type="date">
+                                    <meta>
+                                        <title lang="en">Date</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
             </properties>
         </section>
         <section name="termine">
