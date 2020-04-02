@@ -16,31 +16,84 @@
 
     <properties>
         <xi:include href="../includes/highlight.xml"/>
-
-        <property name="headline" type="text_line">
+        <section name="header">
             <meta>
-                <title lang="en">Headline</title>
+                <title lang="en">Header</title>
             </meta>
-        </property>
-        <block name="subPoints" default-type="subPoints" minOccurs="0">
-            <meta>
-                <title lang="en">Sub points</title>
-            </meta>
-            <types>
-                <type name="subPoints">
+            <properties>
+                <property name="headline" type="text_line">
                     <meta>
-                        <title lang="en">Items</title>
+                        <title lang="en">Headline</title>
                     </meta>
-                    <properties>
-                        <property name="subPointsItem" type="text_line">
+                </property>
+                <block name="subPoints" default-type="subPoints" minOccurs="0">
+                    <meta>
+                        <title lang="en">Sub points</title>
+                    </meta>
+                    <types>
+                        <type name="subPoints">
                             <meta>
-                                <title lang="en">Item</title>
+                                <title lang="en">Items</title>
                             </meta>
-                        </property>
-                    </properties>
-                </type>
-            </types>
-        </block>
+                            <properties>
+                                <property name="subPointsItem" type="text_line">
+                                    <meta>
+                                        <title lang="en">Item</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="why">
+            <meta>
+                <title lang="en">Why</title>
+            </meta>
+            <properties>
+                <property name="whyImage" type="media_selection" maxOccurs="1">
+                    <meta>
+                        <title lang="en">Image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <property name="whyHeadline" type="text_line">
+                    <meta>
+                        <title lang="en">Headline</title>
+                    </meta>
+                    <params>
+                        <param name="headline" value="true"/>
+                    </params>
+                </property>
+                <property name="whyDescription" type="text_editor">
+                    <meta>
+                        <title lang="en">Description</title>
+                    </meta>
+
+                    <params>
+                        <param name="table" value="false"/>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content"
+                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
+                </property>
+                <property name="whyButtonText" type="text_line" colspan="6">
+                    <meta>
+                        <title lang="en">Text</title>
+                    </meta>
+                </property>
+                <property name="whyButtonLink" type="single_page_selection" colspan="6">
+                    <meta>
+                        <title lang="en">Page</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
         <section name="course">
             <meta>
                 <title lang="en">Courses</title>
