@@ -24,10 +24,14 @@
                 "action": "vendor/bin/phpstan analyse src -c phpstan.neon",
                 "options": [],
                 "conditions": []
-            }
-        ,
+            },
             {
                 "action": "vendor/bin/xmllint config -v",
+                "options": [],
+                "conditions": []
+            },
+            {
+                "action": "./dumpFinder.sh",
                 "options": [],
                 "conditions": []
             }
