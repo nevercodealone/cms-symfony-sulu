@@ -5,7 +5,7 @@
         <div class="tz-banner-style4">
             <div class="owl-carousel owl-theme tz-slider-banner">
                 {% for slider_item in content.slider %}
-                    {% if slider_item.slider_url or slider_item.slider_link[0].path is defined %}
+                    {% if slider_item.slider_url or slider_item.slider_link[0].url is defined %}
                         <div class="tz-items">
                             <div class="tz-slider-images">
                                 <img src="{{ slider_item.slider_image[0].formats['1915x1215'] }}" alt="#NCAEvents Employer Branding">
