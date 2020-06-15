@@ -91,15 +91,14 @@
                                             </li>
                                         {% else %}
                                             <li>
-                                                <a href="{{ sulu_content_path(item.url) }}" title="{{ item.excerpt.title|default(item.title) }}">
+                                                <a href="{{ item.path }}" title="{{ item.title }}">
                                                     {{ item.excerpt.title|default(item.title) }}
                                                 </a>
                                                 {% if item.children|length > 0 %}
                                                     <ul class="sub-menu sub-menu-style-1">
                                                         {% for child in item.children|sulu_util_multisort('[published]', 'desc') %}
-                                                            {% set target = sulu_content_path(child.url) %}
                                                             <li>
-                                                                <a href="{{ target }}" title="{{ child.excerpt.title|default(child.title) }}">
+                                                                <a href="{{ child.path }}" title="{{ child.title }}">
                                                                     {{ child.excerpt.title|default(child.title) }}
                                                                 </a>
                                                             </li>
