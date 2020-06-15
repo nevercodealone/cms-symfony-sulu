@@ -96,9 +96,9 @@
                                                 </a>
                                                 {% if item.children|length > 0 %}
                                                     <ul class="sub-menu sub-menu-style-1">
-                                                        {% for child in item.children|sulu_util_multisort('[published]', 'desc') %}
+                                                        {% for child in item.children %}
                                                             <li>
-                                                                <a href="{{ child.path }}" title="{{ child.title }}">
+                                                                <a href="{{ child.url }}" title="{{ child.title }}">
                                                                     {{ child.excerpt.title|default(child.title) }}
                                                                 </a>
                                                             </li>
