@@ -12,9 +12,6 @@ class contactCest
         $I->waitForElement('#setting > i');
     }
 
-    /**
-     * @group db
-     */
     public function openContactFormAndSentWithValidData(AcceptanceTester $I)
     {
         $inputData = [
@@ -33,12 +30,5 @@ class contactCest
 
         $I->click('#sent');
         $I->waitForText('Danke wir melden uns');
-
-        $inputData['message'] = 'lunch|112|Testify right here';
-
-        $I->seeInDatabase(
-            'message',
-            $inputData
-        );
     }
 }
