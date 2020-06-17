@@ -4,8 +4,14 @@
         "actions": []
     },
     "pre-push": {
-        "enabled": false,
-        "actions": []
+        "enabled": true,
+        "actions": [
+            {
+                "action": "./dumpFinder.sh",
+                "options": [],
+                "conditions": []
+            }
+        ]
     },
     "pre-commit": {
         "enabled": true,
@@ -27,11 +33,6 @@
             },
             {
                 "action": "vendor/bin/xmllint config -v",
-                "options": [],
-                "conditions": []
-            },
-            {
-                "action": "./dumpFinder.sh",
                 "options": [],
                 "conditions": []
             }
