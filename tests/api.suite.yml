@@ -1,0 +1,10 @@
+class_name: ApiTester
+modules:
+    enabled:
+        - Asserts
+        - PhpBrowser
+        - REST
+env:
+    fast:
+    debug:
+    xdebug:
