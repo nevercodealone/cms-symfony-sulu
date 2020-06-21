@@ -16,27 +16,131 @@
 
     <properties>
         <xi:include href="../includes/highlight.xml"/>
-
-        <property name="price" type="text_line" colspan="4" mandatory="true">
-            <meta>
-                <title lang="en">Price</title>
-            </meta>
-        </property>
-        <property name="duration" type="text_line" colspan="4" mandatory="true">
-            <meta>
-                <title lang="en">Duration</title>
-            </meta>
-        </property>
-        <property name="level" type="text_line" colspan="4" mandatory="true">
-            <meta>
-                <title lang="en">Level</title>
-            </meta>
-        </property>
         <property name="youTubeIframe" type="text_line" mandatory="true">
             <meta>
                 <title lang="en">YouTubeIframe</title>
             </meta>
         </property>
+        <section name="prices">
+            <meta>
+                <title lang="en">Prices</title>
+            </meta>
+            <properties>
+                <block name="priceItems" default-type="items" minOccurs="0">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <types>
+                        <type name="items">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                            <properties>
+                                <property name="kind" type="single_select" colspan="3">
+                                    <meta>
+                                        <title lang="en">Kind</title>
+                                    </meta>
+                                    <params>
+                                        <param name="default_value" value="Remote"/>
+                                        <param name="values" type="collection">
+                                            <param name="Remote">
+                                                <meta>
+                                                    <title lang="en">Remote</title>
+                                                </meta>
+                                            </param>
+                                            <param name="Inhouse">
+                                                <meta>
+                                                    <title lang="en">Inhouse</title>
+                                                </meta>
+                                            </param>
+                                        </param>
+                                    </params>
+                                </property>
+                                <property name="price" type="text_line" colspan="3" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Price</title>
+                                    </meta>
+                                </property>
+                                <property name="duration" type="text_line" colspan="3" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Duration</title>
+                                    </meta>
+                                </property>
+                                <property name="level" type="text_line" colspan="3" mandatory="true">
+                                    <meta>
+                                        <title lang="en">Level</title>
+                                    </meta>
+                                </property>
+                                <property name="date" type="date">
+                                    <meta>
+                                        <title lang="en">Date</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="termine">
+            <meta>
+                <title lang="en">Termine</title>
+            </meta>
+            <properties>
+                <property name="datesImage" type="media_selection" maxOccurs="1">
+                    <meta>
+                        <title lang="en">Image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+                <block name="datesItems" default-type="items" minOccurs="0">
+                    <meta>
+                        <title lang="en">Items</title>
+                    </meta>
+                    <types>
+                        <type name="items">
+                            <meta>
+                                <title lang="en">Item</title>
+                            </meta>
+                            <properties>
+                                <property name="date" type="date" colspan="6">
+                                    <meta>
+                                        <title lang="en">Date</title>
+                                    </meta>
+                                </property>
+                                <property name="town" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Town</title>
+                                    </meta>
+                                </property>
+                                <property name="locationUrl" type="url" colspan="6">
+                                    <meta>
+                                        <title>Location URL</title>
+                                    </meta>
+                                </property>
+                                <property name="locationText" type="text_line" colspan="6">
+                                    <meta>
+                                        <title lang="en">Location text</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+                <property name="datesForm" type="single_form_selection">
+                    <meta>
+                        <title lang="de">Formular</title>
+                        <title lang="en">Form</title>
+                    </meta>
+
+                    <params>
+                        <param name="resourceKey" value="page" />
+                    </params>
+                </property>
+            </properties>
+        </section>
         <section name="trainer">
             <meta>
                 <title lang="en">Trainer</title>

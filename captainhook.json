@@ -4,8 +4,14 @@
         "actions": []
     },
     "pre-push": {
-        "enabled": false,
-        "actions": []
+        "enabled": true,
+        "actions": [
+            {
+                "action": "./dumpFinder.sh",
+                "options": [],
+                "conditions": []
+            }
+        ]
     },
     "pre-commit": {
         "enabled": true,
@@ -24,8 +30,7 @@
                 "action": "vendor/bin/phpstan analyse src -c phpstan.neon",
                 "options": [],
                 "conditions": []
-            }
-        ,
+            },
             {
                 "action": "vendor/bin/xmllint config -v",
                 "options": [],

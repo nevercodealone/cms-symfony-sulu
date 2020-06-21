@@ -7,7 +7,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
         {% block meta %}
-            {% include "SuluWebsiteBundle:Extension:seo.html.twig" with {
+            {% include "@SuluWebsite/Extension/seo.html.twig" with {
                 "seo": extension.seo|default([]),
                 "content": content|default([]),
                 "urls": urls|default([]),
@@ -73,7 +73,10 @@
                                         <p>{{ content.date|localizeddate('long', 'none', "de") }}</p>
                                         <p>{{ content.town }}</p>
                                     </div>
-                                    <div class="action-btn"><a href="{{ content.eventLink }}{{ sourceParam }}" target="_blank" class="bttn">Tickets kaufen</a> <a href="#counter" class="bttn">Event Infos</a></div>
+                                    <div class="action-btn">
+                                        <a href="{{ content.eventLink }}{{ sourceParam }}" target="_blank" class="bttn">
+                                            {{ content.optinalButtonText is not empty ? content.optinalButtonText : "Tickets kaufen" }}
+                                        </a> <a href="#counter" class="bttn">Event Infos</a></div>
                                 </div>
                             </div>
                         </div>
@@ -145,7 +148,7 @@
                                 <div class="col-sm-3 col-xs-6"> <i class="fa fa-hand-spock-o fa-3x"></i>
                                     <h3>
                                         <span class="total-number-4">
-                                            {{ content.counterDonation|default(10) }}
+                                            {{ content.optionalPrice|default(10) }}
                                         </span>,- Euro
                                     </h3>
                                     <p>100% Spende vom Ticketpreis</p>
@@ -364,40 +367,42 @@
                     {% endif %}
                 {% endblock %}
             </section>
-            <section class="faq section-spacing" id="faq">
-                <div class="container">
-                    <header class="text-center">
-                        <h2>FAQ</h2>
-                        <h3>Fragen und Antworten zu dem Event</h3>
-                    </header>
-                    <div class="row">
-                        <div class="col-md-10 center-block">
-                            <ul class="cd-faq-group">
-                                <li> <a class="cd-faq-trigger" href="#0">Brauche ich einen Laptop</a>
-                                    <div class="cd-faq-content">
-                                        <p>Nein, es reicht da zu sein. Hier hat auch nicht jeder einen Schreibtisch. Man kann aber gerne ein Gerät mitbringen. Steckdosen sind vorhanden.</p>
-                                    </div>
-                                </li>
-                                <li> <a class="cd-faq-trigger" href="#0">Kann ich kostenlos parken?</a>
-                                    <div class="cd-faq-content">
-                                        <p>ja, es kann kostenlos geparkt werden.</p>
-                                    </div>
-                                </li>
-                                <li> <a class="cd-faq-trigger" href="#0">Live-Coding - Muß ich an die Tastatur?</a>
-                                    <div class="cd-faq-content">
-                                        <p>Keiner muß an die Tastatur. Sie wird Reihenweise an Freiwillige weiter gegeben. Alles ist ganz entspannt und freundlich. Darauf legen wir großen Wert und moderieren hier auch.</p>
-                                    </div>
-                                </li>
-                                <li> <a class="cd-faq-trigger" href="#0">Gibt es vegetarisches Essen?</a>
-                                    <div class="cd-faq-content">
-                                        <p>Ja das wird auf jeden Fall berücksichtigt.</p>
-                                    </div>
-                                </li>
-                            </ul>
+            {% if content.faqInvisible == false %}
+                <section class="faq section-spacing" id="faq">
+                    <div class="container">
+                        <header class="text-center">
+                            <h2>FAQ</h2>
+                            <h3>Fragen und Antworten zu dem Event</h3>
+                        </header>
+                        <div class="row">
+                            <div class="col-md-10 center-block">
+                                <ul class="cd-faq-group">
+                                    <li> <a class="cd-faq-trigger" href="#0">Brauche ich einen Laptop</a>
+                                        <div class="cd-faq-content">
+                                            <p>Nein, es reicht da zu sein. Hier hat auch nicht jeder einen Schreibtisch. Man kann aber gerne ein Gerät mitbringen. Steckdosen sind vorhanden.</p>
+                                        </div>
+                                    </li>
+                                    <li> <a class="cd-faq-trigger" href="#0">Kann ich kostenlos parken?</a>
+                                        <div class="cd-faq-content">
+                                            <p>ja, es kann kostenlos geparkt werden.</p>
+                                        </div>
+                                    </li>
+                                    <li> <a class="cd-faq-trigger" href="#0">Live-Coding - Muß ich an die Tastatur?</a>
+                                        <div class="cd-faq-content">
+                                            <p>Keiner muß an die Tastatur. Sie wird Reihenweise an Freiwillige weiter gegeben. Alles ist ganz entspannt und freundlich. Darauf legen wir großen Wert und moderieren hier auch.</p>
+                                        </div>
+                                    </li>
+                                    <li> <a class="cd-faq-trigger" href="#0">Gibt es vegetarisches Essen?</a>
+                                        <div class="cd-faq-content">
+                                            <p>Ja das wird auf jeden Fall berücksichtigt.</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            {% endif %}
             <footer class="site-footer section-spacing text-center">
                 <div class="container">
                     <div class="row">

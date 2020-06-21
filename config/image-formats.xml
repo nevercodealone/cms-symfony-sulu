@@ -29,6 +29,12 @@
         </meta>
         <scale x="212" y="130"/>
     </format>
+    <format key="200x130">
+        <meta>
+            <title lang="en">Training teaser town</title>
+        </meta>
+        <scale x="200" y="130"/>
+    </format>
     <format key="270x200">
         <meta>
             <title lang="en">Startpage carousel image</title>
@@ -46,6 +52,12 @@
             <title lang="en">Conference speaker</title>
         </meta>
         <scale x="340" y="340"/>
+    </format>
+    <format key="350x450">
+        <meta>
+            <title lang="en">Why - training overview</title>
+        </meta>
+        <scale x="350" y="450"/>
     </format>
     <format key="400x300">
         <meta>

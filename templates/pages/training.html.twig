@@ -120,27 +120,43 @@
                     </div>
                     <div class="col-md-3 sidebar layout-right">
                         <div class="row">
-                            <div class="course-price-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
-                                <div class="title-widget"><p>{{ content.price }}</p></div>
-                                <div class="content-widget">
-                                    <div class="course-price-widget-wrapper">
-                                        <div class="row">
-                                            <div class="col-md-12 info-row col-sm-12 col-xs-12">
-                                                <div class="pull-left title">Dauer:</div>
-                                                <div class="pull-right length">{{ content.duration }}</div>
-                                            </div>
-                                            <div class="col-md-12 info-row col-sm-12 col-xs-12">
-                                                <div class="pull-left title">Level:</div>
-                                                <div class="pull-right level">{{ content.level }}</div>
-                                            </div>
-                                            <div class="col-md-12 info-row col-sm-12 col-xs-12">
-                                                <div>Max 6 Teilnehmer empfohlen</div>
+                            {% if content.priceItems is not empty %}
+                                {% for item in content.priceItems %}
+                                    <div class="course-price-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
+                                        <div class="title-widget"><p>{{ item.price }}</p></div>
+                                        <div class="content-widget">
+                                            <div class="course-price-widget-wrapper">
+                                                <div class="row">
+                                                    <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                        <div class="pull-left title">Art:</div>
+                                                        <div class="pull-right level">{{ item.kind }}</div>
+                                                    </div>
+                                                    {% if item.date is not empty %}
+                                                        <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                            <div class="pull-left title">Datum:</div>
+                                                            <div class="pull-right level">{{ item.date|date("d.m.yy") }}</div>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                        <div class="pull-left title">Dauer:</div>
+                                                        <div class="pull-right level">{{ item.duration }} Stunden</div>
+                                                    </div>
+                                                    <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                        <div class="pull-left title">Level:</div>
+                                                        <div class="pull-right level">{{ item.level }}</div>
+                                                    </div>
+                                                    <div class="col-md-12 info-row col-sm-12 col-xs-12">
+                                                        <div>Max 6 Teilnehmer</div>
+                                                    </div>
+                                                </div>
+                                                <a href="mailto:rolandgolla@gmail.com" class="btn btn-green color-white"><span>Jetzt buchen</span></a>
                                             </div>
                                         </div>
-                                        <a href="mailto:rolandgolla@gmail.com" class="btn btn-green color-white"><span>Jetzt buchen</span></a>
                                     </div>
-                                </div>
-                            </div>
+
+                                {% endfor %}
+                            {% endif %}
+
                             <div class="author-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
                                 <div class="title-widget">Webdevelopment Trainer</div>
                                 <div class="content-widget">

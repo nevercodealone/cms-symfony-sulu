@@ -137,12 +137,54 @@ phpcs_code_analyses_against_dev_environment:
   except:
     - master
 
-run_tests_against_dev_environment:
+xml_code_analyses_against_dev_environment:
+  stage: codeanalyse
+  image: $TOOLBOX_IMAGE
+  script:
+    - /var/www/html/vendor/bin/xmllint config -v
+  tags:
+    - docker-executor
+  except:
+    - master
+
+run_tests_unit_against_dev_environment:
   stage: test
   image: $TOOLBOX_IMAGE
   script:
     - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
-    - /var/www/html/vendor/bin/codecept run --skip acceptance --html --skip-group db -vvv
+    - /var/www/html/vendor/bin/codecept run unit --html -vvv
+  artifacts:
+    when: always
+    paths:
+      - ./tests/_output/*
+    expire_in: 1 week
+  tags:
+    - docker-executor
+  except:
+    - master
+
+run_tests_api_against_dev_environment:
+  stage: test
+  image: $TOOLBOX_IMAGE
+  script:
+    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
+    - /var/www/html/vendor/bin/codecept run api --html -vvv
+  artifacts:
+    when: always
+    paths:
+      - ./tests/_output/*
+    expire_in: 1 week
+  tags:
+    - docker-executor
+  except:
+    - master
+
+run_tests_acceptance_against_dev_environment:
+  stage: test
+  image: $TOOLBOX_IMAGE
+  script:
+    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
+    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
   artifacts:
     when: always
     paths:
