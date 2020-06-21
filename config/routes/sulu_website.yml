@@ -8,6 +8,9 @@ sulu_search:
 sulu_website:
     resource: "@SuluWebsiteBundle/Resources/config/routing_website.yml"
 
+ch_cookie_consent:
+    resource: "@CHCookieConsentBundle/Resources/config/routing.yaml"
+
 controllers:
     resource: ../../src/Controller/
     type: annotation

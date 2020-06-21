@@ -236,7 +236,9 @@
                 </div>
             {% endblock %}
         </footer>
-
+        {% include "@CHCookieConsent/cookie_consent_styling.html.twig" %}
+        {{ render_esi(path('ch_cookie_consent.show')) }}
+        {{ render_esi(path('ch_cookie_consent.show_if_cookie_consent_not_set')) }}
         <script>
             var Desktop = 5,
                 tabletportrait = 2,
