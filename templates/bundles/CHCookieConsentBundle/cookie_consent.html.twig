@@ -1,5 +1,14 @@
 {% extends '@!CHCookieConsent/cookie_consent.html.twig' %}
 
-{% block title %}
-    Right here
+
+{% block intro %}
+    <p class="ch-cookie-consent__intro">
+        Mit den Infos wollen wir immer besser werden.
+    </p>
+{% endblock %}
+
+{% block submit_button %}
+    <button type="submit" class="btn ch-cookie-consent__btn">
+        Speichern
+    </button>
 {% endblock %}
