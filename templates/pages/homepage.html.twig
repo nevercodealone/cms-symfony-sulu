@@ -389,34 +389,35 @@
             </div>
         </div><!-- End container class tz-cources -->
     </section> <!-- End class tz-cources -->
-
-    <section class="tz-introduce-style-4" data-q="form-contact">
-        <div class="container">
-            <div class="tz-address-style-4">
+    {% if content.introduce_image[0].formats is defined and content.introduce_image[0].formats is not empty %}
+        <section class="tz-introduce-style-4" data-q="form-contact">
+            <div class="container">
+                <div class="tz-address-style-4">
             <span>
                 <img src="{{ content.introduce_image[0].formats['1170x292'] }}"
                      alt="Duisburg Never Code Alone">
             </span>
-                <ul class="tz-phone-fax">
-                    <li><a href="#"><img src="{{ content.introduce_logo[0].formats['212x130'] }}" alt="Never Code Alone Logo"></a></li>
-                    <li>
-                        <img src="/ethic/images/check-home4.png" alt="Adresse">
-                        <span class="theme-color-white">{{ content.introduce_address }}</span>
-                    </li>
-                    <li>
-                        <img src="/ethic/images/check-home4.png" alt="Telefon">
-                        <span class="theme-color-white">{{ content.introduce_phone }}</span>
-                    </li>
-                </ul>
+                    <ul class="tz-phone-fax">
+                        <li><a href="#"><img src="{{ content.introduce_logo[0].formats['212x130'] }}" alt="Never Code Alone Logo"></a></li>
+                        <li>
+                            <img src="/ethic/images/check-home4.png" alt="Adresse">
+                            <span class="theme-color-white">{{ content.introduce_address }}</span>
+                        </li>
+                        <li>
+                            <img src="/ethic/images/check-home4.png" alt="Telefon">
+                            <span class="theme-color-white">{{ content.introduce_phone }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="tz-introduce-content tz-introduce-content-style-4">
+                    <h4>{{ content.introduce_headline }}</h4>
+                    <p>
+                        {{ content.introduce_text|raw }}
+                    </p>
+                </div>
             </div>
-            <div class="tz-introduce-content tz-introduce-content-style-4">
-                <h4>{{ content.introduce_headline }}</h4>
-                <p>
-                    {{ content.introduce_text|raw }}
-                </p>
-            </div>
-        </div>
-    </section>
+        </section>
+    {% endif %}
     <section class="tz-student-life">
         <div class="parallax-style-4">
             <div class="tz-life-content">
