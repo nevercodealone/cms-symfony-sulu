@@ -2,8 +2,6 @@ FROM composer AS composer
 
 WORKDIR /var/www/html
 
-RUN composer global require hirak/prestissimo --no-plugins --no-scripts
-
 COPY composer.* /var/www/html/
 
 FROM composer AS composer-web
