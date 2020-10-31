@@ -237,8 +237,10 @@
                 </div>
             {% endblock %}
         </footer>
-        {{ render_esi(path('ch_cookie_consent.show')) }}
-        {{ render_esi(path('ch_cookie_consent.show_if_cookie_consent_not_set')) }}
+        {% if chcookieconsent_isCookieConsentSavedByUser() != true %}
+            {{ render_esi(path('ch_cookie_consent.show')) }}
+            {{ render_esi(path('ch_cookie_consent.show_if_cookie_consent_not_set')) }}
+        {% endif %}
 
         <script>
             var Desktop = 5,
