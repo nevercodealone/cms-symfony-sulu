@@ -8,8 +8,8 @@ ch_cookie_consent:
     google:
         title: 'Google Analytics'
         description: 'Damit wir besser gefunden werden'
-    facebook:
-        title: 'Facebook'
+    socialmedia:
+        title: 'Social media'
         description: 'Wir schalten für neue Events anzeigen. Damit erreichen wir dich besser.'
     no: 'Nein'
     yes: 'Ja'

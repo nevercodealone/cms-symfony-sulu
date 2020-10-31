@@ -3,6 +3,6 @@ ch_cookie_consent:
   categories:
     - 'matomo'
     - 'google'
-    - 'facebook'
+    - 'socialmedia'
   use_logger: false
   position: 'top'
