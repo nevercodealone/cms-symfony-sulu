@@ -1,7 +1,8 @@
 ch_cookie_consent:
   theme: 'dark'
   categories:
-    - 'analytics'
-    - 'tracking'
+    - 'matomo'
+    - 'google'
+    - 'facebook'
   use_logger: false
   position: 'top'
