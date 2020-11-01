@@ -2,8 +2,6 @@ FROM composer AS composer
 
 WORKDIR /var/www/html
 
-RUN composer global require hirak/prestissimo --no-plugins --no-scripts
-
 COPY composer.* /var/www/html/
 
 FROM composer AS composer-web
@@ -57,6 +55,7 @@ COPY --chown=www-data:www-data . /var/www/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
+RUN /var/www/html/bin/adminconsole assets:install --symlink --relative --env prod
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]

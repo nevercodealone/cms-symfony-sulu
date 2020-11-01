@@ -4,10 +4,11 @@
     "type": "project",
     "description": "The sulu content management framework",
     "require": {
-        "php": "^7.1.3",
+        "php": "^7.4",
         "ext-iconv": "*",
         "api-platform/api-pack": "^1.2",
         "api-platform/core": "^2.4",
+        "connectholland/cookie-consent-bundle": "^0.8.6",
         "dantleech/phpcr-migrations-bundle": "^1.1",
         "dg/twitter-php": "^4.0",
         "doctrine/doctrine-bundle": "^1.6",

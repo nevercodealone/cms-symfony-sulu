@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="{{ app.request.locale|split('_')[0] }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,6 +21,8 @@
         <link href='/css/nca-contact.css' rel='stylesheet' type='text/css'>
         <link href="/ethic/style.css" rel="stylesheet"/>
         <link href="/css/costum-ethic.css" rel="stylesheet"/>
+        {% include "@!CHCookieConsent/cookie_consent_styling.html.twig" %}
+
         {% block additionalstyle %}
 
         {% endblock %}
@@ -236,6 +237,10 @@
                 </div>
             {% endblock %}
         </footer>
+        {% if chcookieconsent_isCookieConsentSavedByUser() != true %}
+            {{ render_esi(path('ch_cookie_consent.show')) }}
+            {{ render_esi(path('ch_cookie_consent.show_if_cookie_consent_not_set')) }}
+        {% endif %}
 
         <script>
             var Desktop = 5,
