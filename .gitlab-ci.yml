@@ -195,23 +195,23 @@ run_tests_acceptance_against_dev_environment:
   except:
     - master
 
-run_tests_against_final_prod_environment:
-  stage: test
-  image: $TOOLBOX_IMAGE
-  variables:
-    WEBSITE_URL: https://stage-cms.nevercodealone.de
-  script:
-    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
-    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
-  artifacts:
-    when: always
-    paths:
-      - /builds/nevercodealone/sulu/tests/_output/*
-    expire_in: 1 week
-  tags:
-    - docker-executor
-  only:
-    - master
+#run_tests_against_final_prod_environment:
+#  stage: test
+#  image: $TOOLBOX_IMAGE
+#  variables:
+#    WEBSITE_URL: https://stage-cms.nevercodealone.de
+#  script:
+#    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
+#    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
+#  artifacts:
+#    when: always
+#    paths:
+#      - /builds/nevercodealone/sulu/tests/_output/*
+#    expire_in: 1 week
+#  tags:
+#    - docker-executor
+#  only:
+#    - master
 
 # Stage: posttest
 deploy_production_image_to_prod:
