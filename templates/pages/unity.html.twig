@@ -27,428 +27,429 @@
         <!-- PRELOADER STARTSCommunity Events sind nachhaltig und persönlich.
             ========================================================================= -->
         <section id="content">
-            <!-- NAVIGATION STARTS ========================================================================= -->
-            <!-- LOGO STARTS  -->
-            <a class="logo-overlay" href="/"><img src="/img/logo.png" width="150" alt="Logo Never Code Alone"></a>
-            <!-- /. LOGO ENDS  -->
-            <!-- TOP RIGHT MENU ICON STARTS  -->
-            <a id="trigger-overlay"><span>Open Overlay</span></a>
-            <!-- /. TOP RIGHT MENU ICON ENDS  -->
-            <div class="overlay overlay-genie" data-steps="m 701.56545,809.01175 35.16718,0 0,19.68384 -35.16718,0 z;m 698.9986,728.03569 41.23353,0 -3.41953,77.8735 -34.98557,0 z;m 687.08153,513.78234 53.1506,0 C 738.0505,683.9161 737.86917,503.34193 737.27015,806 l -35.90067,0 c -7.82727,-276.34892 -2.06916,-72.79261 -14.28795,-292.21766 z;m 403.87105,257.94772 566.31246,2.93091 C 923.38284,513.78233 738.73561,372.23931 737.27015,806 l -35.90067,0 C 701.32034,404.49318 455.17312,480.07689 403.87105,257.94772 z;M 51.871052,165.94772 1362.1835,168.87863 C 1171.3828,653.78233 738.73561,372.23931 737.27015,806 l -35.90067,0 C 701.32034,404.49318 31.173122,513.78234 51.871052,165.94772 z;m 52,26 1364,4 c -12.8007,666.9037 -273.2644,483.78234 -322.7299,776 l -633.90062,0 C 359.32034,432.49318 -6.6979288,733.83462 52,26 z;m 0,0 1439.999975,0 0,805.99999 -1439.999975,0 z">
-                <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1440 806" preserveAspectRatio="none">
-                    <path class="overlay-path" d="m 701.56545,809.01175 35.16718,0 0,19.68384 -35.16718,0 z"/>
-                </svg>
-                <button type="button" class="overlay-close overlay-close-btn">Close</button>
-                <nav>
-                    <ul>
-                        <li><a href="#top" class="overlay-close-btn">Start</a></li>
-                        <li><a href="#portfolio" class="overlay-close-btn">Referenzen</a></li>
-                        <li><a href="#employerbranding" class="overlay-close-btn">Employer Branding</a></li>
-                        <li><a href="#socialmediamarketing" class="overlay-close-btn">Social Media Marketing</a></li>
-                        <li><a href="#events" class="overlay-close-btn">Unsere Events</a></li>
-                        <li><a href="#whatisnca" class="overlay-close-btn">Was ist NCA</a></li>
-                        <li><a href="#team" class="overlay-close-btn">NCA Team</a></li>
-                        <li><a href="#contact" class="overlay-close-btn">Kontakt</a></li>
-                    </ul>
-                </nav>
-            </div>
-            <!-- /. NAVIGATION ENDS ========================================================================= -->
-            <!-- SLIDER STARTS
-    ========================================================================= -->
-            <div class="slider" id="top">
-                <div id="rev_slider_204_1_wrapper" class="rev_slider_wrapper fullwidthbanner-container" data-alias="fullscreen-button44" style="margin:0px auto;background-color:transparent;padding:0px;margin-top:0px;margin-bottom:0px;">
-                    <!-- START REVOLUTION SLIDER 5.1.1RC auto mode -->
-                    <div id="rev_slider_204_1" class="rev_slider fullwidthabanner" style="display:none;" data-version="5.1.1RC">
+            {% block content %}
+                <!-- NAVIGATION STARTS ========================================================================= -->
+                <!-- LOGO STARTS  -->
+                <a class="logo-overlay" href="/"><img src="/img/logo.png" width="150" alt="Logo Never Code Alone"></a>
+                <!-- /. LOGO ENDS  -->
+                <!-- TOP RIGHT MENU ICON STARTS  -->
+                <a id="trigger-overlay"><span>Open Overlay</span></a>
+                <!-- /. TOP RIGHT MENU ICON ENDS  -->
+                <div class="overlay overlay-genie" data-steps="m 701.56545,809.01175 35.16718,0 0,19.68384 -35.16718,0 z;m 698.9986,728.03569 41.23353,0 -3.41953,77.8735 -34.98557,0 z;m 687.08153,513.78234 53.1506,0 C 738.0505,683.9161 737.86917,503.34193 737.27015,806 l -35.90067,0 c -7.82727,-276.34892 -2.06916,-72.79261 -14.28795,-292.21766 z;m 403.87105,257.94772 566.31246,2.93091 C 923.38284,513.78233 738.73561,372.23931 737.27015,806 l -35.90067,0 C 701.32034,404.49318 455.17312,480.07689 403.87105,257.94772 z;M 51.871052,165.94772 1362.1835,168.87863 C 1171.3828,653.78233 738.73561,372.23931 737.27015,806 l -35.90067,0 C 701.32034,404.49318 31.173122,513.78234 51.871052,165.94772 z;m 52,26 1364,4 c -12.8007,666.9037 -273.2644,483.78234 -322.7299,776 l -633.90062,0 C 359.32034,432.49318 -6.6979288,733.83462 52,26 z;m 0,0 1439.999975,0 0,805.99999 -1439.999975,0 z">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1440 806" preserveAspectRatio="none">
+                        <path class="overlay-path" d="m 701.56545,809.01175 35.16718,0 0,19.68384 -35.16718,0 z"/>
+                    </svg>
+                    <button type="button" class="overlay-close overlay-close-btn">Close</button>
+                    <nav>
                         <ul>
-                            {% for key,slide in content.slider %}
-                                <!-- SLIDE  -->
-                                <li data-index="rs-68{{ key }}" data-transition="zoomout" data-slotamount="default" data-easein="Power4.easeInOut" data-easeout="Power4.easeInOut" data-masterspeed="2000" data-rotate="0" data-fstransition="fade" data-fsmasterspeed="1500" data-fsslotamount="7" data-saveperformance="off" data-title="{{ slide.layer1 }}" data-description="">
-                                    <!-- MAIN IMAGE -->
-                                    <img src="{{ slide.sliderImage[0].formats["1500x1000"] }}" alt="{{ slide.layer1 }}" data-bgposition="center center" data-kenburns="on" data-duration="20000" data-ease="Linear.easeNone" data-scalestart="100" data-scaleend="120" data-rotatestart="0" data-rotateend="0" data-offsetstart="0 0" data-offsetend="0 0" data-bgparallax="10" class="rev-slidebg" data-no-retina>
-                                    <!-- LAYERS -->
-                                    <!-- LAYER NR. 1 -->
-                                    <div class="tp-caption NotGeneric-SubTitle tp-resizeme rs-parallaxlevel-0"
-                                         id="slide-68{{ key }}-layer-2"
-                                         data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
-                                         data-y="['top','top','top','top']" data-voffset="['100','100','100','100']"
-                                         data-fontsize="['140','140','100','60']"
-                                         data-lineheight="['120','120','85','55']"
-                                         data-width="['700','600','600','300']"
-                                         data-height="none"
-                                         data-color="#fff"
-                                         data-letter-spacing="normal"
-                                         data-transform_idle="o:1;"
-                                         data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
-                                         data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
-                                         data-mask_out="x:inherit;y:inherit;"
-                                         data-start="1000"
-                                         data-splitin="none"
-                                         data-splitout="none"
-                                         data-responsive_offset="on"
-                                         style="z-index: 6; min-width: 600px; max-width: 700px; white-space: normal; white-space: nowrap;">
-                                        {{ slide.layer1 }}
-                                    </div>
-                                    <!-- LAYER NR. 2 -->
-                                    <div class="tp-caption NotGeneric-Title tp-resizeme rs-parallaxlevel-0"
-                                         id="slide-68{{ key }}-layer-1"
-                                         data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
-                                         data-y="['top','top','top','top']" data-voffset="['350','300','290','230']"
-                                         data-fontsize="['30','30','30','20']"
-                                         data-lineheight="['35','35','35','25']"
-                                         data-width="['600','600','500','300']"
-                                         data-whitespace="normal"
-                                         data-height="none"
-                                         data-color="#fff"
-                                         data-transform_idle="o:1;"
-                                         data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
-                                         data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
-                                         data-mask_out="x:inherit;y:inherit;"
-                                         data-start="1500"
-                                         data-splitin="none"
-                                         data-splitout="none"
-                                         data-responsive_offset="on"
-                                         style="z-index: 6; min-width: 600px; max-width: 600px; white-space: normal; white-space: nowrap; font-weight:300; background-color: rgb(95, 187, 40, 0.6); padding: 10px;">
-                                        {{ slide.layer2 }}
-                                    </div>
-                                    <!-- LAYER NR. 3 -->
-                                    <div class="tp-caption NotGeneric-Button rev-btn red rs-parallaxlevel-0 nca-contact"
-                                         id="slide-68{{ key }}-layer-3"
-                                         data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
-                                         data-y="['center','center','center','center']" data-voffset="['90','90','120','88']"
-                                         data-fontsize="['14','14','14,'14']"
-                                         data-lineheight="['14','14','14,'14']"‚
-                                         data-width="none"
-                                         data-height="none"
-                                         data-whitespace="nowrap"
-                                         data-transform_idle="o:1;"
-                                         data-transform_hover="o:1;rX:0;rY:0;rZ:0;z:0;s:300;e:Power1.easeInOut;"
-                                         data-style_hover="c:rgba(255, 255, 255, 1.00);bc:rgba(255, 255, 255, 1.00);cursor:pointer;"
-                                         data-transform_in="y:50px;opacity:0;s:1500;e:Power4.easeInOut;"
-                                         data-transform_out="y:[175%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
-                                         data-mask_out="x:inherit;y:inherit;"
-                                         data-start="2000"
-                                         data-splitin="none"
-                                         data-splitout="none"
-                                         data-actions='[{"event":"click","action":"jumptoslide","slide":"next","delay":""}]'
-                                         data-responsive_offset="on"
-                                         data-responsive="off"
-                                         style="z-index: 9; white-space: nowrap;outline:none;box-shadow:none;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;">
-                                        {{ slide.layer3 }}
-                                    </div>
-                                </li>
-                                <!-- /. SLIDE  -->
-                            {% endfor %}
+                            <li><a href="#top" class="overlay-close-btn">Start</a></li>
+                            <li><a href="#portfolio" class="overlay-close-btn">Referenzen</a></li>
+                            <li><a href="#employerbranding" class="overlay-close-btn">Employer Branding</a></li>
+                            <li><a href="#socialmediamarketing" class="overlay-close-btn">Social Media Marketing</a></li>
+                            <li><a href="#events" class="overlay-close-btn">Unsere Events</a></li>
+                            <li><a href="#whatisnca" class="overlay-close-btn">Was ist NCA</a></li>
+                            <li><a href="#team" class="overlay-close-btn">NCA Team</a></li>
+                            <li><a href="#contact" class="overlay-close-btn">Kontakt</a></li>
                         </ul>
-                        <div class="tp-bannertimer" style="height: 7px; background-color: rgba(255, 255, 255, 0.25);"></div>
-                    </div>
+                    </nav>
                 </div>
-            </div>
-            <!-- /. SLIDER ENDS ========================================================================= -->
-            <!-- TESTIMONIAL 03 STARTS ========================================================================= -->
-            <div class="parallax-33" id="portfolio" style="background-image: url('{{ content.testimonialsBgImage[0].formats['1920x1280'] }}')">
-                <div class="container testimonial-03">
-                    <div class="row">
-                        <div class="col-lg-10 col-lg-offset-1 herotext">
-                            <h1>{{ content.testimonialsHeadline }}</h1>
-                            <h2>{{ content.testimonialsSubline }}</h2>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-8 col-lg-offset-2">
-                            <div class="testimonial-carousel-03">
-                                {% for testimonial in content.testimonials %}
-                                    <div>
-                                        <div class="description">" {{ testimonial.testimonialDescription }}"</div>
-                                        <div class="picture"><img src="{{ testimonial.testimonialImage[0].formats["72x72"] }}" class="img-responsive center-block img-circle" alt="{{ testimonial.testimonialName }} {{ testimonial.testimonialJobCompany }}" ></div>
-                                        <div class="name">{{ testimonial.testimonialName }}</div>
-                                        <div class="company">{{ testimonial.testimonialJobCompany }}</div>
-                                        <div class="company"><a href="{{ testimonial.testimonialLink }}" target="_blank" rel="noopener">{{ testimonial.testimonialLinkText }}</a></div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- TESTIMONIAL 03 ENDS ========================================================================= -->
-            <div class="col-lg-10 col-lg-offset-1" id="socialmediamarketing">
-                <!-- Portfolio Nav Starts -->
-                <div id="options">
-                    <ul id="filters" class="option-set clearfix" data-option-key="filter">
-                        <li><a href="#filter" data-option-value="*" class="selected">ALL</a></li>
-                        <li><a href="#filter" data-option-value=".youtube">YouTube</a></li>
-                        <li><a href="#filter" data-option-value=".twitter">Twitter</a></li>
-                        <li><a href="#filter" data-option-value=".facebook">Facebook</a></li>
-                        <li><a href="#filter" data-option-value=".xing">Xing</a></li>
-                    </ul>
-                </div>
-                <!-- Portfolio Nav Ends -->
-                <!-- Portfolio Thumbs Starts -->
-                <div class="make2columns mansory-effect">
-                    {% for video in videoList %}
-                        <figure class="item youtube">
-                            <div class="picture">
-                                <iframe title="{{ video['snippet']['title'] }}" width="560" height="315" src="https://www.youtube.com/embed/{{ video['snippet']['resourceId']['videoId'] }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                            </div>
-                        </figure>
-                    {% endfor %}
-                    {% for tweet in content.socialMediaTweets %}
-                        <figure class="item twitter">
-                            <div class="picture">
-                                {{ twitter_service.getEmbedCodeByUrl(tweet.socialMediaTweetUrl)|raw }}
-                            </div>
-                        </figure>
-                    {% endfor %}
-                    {% for facebook in content.socialMediaFacebook %}
-                        <figure class="item facebook">
-                            <div class="picture">
-                                <a href="{{ facebook.socialMediaFacebookUrl }}" target="_blank">
-                                    <img src="{{ facebook.socialMediaFacebookImage[0].formats['450x521'] }}" alt="Facebook NCA Event">
-                                </a>
-                            </div>
-                        </figure>
-                    {% endfor %}
-                    {% for xing in content.socialMediaXing %}
-                        <figure class="item xing">
-                            <div class="picture">
-                                <a href="{{ xing.socialMediaXingUrl }}" target="_blank">
-                                    <img src="{{ xing.socialMediaXingImage[0].formats['500x320'] }}" alt="Xing NCA Event">
-                                </a>
-                            </div>
-                        </figure>
-                    {% endfor %}
-                </div>
-                <!-- Portfolio Thumbs Ends -->
-            </div>
-            <div class="container tab-style-07" id="employerbranding">
-                <div class="row">
-                    <div class="col-lg-10 col-lg-offset-1 herotext">
-                        <h1>Employer Branding Web Development Jobs</h1>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-10 col-lg-offset-1">
-                        <!-- Nav tabs -->
-                        <ul class="nav nav-justified icon-tabs" role="tablist">
-                            <li role="presentation" class="active">
-                                <a href="#tab-1" aria-controls="tab-1" role="tab" data-toggle="tab">
-                                    <div class="icon"><i class="pe-7s-video"></i></div>
-                                    <div class="caption">Video</div>
-                                </a>
-                            </li>
-                            <li role="presentation">
-                                <a href="#tab-2" aria-controls="tab-2" role="tab" data-toggle="tab">
-                                    <div class="icon"><i class="pe-7s-users"></i></div>
-                                    <div class="caption">Social Media</div>
-                                </a>
-                            </li>
-                            <li role="presentation">
-                                <a href="#tab-3" aria-controls="tab-3" role="tab" data-toggle="tab">
-                                    <div class="icon"><i class="pe-7s-volume"></i></div>
-                                    <div class="caption">Event Marketing</div>
-                                </a>
-                            </li>
-                            <li role="presentation">
-                                <a href="#tab-4" aria-controls="tab-4" role="tab" data-toggle="tab">
-                                    <div class="icon"><i class="pe-7s-smile"></i></div>
-                                    <div class="caption">Sozialer Zweck</div>
-                                </a>
-                            </li>
-                            <li role="presentation">
-                                <a href="#tab-5" aria-controls="tab-5" role="tab" data-toggle="tab">
-                                    <div class="icon"><i class="pe-7s-rocket"></i></div>
-                                    <div class="caption">#NCAEvent</div>
-                                </a>
-                            </li>
-                        </ul>
-                        <!-- Tab panes -->
-                        <div class="tab-content">
-                            <div role="tabpanel" class="tab-pane fade in active" id="tab-1">
-                                <div class="description">
-                                    Unsere professionellen Videos setzen euch als Arbeitgeber richtig in Szene und vermitteln einen persönlichen Eindruck des Unternehmens und der Mitarbeiter. Videos haben in den sozialen Medien eine größere Reichweite und erzielen durchschnittlich 2.500 Impressionen pro Event.
-                                    <br>
-                                    <strong>Unser Angebot:</strong>
-                                    <br>
-                                    - 3 Interviews vor dem Event
-                                    <br>
-                                    - 1 Action Event Video
-                                    <br>
-                                    <a href="https://youtu.be/CCJ3KFWJJiA" target="_blank">Zur NCAEvent YouTube Playlist</a>
-                                </div>
-                            </div>
-                            <div role="tabpanel" class="tab-pane fade" id="tab-2">
-                                <div class="description">
-                                    Social Media Marketing in der relevanten Zielgruppe der motivierten Web Developer. Wir haben hier eine sehr gute Community auf <a href="https://www.facebook.com/nevercodealone/" target="_blank">Facebook</a> und <a href="https://twitter.com/nevercodealone" target="_blank">Twitter</a>. Dazu gibt es noch <a href="https://www.instagram.com/nevercodealone/" target="_blank">Instagram</a> mit meinem persönlichen Developer-Tagebuch und natürlich auch die großen Business-Netzwerke <a href="https://www.xing.com/companies/nevercodealone" target="_blank">Xing</a> und <a href="https://www.linkedin.com/in/rolandgolla/" target="_blank">Linkedin</a> mit je knapp 2.000 Follower. Ergänzend werden 250,- Euro für Advertising ausgegeben.
-                                    <br>
-                                    Zahlen Impressionen InflunecerDB Event Monat:
-                                    <br>
-                                    Twitter - 45k
-                                    <br>
-                                    Facebook - 26K
-                                    <br>
-                                    Video - 2.5K
-                                </div>
-                            </div>
-                            <div role="tabpanel" class="tab-pane fade" id="tab-3">
-                                <div class="description">
-                                    Never Code Alone setzt sich von Anfang an für soziale Zwecke ein. Aus Überzeugung und mit guten Absichten. Die 40 * 10,- Euro Schutzgebühr des Events werden immer vollständig einem sozialen Zweck in der jeweiligen Stadt zur Verfügung gestellt. Neuerdings können die Empfänger auch einen Aufruf an die Community in Form eines Videos absenden.
-                                    <br>
-                                    <strong>Interviews Spenden Empfänger</strong>
-                                    <br>
-                                    Froschkönige e.V.
-                                    <br>
-                                    Mitmachkinder e.V.
-                                </div>
-                            </div>
-                            <div role="tabpanel" class="tab-pane fade" id="tab-4">
-                                <div class="description">
-                                    Wir sorgen für eine hohe Sichtbarkeit durch ein Multi Channel Event Marketing als Employer Branding. Neben der #NCAEvent Landing-Page gibt es noch eine XING-Event, Facebook -Event und ein Meetup. Alle werden exklusiv als Single Sponsor Event ausgelegt, werden mit hochwertigen und individuellen Inhalten eingepflegt und als News-Kanäle über den gesamten Zeitraum genutzt.
-                                    <br>
-                                    <strong>Event Marketing Pages</strong>
-                                    <br>
-                                    <a href="/influencerdb/">InflunecerDB Event Page</a>
-                                    <br>
-                                    <a href="https://www.xing.com/events/python-workshop-influencerdb-ncaevent-1903595" target="_blank">InflunecerDB Xing Event</a>
-                                    <br>
-                                    <a href="https://www.facebook.com/events/938481492982319/" target="_blank">InflunecerDB FB Event</a>
-                                    <br>
-                                    <a href="https://www.meetup.com/de-DE/meetup-group-PNulFhzz/events/248153897/" target="_blank">InflunecerDB Meetup Event</a>
-                                </div>
-                            </div>
-                            <div role="tabpanel" class="tab-pane fade" id="tab-5">
-                                <div class="description">
-                                    Die Never Code Alone Events haben durch ihre zahlreichen Videos einen großen Schneeball-Effekt untereinander. Im Gegensatz zu Blog-Posts werden Videos als Related Content auch deutlich öfter geschaut und auf jeden Fall in den Play-Lists als Vorschau wahrgenommen. Dadurch entsteht ein nachhaltiges Marketing. Der Content kann natürlich auch als Rich Media Content hervorragend auf Job-Seiten eingebunden werden.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="icon-style-20">
-                <div class="container-fluid">
-                    <!-- Row Starts -->
-                    <div class="row">
-                        <div class="col-lg-3 col-md-3 col-sm-6 block">
-                            <div class="icon"><i class="pe-7s-add-user"></i></div>
-                            <div class="heading">Persönlicher Kontakt</div>
-                            <div class="line"></div>
-                            <div class="description">Eine ganz persönliche Möglichkeit, sich als Arbeitgeber in den eigenen Räumen zu präsentieren und über einen ganzen Tag lang kennenzulernen. Das macht den ganzen Prozess einfacher und effizienter.</div>
-                        </div>
-                        <div class="col-lg-3 col-md-3 col-sm-6 block">
-                            <div class="icon"><i class="pe-7s-like2"></i></div>
-                            <div class="heading">Motivierte Entwickler</div>
-                            <div class="line"></div>
-                            <div class="description">Einen ganzen Samstag kostenlos für die persönliche Weiterbildung einsetzen? Das versteht sich nicht von selbst und die Kandidaten wollen genau das und sich über den Tellerrand hinaus weiterbilden.</div>
-                        </div>
-                        <div class="col-lg-3 col-md-3 col-sm-6 block">
-                            <div class="icon"><i class="pe-7s-tools"></i></div>
-                            <div class="heading">Reichweite</div>
-                            <div class="line"></div>
-                            <div class="description">Durch Videos und gezieltes Social Media Marketing präsentiert man sich als guter Arbeitgeber und Förderer der Community mit dem Einsatz für den guten Zweck. Das ist ein HR- und PR-Thema.</div>
-                        </div>
-                        <div class="col-lg-3 col-md-3 col-sm-6 block">
-                            <div class="icon"><i class="pe-7s-science"></i></div>
-                            <div class="heading">Der gute Zweck</div>
-                            <div class="line"></div>
-                            <div class="description">Das Unternehmen, Never Code Alone und Teilnehmer setzen sich gemeinsam für einen sozialen Zweck in der jeweiligen Stadt ein. Gemeinsam Gutes tun erzeugt ein starkes Wir-Gefühl und verbindet.</div>
-                        </div>
-                    </div>
-                    <!-- Row Ends -->
-                </div>
-            </div>
-            <div class="parallax-39" id="events" style="background-image: url('{{ content.eventsBgImage[0].formats['1920x1080'] }}');">
-                <div class="call-to-action-03 container">
-                    <div class="row">
-                        <div class="col-lg-10 col-lg-offset-1 herotext">
-                            <div class="clothing-carousel">
-                                {% for event in content.events %}
-                                    <div>
-                                        <h1>{{ event.eventHeadline }}</h1>
-                                        <div class="description">{{ event.eventDescription }}</div>
-                                        <div class="button"><a href="#/" class="fill nca-contact">{{ event.eventContactText }}</a></div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="container-fluid" id="whatisnca">
-                <div class="row">
-                    <section class="mockup-section-11 blue-bg-10">
-                        <div class="col-lg-6 col-sm-8 col-sm-offset-6 tab-style-13">
-                            <div class="contents">
-                                <!-- Nav tabs -->
-                                <ul class="nav nav-justified" role="tablist">
-                                    <li role="presentation" class="active">
-                                        <a href="#plan-13" aria-controls="plan-13" role="tab" data-toggle="tab">
-                                            <div class="caption">Employer<br>Branding</div>
-                                        </a>
+                <!-- /. NAVIGATION ENDS ========================================================================= -->
+                <!-- SLIDER STARTS ========================================================================= -->
+                <div class="slider" id="top">
+                    <div id="rev_slider_204_1_wrapper" class="rev_slider_wrapper fullwidthbanner-container" data-alias="fullscreen-button44" style="margin:0px auto;background-color:transparent;padding:0px;margin-top:0px;margin-bottom:0px;">
+                        <!-- START REVOLUTION SLIDER 5.1.1RC auto mode -->
+                        <div id="rev_slider_204_1" class="rev_slider fullwidthabanner" style="display:none;" data-version="5.1.1RC">
+                            <ul>
+                                {% for key,slide in content.slider %}
+                                    <!-- SLIDE  -->
+                                    <li data-index="rs-68{{ key }}" data-transition="zoomout" data-slotamount="default" data-easein="Power4.easeInOut" data-easeout="Power4.easeInOut" data-masterspeed="2000" data-rotate="0" data-fstransition="fade" data-fsmasterspeed="1500" data-fsslotamount="7" data-saveperformance="off" data-title="{{ slide.layer1 }}" data-description="">
+                                        <!-- MAIN IMAGE -->
+                                        <img src="{{ slide.sliderImage[0].formats["1500x1000"] }}" alt="{{ slide.layer1 }}" data-bgposition="center center" data-kenburns="on" data-duration="20000" data-ease="Linear.easeNone" data-scalestart="100" data-scaleend="120" data-rotatestart="0" data-rotateend="0" data-offsetstart="0 0" data-offsetend="0 0" data-bgparallax="10" class="rev-slidebg" data-no-retina>
+                                        <!-- LAYERS -->
+                                        <!-- LAYER NR. 1 -->
+                                        <div class="tp-caption NotGeneric-SubTitle tp-resizeme rs-parallaxlevel-0"
+                                             id="slide-68{{ key }}-layer-2"
+                                             data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
+                                             data-y="['top','top','top','top']" data-voffset="['100','100','100','100']"
+                                             data-fontsize="['140','140','100','60']"
+                                             data-lineheight="['120','120','85','55']"
+                                             data-width="['700','600','600','300']"
+                                             data-height="none"
+                                             data-color="#fff"
+                                             data-letter-spacing="normal"
+                                             data-transform_idle="o:1;"
+                                             data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
+                                             data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                             data-mask_out="x:inherit;y:inherit;"
+                                             data-start="1000"
+                                             data-splitin="none"
+                                             data-splitout="none"
+                                             data-responsive_offset="on"
+                                             style="z-index: 6; min-width: 600px; max-width: 700px; white-space: normal; white-space: nowrap;">
+                                            {{ slide.layer1 }}
+                                        </div>
+                                        <!-- LAYER NR. 2 -->
+                                        <div class="tp-caption NotGeneric-Title tp-resizeme rs-parallaxlevel-0"
+                                             id="slide-68{{ key }}-layer-1"
+                                             data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
+                                             data-y="['top','top','top','top']" data-voffset="['350','300','290','230']"
+                                             data-fontsize="['30','30','30','20']"
+                                             data-lineheight="['35','35','35','25']"
+                                             data-width="['600','600','500','300']"
+                                             data-whitespace="normal"
+                                             data-height="none"
+                                             data-color="#fff"
+                                             data-transform_idle="o:1;"
+                                             data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
+                                             data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                             data-mask_out="x:inherit;y:inherit;"
+                                             data-start="1500"
+                                             data-splitin="none"
+                                             data-splitout="none"
+                                             data-responsive_offset="on"
+                                             style="z-index: 6; min-width: 600px; max-width: 600px; white-space: normal; white-space: nowrap; font-weight:300; background-color: rgb(95, 187, 40, 0.6); padding: 10px;">
+                                            {{ slide.layer2 }}
+                                        </div>
+                                        <!-- LAYER NR. 3 -->
+                                        <div class="tp-caption NotGeneric-Button rev-btn red rs-parallaxlevel-0 nca-contact"
+                                             id="slide-68{{ key }}-layer-3"
+                                             data-x="['left','left','left','left']" data-hoffset="['60','60','60','60']"
+                                             data-y="['center','center','center','center']" data-voffset="['90','90','120','88']"
+                                             data-fontsize="['14','14','14,'14']"
+                                             data-lineheight="['14','14','14,'14']"‚
+                                             data-width="none"
+                                             data-height="none"
+                                             data-whitespace="nowrap"
+                                             data-transform_idle="o:1;"
+                                             data-transform_hover="o:1;rX:0;rY:0;rZ:0;z:0;s:300;e:Power1.easeInOut;"
+                                             data-style_hover="c:rgba(255, 255, 255, 1.00);bc:rgba(255, 255, 255, 1.00);cursor:pointer;"
+                                             data-transform_in="y:50px;opacity:0;s:1500;e:Power4.easeInOut;"
+                                             data-transform_out="y:[175%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                             data-mask_out="x:inherit;y:inherit;"
+                                             data-start="2000"
+                                             data-splitin="none"
+                                             data-splitout="none"
+                                             data-actions='[{"event":"click","action":"jumptoslide","slide":"next","delay":""}]'
+                                             data-responsive_offset="on"
+                                             data-responsive="off"
+                                             style="z-index: 9; white-space: nowrap;outline:none;box-shadow:none;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box;">
+                                            {{ slide.layer3 }}
+                                        </div>
                                     </li>
-                                </ul>
-                                <!-- Tab panes -->
-                                <div class="tab-content">
-                                    <div role="tabpanel" class="tab-pane fade in active" id="plan-13">
-                                        <div class="heading">Vertrauen aufbauen</div>
-                                        <div class="description">
-                                            Stellenausschreibungen bringen keine guten Bewerber, weil der persönliche Kontakt fehlt und man sich hier nicht richtig absetzen kann.
-                                            <br><br>
-                                            In der großen Masse der Jobangebote gibt es leider viele schwarze Schafe mit falschen Versprechen.
-                                            Daher sind diese zunehmend unglaubwürdig und können die Wahrheit nicht mehr transportieren.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                    <!-- /. SLIDE  -->
+                                {% endfor %}
+                            </ul>
+                            <div class="tp-bannertimer" style="height: 7px; background-color: rgba(255, 255, 255, 0.25);"></div>
                         </div>
-                        <div class="col-lg-6 col-sm-4 img-side img-left">
-                            <div class="img-holder"><img src="{{ content.whatIsNcaImage[0].formats['1000x1150'] }}" alt="Employer Branding" ></div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-            <div class="container team-style-06" id="team">
-                <div class="row">
-                    <div class="col-lg-12 herotext">
-                        <h1>{{ content.teamHeadline }}</h1>
-                        <div class="description">{{ content.teamDescription }}</div>
                     </div>
                 </div>
-                <div class="row">
-                    {% for teamMember in content.teamMembers %}
-                        <div class="col-lg-3 col-md-3 block">
-                            <div class="picture">
-                                <img src="{{ teamMember.teamMemberImage[0].formats['720x500'] }}" class="img-responsive" alt="{{ teamMember.teamMemberName }} {{ teamMember.teamMemberPosition }}" >
-                                <!-- Picture Overlay Starts -->
-                                <div class="picture-overlay">
-                                    <div class="icons">
+                <!-- /. SLIDER ENDS ========================================================================= -->
+                <!-- TESTIMONIAL 03 STARTS ========================================================================= -->
+                <div class="parallax-33" id="portfolio" style="background-image: url('{{ content.testimonialsBgImage[0].formats['1920x1280'] }}')">
+                    <div class="container testimonial-03">
+                        <div class="row">
+                            <div class="col-lg-10 col-lg-offset-1 herotext">
+                                <h1>{{ content.testimonialsHeadline }}</h1>
+                                <h2>{{ content.testimonialsSubline }}</h2>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-8 col-lg-offset-2">
+                                <div class="testimonial-carousel-03">
+                                    {% for testimonial in content.testimonials %}
                                         <div>
-                                            <span class="icon">
-                                                {% if teamMember.teamMemberFbUrl %}
-                                                    <a href="{{ teamMember.teamMemberFbUrl }}" target="_blank" rel="noopener">Facebook</a>&nbsp;
-                                                {% endif %}
-                                                {% if teamMember.teamMemberTwitterUrl %}
-                                                    <a href="{{ teamMember.teamMemberTwitterUrl }}" target="_blank" rel="noopener">Twitter</a>&nbsp;
-                                                {% endif %}
-                                                {% if teamMember.teamMemberInstagramUrl %}
-                                                    <a href="{{ teamMember.teamMemberInstagramUrl }}" target="_blank" rel="noopener">Instagram</a>&nbsp;
-                                                {% endif %}
-                                                {% if teamMember.teamMemberWebUrl %}
-                                                    <a href="{{ teamMember.teamMemberWebUrl }}" target="_blank" rel="noopener">Web</a>
-                                                {% endif %}
-                                            </span>
+                                            <div class="description">" {{ testimonial.testimonialDescription }}"</div>
+                                            <div class="picture"><img src="{{ testimonial.testimonialImage[0].formats["72x72"] }}" class="img-responsive center-block img-circle" alt="{{ testimonial.testimonialName }} {{ testimonial.testimonialJobCompany }}" ></div>
+                                            <div class="name">{{ testimonial.testimonialName }}</div>
+                                            <div class="company">{{ testimonial.testimonialJobCompany }}</div>
+                                            <div class="company"><a href="{{ testimonial.testimonialLink }}" target="_blank" rel="noopener">{{ testimonial.testimonialLinkText }}</a></div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- TESTIMONIAL 03 ENDS ========================================================================= -->
+                <div class="col-lg-10 col-lg-offset-1" id="socialmediamarketing">
+                    <!-- Portfolio Nav Starts -->
+                    <div id="options">
+                        <ul id="filters" class="option-set clearfix" data-option-key="filter">
+                            <li><a href="#filter" data-option-value="*" class="selected">ALL</a></li>
+                            <li><a href="#filter" data-option-value=".youtube">YouTube</a></li>
+                            <li><a href="#filter" data-option-value=".twitter">Twitter</a></li>
+                            <li><a href="#filter" data-option-value=".facebook">Facebook</a></li>
+                            <li><a href="#filter" data-option-value=".xing">Xing</a></li>
+                        </ul>
+                    </div>
+                    <!-- Portfolio Nav Ends -->
+                    <!-- Portfolio Thumbs Starts -->
+                    <div class="make2columns mansory-effect">
+                        {% for video in videoList %}
+                            <figure class="item youtube">
+                                <div class="picture">
+                                    <iframe title="{{ video['snippet']['title'] }}" width="560" height="315" src="https://www.youtube.com/embed/{{ video['snippet']['resourceId']['videoId'] }}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                                </div>
+                            </figure>
+                        {% endfor %}
+                        {% for tweet in content.socialMediaTweets %}
+                            <figure class="item twitter">
+                                <div class="picture">
+                                    {{ twitter_service.getEmbedCodeByUrl(tweet.socialMediaTweetUrl)|raw }}
+                                </div>
+                            </figure>
+                        {% endfor %}
+                        {% for facebook in content.socialMediaFacebook %}
+                            <figure class="item facebook">
+                                <div class="picture">
+                                    <a href="{{ facebook.socialMediaFacebookUrl }}" target="_blank">
+                                        <img src="{{ facebook.socialMediaFacebookImage[0].formats['450x521'] }}" alt="Facebook NCA Event">
+                                    </a>
+                                </div>
+                            </figure>
+                        {% endfor %}
+                        {% for xing in content.socialMediaXing %}
+                            <figure class="item xing">
+                                <div class="picture">
+                                    <a href="{{ xing.socialMediaXingUrl }}" target="_blank">
+                                        <img src="{{ xing.socialMediaXingImage[0].formats['500x320'] }}" alt="Xing NCA Event">
+                                    </a>
+                                </div>
+                            </figure>
+                        {% endfor %}
+                    </div>
+                    <!-- Portfolio Thumbs Ends -->
+                </div>
+                <div class="container tab-style-07" id="employerbranding">
+                    <div class="row">
+                        <div class="col-lg-10 col-lg-offset-1 herotext">
+                            <h1>Employer Branding Web Development Jobs</h1>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-10 col-lg-offset-1">
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-justified icon-tabs" role="tablist">
+                                <li role="presentation" class="active">
+                                    <a href="#tab-1" aria-controls="tab-1" role="tab" data-toggle="tab">
+                                        <div class="icon"><i class="pe-7s-video"></i></div>
+                                        <div class="caption">Video</div>
+                                    </a>
+                                </li>
+                                <li role="presentation">
+                                    <a href="#tab-2" aria-controls="tab-2" role="tab" data-toggle="tab">
+                                        <div class="icon"><i class="pe-7s-users"></i></div>
+                                        <div class="caption">Social Media</div>
+                                    </a>
+                                </li>
+                                <li role="presentation">
+                                    <a href="#tab-3" aria-controls="tab-3" role="tab" data-toggle="tab">
+                                        <div class="icon"><i class="pe-7s-volume"></i></div>
+                                        <div class="caption">Event Marketing</div>
+                                    </a>
+                                </li>
+                                <li role="presentation">
+                                    <a href="#tab-4" aria-controls="tab-4" role="tab" data-toggle="tab">
+                                        <div class="icon"><i class="pe-7s-smile"></i></div>
+                                        <div class="caption">Sozialer Zweck</div>
+                                    </a>
+                                </li>
+                                <li role="presentation">
+                                    <a href="#tab-5" aria-controls="tab-5" role="tab" data-toggle="tab">
+                                        <div class="icon"><i class="pe-7s-rocket"></i></div>
+                                        <div class="caption">#NCAEvent</div>
+                                    </a>
+                                </li>
+                            </ul>
+                            <!-- Tab panes -->
+                            <div class="tab-content">
+                                <div role="tabpanel" class="tab-pane fade in active" id="tab-1">
+                                    <div class="description">
+                                        Unsere professionellen Videos setzen euch als Arbeitgeber richtig in Szene und vermitteln einen persönlichen Eindruck des Unternehmens und der Mitarbeiter. Videos haben in den sozialen Medien eine größere Reichweite und erzielen durchschnittlich 2.500 Impressionen pro Event.
+                                        <br>
+                                        <strong>Unser Angebot:</strong>
+                                        <br>
+                                        - 3 Interviews vor dem Event
+                                        <br>
+                                        - 1 Action Event Video
+                                        <br>
+                                        <a href="https://youtu.be/CCJ3KFWJJiA" target="_blank">Zur NCAEvent YouTube Playlist</a>
+                                    </div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane fade" id="tab-2">
+                                    <div class="description">
+                                        Social Media Marketing in der relevanten Zielgruppe der motivierten Web Developer. Wir haben hier eine sehr gute Community auf <a href="https://www.facebook.com/nevercodealone/" target="_blank">Facebook</a> und <a href="https://twitter.com/nevercodealone" target="_blank">Twitter</a>. Dazu gibt es noch <a href="https://www.instagram.com/nevercodealone/" target="_blank">Instagram</a> mit meinem persönlichen Developer-Tagebuch und natürlich auch die großen Business-Netzwerke <a href="https://www.xing.com/companies/nevercodealone" target="_blank">Xing</a> und <a href="https://www.linkedin.com/in/rolandgolla/" target="_blank">Linkedin</a> mit je knapp 2.000 Follower. Ergänzend werden 250,- Euro für Advertising ausgegeben.
+                                        <br>
+                                        Zahlen Impressionen InflunecerDB Event Monat:
+                                        <br>
+                                        Twitter - 45k
+                                        <br>
+                                        Facebook - 26K
+                                        <br>
+                                        Video - 2.5K
+                                    </div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane fade" id="tab-3">
+                                    <div class="description">
+                                        Never Code Alone setzt sich von Anfang an für soziale Zwecke ein. Aus Überzeugung und mit guten Absichten. Die 40 * 10,- Euro Schutzgebühr des Events werden immer vollständig einem sozialen Zweck in der jeweiligen Stadt zur Verfügung gestellt. Neuerdings können die Empfänger auch einen Aufruf an die Community in Form eines Videos absenden.
+                                        <br>
+                                        <strong>Interviews Spenden Empfänger</strong>
+                                        <br>
+                                        Froschkönige e.V.
+                                        <br>
+                                        Mitmachkinder e.V.
+                                    </div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane fade" id="tab-4">
+                                    <div class="description">
+                                        Wir sorgen für eine hohe Sichtbarkeit durch ein Multi Channel Event Marketing als Employer Branding. Neben der #NCAEvent Landing-Page gibt es noch eine XING-Event, Facebook -Event und ein Meetup. Alle werden exklusiv als Single Sponsor Event ausgelegt, werden mit hochwertigen und individuellen Inhalten eingepflegt und als News-Kanäle über den gesamten Zeitraum genutzt.
+                                        <br>
+                                        <strong>Event Marketing Pages</strong>
+                                        <br>
+                                        <a href="/influencerdb/">InflunecerDB Event Page</a>
+                                        <br>
+                                        <a href="https://www.xing.com/events/python-workshop-influencerdb-ncaevent-1903595" target="_blank">InflunecerDB Xing Event</a>
+                                        <br>
+                                        <a href="https://www.facebook.com/events/938481492982319/" target="_blank">InflunecerDB FB Event</a>
+                                        <br>
+                                        <a href="https://www.meetup.com/de-DE/meetup-group-PNulFhzz/events/248153897/" target="_blank">InflunecerDB Meetup Event</a>
+                                    </div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane fade" id="tab-5">
+                                    <div class="description">
+                                        Die Never Code Alone Events haben durch ihre zahlreichen Videos einen großen Schneeball-Effekt untereinander. Im Gegensatz zu Blog-Posts werden Videos als Related Content auch deutlich öfter geschaut und auf jeden Fall in den Play-Lists als Vorschau wahrgenommen. Dadurch entsteht ein nachhaltiges Marketing. Der Content kann natürlich auch als Rich Media Content hervorragend auf Job-Seiten eingebunden werden.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="icon-style-20">
+                    <div class="container-fluid">
+                        <!-- Row Starts -->
+                        <div class="row">
+                            <div class="col-lg-3 col-md-3 col-sm-6 block">
+                                <div class="icon"><i class="pe-7s-add-user"></i></div>
+                                <div class="heading">Persönlicher Kontakt</div>
+                                <div class="line"></div>
+                                <div class="description">Eine ganz persönliche Möglichkeit, sich als Arbeitgeber in den eigenen Räumen zu präsentieren und über einen ganzen Tag lang kennenzulernen. Das macht den ganzen Prozess einfacher und effizienter.</div>
+                            </div>
+                            <div class="col-lg-3 col-md-3 col-sm-6 block">
+                                <div class="icon"><i class="pe-7s-like2"></i></div>
+                                <div class="heading">Motivierte Entwickler</div>
+                                <div class="line"></div>
+                                <div class="description">Einen ganzen Samstag kostenlos für die persönliche Weiterbildung einsetzen? Das versteht sich nicht von selbst und die Kandidaten wollen genau das und sich über den Tellerrand hinaus weiterbilden.</div>
+                            </div>
+                            <div class="col-lg-3 col-md-3 col-sm-6 block">
+                                <div class="icon"><i class="pe-7s-tools"></i></div>
+                                <div class="heading">Reichweite</div>
+                                <div class="line"></div>
+                                <div class="description">Durch Videos und gezieltes Social Media Marketing präsentiert man sich als guter Arbeitgeber und Förderer der Community mit dem Einsatz für den guten Zweck. Das ist ein HR- und PR-Thema.</div>
+                            </div>
+                            <div class="col-lg-3 col-md-3 col-sm-6 block">
+                                <div class="icon"><i class="pe-7s-science"></i></div>
+                                <div class="heading">Der gute Zweck</div>
+                                <div class="line"></div>
+                                <div class="description">Das Unternehmen, Never Code Alone und Teilnehmer setzen sich gemeinsam für einen sozialen Zweck in der jeweiligen Stadt ein. Gemeinsam Gutes tun erzeugt ein starkes Wir-Gefühl und verbindet.</div>
+                            </div>
+                        </div>
+                        <!-- Row Ends -->
+                    </div>
+                </div>
+                <div class="parallax-39" id="events" style="background-image: url('{{ content.eventsBgImage[0].formats['1920x1080'] }}');">
+                    <div class="call-to-action-03 container">
+                        <div class="row">
+                            <div class="col-lg-10 col-lg-offset-1 herotext">
+                                <div class="clothing-carousel">
+                                    {% for event in content.events %}
+                                        <div>
+                                            <h1>{{ event.eventHeadline }}</h1>
+                                            <div class="description">{{ event.eventDescription }}</div>
+                                            <div class="button"><a href="#/" class="fill nca-contact">{{ event.eventContactText }}</a></div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container-fluid" id="whatisnca">
+                    <div class="row">
+                        <section class="mockup-section-11 blue-bg-10">
+                            <div class="col-lg-6 col-sm-8 col-sm-offset-6 tab-style-13">
+                                <div class="contents">
+                                    <!-- Nav tabs -->
+                                    <ul class="nav nav-justified" role="tablist">
+                                        <li role="presentation" class="active">
+                                            <a href="#plan-13" aria-controls="plan-13" role="tab" data-toggle="tab">
+                                                <div class="caption">Employer<br>Branding</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <!-- Tab panes -->
+                                    <div class="tab-content">
+                                        <div role="tabpanel" class="tab-pane fade in active" id="plan-13">
+                                            <div class="heading">Vertrauen aufbauen</div>
+                                            <div class="description">
+                                                Stellenausschreibungen bringen keine guten Bewerber, weil der persönliche Kontakt fehlt und man sich hier nicht richtig absetzen kann.
+                                                <br><br>
+                                                In der großen Masse der Jobangebote gibt es leider viele schwarze Schafe mit falschen Versprechen.
+                                                Daher sind diese zunehmend unglaubwürdig und können die Wahrheit nicht mehr transportieren.
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Picture Overlay Ends -->
                             </div>
-                            <div class="info">
-                                <div class="name">{{ teamMember.teamMemberName }}</div>
-                                <div class="designation">{{ teamMember.teamMemberPosition }}</div>
+                            <div class="col-lg-6 col-sm-4 img-side img-left">
+                                <div class="img-holder"><img src="{{ content.whatIsNcaImage[0].formats['1000x1150'] }}" alt="Employer Branding" ></div>
                             </div>
-                        </div>
-                    {% endfor %}
+                        </section>
+                    </div>
                 </div>
-            </div>
+                <div class="container team-style-06" id="team">
+                    <div class="row">
+                        <div class="col-lg-12 herotext">
+                            <h1>{{ content.teamHeadline }}</h1>
+                            <div class="description">{{ content.teamDescription }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        {% for teamMember in content.teamMembers %}
+                            <div class="col-lg-3 col-md-3 block">
+                                <div class="picture">
+                                    <img src="{{ teamMember.teamMemberImage[0].formats['720x500'] }}" class="img-responsive" alt="{{ teamMember.teamMemberName }} {{ teamMember.teamMemberPosition }}" >
+                                    <!-- Picture Overlay Starts -->
+                                    <div class="picture-overlay">
+                                        <div class="icons">
+                                            <div>
+                                                <span class="icon">
+                                                    {% if teamMember.teamMemberFbUrl %}
+                                                        <a href="{{ teamMember.teamMemberFbUrl }}" target="_blank" rel="noopener">Facebook</a>&nbsp;
+                                                    {% endif %}
+                                                    {% if teamMember.teamMemberTwitterUrl %}
+                                                        <a href="{{ teamMember.teamMemberTwitterUrl }}" target="_blank" rel="noopener">Twitter</a>&nbsp;
+                                                    {% endif %}
+                                                    {% if teamMember.teamMemberInstagramUrl %}
+                                                        <a href="{{ teamMember.teamMemberInstagramUrl }}" target="_blank" rel="noopener">Instagram</a>&nbsp;
+                                                    {% endif %}
+                                                    {% if teamMember.teamMemberWebUrl %}
+                                                        <a href="{{ teamMember.teamMemberWebUrl }}" target="_blank" rel="noopener">Web</a>
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Picture Overlay Ends -->
+                                </div>
+                                <div class="info">
+                                    <div class="name">{{ teamMember.teamMemberName }}</div>
+                                    <div class="designation">{{ teamMember.teamMemberPosition }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endblock %}
         </section>
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
