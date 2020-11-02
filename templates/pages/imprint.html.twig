@@ -38,7 +38,9 @@
         <div class="row">
             <div class="col-lg-8 herotext">
                 <section id="content">
-                    {{ content.imprint|raw }}
+                    {% block content %}
+                        {{ content.imprint|raw }}
+                    {% endblock %}
                 </section>
             </div>
         </div>
