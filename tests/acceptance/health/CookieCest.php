@@ -22,4 +22,25 @@ class CookieCest
         $I->comment('Social');
         $I->dontSeeInPageSource($page::$cookieStringSocial);
     }
+
+    public function allYesShowTrackingPixels(AcceptanceTester $I, startpage $page)
+    {
+        $I->click($page::$cookieMatomoYes);
+        $I->click($page::$cookieGoogleYes);
+        $I->click($page::$cookieSocialYes);
+        $I->click($page::$cookieSubmit);
+        $I->waitForElementNotVisible($page::$cookieDiv);
+
+        $I->comment('Google');
+        $I->seeInPageSource($page::$cookieStringGoogle);
+        $I->comment('Matomo');
+        $I->seeInPageSource($page::$cookieStringMatomo);
+        $I->comment('Social');
+        $I->seeInPageSource($page::$cookieStringSocial);
+    }
+
+    public function _after(AcceptanceTester $I)
+    {
+        $I->resetCookie('Cookie_Consent');
+    }
 }
