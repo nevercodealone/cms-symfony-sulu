@@ -30,6 +30,8 @@ class CookieCest
         $I->click($page::$cookieSocialYes);
         $I->click($page::$cookieSubmit);
         $I->waitForElementNotVisible($page::$cookieDiv);
+        $I->reloadPage();
+        $I->waitForElement($page::$logo);
 
         $I->comment('Google');
         $I->seeInPageSource($page::$cookieStringGoogle);
