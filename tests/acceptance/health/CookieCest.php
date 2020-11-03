@@ -8,6 +8,9 @@ class CookieCest
     {
         $I->amOnPage($page::$URL);
         $I->waitForElement($page::$cookieDiv);
+        $I->resetCookie('Cookie_Consent');
+        $I->reloadPage();
+        $I->waitForElement($page::$logo);
     }
 
     public function allNoDoNotShowTrackingPixels(AcceptanceTester $I, startpage $page)
@@ -41,8 +44,4 @@ class CookieCest
         $I->seeInPageSource($page::$cookieStringSocial);
     }
 
-    public function _after(AcceptanceTester $I)
-    {
-        $I->resetCookie('Cookie_Consent');
-    }
 }
