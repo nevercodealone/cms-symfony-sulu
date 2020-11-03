@@ -3,7 +3,7 @@ namespace NCATesting\Page;
 
 class startpage
 {
-    public static $URL = '/';
+    public static $URL = '/de';
     public static $logo = '//*[@data-q="logo"]';
     public static $navMain = '//ul[@data-q="navMain"]/li/a';
 
