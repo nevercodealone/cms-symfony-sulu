@@ -7,14 +7,20 @@ class CookieCest
     public function _before(AcceptanceTester $I, startpage $page)
     {
         $I->amOnPage($page::$URL);
-        $I->waitForElement($page::$cookieDiv);
+        $I->waitForElement($page::$logo);
         $I->resetCookie('Cookie_Consent');
+        $I->resetCookie('Cookie_Category_socialmedia');
+        $I->resetCookie('Cookie_Category_matomo');
+        $I->resetCookie('Cookie_Category_google');
         $I->reloadPage();
         $I->waitForElement($page::$logo);
+        $I->waitForElementVisible($page::$cookieDiv);
+        $I->scrollTo($page::$cookieDiv);
     }
 
     public function allNoDoNotShowTrackingPixels(AcceptanceTester $I, startpage $page)
     {
+        $I->waitForElementClickable($page::$cookieSubmit);
         $I->click($page::$cookieSubmit);
         $I->waitForElementNotVisible($page::$cookieDiv);
 
@@ -28,9 +34,9 @@ class CookieCest
 
     public function allYesShowTrackingPixels(AcceptanceTester $I, startpage $page)
     {
-        $I->click($page::$cookieMatomoYes);
-        $I->click($page::$cookieGoogleYes);
-        $I->click($page::$cookieSocialYes);
+        $I->checkOption($page::$cookieMatomoYes);
+        $I->checkOption($page::$cookieGoogleYes);
+        $I->checkOption($page::$cookieSocialYes);
         $I->click($page::$cookieSubmit);
         $I->waitForElementNotVisible($page::$cookieDiv);
         $I->reloadPage();
