@@ -33,11 +33,11 @@ var klaroConfig = {
 
     // You can customize the name of the cookie that Klaro uses for storing
     // user consent decisions. If undefined, Klaro will use 'klaro'.
-    cookieName: 'klaro',
+    cookieName: 'ncacookie',
 
     // You can also set a custom expiration time for the Klaro cookie.
     // By default, it will expire after 120 days.
-    cookieExpiresAfterDays: 365,
+    cookieExpiresAfterDays: 120,
 
     // You can change to cookie domain for the consent manager itself.
     // Use this if you want to get consent once for multiple matching domains.
@@ -45,7 +45,7 @@ var klaroConfig = {
     //cookieDomain: '.github.com',
 
     // Defines the default state for services (true=enabled by default).
-    default: false,
+    default: true,
 
     // If "mustConsent" is set to true, Klaro will directly display the consent
     // manager modal and not allow the user to close it before having actively
@@ -60,7 +60,7 @@ var klaroConfig = {
     hideDeclineAll: false,
 
     // hide "learnMore" link
-    hideLearnMore: false,
+    hideLearnMore: true,
 
     // show cookie notice as modal
     noticeAsModal: false,
@@ -89,98 +89,19 @@ var klaroConfig = {
     // Example config that shows how to overwrite translations:
     // https://github.com/KIProtect/klaro/blob/master/src/configs/i18n.js
     translations: {
-        // translationsed defined under the 'zz' language code act as default
-        // translations.
-        zz: {
-            privacyPolicyUrl: '/#privacy',
-        },
         // If you erase the "consentModal" translations, Klaro will use the
         // bundled translations.
         de: {
             privacyPolicyUrl: '/#datenschutz',
             consentModal: {
                 description:
-                    'Hier können Sie einsehen und anpassen, welche Information wir über Sie sammeln. Einträge die als "Beispiel" gekennzeichnet sind dienen lediglich zu Demonstrationszwecken und werden nicht wirklich verwendet.',
-            },
-            inlineTracker: {
-                description: 'Beispiel für ein Inline-Tracking Skript',
-            },
-            externalTracker: {
-                description: 'Beispiel für ein externes Tracking Skript',
-            },
-            adsense: {
-                description: 'Anzeigen von Werbeanzeigen (Beispiel)',
-                title: 'Google AdSense Werbezeugs',
+                    'Hier können Sie einsehen und anpassen, welche Information uns helfen.',
             },
             matomo: {
-                description: 'Sammeln von Besucherstatistiken',
-            },
-            camera: {
-                description:
-                    'Eine Überwachungskamera (nur ein Beispiel zu IMG-Tags)',
-            },
-            cloudflare: {
-                description: 'Schutz gegen DDoS-Angriffe',
-            },
-            intercom: {
-                description:
-                    'Chat Widget & Sammeln von Besucherstatistiken (nur ein Beispiel)',
-            },
-            mouseflow: {
-                description: 'Echtzeit-Benutzeranalyse (nur ein Beispiel)',
-            },
-            googleFonts: {
-                description: 'Web-Schriftarten von Google gehostet',
+                description: 'Besucherstatistiken für bessren Content für euch',
             },
             purposes: {
-                analytics: 'Besucher-Statistiken',
-                security: 'Sicherheit',
-                livechat: 'Live Chat',
-                advertising: 'Anzeigen von Werbung',
-                styling: 'Styling',
-            },
-        },
-        en: {
-            consentModal: {
-                description:
-                    'Here you can see and customize the information that we collect about you. Entries marked as "Example" are just for demonstration purposes and are not really used on this website.',
-            },
-            inlineTracker: {
-                description: 'Example of an inline tracking script',
-            },
-            externalTracker: {
-                description: 'Example of an external tracking script',
-            },
-            adsense: {
-                description: 'Displaying of advertisements (just an example)',
-                title: 'Google Adsense Advertisement',
-            },
-            matomo: {
-                description: 'Collecting of visitor statistics',
-            },
-            camera: {
-                description:
-                    'A surveillance camera (just an example for an IMG tag)',
-            },
-            cloudflare: {
-                description: 'Protection against DDoS attacks',
-            },
-            intercom: {
-                description:
-                    'Chat widget & collecting of visitor statistics (just an example)',
-            },
-            mouseflow: {
-                description: 'Real-Time user analytics (just an example)',
-            },
-            googleFonts: {
-                description: 'Web fonts hosted by Google',
-            },
-            purposes: {
-                analytics: 'Analytics',
-                security: 'Security',
-                livechat: 'Livechat',
-                advertising: 'Advertising',
-                styling: 'Styling',
+                analytics: 'Besucher-Statistiken'
             },
         },
     },
@@ -198,7 +119,7 @@ var klaroConfig = {
             default: true,
 
             // The title of you service as listed in the consent modal.
-            title: 'Matomo/Piwik',
+            title: 'Matomo / Piwik',
 
             // The purpose(s) of this service. Will be listed on the consent notice.
             // Do not forget to add translations for all purposes you list here.
@@ -218,7 +139,7 @@ var klaroConfig = {
                 // Notice that it is not possible to delete cookies that were set
                 // on a third-party domain! See the note at mdn:
                 // https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie#new-cookie_domain
-                [/^_pk_.*$/, '/', 'klaro.kiprotect.com'], //for the production version
+                [/^_pk_.*$/, '/', 'stats.nevercodealone.de'], //for the production version
                 [/^_pk_.*$/, '/', 'localhost'], //for the local version
                 'piwik_ignore',
             ],
@@ -258,51 +179,11 @@ var klaroConfig = {
 
         // The services will appear in the modal in the same order as defined here.
         {
-            name: 'inlineTracker',
-            title: 'Inline Tracker',
+            name: 'piwik',
+            title: 'Matomo / Piwik',
             purposes: ['analytics'],
-            cookies: ['inline-tracker'],
-            optOut: false,
-        },
-        {
-            name: 'externalTracker',
-            title: 'External Tracker',
-            purposes: ['analytics', 'security'],
-            cookies: ['external-tracker'],
-        },
-        {
-            name: 'intercom',
-            title: 'Intercom',
-            default: true,
-            purposes: ['livechat'],
-        },
-        {
-            name: 'mouseflow',
-            title: 'Mouseflow',
-            purposes: ['analytics'],
-        },
-        {
-            name: 'adsense',
-            // if you omit the title here Klaro will try to look it up in the
-            // translations
-            //title: 'Google AdSense',
-            purposes: ['advertising'],
-        },
-        {
-            name: 'camera',
-            title: 'Surveillance Camera',
-            purposes: ['security'],
-        },
-        /*        {
-                    name: 'googleFonts',
-                    title: 'Google Fonts',
-                    purposes: ['styling'],
-                },*/
-        {
-            name: 'cloudflare',
-            title: 'Cloudflare',
-            purposes: ['security'],
-            required: true,
+            cookies: ['matomo'],
+            optOut: true,
         },
     ],
 };
