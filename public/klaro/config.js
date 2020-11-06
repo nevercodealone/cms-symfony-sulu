@@ -2,8 +2,6 @@
 // You can change this by specifying the "data-config" attribute on your
 // script take, e.g. like this:
 // <script src="klaro.js" data-config="myConfigVariableName" />
-// You can also disable auto-loading of the consent notice by adding
-// data-no-auto-load=true to the script tag.
 var klaroConfig = {
     // With the 0.7.0 release we introduce a 'version' paramter that will make
     // if easier for us to keep configuration files backwards-compatible in the future.
@@ -12,6 +10,10 @@ var klaroConfig = {
     // You can customize the ID of the DIV element that Klaro will create
     // when starting up. If undefined, Klaro will use 'klaro'.
     elementID: 'klaro',
+
+    // Setting this to true will keep Klaro from automatically loading itself
+    // when the page is being loaded.
+    noAutoLoad: false,
 
     // Setting this to true will render the descriptions of the consent
     // modal and consent notice are HTML. Use with care.
@@ -33,11 +35,11 @@ var klaroConfig = {
 
     // You can customize the name of the cookie that Klaro uses for storing
     // user consent decisions. If undefined, Klaro will use 'klaro'.
-    cookieName: 'ncacookie',
+    cookieName: 'klaro',
 
     // You can also set a custom expiration time for the Klaro cookie.
     // By default, it will expire after 120 days.
-    cookieExpiresAfterDays: 120,
+    cookieExpiresAfterDays: 365,
 
     // You can change to cookie domain for the consent manager itself.
     // Use this if you want to get consent once for multiple matching domains.
@@ -45,7 +47,7 @@ var klaroConfig = {
     //cookieDomain: '.github.com',
 
     // Defines the default state for services (true=enabled by default).
-    default: true,
+    default: false,
 
     // If "mustConsent" is set to true, Klaro will directly display the consent
     // manager modal and not allow the user to close it before having actively
@@ -60,7 +62,7 @@ var klaroConfig = {
     hideDeclineAll: false,
 
     // hide "learnMore" link
-    hideLearnMore: true,
+    hideLearnMore: false,
 
     // show cookie notice as modal
     noticeAsModal: false,
@@ -89,19 +91,26 @@ var klaroConfig = {
     // Example config that shows how to overwrite translations:
     // https://github.com/KIProtect/klaro/blob/master/src/configs/i18n.js
     translations: {
-        // If you erase the "consentModal" translations, Klaro will use the
-        // bundled translations.
         de: {
             privacyPolicyUrl: '/#datenschutz',
             consentModal: {
-                description:
-                    'Hier können Sie einsehen und anpassen, welche Information uns helfen.',
+                description: 'Hier kannst Du einsehen und anpassen, welche Information uns helfen.',
             },
-            matomo: {
-                description: 'Besucherstatistiken für bessren Content für euch',
+            piwik: {
+                description: 'Piwik für besseren Content für euch',
+            },
+            google: {
+                description: 'Google für unsere Chance im Markt',
+            },
+            facebook: {
+                description: 'Gezielte Werbung für unsere Events',
+            },
+            twitter: {
+                description: 'Gezielte Werbung für unsere Events',
             },
             purposes: {
-                analytics: 'Besucher-Statistiken'
+                analytics: 'Besucher-Statistiken',
+                social: "Social Ads"
             },
         },
     },
@@ -109,81 +118,26 @@ var klaroConfig = {
     // This is a list of third-party services that Klaro will manage for you.
     services: [
         {
-            // Each service should have a unique (and short) name.
-            name: 'matomo',
-
-            // If "default" is set to true, the service will be enabled by default
-            // Overwrites global "default" setting.
-            // We recommend leaving this to "false" for services that collect
-            // personal information.
-            default: true,
-
-            // The title of you service as listed in the consent modal.
-            title: 'Matomo / Piwik',
-
-            // The purpose(s) of this service. Will be listed on the consent notice.
-            // Do not forget to add translations for all purposes you list here.
-            purposes: ['analytics'],
-
-            // A list of regex expressions or strings giving the names of
-            // cookies set by this service. If the user withdraws consent for a
-            // given service, Klaro will then automatically delete all matching
-            // cookies.
-            cookies: [
-                // you can also explicitly provide a path and a domain for
-                // a given cookie. This is necessary if you have services that
-                // set cookies for a path that is not "/" or a domain that
-                // is not the current domain. If you do not set these values
-                // properly, the cookie can't be deleted by Klaro
-                // (there is no way to access the path or domain of a cookie in JS)
-                // Notice that it is not possible to delete cookies that were set
-                // on a third-party domain! See the note at mdn:
-                // https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie#new-cookie_domain
-                [/^_pk_.*$/, '/', 'stats.nevercodealone.de'], //for the production version
-                [/^_pk_.*$/, '/', 'localhost'], //for the local version
-                'piwik_ignore',
-            ],
-
-            // An optional callback function that will be called each time
-            // the consent state for the service changes (true=consented). Passes
-            // the `service` config as the second parameter as well.
-            callback: function(consent, service) {
-                // This is an example callback function.
-                console.log(
-                    'User consent for service ' + service.name + ': consent=' + consent
-                );
-                // To be used in conjunction with Matomo 'requireCookieConsent' Feature, Matomo 3.14.0 or newer
-                // For further Information see https://matomo.org/faq/new-to-piwik/how-can-i-still-track-a-visitor-without-cookies-even-if-they-decline-the-cookie-consent/
-                /*
-                if(consent==true){
-                    _paq.push(['rememberCookieConsentGiven']);
-                } else {
-                    _paq.push(['forgetCookieConsentGiven']);
-                }
-                */
-            },
-
-            // If "required" is set to true, Klaro will not allow this service to
-            // be disabled by the user.
-            required: false,
-
-            // If "optOut" is set to true, Klaro will load this service even before
-            // the user gave explicit consent.
-            // We recommend always leaving this "false".
-            optOut: false,
-
-            // If "onlyOnce" is set to true, the service will only be executed
-            // once regardless how often the user toggles it on and off.
-            onlyOnce: true,
-        },
-
-        // The services will appear in the modal in the same order as defined here.
-        {
             name: 'piwik',
-            title: 'Matomo / Piwik',
             purposes: ['analytics'],
-            cookies: ['matomo'],
-            optOut: true,
+            // Setting this to true will exempt this service from the "Accept All"
+            // flow, i.e. clicking on "Accept All" will not enable this service.
+            contextualConsentOnly: true,
+        },
+        {
+            name: 'google',
+            purposes: ['analytics'],
+            contextualConsentOnly: true,
+        },
+        {
+            name: 'facebook',
+            purposes: ['social'],
+            contextualConsentOnly: true,
+        },
+        {
+            name: 'twitter',
+            purposes: ['social'],
+            contextualConsentOnly: true,
         },
     ],
 };
