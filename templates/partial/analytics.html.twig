@@ -1,7 +1,6 @@
 <!-- Analytics -->
 {% if app.environment == 'prod' %}
-    {% set cookieConsitent = app.request.cookies.get('klaro') %}
-    {% if '"google":true' in cookieConsitent %}
+    {% if klaroItems['google'] == true %}
         <!-- Google -->
         <script data-name="google" type="text/plain" data-type="application/javascript">
             (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -16,7 +15,7 @@
         <!-- End Google -->
     {% endif %}
 
-    {% if '"piwik":true' in cookieConsitent %}
+    {% if klaroItems['piwik'] == true %}
         <!-- Piwik -->
         <script type="text/javascript" data-name="piwik">
             var _paq = _paq || [];
@@ -34,7 +33,7 @@
         <!-- End Matomo Code -->
     {% endif %}
 
-    {% if '"twitter":true' in cookieConsitent %}
+    {% if klaroItems['twitter'] == true %}
         <!-- Twitter universal website tag code -->
         <script data-name="twitter">
             !function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
@@ -47,7 +46,7 @@
         <!-- End Twitter universal website tag code -->
     {% endif %}
 
-    {% if '"facebook":true' in cookieConsitent %}
+    {% if klaroItems['facebook'] == true %}
         <!-- Facebook Pixel Code -->
         <script data-name="facebook">
             !function(f,b,e,v,n,t,s)
