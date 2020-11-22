@@ -120,7 +120,6 @@ class PageController extends WebsiteController
             $aff = $queryGet;
         }
 
-        $sourceParam = '?aff=' . $aff;
-        return $sourceParam;
+        return '?aff=' . $aff;
     }
 }
