@@ -19,6 +19,7 @@ class CookieCest
 
     public function denyAllTrackingPixels(AcceptanceTester $I, startpage $page)
     {
+        $I->waitForElementClickable($page::$cookieDenyAll);
         $I->click($page::$cookieDenyAll);
         $I->waitForElementNotVisible($page::$cookieDiv);
 
@@ -28,7 +29,7 @@ class CookieCest
 
         $I->comment('Google');
         $I->dontSeeInPageSource($page::$cookieStringGoogle);
-        $I->comment('Matomo');
+        $I->comment('Piwik');
         $I->dontSeeInPageSource($page::$cookieStringPiwik);
         $I->comment('Twitter');
         $I->dontSeeInPageSource($page::$cookieStringTwitter);
@@ -38,6 +39,7 @@ class CookieCest
 
     public function acceptAllTrackingPixels(AcceptanceTester $I, startpage $page)
     {
+        $I->waitForElementClickable($page::$cookieAcceptAll);
         $I->click($page::$cookieAcceptAll);
         $I->waitForElementNotVisible($page::$cookieDiv);
         $I->reloadPage();
@@ -46,7 +48,7 @@ class CookieCest
 
         $I->comment('Google');
         $I->seeInPageSource($page::$cookieStringGoogle);
-        $I->comment('Matomo');
+        $I->comment('Piwik');
         $I->seeInPageSource($page::$cookieStringPiwik);
         $I->comment('Twitter');
         $I->seeInPageSource($page::$cookieStringTwitter);
@@ -54,4 +56,47 @@ class CookieCest
         $I->seeInPageSource($page::$cookieStringFacebook);
     }
 
+    public function onlyAcceptStats(AcceptanceTester $I, startpage $page)
+    {
+        $I->waitForElementClickable($page::$cookieShowMore);
+        $I->click($page::$cookieShowMore);
+        $I->wait(1);
+        $I->click($page::$cookieModalAcceptAllStatCookies);
+        $I->click($page::$cookieModalAcceptSelection);
+
+        $I->reloadPage();
+        $I->waitForElement($page::$logo);
+        $I->dontSeeElement($page::$cookieDiv);
+
+        $I->comment('Google');
+        $I->seeInPageSource($page::$cookieStringGoogle);
+        $I->comment('Piwik');
+        $I->seeInPageSource($page::$cookieStringPiwik);
+        $I->comment('Twitter');
+        $I->dontSeeInPageSource($page::$cookieStringTwitter);
+        $I->comment('Facebook');
+        $I->dontSeeInPageSource($page::$cookieStringFacebook);
+    }
+
+    public function onlyAcceptSocial(AcceptanceTester $I, startpage $page)
+    {
+        $I->waitForElementClickable($page::$cookieShowMore);
+        $I->click($page::$cookieShowMore);
+        $I->wait(1);
+        $I->click($page::$cookieModalAcceptAllSocialCookies);
+        $I->click($page::$cookieModalAcceptSelection);
+
+        $I->reloadPage();
+        $I->waitForElement($page::$logo);
+        $I->dontSeeElement($page::$cookieDiv);
+
+        $I->comment('Google');
+        $I->dontSeeInPageSource($page::$cookieStringGoogle);
+        $I->comment('Piwik');
+        $I->dontSeeInPageSource($page::$cookieStringPiwik);
+        $I->comment('Twitter');
+        $I->seeInPageSource($page::$cookieStringTwitter);
+        $I->comment('Facebook');
+        $I->seeInPageSource($page::$cookieStringFacebook);
+    }
 }

@@ -13,7 +13,8 @@ class startpage
     public static $cookieShowMore = '#klaro > div > div > div > div > a';
     public static $cookieModal = '.cookie-modal';
     public static $cookieModalAcceptAllStatCookies = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-body > ul > li:nth-child(1) > label > span.cm-switch > div';
-    public static $cookieModalAcceptAllSocialCookies = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-body > ul > li:nth-child(1) > label > span.cm-switch > div';
+    public static $cookieModalAcceptAllSocialCookies = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-body > ul > li:nth-child(2) > label > span.cm-switch > div';
+    public static $cookieModalAcceptSelection = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-footer > div > button.cm-btn.cm-btn-success.cm-btn-info.cm-btn-accept';
 
     public static $cookieStringGoogle = 'data-name="google"';
     public static $cookieStringPiwik = 'data-name="piwik"';
