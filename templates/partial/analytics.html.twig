@@ -1,5 +1,5 @@
 <!-- Analytics -->
-{% if app.environment == 'dev' %}
+{% if app.environment == 'prod' %}
     {% set cookieConsitent = app.request.cookies.get('klaro') %}
     {% if '"google":true' in cookieConsitent %}
         <!-- Google -->
