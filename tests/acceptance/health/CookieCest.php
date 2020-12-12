@@ -28,7 +28,7 @@ class CookieCest
         $I->dontSeeElement($page::$cookieDiv);
 
         $I->comment('Google');
-        $I->dontSeeInPageSource($page::$cookieStringGoogle);
+        $I->dontSee($page::$cookieStringGoogle);
         $I->comment('Piwik');
         $I->dontSeeInPageSource($page::$cookieStringPiwik);
         $I->comment('Twitter');

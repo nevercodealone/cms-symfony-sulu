@@ -16,10 +16,9 @@ class startpage
     public static $cookieModalAcceptAllSocialCookies = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-body > ul > li:nth-child(2) > label > span.cm-switch > div';
     public static $cookieModalAcceptSelection = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-footer > div > button.cm-btn.cm-btn-success.cm-btn-info.cm-btn-accept';
 
-    public static $cookieStringGoogle = 'data-name="google"';
-    public static $cookieStringPiwik = 'data-name="piwik"';
-    public static $cookieStringTwitter = 'data-name="twitter"';
-    public static $cookieStringFacebook = 'data-name="facebook"';
+    public static $cookieGoogle = 'data-name="google"';
+    public static $cookiePiwik = 'data-name="piwik"';
+    public static $cookieFacebook = 'data-name="facebook"';
 
     public static $serviceSection = '//*[@data-q="services-section"]';
     public static $serviceContainer = '//*[@data-q="services-container"]';

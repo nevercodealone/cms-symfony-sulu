@@ -1,7 +1,7 @@
 <?php
 namespace NCATesting;
 
-use NCATesting\_generated\AcceptanceTesterActions;
+use NCATesting\_generated\A;
 use diversen\meta;
 
 /**

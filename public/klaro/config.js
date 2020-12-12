@@ -105,9 +105,6 @@ var klaroConfig = {
             facebook: {
                 description: 'Gezielte Werbung für unsere Events',
             },
-            twitter: {
-                description: 'Gezielte Werbung für unsere Events',
-            },
             purposes: {
                 analytics: 'Besucher-Statistiken',
                 social: "Social Ads"
@@ -142,11 +139,6 @@ var klaroConfig = {
             cookies: [
                 /^_fb(.*)?/
             ]
-        },
-        {
-            name: 'twitter',
-            purposes: ['social'],
-            contextualConsentOnly: true,
         },
     ],
 };
