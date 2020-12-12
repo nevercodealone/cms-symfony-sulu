@@ -118,21 +118,30 @@ var klaroConfig = {
     // This is a list of third-party services that Klaro will manage for you.
     services: [
         {
-            name: 'piwik',
+            name: 'matomo',
             purposes: ['analytics'],
             // Setting this to true will exempt this service from the "Accept All"
             // flow, i.e. clicking on "Accept All" will not enable this service.
             contextualConsentOnly: true,
+            cookies: [
+                /^_pk(.*)?/
+            ]
         },
         {
             name: 'google',
             purposes: ['analytics'],
-            contextualConsentOnly: true,
+            cookies: [
+                '_ga',
+                '_gid'
+            ],
         },
         {
             name: 'facebook',
             purposes: ['social'],
             contextualConsentOnly: true,
+            cookies: [
+                /^_fb(.*)?/
+            ]
         },
         {
             name: 'twitter',
