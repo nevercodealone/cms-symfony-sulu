@@ -3,6 +3,7 @@
 namespace NCATesting\health;
 
 use NCATesting\AcceptanceTester;
+use NCATesting\Helper\Acceptance as AcceptanceHelper;
 use NCATesting\Page\startpage;
 
 class CookieCest
@@ -28,16 +29,11 @@ class CookieCest
         $I->dontSeeElement($page::$cookieDiv);
 
         $I->comment('Google');
-        $I->dontSee($page::$cookieStringGoogle);
-        $I->comment('Piwik');
-        $I->dontSeeInPageSource($page::$cookieStringPiwik);
-        $I->comment('Twitter');
-        $I->dontSeeInPageSource($page::$cookieStringTwitter);
-        $I->comment('Facebook');
-        $I->dontSeeInPageSource($page::$cookieStringFacebook);
+        $I->dontSeeCookie($page::$cookieGoogleGa);
+        $I->dontSeeCookie($page::$cookieGoogleGa);
     }
 
-    public function acceptAllTrackingPixels(AcceptanceTester $I, startpage $page)
+    public function acceptAllTrackingPixels(AcceptanceTester $I, startpage $page,  AcceptanceHelper $acceptanceHelper)
     {
         $I->waitForElementClickable($page::$cookieAcceptAll);
         $I->click($page::$cookieAcceptAll);
@@ -47,13 +43,8 @@ class CookieCest
         $I->dontSeeElement($page::$cookieDiv);
 
         $I->comment('Google');
-        $I->seeInPageSource($page::$cookieStringGoogle);
-        $I->comment('Piwik');
-        $I->seeInPageSource($page::$cookieStringPiwik);
-        $I->comment('Twitter');
-        $I->seeInPageSource($page::$cookieStringTwitter);
-        $I->comment('Facebook');
-        $I->seeInPageSource($page::$cookieStringFacebook);
+        $I->seeCookie($page::$cookieGoogleGa);
+        $I->seeCookie($page::$cookieGoogleGid);
     }
 
     public function onlyAcceptStats(AcceptanceTester $I, startpage $page)
@@ -69,13 +60,8 @@ class CookieCest
         $I->dontSeeElement($page::$cookieDiv);
 
         $I->comment('Google');
-        $I->seeInPageSource($page::$cookieStringGoogle);
-        $I->comment('Piwik');
-        $I->seeInPageSource($page::$cookieStringPiwik);
-        $I->comment('Twitter');
-        $I->dontSeeInPageSource($page::$cookieStringTwitter);
-        $I->comment('Facebook');
-        $I->dontSeeInPageSource($page::$cookieStringFacebook);
+        $I->seeCookie($page::$cookieGoogleGa);
+        $I->seeCookie($page::$cookieGoogleGid);
     }
 
     public function onlyAcceptSocial(AcceptanceTester $I, startpage $page)
@@ -91,12 +77,7 @@ class CookieCest
         $I->dontSeeElement($page::$cookieDiv);
 
         $I->comment('Google');
-        $I->dontSeeInPageSource($page::$cookieStringGoogle);
-        $I->comment('Piwik');
-        $I->dontSeeInPageSource($page::$cookieStringPiwik);
-        $I->comment('Twitter');
-        $I->seeInPageSource($page::$cookieStringTwitter);
-        $I->comment('Facebook');
-        $I->seeInPageSource($page::$cookieStringFacebook);
+        $I->dontSeeCookie($page::$cookieGoogleGa);
+        $I->dontSeeCookie($page::$cookieGoogleGid);
     }
 }
