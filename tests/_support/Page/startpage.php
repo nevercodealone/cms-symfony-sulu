@@ -16,8 +16,10 @@ class startpage
     public static $cookieModalAcceptAllSocialCookies = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-body > ul > li:nth-child(2) > label > span.cm-switch > div';
     public static $cookieModalAcceptSelection = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-footer > div > button.cm-btn.cm-btn-success.cm-btn-info.cm-btn-accept';
 
+    public static $cookieKlaro = 'klaro';
     public static $cookieGoogleGa = '_ga';
     public static $cookieGoogleGid = '_gid';
+    public static $cookieGoogleGat = '_gat';
     public static $cookieMatomo = '_pk';
     public static $cookieFacebook = '_fb';
 
