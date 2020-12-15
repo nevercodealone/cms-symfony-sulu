@@ -1,5 +1,9 @@
-<?php namespace NCATesting\health;
+<?php
+
+namespace NCATesting\health;
+
 use NCATesting\AcceptanceTester;
+use NCATesting\Helper\Acceptance as AcceptanceHelper;
 use NCATesting\Page\startpage;
 
 class CookieCest
@@ -8,46 +12,47 @@ class CookieCest
     {
         $I->amOnPage($page::$URL);
         $I->waitForElement($page::$logo);
-        $I->resetCookie('Cookie_Consent');
-        $I->resetCookie('Cookie_Category_socialmedia');
-        $I->resetCookie('Cookie_Category_matomo');
-        $I->resetCookie('Cookie_Category_google');
+        $I->resetCookie('klaro');
         $I->reloadPage();
         $I->waitForElement($page::$logo);
         $I->waitForElementVisible($page::$cookieDiv);
-        $I->scrollTo($page::$cookieDiv);
     }
 
-    public function allNoDoNotShowTrackingPixels(AcceptanceTester $I, startpage $page)
+    public function denyAllTrackingPixels(AcceptanceTester $I, startpage $page)
     {
-        $I->waitForElementClickable($page::$cookieSubmit);
-        $I->click($page::$cookieSubmit);
+        $I->waitForElementClickable($page::$cookieDenyAll);
+        $I->click($page::$cookieDenyAll);
         $I->waitForElementNotVisible($page::$cookieDiv);
 
-        $I->comment('Google');
-        $I->dontSeeInPageSource($page::$cookieStringGoogle);
-        $I->comment('Matomo');
-        $I->dontSeeInPageSource($page::$cookieStringMatomo);
-        $I->comment('Social');
-        $I->dontSeeInPageSource($page::$cookieStringSocial);
+        $I->reloadPage();
+        $I->waitForElementClickable($page::$logo);
+        $I->waitForPageLoad();
+        $I->dontSeeElement($page::$cookieDiv);
+
+        $klaro = $I->grabCookie($page::$cookieKlaro);
+        $cookieSettings = json_decode(urldecode($klaro), true);
+        $I->comment('Validate cookie settings');
+        foreach ($cookieSettings as $key => $cookieSetting) {
+            $I->assertFalse($cookieSetting, $key);
+        }
     }
 
-    public function allYesShowTrackingPixels(AcceptanceTester $I, startpage $page)
+    public function acceptAllTrackingPixels(AcceptanceTester $I, startpage $page,  AcceptanceHelper $acceptanceHelper)
     {
-        $I->checkOption($page::$cookieMatomoYes);
-        $I->checkOption($page::$cookieGoogleYes);
-        $I->checkOption($page::$cookieSocialYes);
-        $I->click($page::$cookieSubmit);
+        $I->waitForElementClickable($page::$cookieAcceptAll);
+        $I->click($page::$cookieAcceptAll);
         $I->waitForElementNotVisible($page::$cookieDiv);
         $I->reloadPage();
         $I->waitForElement($page::$logo);
+        $I->waitForPageLoad();
+        $I->dontSeeElement($page::$cookieDiv);
 
-        $I->comment('Google');
-        $I->seeInPageSource($page::$cookieStringGoogle);
-        $I->comment('Matomo');
-        $I->seeInPageSource($page::$cookieStringMatomo);
-        $I->comment('Social');
-        $I->seeInPageSource($page::$cookieStringSocial);
+        $klaro = $I->grabCookie($page::$cookieKlaro);
+        $cookieSettings = json_decode(urldecode($klaro), true);
+        $I->comment('Validate cookie settings');
+        foreach ($cookieSettings as $key => $cookieSetting) {
+            $I->assertTrue($cookieSetting, $key);
+        }
     }
 
 }

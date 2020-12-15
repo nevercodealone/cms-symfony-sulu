@@ -7,18 +7,21 @@ class startpage
     public static $logo = '//*[@data-q="logo"]';
     public static $navMain = '//ul[@data-q="navMain"]/li/a';
 
-    public static $cookieDiv = '.ch-cookie-consent';
-    public static $cookieMatomoYes = '#cookie_consent > div:nth-child(1) > div.ch-cookie-consent__category-toggle > label:nth-child(2)';
-    public static $cookieMatomoNo = '#cookie_consent_matomo_1';
-    public static $cookieGoogleYes = '#cookie_consent > div:nth-child(2) > div.ch-cookie-consent__category-toggle > label:nth-child(2)';
-    public static $cookieGoogleNo = '#cookie_consent_google_1';
-    public static $cookieSocialYes = '#cookie_consent > div:nth-child(3) > div.ch-cookie-consent__category-toggle > label:nth-child(2)';
-    public static $cookieSocialNo = '#cookie_consent_socialmedia_1';
-    public static $cookieSubmit = 'body > div.ch-cookie-consent.ch-cookie-consent--dark-theme.ch-cookie-consent--top > form > button';
-    public static $cookieStringGoogle = 'GoogleAnalyticsObject';
-    public static $cookieStringMatomo = 'piwik';
-    public static $cookieStringSocial = 'ads-twitter';
+    public static $cookieDiv = '#klaro';
+    public static $cookieAcceptAll = '#klaro > div > div > div > div > div > button.cm-btn.cm-btn-success';
+    public static $cookieDenyAll = '#klaro > div > div > div > div > div > button.cm-btn.cm-btn-danger.cn-decline';
+    public static $cookieShowMore = '#klaro > div > div > div > div > a';
+    public static $cookieModal = '.cookie-modal';
+    public static $cookieModalAcceptAllStatCookies = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-body > ul > li:nth-child(1) > label > span.cm-switch > div';
+    public static $cookieModalAcceptAllSocialCookies = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-body > ul > li:nth-child(2) > label > span.cm-switch > div';
+    public static $cookieModalAcceptSelection = '#klaro > div > div > div.cm-modal.cm-klaro > div.cm-footer > div > button.cm-btn.cm-btn-success.cm-btn-info.cm-btn-accept';
 
+    public static $cookieKlaro = 'klaro';
+    public static $cookieGoogleGa = '_ga';
+    public static $cookieGoogleGid = '_gid';
+    public static $cookieGoogleGat = '_gat';
+    public static $cookieMatomo = '_pk';
+    public static $cookieFacebook = '_fb';
 
     public static $serviceSection = '//*[@data-q="services-section"]';
     public static $serviceContainer = '//*[@data-q="services-container"]';

@@ -13,6 +13,13 @@
         <script src="/ethic/js/html5shiv.js"></script>
         <script src="/ethic/js/respond.min.js"></script>
         <![endif]-->
+        <script defer type="text/javascript" src="/klaro/config.js"></script>
+        <script
+                defer
+                data-config="klaroConfig"
+                type="application/javascript"
+                src="/klaro/klaro.js">
+        </script>
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
         <link href='//cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.css' rel='stylesheet' type='text/css'>
@@ -21,15 +28,21 @@
         <link href='/css/nca-contact.css' rel='stylesheet' type='text/css'>
         <link href="/ethic/style.css" rel="stylesheet"/>
         <link href="/css/costum-ethic.css" rel="stylesheet"/>
-        {% include "@!CHCookieConsent/cookie_consent_styling.html.twig" %}
+        <link href="/klaro/klaro.min.css" rel="stylesheet"/>
 
         {% block additionalstyle %}
 
         {% endblock %}
-
+        {% include 'partial/analytics.html.twig' %}
     </head>
 
     <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe data-name="google-tag-manager" src="https://www.googletagmanager.com/ns.html?id=GTM-NTBGN2M"
+                      height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
         <header class="tz-header tz-header-2">
             {% block header %}
                 <div class="tz-customer-container">
@@ -167,6 +180,7 @@
             <span class="visuallyhidden">Kontakt Formular öffnen</span>
             <div id="setting"><i class="fa fa-comment"></i></div>
         </button>
+
         <footer class="tz-footer">
             {% block footer %}
                 <!-- Begin Footer -->
@@ -180,7 +194,7 @@
                                     <h4>ROLAND GOLLA</h4>
                                     <ul>
                                         <li><a href="https://www.rolandgolla.de/" target="_blank" rel="noopener">PHP Freelancer</a></li>
-                                        <li><a href="https://www.rolandgolla.de/php-kurs-inhouse-schulung/" target="_blank" rel="noopener">PHP-Kurs
+                                        <li><a href="https://www.rolandgolla.de/php-schulung-training/" target="_blank" rel="noopener">PHP-Kurs
                                                 Inhouse-Schulung</a></li>
                                     </ul>
                                 </div>
@@ -189,17 +203,9 @@
                                 <div class="tz-footer-content-main">
                                     <img src="/ethic/images/check-footer-Home4.png"
                                          alt="Images remove footer">
-                                    <h4>ENTWICKLUNGSHILFE NRW</h4>
+                                    <h4>TESTIFY - Agentur für Tests</h4>
                                     <ul>
-                                        <li><a href="http://www.entwicklungshilfe.nrw/dozenten/" target="_blank" rel="noopener">Dozenten</a></li>
-                                        <li><a href="http://www.entwicklungshilfe.nrw/workshops/soforthilfe/" target="_blank" rel="noopener">Soforthilfe</a>
-                                        </li>
-                                        <li><a href="http://www.entwicklungshilfe.nrw/code-rocker/" target="_blank" rel="noopener">Code-Rocker</a>
-                                        </li>
-                                        <li><a href="http://www.entwicklungshilfe.nrw/workshops/moderierte-code-reviews/"
-                                               target="_blank" rel="noopener">Code Reviews</a></li>
-                                        <li><a href="http://www.entwicklungshilfe.nrw/workshops/moderiertes-pair-programming/"
-                                               target="_blank" rel="noopener">Pair Programming</a></li>
+                                        <li><a href="https://testify.nevercodealone.de/de" target="_blank" rel="noopener">TESTIFY</a></li>
                                     </ul>
                                 </div>
                             </li>
@@ -207,11 +213,11 @@
                                 <div class="tz-footer-content-main">
                                     <img src="/ethic/images/check-footer-Home4.png"
                                          alt="Images remove footer">
-                                    <h4>WEBVISUM</h4>
+                                    <h4>PARTNER</h4>
                                     <ul>
-                                        <li><a href="https://webvisum.de/schulungen.html" target="_blank" rel="noopener">Magento Support</a></li>
-                                        <li><a href="https://webvisum.de/magento-hosting" target="_blank" rel="noopener">Hosting</a></li>
-                                        <li><a href="https://webvisum.de/online-marketing" target="_blank" rel="noopener">Online Marketing</a></li>
+                                        <li><a href="https://webvisum.de" target="_blank" rel="noopener">Webvisum Magento Agentur</a></li>
+                                        <li><a href="https://www.conversis.de/" target="_blank" rel="noopener">Conversis Hosting</a></li>
+                                        <li><a href="https://www.safe-design.de/" target="_blank" rel="noopener">Safe Design</a></li>
                                     </ul>
                                 </div>
                             </li>
@@ -219,9 +225,10 @@
                                 <div class="tz-footer-content-main">
                                     <img src="/ethic/images/check-footer-Home4.png"
                                          alt="Images remove footer">
-                                    <h4>PARTNER WERDEN</h4>
+                                    <h4>Cookies</h4>
                                     <ul>
-                                        <li><a href="https://blog.nevercodealone.de/kontakt-nca/" target="_blank" rel="noopener">Sponsoring</a>
+                                        <li>
+                                            <button type="button" class="btn btn-sm" onclick="return klaro.show();">Klaro Einstellungen</button>
                                         </li>
                                     </ul>
                                 </div>
@@ -237,7 +244,6 @@
                 </div>
             {% endblock %}
         </footer>
-        {{ render_esi(path('ch_cookie_consent.show_if_cookie_consent_not_set')) }}
 
         <script>
             var Desktop = 5,
@@ -260,6 +266,5 @@
         {% block additionaljavascripts %}
 
         {% endblock %}
-        {% include 'partial/analytics.html.twig' %}
     </body>
 </html>
