@@ -1,18 +1,14 @@
 <!-- Analytics -->
 {% if app.environment == 'dev' %}
-    <!-- Google -->
-    <script async type="opt-in" data-type="application/javascript" data-src="https://www.googletagmanager.com/gtag/js?id=your-ga-id" data-name="google"></script>
-    <script type="opt-in" data-type="application/javascript" data-name="google">
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-        ga('create', 'UA-3268576-52', 'auto');
-        ga('set','anonymizeIp',true);
-        ga('send', 'pageview');
+    <!-- Google Tag Manager -->
+    <script data-type="application/javascript" type="text/plain" data-name="google-tag-manager">
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-NTBGN2M');
     </script>
-    <!-- End Google -->
+    <!-- End Google Tag Manager -->
 
     <!-- Matomo -->
     <script data-type="application/javascript" type="text/plain" data-name="matomo">

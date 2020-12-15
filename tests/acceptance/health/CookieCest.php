@@ -29,10 +29,6 @@ class CookieCest
         $I->waitForPageLoad();
         $I->dontSeeElement($page::$cookieDiv);
 
-        $I->comment('Google');
-        $I->dontSeeCookie($page::$cookieGoogleGa);
-        $I->dontSeeCookie($page::$cookieGoogleGa);
-
         $klaro = $I->grabCookie($page::$cookieKlaro);
         $cookieSettings = json_decode(urldecode($klaro), true);
         $I->comment('Validate cookie settings');
@@ -50,11 +46,6 @@ class CookieCest
         $I->waitForElement($page::$logo);
         $I->waitForPageLoad();
         $I->dontSeeElement($page::$cookieDiv);
-
-        $I->comment('Google');
-        $I->seeCookie($page::$cookieGoogleGa);
-        $I->seeCookie($page::$cookieGoogleGid);
-        $I->seeCookie($page::$cookieGoogleGat);
 
         $klaro = $I->grabCookie($page::$cookieKlaro);
         $cookieSettings = json_decode(urldecode($klaro), true);
