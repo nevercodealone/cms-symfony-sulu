@@ -1,8 +1,0 @@
-ch_cookie_consent:
-  theme: 'dark'
-  categories:
-    - 'matomo'
-    - 'google'
-    - 'socialmedia'
-  use_logger: false
-  position: 'top'
