@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <template xmlns="http://schemas.sulu.io/template/template"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
           xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
 
     <key>default</key>
@@ -10,37 +11,22 @@
     <cacheLifetime>604800</cacheLifetime>
 
     <meta>
-        <title lang="en">Default</title>
-        <title lang="de">Standard</title>
+        <title lang="en">Edugate - Default</title>
+        <title lang="de">Edugate - Standard</title>
     </meta>
 
     <properties>
-        <property name="title" type="text_line" mandatory="true">
+        <xi:include href="../includes/highlight.xml"/>
+        <block name="blocks" default-type="icon-list" minOccurs="0">
             <meta>
-                <title lang="en">Title</title>
-                <title lang="de">Titel</title>
+                <title lang="en">Content</title>
+                <title lang="de">Inhalte</title>
             </meta>
-            <params>
-                <param name="headline" value="true"/>
-            </params>
-
-            <tag name="sulu.rlp.part"/>
-        </property>
-
-        <property name="url" type="resource_locator" mandatory="true">
-            <meta>
-                <title lang="en">Resourcelocator</title>
-                <title lang="de">Adresse</title>
-            </meta>
-
-            <tag name="sulu.rlp"/>
-        </property>
-
-        <property name="article" type="text_editor">
-            <meta>
-                <title lang="en">Article</title>
-                <title lang="de">Artikel</title>
-            </meta>
-        </property>
+            <types>
+                <!-- @see https://docs.sulu.io/en/2.1/book/templates.html#including-other-templates -->
+                <xi:include href="../includes/edugate/blocks.xml"
+                            xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/*)"/>
+            </types>
+        </block>
     </properties>
 </template>

@@ -1,0 +1,28 @@
+<!-- CHOOSE COURSES START -->
+<div class="section section-padding choose-course">
+    <div class="container">
+        <div class="group-title-index">
+            <h4 class="top-title">{{ content.subline }}</h4>
+
+            <h2 class="center-title">{{ content.headline }}</h2>
+
+            <div class="bottom-title"><i class="bottom-icon icon-a-01-01"></i></div>
+        </div>
+        <div class="choose-course-wrapper row">
+            {% for item in content.items %}
+                <div class="col-md-4 col-xs-6">
+                    <div class="item-course item-1">
+                        <div class="icon-circle">
+                            <div class="icon-background"><i class="icons-img icon-{{ item.icon }}"></i></div>
+                            <div class="info">
+                                <div class="info-back"><a href="#">{{ item.slogan }}</a></div>
+                            </div>
+                        </div>
+                        <div class="name-course"><a href="#">{{ item.keyword }}</a><i class="fa fa-long-arrow-right"></i></div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<!-- CHOOSE COURSES END -->

@@ -1,0 +1,25 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="icon-list" minOccurs="0">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+
+        <meta>
+            <title lang="en">Blocks</title>
+            <title lang="de">Blocks</title>
+        </meta>
+
+        <types>
+            <xi:include href="blocks/icon-list.xml"
+                xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+            <xi:include href="blocks/references.xml"
+                        xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+            <xi:include href="blocks/team.xml"
+                        xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+            <xi:include href="blocks/why-choose-us.xml"
+                        xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+
+        </types>
+    </block>
+</properties>

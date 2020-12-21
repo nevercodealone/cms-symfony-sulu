@@ -41,7 +41,7 @@ class overviewCest
             $I->assertNotEmpty($descriptions[$key], 'Description');
             $I->assertNotEmpty($hrefs[$key], 'href');
             $I->assertNotEmpty($srces[$key], 'src');
-            $I->assertContains('400x300', $srces[$key], 'img 400x300');
+            $I->assertStringContainsString('400x300', $srces[$key], 'img 400x300');
             $I->assertNotEmpty($alts[$key], 'alt');
             $I->assertNotEmpty($imgTitles[$key], 'Img title');
         }

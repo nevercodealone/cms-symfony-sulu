@@ -1,0 +1,56 @@
+<!-- START TOP COURSES-->
+<div class="section section-padding top-courses">
+    <div class="container">
+        <div class="group-title-index"><h4 class="top-title">{{ content.subline }}</h4>
+
+            <h2 class="center-title">{{ content.headline }}</h2>
+
+            <div class="bottom-title"><i class="bottom-icon icon-icon-04"></i></div>
+        </div>
+        <div class="top-courses-wrapper">
+                {% set rowKeys = [0,2,4,6,8,10] %}
+                {% if content.items is not empty %}
+                    {% for key,item in content.items %}
+                        {% set source = item.image[0].formats['400x300'] %}
+                        {% if key in rowKeys %}
+                            <div class="top-courses-slider">
+                        {% endif %}
+                        <div class="top-courses-item">
+                            <div class="edugate-layout-2">
+                                <div class="edugate-layout-2-wrapper">
+                                    <div class="edugate-content">
+                                        <a href="{{ item.url }}" class="title" target="_blank" rel="nofollow">
+                                            {{ item.headline }}
+                                        </a>
+                                        <div class="info">
+                                            <div class="author item"><a href="{{ item.url }}"><strong>{{ item.kind }}:</strong></a></div>
+                                            <div class="date-time item"><a href="{{ item.url }}">{{ item.date }}</a></div>
+                                        </div>
+                                        <div class="info-more">
+                                            <div class="view item">
+                                                <p><strong>Genre:</strong></p>
+                                            </div>
+                                            <div class="comment item">
+                                                <p>{{ item.business }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="description">
+                                            {{ item.description|raw }}
+                                        </div>
+                                        <button onclick="window.location.href='{{ item.url }}'" class="btn btn-green"><span>Weiter</span></button>
+                                    </div>
+                                    <div class="edugate-image">
+                                        <img src="{{ source }}" alt="" class="img-responsive"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if key not in rowKeys %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+        </div>
+    </div>
+</div>
+<!-- END TOP COURSES-->

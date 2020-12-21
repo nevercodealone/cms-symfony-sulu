@@ -1,0 +1,79 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="icon-list">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+
+        <types>
+            <type name="icon-list">
+                <meta>
+                    <title>Icon list</title>
+                </meta>
+                <properties>
+                    <property name="subline" type="text_line">
+                        <meta>
+                            <title>Subline</title>
+                        </meta>
+                    </property>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <block name="items" default-type="items" minOccurs="0">
+                        <meta>
+                            <title>Items</title>
+                        </meta>
+                        <types>
+                            <type name="items">
+                                <meta>
+                                    <title>Item</title>
+                                </meta>
+                                <properties>
+                                    <property name="icon" type="single_select">
+                                        <meta>
+                                            <title>Icon</title>
+                                        </meta>
+                                        <params>
+                                            <param name="default_value" value="computer_network"/>
+                                            <param name="values" type="collection">
+                                                <param name="computer_network">
+                                                    <meta>
+                                                        <title>Computer</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="photocamera_1">
+                                                    <meta>
+                                                        <title>Photo</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="chat_bubbles">
+                                                    <meta>
+                                                        <title>Chat</title>
+                                                    </meta>
+                                                </param>
+                                            </param>
+                                        </params>
+                                    </property>
+                                    <property name="keyword" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Keyword</title>
+                                        </meta>
+                                    </property>
+                                    <property name="slogan" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Slogan</title>
+                                        </meta>
+                                    </property>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

@@ -12,7 +12,9 @@ class linksCest
         $I->waitForElement('a');
     }
 
-    // tests
+    /**
+     * @skip
+     */
     public function internalLinksWorks(AcceptanceTester $I, Config $helperConfig)
     {
         $specialLinks = [

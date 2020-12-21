@@ -1,7 +1,5 @@
-{% extends "base.html.twig" %}
+{% extends "base-edugate.html.twig" %}
 
 {% block content %}
-    <h1>{{ content.title }}</h1>
-
-    {{ content.article|raw }}
+    {% include 'includes/edugate/blocks.html.twig' %}
 {% endblock %}
