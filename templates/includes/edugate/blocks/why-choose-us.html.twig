@@ -1,0 +1,41 @@
+<!-- WHY CHOOSE US START -->
+<div class="section why-choose-us">
+    <div class="why-choose-us-wrapper-top">
+        <div class="container">
+            <div class="why-choose-us-wrapper"><h2 class="title-2">{{ content.headline }}</h2>
+                {{ content.description|raw }}
+                {% set target = sulu_content_load(content.buttonLink).path %}
+                <button onclick="window.location.href='{{ target }}'" class="btn btn-green-2">
+                    <span>{{ content.buttonText }}</span>
+                </button>
+            </div>
+            <div data-wow-delay="0.2s" data-wow-duration="1.2s" class="background-girl-1 wow fadeInUp">
+                {% set source = content.image[0].formats['350x450'] %}
+                <img src="{{ source }}" alt="{{ content.headline }}" class="img-responsive"/>
+            </div>
+        </div>
+    </div>
+    {% set source = content.backgroundImage[0].formats['1920x1280'] %}
+    <div class="why-choose-us-wrapper-bottom background-opacity" style="background-image: url('{{ source }}')">
+        <div class="container">
+            <div data-wow-delay="0.4s" data-wow-duration="1s" class="row why-choose-us-wrapper wow zoomIn">
+                {% if content.items is not empty %}
+                    {% set rowKeys = [0,2,4,6,8,10] %}
+                    {% for key,item in content.items %}
+                        {% if key in rowKeys %}
+                            <div class="customs-row">
+                        {% endif %}
+                        <div class="col-sm-4 col-xs-6 section-icon">
+                            <i class="fa fa-{{ item.icon }}"></i>
+                            {{ item.description|raw }}
+                        </div>
+                        {% if key not in rowKeys %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- WHY CHOOSE US END -->

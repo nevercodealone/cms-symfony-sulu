@@ -19,7 +19,7 @@ class defaultCest
     {
         $request = new Request();
         $methodReturn = $I->getMethodReturn($this->fixture,'getSourceParam', $request);
-        $I->assertContains('aff=website', $methodReturn);
+        $I->assertStringContainsString('aff=website', $methodReturn);
     }
 
     public function getSourceParamFromAffiliateGetParam(UnitTester $I)
@@ -28,6 +28,6 @@ class defaultCest
         $request = new Request();
         $request->query->set('aff', $affiliate);
         $methodReturn = $I->getMethodReturn($this->fixture,'getSourceParam', $request);
-        $I->assertContains('aff=' . $affiliate, $methodReturn);
+        $I->assertStringContainsString('aff=' . $affiliate, $methodReturn);
     }
 }

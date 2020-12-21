@@ -7,7 +7,6 @@
     <key>ncapaas</key>
 
     <view>pages/ncapaas</view>
-    <controller>SuluWebsiteBundle:Default:index</controller>
     <controller>App\Controller\PageController:employerBranding</controller>
     <cacheLifetime>86400</cacheLifetime>
 

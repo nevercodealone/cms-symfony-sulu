@@ -1,0 +1,106 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="references">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+
+        <types>
+            <type name="references">
+                <meta>
+                    <title>Referenzen</title>
+                </meta>
+                <properties>
+                    <property name="subline" type="text_line">
+                        <meta>
+                            <title>Subline</title>
+                        </meta>
+                    </property>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <block name="items" default-type="items" minOccurs="0">
+                        <meta>
+                            <title>Items</title>
+                        </meta>
+                        <types>
+                            <type name="items">
+                                <meta>
+                                    <title>Item</title>
+                                </meta>
+                                <properties>
+                                    <property name="image" type="media_selection" maxOccurs="1">
+                                        <meta>
+                                            <title>Image</title>
+                                        </meta>
+                                        <params>
+                                            <param name="types" value="image"/>
+                                        </params>
+                                    </property>
+                                    <property name="kind" type="single_select" colspan="6">
+                                        <meta>
+                                            <title lang="en">Typ</title>
+                                        </meta>
+                                        <params>
+                                            <param name="default_value" value="Relaunch"/>
+                                            <param name="values" type="collection">
+                                                <param name="Relaunch">
+                                                    <meta>
+                                                        <title>Relaunch</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="Launch">
+                                                    <meta>
+                                                        <title>Launch</title>
+                                                    </meta>
+                                                </param>
+                                            </param>
+                                        </params>
+                                    </property>
+                                    <property name="headline" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Headline</title>
+                                        </meta>
+                                    </property>
+                                    <property name="date" type="date" colspan="6">
+                                        <meta>
+                                            <title>Datum</title>
+                                        </meta>
+                                    </property>
+                                    <property name="business" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Business</title>
+                                        </meta>
+                                    </property>
+                                    <property name="description" type="text_editor">
+                                        <meta>
+                                            <title>Description</title>
+                                        </meta>
+
+                                        <params>
+                                            <param name="table" value="false"/>
+                                            <param name="link" value="true"/>
+                                            <!-- CKEditor Parameters examples: -->
+                                            <param name="extra_allowed_content"
+                                                   value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                                            <param name="ui_color" value="#ffcc00"/>
+                                        </params>
+                                    </property>
+                                    <property name="url" type="url">
+                                        <meta>
+                                            <title>URL</title>
+                                        </meta>
+                                    </property>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

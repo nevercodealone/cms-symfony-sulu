@@ -1,0 +1,43 @@
+<!-- BEST STAFF START-->
+<div class="section section-padding background-opacity best-staff">
+    <div class="container">
+        <div class="group-title-index"><h4 class="top-title">{{ content.subline }}</h4>
+
+            <h2 class="center-title">{{ content.headline }}</h2>
+
+            <div class="bottom-title"><i class="bottom-icon icon-icon-05"></i></div>
+        </div>
+        <div class="best-staff-wrapper">
+            <div class="best-staff-content">
+                {% if content.organisation is not empty %}
+                    {% for item in content.organisation %}
+                        {% if item.avatar.thumbnails['400x400'] is defined and item.avatar.thumbnails['400x400'] is not empty %}
+                            {% set source = item.avatar.thumbnails['400x400'] %}
+                            <div class="staff-item">
+                                <div class="staff-item-wrapper">
+                                    <div class="staff-info">
+                                        <a href="#" class="staff-avatar">
+                                            <img src="{{ source }}" alt="{{ item.fullName }} - {{ item.positionName }}" class="img-responsive"/>
+                                        </a>
+                                        <a href="#" class="staff-name">{{ item.fullName }}</a>
+                                        <div class="staff-job">{{ item.positionName }}</div>
+                                        <div class="staff-desctiption">{{ item.note }}</div>
+                                    </div>
+                                </div>
+                                <div class="staff-socials">
+                                    {% if item.contactDetails.socialMedia is not empty %}
+                                        {% for socialMedia in item.contactDetails.socialMedia %}
+                                            {% set class = socialMedia.username|split('.')[1] %}
+                                            <a href="{{ socialMedia.id }}" class="{{ class }}"><i class="fab fa-{{ class }}"></i></a>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- BEST STAFF END-->
