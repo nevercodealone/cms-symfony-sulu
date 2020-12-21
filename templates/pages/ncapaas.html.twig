@@ -38,187 +38,188 @@
         <!-- PRELOADER STARTSCommunity Events sind nachhaltig und persönlich.
             ========================================================================= -->
         <section id="content">
-            <header role="banner" class="home-36">
-                <!-- SLIDER STARTS
-        ========================================================================= -->
-                <div class="slider">
-                    <div id="rev_slider_46_1_wrapper" class="rev_slider_wrapper fullscreen-container" data-alias="notgeneric1" style="background-color:transparent;padding:0px;">
-                        <!-- START REVOLUTION SLIDER 5.0.7 fullscreen mode -->
-                        <div id="rev_slider_46_1" class="rev_slider fullscreenbanner" style="display:none;" data-version="5.0.7">
-                            <ul>
-                                {% for key,slide in content.slider %}
-                                    <!-- SLIDE  -->
-                                    <li data-index="rs-{{ key }}" data-transition="zoomout" data-slotamount="default"  data-easein="Power4.easeInOut" data-easeout="Power4.easeInOut" data-masterspeed="2000"  data-thumb="/unity/images/slider/thumbs/19.jpg"  data-rotate="0"  data-fstransition="fade" data-fsmasterspeed="1500" data-fsslotamount="7" data-saveperformance="off"  data-title="Ideas" data-description="">
-                                        <!-- MAIN IMAGE -->
-                                        <img src="{{ slide.sliderImage[0].formats["1500x1000"] }}" alt="{{ slide.layer1 }}" data-bgposition="center center" data-kenburns="on" data-duration="20000" data-ease="Linear.easeNone" data-scalestart="100" data-scaleend="120" data-rotatestart="0" data-rotateend="0" data-offsetstart="0 0" data-offsetend="0 0" data-bgparallax="10" class="rev-slidebg" data-no-retina>
-                                        <!-- LAYERS -->
-                                        <!-- LAYER NR. 1 -->
-                                        <div class="tp-caption NotGeneric-Icon   tp-resizeme rs-parallaxlevel-0"
-                                             id="slide-{{ key }}-layer-1"
-                                             data-x="['center','center','center','center']" data-hoffset="['0','0','0','0']"
-                                             data-y="['top','top','top','top']" data-voffset="['100','100','100','100']"
-                                             data-width="none"
-                                             data-height="none"
-                                             data-whitespace="nowrap"
-                                             data-transform_idle="o:1;"
-                                             data-style_hover="cursor:default;"
-                                             data-transform_in="y:[100%];z:0;rX:0deg;rY:0;rZ:0;sX:1;sY:1;skX:0;skY:0;opacity:0;s:1500;e:Power4.easeInOut;"
-                                             data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
-                                             data-mask_in="x:0px;y:[100%];s:inherit;e:inherit;"
-                                             data-mask_out="x:inherit;y:inherit;s:inherit;e:inherit;"
-                                             data-start="1000"
-                                             data-splitin="none"
-                                             data-splitout="none"
-                                             data-responsive_offset="on"
-                                             style="z-index: 5; white-space: nowrap;">
-                                            <h2>{{ slide.layer1 }}</h2>
-                                        </div>
-                                        <!-- LAYER NR. 2 -->
-                                        <div class="tp-caption NotGeneric-Title tp-resizeme rs-parallaxlevel-0 t-center"
-                                             id="slide-{{ key }}-layer-2"
-                                             data-x="['center','center','center','center']" data-hoffset="['0','0','0','0']"
-                                             data-y="['center','center','center','center']" data-voffset="['30','30','30','30']"
-                                             data-fontsize="['38','38','38','36']"
-                                             data-lineheight="['45','45','45','40']"
-                                             data-width="['600','500','400','300']"
-                                             data-height="none"
-                                             data-whitespace="normal"
-                                             data-transform_idle="o:1;"
-                                             data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
-                                             data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
-                                             data-mask_out="x:inherit;y:inherit;"
-                                             data-start="1500"
-                                             data-splitin="none"
-                                             data-splitout="none"
-                                             data-responsive_offset="on"
-                                             style="z-index: 6; min-width: 300px; max-width: 600px; white-space: normal;">
-                                            {{ slide.layer2 }}
-                                        </div>
-                                    </li>
-                                    <!-- ./ SLIDE -->
-                                {% endfor %}
-                            </ul>
-                            <div class="tp-bannertimer tp-bottom" style="visibility: hidden !important;"></div>
+            {% block content %}
+                <header role="banner" class="home-36">
+                    <!-- SLIDER STARTS
+            ========================================================================= -->
+                    <div class="slider">
+                        <div id="rev_slider_46_1_wrapper" class="rev_slider_wrapper fullscreen-container" data-alias="notgeneric1" style="background-color:transparent;padding:0px;">
+                            <!-- START REVOLUTION SLIDER 5.0.7 fullscreen mode -->
+                            <div id="rev_slider_46_1" class="rev_slider fullscreenbanner" style="display:none;" data-version="5.0.7">
+                                <ul>
+                                    {% for key,slide in content.slider %}
+                                        <!-- SLIDE  -->
+                                        <li data-index="rs-{{ key }}" data-transition="zoomout" data-slotamount="default"  data-easein="Power4.easeInOut" data-easeout="Power4.easeInOut" data-masterspeed="2000"  data-thumb="/unity/images/slider/thumbs/19.jpg"  data-rotate="0"  data-fstransition="fade" data-fsmasterspeed="1500" data-fsslotamount="7" data-saveperformance="off"  data-title="Ideas" data-description="">
+                                            <!-- MAIN IMAGE -->
+                                            <img src="{{ slide.sliderImage[0].formats["1500x1000"] }}" alt="{{ slide.layer1 }}" data-bgposition="center center" data-kenburns="on" data-duration="20000" data-ease="Linear.easeNone" data-scalestart="100" data-scaleend="120" data-rotatestart="0" data-rotateend="0" data-offsetstart="0 0" data-offsetend="0 0" data-bgparallax="10" class="rev-slidebg" data-no-retina>
+                                            <!-- LAYERS -->
+                                            <!-- LAYER NR. 1 -->
+                                            <div class="tp-caption NotGeneric-Icon   tp-resizeme rs-parallaxlevel-0"
+                                                 id="slide-{{ key }}-layer-1"
+                                                 data-x="['center','center','center','center']" data-hoffset="['0','0','0','0']"
+                                                 data-y="['top','top','top','top']" data-voffset="['100','100','100','100']"
+                                                 data-width="none"
+                                                 data-height="none"
+                                                 data-whitespace="nowrap"
+                                                 data-transform_idle="o:1;"
+                                                 data-style_hover="cursor:default;"
+                                                 data-transform_in="y:[100%];z:0;rX:0deg;rY:0;rZ:0;sX:1;sY:1;skX:0;skY:0;opacity:0;s:1500;e:Power4.easeInOut;"
+                                                 data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                                 data-mask_in="x:0px;y:[100%];s:inherit;e:inherit;"
+                                                 data-mask_out="x:inherit;y:inherit;s:inherit;e:inherit;"
+                                                 data-start="1000"
+                                                 data-splitin="none"
+                                                 data-splitout="none"
+                                                 data-responsive_offset="on"
+                                                 style="z-index: 5; white-space: nowrap;">
+                                                <h2>{{ slide.layer1 }}</h2>
+                                            </div>
+                                            <!-- LAYER NR. 2 -->
+                                            <div class="tp-caption NotGeneric-Title tp-resizeme rs-parallaxlevel-0 t-center"
+                                                 id="slide-{{ key }}-layer-2"
+                                                 data-x="['center','center','center','center']" data-hoffset="['0','0','0','0']"
+                                                 data-y="['center','center','center','center']" data-voffset="['30','30','30','30']"
+                                                 data-fontsize="['38','38','38','36']"
+                                                 data-lineheight="['45','45','45','40']"
+                                                 data-width="['600','500','400','300']"
+                                                 data-height="none"
+                                                 data-whitespace="normal"
+                                                 data-transform_idle="o:1;"
+                                                 data-transform_in="z:0;rX:0;rY:0;rZ:0;sX:0.9;sY:0.9;skX:0;skY:0;opacity:0;s:1500;e:Power3.easeInOut;"
+                                                 data-transform_out="y:[100%];s:1000;e:Power2.easeInOut;s:1000;e:Power2.easeInOut;"
+                                                 data-mask_out="x:inherit;y:inherit;"
+                                                 data-start="1500"
+                                                 data-splitin="none"
+                                                 data-splitout="none"
+                                                 data-responsive_offset="on"
+                                                 style="z-index: 6; min-width: 300px; max-width: 600px; white-space: normal;">
+                                                {{ slide.layer2 }}
+                                            </div>
+                                        </li>
+                                        <!-- ./ SLIDE -->
+                                    {% endfor %}
+                                </ul>
+                                <div class="tp-bannertimer tp-bottom" style="visibility: hidden !important;"></div>
+                            </div>
                         </div>
+                        <!-- END REVOLUTION SLIDER -->
                     </div>
-                    <!-- END REVOLUTION SLIDER -->
-                </div>
 
-                <!-- /. SLIDER ENDS ========================================================================= -->
-            </header>
-            {% if
-                (content.digitalCreativesTitle != '' and content.digitalCreativesBodytext != '')
-                or
-                (content.ideology) != ''
-            %}
-                <div class="parallax-71">
-                    {% if (content.digitalCreativesTitle != '' and content.digitalCreativesBodytext != '')  %}
-                        <!-- DIGITAL CREATIVES STARTS
-                            ========================================================================= -->
-                        <div class="container digital-creatives">
-                            <div class="row">
-                                <div class="col-lg-8 col-lg-offset-2 herotext">
-                                    <h2 class="animated" data-animation="fadeInUp" data-animation-delay="200">
-                                        {{ content.digitalCreativesTitle }}
-                                    </h2>
-                                    <div class="description animated" data-animation="fadeInUp" data-animation-delay="400">
-                                        {{ content.digitalCreativesBodytext|raw }}
+                    <!-- /. SLIDER ENDS ========================================================================= -->
+                </header>
+                {% if
+                    (content.digitalCreativesTitle != '' and content.digitalCreativesBodytext != '')
+                    or
+                    (content.ideology) != ''
+                %}
+                    <div class="parallax-71">
+                        {% if (content.digitalCreativesTitle != '' and content.digitalCreativesBodytext != '')  %}
+                            <!-- DIGITAL CREATIVES STARTS
+                                ========================================================================= -->
+                            <div class="container digital-creatives">
+                                <div class="row">
+                                    <div class="col-lg-8 col-lg-offset-2 herotext">
+                                        <h2 class="animated" data-animation="fadeInUp" data-animation-delay="200">
+                                            {{ content.digitalCreativesTitle }}
+                                        </h2>
+                                        <div class="description animated" data-animation="fadeInUp" data-animation-delay="400">
+                                            {{ content.digitalCreativesBodytext|raw }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- ./ DIGITAL CREATIVES ENDS
-                            ========================================================================= -->
-                    {% endif %}
-                    {% if (content.ideology) != '' %}
-                        <!-- OUR IDEALOGY STARTS
-                            ========================================================================= -->
-                        {% for item in content.ideology %}
-                            {% set oddOrEven = cycle(['odd', 'even'], loop.index) %}
-                            <div class="container-fluid our-ideology bg">
-                                <div class="row no-gutter-5">
-                                    {% if oddOrEven == 'even' %}
-                                    <div class="col-lg-5 picture animated" data-animation="fadeInLeft" data-animation-delay="200">
-                                        <img src="{{ item.ideologyImage[0].formats['800x800'] }}" alt="{{ item.ideologyTitle }}" title="{{ item.ideologyTitle }}" class="img-responsive">
-                                    </div>
-                                    {% endif %}
-                                    <div class="col-lg-7 herotext">
-                                        <h2 class="animated" data-animation="fadeInUp" data-animation-delay="400">
-                                            {{ item.ideologyTitle }}
-                                        </h2>
-                                        <h1 class="animated" data-animation="fadeInUp" data-animation-delay="600">
-                                            {{ item.ideologyBodytext|raw }}
-                                        </h1>
-                                    </div>
-                                    {% if oddOrEven == 'odd' %}
+                            <!-- ./ DIGITAL CREATIVES ENDS
+                                ========================================================================= -->
+                        {% endif %}
+                        {% if (content.ideology) != '' %}
+                            <!-- OUR IDEALOGY STARTS
+                                ========================================================================= -->
+                            {% for item in content.ideology %}
+                                {% set oddOrEven = cycle(['odd', 'even'], loop.index) %}
+                                <div class="container-fluid our-ideology bg">
+                                    <div class="row no-gutter-5">
+                                        {% if oddOrEven == 'even' %}
                                         <div class="col-lg-5 picture animated" data-animation="fadeInLeft" data-animation-delay="200">
                                             <img src="{{ item.ideologyImage[0].formats['800x800'] }}" alt="{{ item.ideologyTitle }}" title="{{ item.ideologyTitle }}" class="img-responsive">
                                         </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                        <!-- ./ OUR IDEALOGY ENDS
-                            ========================================================================= -->
-                    {% endif %}
-                </div>
-            {% endif %}
-            <!-- OUR TEAM STARTS
-                ========================================================================= -->
-            <div class="container-fluid team-style-13  parallax-72">
-                <div class="row">
-                    <div class="col-lg-10 col-lg-offset-1 herotext">
-                        <h2 class="animated" data-animation="fadeInUp" data-animation-delay="300">
-                            {{ content.teamHeadline }}
-                        </h2>
-                        <h1 class="animated" data-animation="fadeInUp" data-animation-delay="600">
-                            {{ content.teamDescription|raw }}
-                        </h1>
-                    </div>
-                    <div class="col-lg-10 col-lg-offset-1">
-                        <div class="row animated" data-animation="fadeInUp" data-animation-delay="900">
-                            {% for teamMember in content.teamMembers %}
-                                <!-- Column Starts -->
-                                <div class="col-lg-4 col-md-4 col-sm-6 block">
-                                    <div class="row no-gutter-5 no-gutter-7 row-lg-height  row-md-height  row-sm-height">
-                                        <div class="col-lg-5 col-md-5 col-sm-5 col-lg-height col-md-height col-sm-height col-middle">
-                                            <div class="picture">
-                                                <img src="{{ teamMember.teamMemberImage[0].formats['183x183'] }}" alt="{{ teamMember.teamMemberName }} {{ teamMember.teamMemberPosition }}" class="img-responsive">
+                                        {% endif %}
+                                        <div class="col-lg-7 herotext">
+                                            <h2 class="animated" data-animation="fadeInUp" data-animation-delay="400">
+                                                {{ item.ideologyTitle }}
+                                            </h2>
+                                            <h1 class="animated" data-animation="fadeInUp" data-animation-delay="600">
+                                                {{ item.ideologyBodytext|raw }}
+                                            </h1>
+                                        </div>
+                                        {% if oddOrEven == 'odd' %}
+                                            <div class="col-lg-5 picture animated" data-animation="fadeInLeft" data-animation-delay="200">
+                                                <img src="{{ item.ideologyImage[0].formats['800x800'] }}" alt="{{ item.ideologyTitle }}" title="{{ item.ideologyTitle }}" class="img-responsive">
                                             </div>
-                                        </div>
-                                        <div class="col-lg-7 col-md-7 col-sm-7 col-lg-height col-md-height col-sm-height col-middle info">
-                                            <div class="name">{{ teamMember.teamMemberName }}</div>
-                                            <div class="designation">{{ teamMember.teamMemberPosition }}</div>
-                                            <ul class="social-icons">
-                                                {% if teamMember.teamMemberTwitterUrl != '' %}
-                                                    <li>
-                                                        <a href="{{ teamMember.teamMemberTwitterUrl }}" target="_blank" rel="noopener"><i class="fa fa-twitter"></i></a>
-                                                    </li>
-                                                {% endif %}
-                                                {% if teamMember.teamMemberFbUrl != '' %}
-                                                    <li>
-                                                        <a href="{{ teamMember.teamMemberFbUrl }}" target="_blank" rel="noopener"><i class="fa fa-facebook"></i></a>
-                                                    </li>
-                                                {% endif %}
-                                                {% if teamMember.teamMemberGitHubUrl != '' %}
-                                                    <li>
-                                                        <a href="{{ teamMember.teamMemberGitHubUrl }}" target="_blank" rel="noopener"><i class="fa fa-github"></i></a>
-                                                    </li>
-                                                {% endif %}
-                                            </ul>
-                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
-                                <!-- Column Ends -->
                             {% endfor %}
+                            <!-- ./ OUR IDEALOGY ENDS
+                                ========================================================================= -->
+                        {% endif %}
+                    </div>
+                {% endif %}
+                <!-- OUR TEAM STARTS
+                    ========================================================================= -->
+                <div class="container-fluid team-style-13  parallax-72">
+                    <div class="row">
+                        <div class="col-lg-10 col-lg-offset-1 herotext">
+                            <h2 class="animated" data-animation="fadeInUp" data-animation-delay="300">
+                                {{ content.teamHeadline }}
+                            </h2>
+                            <h1 class="animated" data-animation="fadeInUp" data-animation-delay="600">
+                                {{ content.teamDescription|raw }}
+                            </h1>
+                        </div>
+                        <div class="col-lg-10 col-lg-offset-1">
+                            <div class="row animated" data-animation="fadeInUp" data-animation-delay="900">
+                                {% for teamMember in content.teamMembers %}
+                                    <!-- Column Starts -->
+                                    <div class="col-lg-4 col-md-4 col-sm-6 block">
+                                        <div class="row no-gutter-5 no-gutter-7 row-lg-height  row-md-height  row-sm-height">
+                                            <div class="col-lg-5 col-md-5 col-sm-5 col-lg-height col-md-height col-sm-height col-middle">
+                                                <div class="picture">
+                                                    <img src="{{ teamMember.teamMemberImage[0].formats['183x183'] }}" alt="{{ teamMember.teamMemberName }} {{ teamMember.teamMemberPosition }}" class="img-responsive">
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7 col-sm-7 col-lg-height col-md-height col-sm-height col-middle info">
+                                                <div class="name">{{ teamMember.teamMemberName }}</div>
+                                                <div class="designation">{{ teamMember.teamMemberPosition }}</div>
+                                                <ul class="social-icons">
+                                                    {% if teamMember.teamMemberTwitterUrl != '' %}
+                                                        <li>
+                                                            <a href="{{ teamMember.teamMemberTwitterUrl }}" target="_blank" rel="noopener"><i class="fa fa-twitter"></i></a>
+                                                        </li>
+                                                    {% endif %}
+                                                    {% if teamMember.teamMemberFbUrl != '' %}
+                                                        <li>
+                                                            <a href="{{ teamMember.teamMemberFbUrl }}" target="_blank" rel="noopener"><i class="fa fa-facebook"></i></a>
+                                                        </li>
+                                                    {% endif %}
+                                                    {% if teamMember.teamMemberGitHubUrl != '' %}
+                                                        <li>
+                                                            <a href="{{ teamMember.teamMemberGitHubUrl }}" target="_blank" rel="noopener"><i class="fa fa-github"></i></a>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Column Ends -->
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- ./ OUR TEAM ENDS
-                ========================================================================= -->
-
+                <!-- ./ OUR TEAM ENDS
+                    ========================================================================= -->
+            {% endblock %}
         </section>
         <!-- FOOTER 08 STARTS
     ========================================================================= -->
