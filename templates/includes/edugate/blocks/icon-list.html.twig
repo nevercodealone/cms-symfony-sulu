@@ -11,7 +11,7 @@
         <div class="choose-course-wrapper row">
             {% for item in content.items %}
                 <div class="col-md-4 col-xs-6">
-                    <div class="item-course item-1">
+                    <div class="item-course item-{{ loop.index }}">
                         <div class="icon-circle">
                             <div class="icon-background"><i class="icons-img icon-{{ item.icon }}"></i></div>
                             <div class="info">
