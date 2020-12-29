@@ -7,7 +7,7 @@
     <key>ncaeventoverview</key>
 
     <view>pages/ncaeventoverview</view>
-    <controller>SuluWebsiteBundle:Default:index</controller>
+    <controller>Sulu\Bundle\WebsiteBundle\Controller\DefaultController::indexAction</controller>
     <cacheLifetime>604800</cacheLifetime>
 
     <meta>
