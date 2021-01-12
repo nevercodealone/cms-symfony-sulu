@@ -1,0 +1,16 @@
+<div class="footer-top container">
+    <div class="footer-top-wrapper">
+        <div class="footer-top-left">
+            <p class="footer-top-focus">{{ content.headline }}</p>
+            <div class="footer-top-text">
+                {{ content.description|raw }}
+            </div>
+        </div>
+        <div class="footer-top-right">
+            {% set target = sulu_content_load(content.buttonLink).path %}
+            <a href="{{ target }}" class="btn btn-blue btn-bold">
+                <span>{{ content.buttonText }}</span>
+            </a>
+        </div>
+    </div>
+</div>
