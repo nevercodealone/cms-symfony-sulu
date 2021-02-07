@@ -24,3 +24,7 @@ a.color-white {color: #ffffff}
     width: 100%;
     height: 100%;
 }
+
+.section-padding {
+    padding: 50px 0 20px 0;
+}

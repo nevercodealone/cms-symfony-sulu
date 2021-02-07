@@ -1,0 +1,86 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="course-syllabus">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+
+        <types>
+            <type name="course-syllabus">
+                <meta>
+                    <title>Course syllabus</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <block name="items" default-type="items" minOccurs="0">
+                        <meta>
+                            <title>Items</title>
+                        </meta>
+                        <types>
+                            <type name="items">
+                                <meta>
+                                    <title>Item</title>
+                                </meta>
+                                <properties>
+                                    <property name="headline" type="text_line">
+                                        <meta>
+                                            <title>Headline</title>
+                                        </meta>
+                                        <params>
+                                            <param name="headline" value="true"/>
+                                        </params>
+                                    </property>
+                                    <property name="time" type="single_select">
+                                        <meta>
+                                            <title>Time in minutes</title>
+                                        </meta>
+                                        <params>
+                                            <param name="default_value" value="60"/>
+                                            <param name="values" type="collection">
+                                                <param name="60">
+                                                    <meta>
+                                                        <title>60</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="90">
+                                                    <meta>
+                                                        <title>90</title>
+                                                    </meta>
+                                                </param>
+                                            </param>
+                                        </params>
+                                    </property>
+                                    <block name="points" default-type="items" minOccurs="0">
+                                        <meta>
+                                            <title>Items</title>
+                                        </meta>
+                                        <types>
+                                            <type name="items">
+                                                <meta>
+                                                    <title>Item</title>
+                                                </meta>
+                                                <properties>
+                                                    <property name="points" type="text_line">
+                                                        <meta>
+                                                            <title>Point</title>
+                                                        </meta>
+                                                    </property>
+                                                </properties>
+                                            </type>
+                                        </types>
+                                    </block>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
