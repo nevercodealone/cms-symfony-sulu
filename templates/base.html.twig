@@ -99,7 +99,7 @@
                                             </li>
                                         {% else %}
                                             <li>
-                                                <a href="{{ item.path }}" title="{{ item.title }}">
+                                                <a href="{{ item.url }}" title="{{ item.title }}">
                                                     {{ item.excerpt.title|default(item.title) }}
                                                 </a>
                                                 {% if item.children|length > 0 %}

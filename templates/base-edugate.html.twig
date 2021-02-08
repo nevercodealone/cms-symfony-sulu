@@ -78,7 +78,7 @@
                                 {% else %}
                                     <li>
                                 {% endif %}
-                                        <a href="{{ item.path }}" title="{{ item.excerpt.title|default(item.title) }}" class="main-menu">
+                                        <a href="{{ item.url }}" title="{{ item.excerpt.title|default(item.title) }}" class="main-menu">
                                             {{ item.excerpt.title|default(item.title) }}
                                         </a>
                                         {% if item.children|length > 0 %}
