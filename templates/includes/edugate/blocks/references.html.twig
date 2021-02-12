@@ -24,7 +24,7 @@
                                         </a>
                                         <div class="info">
                                             <div class="author item"><a href="{{ item.url }}"><strong>{{ item.kind }}:</strong></a></div>
-                                            <div class="date-time item"><a href="{{ item.url }}">{{ item.date }}</a></div>
+                                            <div class="date-time item"><a href="{{ item.url }}">{{ item.date|date('d.m.Y') }}</a></div>
                                         </div>
                                         <div class="info-more">
                                             <div class="view item">

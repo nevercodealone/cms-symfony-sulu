@@ -68,6 +68,9 @@
     "nikic/php-parser": {
         "version": "v4.10.3"
     },
+    "paragonie/constant_time_encoding": {
+        "version": "v2.4.0"
+    },
     "phar-io/manifest": {
         "version": "2.0.1"
     },
@@ -82,6 +85,9 @@
     },
     "phpspec/prophecy": {
         "version": "1.12.1"
+    },
+    "phpstan/phpdoc-parser": {
+        "version": "0.4.10"
     },
     "phpstan/phpstan": {
         "version": "0.12.63"
