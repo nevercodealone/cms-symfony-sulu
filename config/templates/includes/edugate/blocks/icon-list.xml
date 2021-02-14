@@ -40,19 +40,34 @@
                                         <params>
                                             <param name="default_value" value="computer_network"/>
                                             <param name="values" type="collection">
-                                                <param name="computer_network">
+                                                <param name="icon-computer_network">
                                                     <meta>
                                                         <title>Computer</title>
                                                     </meta>
                                                 </param>
-                                                <param name="photocamera_1">
+                                                <param name="icon-photocamera_1">
                                                     <meta>
                                                         <title>Photo</title>
                                                     </meta>
                                                 </param>
-                                                <param name="chat_bubbles">
+                                                <param name="icon-chat_bubbles">
                                                     <meta>
                                                         <title>Chat</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="fa fa-database">
+                                                    <meta>
+                                                        <title>Database</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="far fa-file-alt">
+                                                    <meta>
+                                                        <title>Text</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="far fa-images">
+                                                    <meta>
+                                                        <title>Bilder</title>
                                                     </meta>
                                                 </param>
                                             </param>
