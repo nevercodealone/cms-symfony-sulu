@@ -7,7 +7,8 @@
             </div>
         </div>
         <div class="footer-top-right">
-            {% set target = sulu_content_load(content.buttonLink).path %}
+            {% set page = sulu_content_load(content.buttonLink) %}
+            {% set target = sulu_content_path(page.content.url) %}
             <a href="{{ target }}" class="btn btn-blue btn-bold">
                 <span>{{ content.buttonText }}</span>
             </a>

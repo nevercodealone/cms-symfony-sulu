@@ -4,7 +4,8 @@
         <div class="container">
             <div class="why-choose-us-wrapper"><h2 class="title-2">{{ content.headline }}</h2>
                 {{ content.description|raw }}
-                {% set target = sulu_content_load(content.buttonLink).path %}
+                {% set page = sulu_content_load(content.buttonLink) %}
+                {% set target = sulu_content_path(page.content.url) %}
                 <button onclick="window.location.href='{{ target }}'" class="btn btn-green-2">
                     <span>{{ content.buttonText }}</span>
                 </button>
