@@ -27,7 +27,8 @@
                         <h2 class="title-2">{{ content.whyHeadline }}</h2>
                         {{ content.whyDescription|raw }}
                         {% if content.whyButtonLink is not empty and content.whyButtonText is not empty %}
-                            {% set target = sulu_content_load(content.whyButtonLink).path %}
+                            {% set page = sulu_content_load(content.whyButtonLink) %}
+                            {% set target = sulu_content_path(page.content.url) %}
                             <button onclick="window.location.href='{{ target }}'" class="btn btn-green-2"><span>{{ content.whyButtonText }}</span></button>
                         {% endif %}
                     </div>
