@@ -28,3 +28,7 @@ a.color-white {color: #ffffff}
 .section-padding {
     padding: 50px 0 20px 0;
 }
+
+.best-staff {
+    background-image: url("/edugate/assets/images/background-best-stuff.jpg");
+}
