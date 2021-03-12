@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "partial/header.html.twig" %}
+    <!-- LIBRARY FONT-->
+    <link type="text/css" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,400italic,700,900,300">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/font/font-icon/fontawesome-free-5.15.1-web/css/all.css">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/font/font-icon/font-svg/css/Glyphter.css">
+    <!-- LIBRARY CSS-->
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/libs/animate/animate.css">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/libs/bootstrap-3.3.5/css/bootstrap.css">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/libs/owl-carousel-2.0/assets/owl.carousel.css">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/libs/selectbox/css/jquery.selectbox.css">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/libs/fancybox/css/jquery.fancybox.css">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/libs/fancybox/css/jquery.fancybox-buttons.css">
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/libs/media-element/build/mediaelementplayer.min.css">
+    <!-- STYLE CSS-->
+    <link type="text/css" rel="stylesheet" href="/edugate/assets/css/color-1.css" id="color-skins">
+    <link type="text/css" rel="stylesheet" href="/edugate/style.css">
+</head>
+<body>
+<header>
+    <div class="header-topbar">
+        <div class="container">
+            <div class="topbar-left pull-left">
+                <div class="email">
+                    <a href="mailto:die-websprinter@nevercodealone.de">
+                        <i class="topbar-icon fa fa-envelope"></i><span>die-websprinter@nevercodealone.de</span>
+                    </a>
+                </div>
+                <div class="hotline">
+                    <a href="#">
+                        <i class="topbar-icon fa fa-phone"></i><span>017624747727</span>
+                    </a>
+                </div>
+            </div>
+            <div class="topbar-right pull-right">
+                <div class="socials">
+                    <a href="https://www.facebook.com/nevercodealone/" class="facebook" target="_blank" rel="nofollow">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://twitter.com/nevercodealone" class="twitter" target="_blank" rel="nofollow">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=UBv9M5Mjs5U&list=PLKrKzhBjw2Y9gwqEBheEhUMzP5_d0qBPN" class="youtube" target="_blank" rel="nofollow">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                    <a href="https://blog.nevercodealone.de/" class="wordpress" target="_blank" rel="nofollow">
+                        <i class="fab fa-wordpress"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="header-main homepage-01">
+        <div class="container">
+            <div class="header-main-wrapper">
+                <div class="navbar-heade">
+                    <div class="logo pull-left">
+                        <a href="/de/die-websprinter" class="header-logo">
+                            <img src="{{ asset('img/logo-die-websprinter.png') }}" alt="Logo die Websprinter" style="max-width: 300px"/>
+                        </a>
+                    </div>
+                    <button type="button" data-toggle="collapse" data-target=".navigation" class="navbar-toggle edugate-navbar"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
+                </div>
+                <nav class="navigation collapse navbar-collapse pull-right">
+                    <ul class="nav-links nav navbar-nav">
+                        <li>
+                            <a href="/" class="main-menu">
+                                Startseite
+                            </a>
+                        </li>
+                        {% for item in sulu_navigation_root_tree('main', 2, true) %}
+                            {% if item.children|length > 0 %}
+                                <li class="dropdown">
+                            {% else %}
+                                <li>
+                            {% endif %}
+                            <a href="{{ item.url }}" title="{{ item.excerpt.title|default(item.title) }}" class="main-menu">
+                                {{ item.excerpt.title|default(item.title) }}
+                            </a>
+                            {% if item.children|length > 0 %}
+                                <ul class="dropdown-menu edugate-dropdown-menu-1">
+                                    {% for child in item.children %}
+                                        <li>
+                                            <a href="{{ child.url }}" class="link-page" title="{{ child.excerpt.title|default(child.title) }}">
+                                                {{ child.excerpt.title|default(child.title) }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div id="wrapper-content">
+    <div id="page-wrapper">
+        <div class="main-content"><!-- CONTENT-->
+            <div class="content">
+                <section id="content">
+                    {% block content %}{% endblock %}
+                </section>
+            </div>
+        </div>
+    </div>
+    <div id="back-top">
+        <a href="#top"><i class="fa fa-angle-double-up"></i></a>
+    </div>
+</div>
+<!-- FOOTER -->
+<footer>
+    <div class="footer-top">
+        <div class="container">
+            <div class="footer-top-wrapper">
+                <div class="footer-top-left">
+                    <p class="footer-top-focus">Video Call zum kennenlernen vereinbaren</p>
+                    <p class="footer-top-text">
+                        Einfach einen Terminvorschlag als E-Mail an <a href="mailto:die-websprinter@nevercodealone.de">die-websprinter@nevercodealone.de</a>
+                    </p>
+                </div>
+                <div class="footer-top-right">
+                    <button onclick="window.location.href='mailto:die-websprinter@nevercodealone.de'" class="btn btn-blue btn-bold">
+                        <span>Termin vereinbaren</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-main">
+        <div class="container">
+            <div class="footer-main-wrapper">
+                <div class="row">
+                    <div class="col-2">
+                        <div class="col-md-3 col-sm-6 col-xs-6 sd380">
+                            <div class="edugate-widget widget">
+                                <div class="title-widget">Über Die Websprinter</div>
+                                <div class="content-widget">
+                                    <p>Wir entwickeln gemeinsam mit dem Kunden in 6 wöchentlichen Sprints profesionelles Webdesign.</p>
+                                    <div class="info-list">
+                                        <ul class="list-unstyled">
+                                            <li>
+                                                <i class="fa fa-envelope"></i><a href="mailto:die-websprinter@nevercodealone.de">die-websprinter@nevercodealone.de</a>
+                                            </li>
+                                            <li>
+                                                <i class="fa fa-phone"></i><a href="#">Tel: 017624747727</a>
+                                            </li>
+                                            <li>
+                                                <i class="fa fa-map-marker"></i>
+                                                <a href="#">
+                                                    <p>Fürstenstraße 10</p>
+                                                    <p>47051 Duisburg</p>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-6 sd380">
+                            <div class="useful-link-widget widget">
+                                <div class="title-widget">Weiterführende Links</div>
+                                <div class="content-widget">
+                                    <div class="useful-link-list">
+                                        <div class="row">
+                                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                                <ul class="list-unstyled">
+                                                    <li>
+                                                        <i class="fa fa-angle-right"></i>
+                                                        <a href="https://www.youtube.com/watch?v=UBv9M5Mjs5U&list=PLKrKzhBjw2Y9gwqEBheEhUMzP5_d0qBPN" target="_blank" rel="nofollow">
+                                                            YouTube Kanal - Die Web Sprinter
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="col-md-3 col-sm-6 col-xs-6 sd380">
+                            <div class="gallery-widget widget">
+                                <div class="title-widget">Kooperation</div>
+                                <div class="content-widget">
+                                    <a href="https://digitallotsen.ruhr/" class="view-more" target="_blank" rel="nofollow">
+                                        Digitallotsen&nbsp;<i class="fa fa-angle-double-right mls"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-6 sd380">
+                            <div class="mailing-widget widget">
+                                <div class="title-widget">Folgen lohnt sich</div>
+                                <div class="content-wiget">
+                                    <p>Kein Crossposting. Jeder Kanal hat spezielle Inhalte für die Zielgruppe.</p>
+                                    <div class="socials">
+                                        <a href="https://www.youtube.com/watch?v=UBv9M5Mjs5U&list=PLKrKzhBjw2Y9gwqEBheEhUMzP5_d0qBPN" class="youtube" target="_blank" rel="nofollow"><i class="fab fa-youtube"></i></a>
+                                        <a href="https://twitter.com/nevercodealone" class="twitter" target="_blank" rel="nofollow"><i class="fab fa-twitter"></i></a>
+                                        <a href="https://www.facebook.com/nevercodealone" class="facebook" target="_blank" rel="nofollow"><i class="fab fa-facebook"></i></a>
+                                        <a href="https://www.instagram.com/nevercodealone/" class="instagram" target="_blank" rel="nofollow"><i class="fab fa-instagram"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hyperlink">
+                    <div class="pull-left hyper-left">
+                        <ul class="list-inline">
+                            <li>
+                                <a href="/de/impressum">Impressum</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="pull-right hyper-right">@ NEVERCODEALONE</div>
+                </div>
+            </div>
+        </div>
+</footer>
+<!-- JAVASCRIPT LIBS-->
+<script src="/edugate/assets/libs/jquery/jquery-2.1.4.min.js"></script>
+<script src="/edugate/assets/libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="/edugate/assets/libs/smooth-scroll/jquery-smoothscroll.js"></script>
+<script src="/edugate/assets/libs/owl-carousel-2.0/owl.carousel.min.js"></script>
+<script src="/edugate/assets/libs/appear/jquery.appear.js"></script>
+<script src="/edugate/assets/libs/count-to/jquery.countTo.js"></script>
+<script src="/edugate/assets/libs/wow-js/wow.min.js"></script>
+<script src="/edugate/assets/libs/selectbox/js/jquery.selectbox-0.2.min.js"></script>
+<script src="/edugate/assets/libs/isotope/isotope.pkgd.min.js"></script>
+<script src="/edugate/assets/libs/fancybox/js/jquery.fancybox.js"></script>
+<script src="/edugate/assets/libs/fancybox/js/jquery.fancybox-buttons.js"></script>
+<script src="/edugate/assets/libs/js-cookie/js.cookie.js"></script>
+<script src="/edugate/assets/js/main.js"></script>
+<!-- LOADING SCRIPTS FOR PAGE-->
+<script src="/edugate/assets/js/pages/homepage.js"></script>
+{% block javascript %}
+{% endblock %}
+{% include 'partial/analytics.html.twig' %}
+</body>
+</html>
