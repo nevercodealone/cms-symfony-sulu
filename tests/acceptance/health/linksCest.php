@@ -12,37 +12,28 @@ class linksCest
         $I->waitForElement('a');
     }
 
-    public function internalLinksWorks(AcceptanceTester $I, Config $helperConfig)
+    public function allInternalLinksFromStartpageWorks(AcceptanceTester $I, Config $helperConfig)
     {
-        $specialLinks = [
-            'tel:+',
-            '//symfony.com',
-            'https://clea',
-            '_profiler',
-            '/#'
+        $specialLinksParts = [
+            '#',
+            '_profiler'
         ];
 
         $url = $helperConfig->getUrlFromConfigWebdriver('url');
-
         $items = $I->grabMultiple('a', 'href');
-        $itemsTargets = $I->grabMultiple('a', 'target');
 
         $internalLinks = [];
 
         foreach ($items as $key => $item) {
-            if($item === null) {
-                continue;
+            foreach ($specialLinksParts as $specialLink) {
+                if(strpos($item, $specialLink) !== false) {
+                    continue 2;
+                }
             }
 
             if(strpos($item, $url) !== false) {
-                foreach ($specialLinks as $specialLink) {
-                    if(strpos($item, $specialLink) !== false) {
-                        continue 2;
-                    }
-                }
-
                 $item = str_replace($url, '', $item);
-                if(!in_array($item, $internalLinks)) {
+                if (!in_array($item, $internalLinks)) {
                     $internalLinks[] = $item;
                 }
             }
