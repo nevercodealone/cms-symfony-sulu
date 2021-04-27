@@ -51,6 +51,7 @@
                             <nav class="nav-collapse pull-right">
                                 <ul class="tz-menu">
                                     {% for item in sulu_navigation_root_tree('main', 2, true) %}
+                                        {% set itemUrl = sulu_content_path(item.url) %}
                                         {% if loop.first %}
                                             <li class="tz-point-static">
                                                 <a href="#">#NCAEvents</a>
@@ -99,7 +100,7 @@
                                             </li>
                                         {% else %}
                                             <li>
-                                                <a href="{{ item.url }}" title="{{ item.title }}">
+                                                <a href="{{ itemUrl }}" title="{{ item.title }}">
                                                     {{ item.excerpt.title|default(item.title) }}
                                                 </a>
                                                 {% if item.children|length > 0 %}
