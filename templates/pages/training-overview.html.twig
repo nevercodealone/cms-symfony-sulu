@@ -156,7 +156,7 @@
                                                 #NCAVideo
                                             </div>
                                             <div class="date-time item">
-                                                {{ video['snippet']['publishedAt']|localizeddate('none', 'none', 'de_DE', null, "cccc, d MMMM Y")  }}
+                                                {{ video['snippet']['publishedAt']|date('D.M.Y', "Europe/Berlin")  }}
                                             </div>
                                         </div>
                                         <div>

@@ -41,7 +41,7 @@
                         <figure class="item {{ eventCarouselItem.date|date('Y') }}">
                             <div class="picture">
                                 <a href="{{ eventCarouselItem.url }}">
-                                    <h3>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} - {{ eventCarouselItem.title }}</h3>
+                                    <h3>{{ eventCarouselItem.date|date('D.M.Y', "Europe/Berlin") }} - {{ eventCarouselItem.title }}</h3>
                                     <img src="{{ eventCarouselItem.excerptImages[0].formats['690x480'] }}" alt="{{ eventCarouselItem.title }}">
                                 </a>
                             </div>
