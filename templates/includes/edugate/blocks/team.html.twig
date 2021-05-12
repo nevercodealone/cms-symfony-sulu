@@ -28,7 +28,7 @@
                                     {% if item.contactDetails.socialMedia is not empty %}
                                         {% for socialMedia in item.contactDetails.socialMedia %}
                                             {% set class = socialMedia.username|split('.')[1] %}
-                                            <a href="{{ socialMedia.id }}" class="{{ class }}"><i class="fab fa-{{ class }}"></i></a>
+                                            <a href="{{ socialMedia.username }}" class="{{ class }}"><i class="fab fa-{{ class }}"></i></a>
                                         {% endfor %}
                                     {% endif %}
                                 </div>
