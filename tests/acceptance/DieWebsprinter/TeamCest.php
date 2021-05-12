@@ -25,4 +25,15 @@ class TeamCest
             $I->assertStringContainsString($domain, $classes[$key]);
         }
     }
+
+    public function imageHasNotEmptyAltTag(AcceptanceTester $I, DieWebsprinter $page)
+    {
+        $imageAltTags = $I->grabMultiple($page::$teamImage, 'alt');
+
+        $I->assertNotEmpty($imageAltTags, 'Social images');
+
+        foreach ($imageAltTags as $imageAltTag) {
+            $I->assertFalse(empty(trim($imageAltTag)), $imageAltTag);
+        }
+    }
 }
