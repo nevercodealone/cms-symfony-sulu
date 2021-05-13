@@ -5,7 +5,7 @@ class socialMediaMarketingCest
 {
     public function _before(AcceptanceTester $I)
     {
-        $I->amOnPage('/employer-branding/');
+        $I->amOnPage('/de/employer-branding/');
         $I->waitForPageLoad();
         $I->scrollTo('#socialmediamarketing');
     }
