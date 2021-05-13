@@ -62,7 +62,7 @@
                                                                 <h3>2020</h3>
                                                                 <ul>
                                                                     {% for eventCarouselItem in content.eventCarouselItems%}
-                                                                        {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
+                                                                        {% set date = eventCarouselItem.date|date('D.M.Y', "Europe/Berlin") %}
                                                                         {% if date(eventCarouselItem.date) > date()  %}
                                                                             <li>
                                                                                 <a href="{{ eventCarouselItem.url }}">
@@ -81,7 +81,7 @@
                                                                     </h3>
                                                                     <ul>
                                                                         {% for eventCarouselItem in content.eventCarouselItems%}
-                                                                            {% set date = eventCarouselItem.date|localizeddate('medium', 'none', "de") %}
+                                                                            {% set date = eventCarouselItem.date|date('D.M.Y', "Europe/Berlin") %}
                                                                             {% if year in date and date(eventCarouselItem.date) < date() %}
                                                                                 <li>
                                                                                     <a href="{{ eventCarouselItem.url }}">

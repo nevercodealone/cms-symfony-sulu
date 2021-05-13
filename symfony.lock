@@ -59,6 +59,9 @@
     "codeception/stub": {
         "version": "3.7.0"
     },
+    "doctrine/deprecations": {
+        "version": "v0.5.3"
+    },
     "justinrainbow/json-schema": {
         "version": "5.2.10"
     },
@@ -194,6 +197,19 @@
         },
         "files": [
             "phpcs.xml.dist"
+        ]
+    },
+    "sulu/form-bundle": {
+        "version": "2.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "master",
+            "version": "2.0",
+            "ref": "7aebdb331ad5398dba88db656d7efbef28a2bb9d"
+        },
+        "files": [
+            "config/packages/sulu_form.yaml",
+            "config/routes/sulu_form_admin.yaml"
         ]
     },
     "symfony/browser-kit": {

@@ -70,7 +70,7 @@
                                 <div class="col-md-12">
                                     <div class="welcome-message">
                                         <h1>{{ content.title }}</h1>
-                                        <p>{{ content.date|localizeddate('long', 'none', "de") }}</p>
+                                        <p>{{ content.date|date('D.M.Y', "Europe/Berlin") }}</p>
                                         <p>{{ content.town }}</p>
                                     </div>
                                     <div class="action-btn">
@@ -186,7 +186,7 @@
                                             <ul class="nav nav-tabs content-tabs" role="tablist">
                                                 <li role="presentation" class="active">
                                                     <a href="#day-1" aria-controls="day-1" role="tab" data-toggle="tab">
-                                                        <i class="fa fa-calendar"></i>{{ content.date|localizeddate('full', 'none', "de") }}
+                                                        <i class="fa fa-calendar"></i>{{ content.date|date('D.M.Y', "Europe/Berlin") }}
                                                     </a>
                                                 </li>
                                             </ul>

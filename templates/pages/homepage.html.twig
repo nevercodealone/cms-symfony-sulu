@@ -80,7 +80,7 @@
                             </div>
                             <div class="tz-content-event-item">
                                 <h6>{{ eventCarouselItem.title }}</h6>
-                                <strong>{{ eventCarouselItem.date|localizeddate('long', 'none', "de") }} @ 9:00 am</strong>
+                                <strong>{{ eventCarouselItem.date|date('D.M.Y', "Europe/Berlin") }} @ 9:00 am</strong>
                                 <img src="/ethic/images/check-01-home1.png" style="display: unset; width: unset" alt="{{ eventCarouselItem.title }}">
                                 <p>
                                     <strong><a href="{{ eventCarouselItem.blogUrl }}" target="_blank" rel="noopener">{{ eventCarouselItem.blogUrlText }}</a></strong>
