@@ -1,4 +1,7 @@
-<?php namespace NCATesting\employerBranding;
+<?php
+
+namespace NCATesting\employerBranding;
+
 use NCATesting\AcceptanceTester;
 
 class socialMediaMarketingCest
