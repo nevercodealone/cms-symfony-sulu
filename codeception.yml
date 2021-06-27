@@ -46,6 +46,7 @@ modules:
             connection_timeout: 5
             request_timeout: 30
             clear_cookies: false
+            restart: false
             capabilities:
                 unexpectedAlertBehaviour: 'ignore'
 params:
