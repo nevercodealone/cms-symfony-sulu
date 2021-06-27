@@ -47,6 +47,7 @@ modules:
             request_timeout: 30
             clear_cookies: false
             restart: false
+            pageload_timeout: 10
             capabilities:
                 unexpectedAlertBehaviour: 'ignore'
 params:
