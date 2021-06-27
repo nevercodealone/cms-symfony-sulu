@@ -48,8 +48,6 @@ modules:
             restart: false
             capabilities:
                 unexpectedAlertBehaviour: 'ignore'
-                chromeOptions:
-                    args: [ "--headless", "--disable-gpu" ]
 params:
     - env
 
