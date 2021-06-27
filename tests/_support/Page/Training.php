@@ -15,5 +15,5 @@ class Training
 
     public static $overviewYTItem = '//*[@data-q="yt-item"]';
 
-    public static $detailURL = '/php-training/codeception';
+    public static $detailURL = '/de/php-training/php-schulung-codeception-softwarequalitaet-im-team';
 }
