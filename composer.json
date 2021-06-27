@@ -26,7 +26,7 @@
         "docs": "http://docs.sulu.io/"
     },
     "require": {
-        "php": "^7.2",
+        "php": "^7.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "api-platform/api-pack": "^1.5",
