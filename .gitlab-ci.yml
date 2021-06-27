@@ -168,7 +168,7 @@ run_tests_acceptance_against_dev_environment:
   image: $TOOLBOX_IMAGE
   script:
     - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
-    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
+    - /var/www/html/vendor/bin/codecept run acceptance --env firefox --html --skip-group db -vvv
   artifacts:
     when: always
     paths:
