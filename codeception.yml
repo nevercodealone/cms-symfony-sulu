@@ -43,9 +43,8 @@ modules:
             url: '%WEBSITE_URL%'
             browser: chrome
             window_size: 1600x1000
-            request_timeout: 30
+            request_timeout: 40
             clear_cookies: false
-            start: true
             restart: false
             capabilities:
                 unexpectedAlertBehaviour: 'ignore'
