@@ -45,6 +45,7 @@ modules:
             window_size: 1600x1000
             request_timeout: 30
             clear_cookies: false
+            start: true
             restart: false
             capabilities:
                 unexpectedAlertBehaviour: 'ignore'
