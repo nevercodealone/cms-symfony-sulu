@@ -12,6 +12,9 @@ class linksCest
         $I->waitForElement('a');
     }
 
+    /**
+     * @group live
+     */
     public function allInternalLinksFromStartpageWorks(AcceptanceTester $I, Config $helperConfig)
     {
         $specialLinksParts = [
