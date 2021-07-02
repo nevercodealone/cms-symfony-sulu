@@ -19,7 +19,8 @@ class linksCest
     {
         $specialLinksParts = [
             '#',
-            '_profiler'
+            '_profiler',
+            'tel'
         ];
 
         $url = $helperConfig->getUrlFromConfigWebdriver('url');
@@ -34,16 +35,16 @@ class linksCest
                 }
             }
 
-            if(strpos($item, $url) !== false) {
-                $item = str_replace($url, '', $item);
+            $item = str_replace($url, '', $item);
+
+            if(!str_contains($item, 'http') && str_contains($item, '/')) {
                 if (!in_array($item, $internalLinks)) {
                     $internalLinks[] = $item;
                 }
             }
         }
 
-        // remove first link to startpage
-        array_shift($internalLinks);
+        $I->assertNotEmpty($internalLinks, 'Internal links are not empty');
 
         foreach($internalLinks as $internalLink) {
             $I->amOnPage($internalLink);
