@@ -1,0 +1,39 @@
+.klaro .cookie-notice:not(.cookie-modal-notice),
+.klaro .cookie-modal .cm-modal.cm-klaro
+{
+    background-color: #59ad2b !important;
+}
+
+.klaro .cookie-modal .cm-btn, .klaro .cookie-notice .cm-btn,
+{
+    background-color: #59ad2b !important;
+}
+
+.klaro .cookie-modal .cm-btn.cm-btn-success,
+.klaro .cookie-notice .cm-btn.cm-btn-success,
+.klaro .cookie-modal .cm-btn.cm-btn-info, .klaro .cookie-notice .cm-btn.cm-btn-info
+{
+    background-color: #59d814 !important;
+    color: #000000 !important;
+}
+
+.klaro .cookie-modal a, .klaro .cookie-notice a,
+.klaro .cookie-modal p,
+.klaro .cookie-modal strong,
+.klaro .cookie-modal h1,
+.klaro .cookie-modal h2,
+.klaro .cookie-modal ul,
+.klaro .cookie-modal li,
+.klaro .cookie-notice p,
+.klaro .cookie-notice strong,
+.klaro .cookie-notice h1,
+.klaro .cookie-notice h2,
+.klaro .cookie-notice ul,
+.klaro .cookie-notice li
+{
+    color: #000000 !important;
+}
+
+.klaro .cookie-modal .cm-btn, .klaro .cookie-notice .cm-btn {
+    background: #e62020;
+}

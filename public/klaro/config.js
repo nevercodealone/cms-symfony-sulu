@@ -170,7 +170,8 @@ var klaroConfig = {
             contextualConsentOnly: true,
             cookies: [
                 /^_pk(.*)?/
-            ]
+            ],
+            required: true
         },
         {
             name: 'facebook',
