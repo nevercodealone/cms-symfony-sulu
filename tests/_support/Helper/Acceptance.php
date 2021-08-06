@@ -10,7 +10,7 @@ class Acceptance extends \Codeception\Module
 {
     public function _before(TestInterface $test)
     {
-        sleep(5);
+        sleep(15);
         parent::_before($test);
     }
 
