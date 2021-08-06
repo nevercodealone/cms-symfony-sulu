@@ -9,6 +9,7 @@ modules:
     enabled:
         - Asserts
         - WebDriver
+        - NCATesting\Helper\Acceptance
 env:
     phantomjs:
         modules:
