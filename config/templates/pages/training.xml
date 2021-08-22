@@ -129,16 +129,6 @@
                         </type>
                     </types>
                 </block>
-                <property name="datesForm" type="single_form_selection">
-                    <meta>
-                        <title lang="de">Formular</title>
-                        <title lang="en">Form</title>
-                    </meta>
-
-                    <params>
-                        <param name="resourceKey" value="page" />
-                    </params>
-                </property>
             </properties>
         </section>
         <section name="trainer">

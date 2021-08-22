@@ -7,7 +7,7 @@
     <key>homepage</key>
 
     <view>pages/homepage</view>
-    <controller>App\Controller\PageController:homepage</controller>
+    <controller>App\Controller\Website\PageController:homepage</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
@@ -81,23 +81,6 @@
                             <param name="donation" value="donation"/>
                             <param name="description" value="description"/>
                         </param>
-                    </params>
-                </property>
-            </properties>
-        </section>
-        <section name="contact">
-            <meta>
-                <title lang="en">Contact</title>
-            </meta>
-            <properties>
-                <property name="form" type="single_form_selection">
-                    <meta>
-                        <title lang="de">Formular</title>
-                        <title lang="en">Form</title>
-                    </meta>
-
-                    <params>
-                        <param name="resourceKey" value="page"/>
                     </params>
                 </property>
             </properties>
