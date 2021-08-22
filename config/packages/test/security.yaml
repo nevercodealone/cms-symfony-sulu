@@ -1,13 +1,11 @@
 security:
     providers:
-        testprovider:
+        sulu:
             id: test_user_provider
 
     firewalls:
         admin:
             http_basic:
-                provider: testprovider
-            json_login:
                 provider: sulu
 
 sulu_test:

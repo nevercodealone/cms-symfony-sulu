@@ -1,4 +1,0 @@
-sulu_form_api:
-    resource: "@SuluFormBundle/Resources/config/routing_api.yml"
-    type: rest
-    prefix: /admin/api

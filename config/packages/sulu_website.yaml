@@ -1,4 +1,5 @@
 sulu_website:
-  twig:
-    attributes:
-      path: false
+    twig:
+        attributes:
+            urls: false
+            path: false

@@ -1,5 +1,5 @@
 <?php
-namespace App\Controller;
+namespace App\Controller\Website;
 
 use App\Service\MeetupService;
 use App\Service\TwitterService;
