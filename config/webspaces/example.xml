@@ -7,8 +7,8 @@
     <key>example</key>
 
     <localizations>
-        <localization language="en"/>
         <localization language="de" default="true" />
+        <localization language="en"/>
     </localizations>
 
     <default-templates>
