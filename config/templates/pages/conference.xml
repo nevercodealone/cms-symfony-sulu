@@ -7,7 +7,7 @@
     <key>conference</key>
 
     <view>pages/conference</view>
-    <controller>App\Controller\PageController:conferencePage</controller>
+    <controller>App\Controller\Website\PageController:conferencePage</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
