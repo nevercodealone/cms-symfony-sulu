@@ -54,7 +54,6 @@ COPY --chown=www-data:www-data . /var/www/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var
-RUN chown www-data:www-data /var/www/html/.env
 RUN /var/www/html/bin/adminconsole assets:install --symlink --relative
 
 ENTRYPOINT ["/entrypoint.sh"]

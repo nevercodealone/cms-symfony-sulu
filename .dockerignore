@@ -1,5 +1,4 @@
 .git
-.env
 vendor
 node_modules
 tests
