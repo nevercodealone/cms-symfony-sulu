@@ -50,7 +50,6 @@ ADD ./deploy/config/msmtprc /etc/msmtprc
 
 # copy needed files from build containers
 COPY --from=composer-web /var/www/html/vendor/ /var/www/html/vendor/
-RUN touch /var/www/html/.env
 COPY --chown=www-data:www-data . /var/www/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
