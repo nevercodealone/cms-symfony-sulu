@@ -6,19 +6,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-        {% block meta %}
-            {% include "@SuluWebsite/Extension/seo.html.twig" with {
-                "seo": extension.seo|default([]),
-                "content": content|default([]),
-                "urls": urls|default([]),
-                "shadowBaseLocale": shadowBaseLocale|default(),
-                "defaultLocale": app.request.locale
-            } %}
-            {% include "meta/meta-facebook.html.twig" %}
-            {% include "meta/meta-twitter.html.twig" %}
-        {% endblock %}
-        <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
-        <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+        {% include "partial/header.html.twig" %}
         <link href="/conference/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
         <link href="/conference/css/owl.carousel.css" rel="stylesheet">
@@ -26,8 +14,23 @@
         <link href="/css/yt.css" rel="stylesheet">
         <link href="/css/style.css" rel="stylesheet">
         <script src="/conference/js/modernizr.min.js"></script>
+        <script defer type="text/javascript" src="/klaro/config.js"></script>
+        <script
+                defer
+                data-config="klaroConfig"
+                type="application/javascript"
+                src="/klaro/klaro.js">
+        </script>
+        <link href="/klaro/klaro.min.css" rel="stylesheet"/>
+        <link href="/klaro/klaro-custom.css" rel="stylesheet"/>
     </head>
     <body>
+        <!-- Google Tag Manager (noscript) -->
+        <noscript>
+            <iframe data-name="google-tag-manager" src="https://www.googletagmanager.com/ns.html?id=GTM-NTBGN2M"
+                    height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        </noscript>
+        <!-- End Google Tag Manager (noscript) -->
         <main>
             <section id="content">
                 {% block content %}
