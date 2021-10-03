@@ -32,3 +32,7 @@ a.color-white {color: #ffffff}
 .best-staff {
     background-image: url("/edugate/assets/images/background-best-stuff.jpg");
 }
+
+.edugate-layout-2 .edugate-content .title {
+    text-transform: unset;
+}
