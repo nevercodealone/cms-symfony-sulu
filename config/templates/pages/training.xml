@@ -16,6 +16,21 @@
 
     <properties>
         <xi:include href="../includes/highlight.xml"/>
+        <section name="speaker">
+            <meta>
+                <title>Speaker</title>
+            </meta>
+            <properties>
+                <property name="speakerHeadline" type="text_line">
+                    <meta>
+                        <title>Headline</title>
+                    </meta>
+                    <params>
+                        <param name="headline" value="true"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
         <property name="youTubeIframe" type="text_line" mandatory="true">
             <meta>
                 <title lang="en">YouTubeIframe</title>
