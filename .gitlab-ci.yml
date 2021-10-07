@@ -186,7 +186,7 @@ run_tests_against_final_prod_environment:
     WEBSITE_URL: https://stage-cms.nevercodealone.de
   script:
     - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
-    - /var/www/html/vendor/bin/codecept run acceptance --html -g live -vvv
+#    - /var/www/html/vendor/bin/codecept run acceptance --html -g live -vvv
   artifacts:
     when: always
     paths:
