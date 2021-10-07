@@ -192,6 +192,13 @@
                                                         <i class="fa fa-calendar"></i>{{ content.date|format_datetime('full', 'none', locale='de') }}
                                                     </a>
                                                 </li>
+                                                {% if content.secondTimeTableItems is defined and content.secondTimeTableItems is not empty %}
+                                                    <li role="presentation">
+                                                        <a href="#day-2" aria-controls="day-2" role="tab" data-toggle="tab">
+                                                            <i class="fa fa-calendar"></i>{{ content.date|date_modify("+1 day")|format_datetime('full', 'none', locale='de') }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
                                             </ul>
                                             <div class="tab-content">
                                                 <div role="tabpanel" class="tab-pane fade in active" id="day-1">
@@ -227,6 +234,41 @@
                                                         {% endfor %}
                                                     </ul>
                                                 </div>
+                                                {% if content.secondTimeTableItems is defined and content.secondTimeTableItems is not empty %}
+                                                    <div role="tabpanel" class="tab-pane fade in active" id="day-2">
+                                                        <ul class="timeline">
+                                                            {% for timeTableItem in content.secondTimeTableItems %}
+                                                                <li class="event">
+                                                                    <div class="row">
+                                                                        {% if timeTableItem.images is not empty %}
+                                                                        {% if timeTableItem.alignRight %}
+                                                                        <div class="col-md-3 col-md-push-9 text-center">
+                                                                            {% else %}
+                                                                            <div class="col-md-3 text-center">
+                                                                                {% endif %}
+                                                                                <img src="{{ timeTableItem.images[0].formats['340x340'] }}" alt="{% if timeTableItem.timetableSpeaker != '' %}{{ timeTableItem.timetableSpeaker }}{% endif %}" data-no-retina>
+                                                                            </div>
+                                                                            {% endif %}
+                                                                            {% if timeTableItem.alignRight %}
+                                                                            <div class="col-md-9 col-md-pull-3">
+                                                                                {% else %}
+                                                                                <div class="col-md-9">
+                                                                                    {% endif %}
+                                                                                    <p>{{ timeTableItem.time|date('H:i') }} Uhr</p>
+                                                                                    <h4>{{ timeTableItem.timetableHeadline }}</h4>
+                                                                                    {% if timeTableItem.timetableDescription != '' %}
+                                                                                        {{ timeTableItem.timetableDescription|raw }}
+                                                                                    {% endif %}
+                                                                                    {% if timeTableItem.timetableSpeaker != '' %}
+                                                                                        <p class="event-speaker">- Mit {{ timeTableItem.timetableSpeaker }}</p>
+                                                                                    {% endif %}
+                                                                                </div>
+                                                                            </div>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </div>

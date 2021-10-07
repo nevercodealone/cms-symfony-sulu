@@ -317,6 +317,53 @@
                         </type>
                     </types>
                 </block>
+                <block name="secondTimeTableItems" default-type="editor_image" minOccurs="0">
+                    <meta>
+                        <title lang="en">Time table</title>
+                    </meta>
+                    <types>
+                        <type name="editor_image">
+                            <meta>
+                                <title lang="en">Time item</title>
+                            </meta>
+                            <properties>
+                                <property name="time" type="time">
+                                    <meta>
+                                        <title lang="en">Time</title>
+                                    </meta>
+                                </property>
+                                <property name="timetableHeadline" type="text_line">
+                                    <meta>
+                                        <title lang="en">Headline</title>
+                                    </meta>
+                                </property>
+                                <property name="images" type="media_selection" colspan="12">
+                                    <meta>
+                                        <title lang="en">Image</title>
+                                    </meta>
+                                    <params>
+                                        <param name="type" value="image"/>
+                                    </params>
+                                </property>
+                                <property name="alignRight" type="checkbox">
+                                    <meta>
+                                        <title lang="en">Align right</title>
+                                    </meta>
+                                </property>
+                                <property name="timetableDescription" type="text_editor" colspan="12">
+                                    <meta>
+                                        <title lang="en">Description</title>
+                                    </meta>
+                                </property>
+                                <property name="timetableSpeaker" type="text_line">
+                                    <meta>
+                                        <title lang="en">Speaker</title>
+                                    </meta>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
             </properties>
         </section>
         <section name="contact">
