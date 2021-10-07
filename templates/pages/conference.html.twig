@@ -73,8 +73,16 @@
                                 <div class="col-md-12">
                                     <div class="welcome-message">
                                         <h1>{{ content.title }}</h1>
-                                        <p>{{ content.date|format_datetime('full', 'none', locale='de') }}</p>
-                                        <p>{{ content.town }}</p>
+                                        {% set dateDisplay = content.date|format_datetime('full', 'none', locale='de') %}
+                                        {% if content.secondTimeTableItems is defined and content.secondTimeTableItems is not empty %}
+                                            {% set dateFirstDay = content.date|date("d.m.Y")|split('.') %}
+                                            {% set dateNextDay = content.date|date_modify("+1 day")|date("d") %}
+                                            {% set dateDisplay = dateFirstDay[0] ~ ' - ' ~ dateNextDay ~ '.' ~ dateFirstDay[1] ~ '.' ~ dateFirstDay[2] %}
+                                        {% endif %}
+                                        <p> {{ dateDisplay }}
+                                            <br>
+                                            {{ content.town }}
+                                        </p>
                                     </div>
                                     <div class="action-btn">
                                         <a href="{{ content.eventLink }}{{ sourceParam }}" target="_blank" class="bttn">

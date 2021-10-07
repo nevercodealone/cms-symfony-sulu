@@ -319,7 +319,7 @@
                 </block>
                 <block name="secondTimeTableItems" default-type="editor_image" minOccurs="0">
                     <meta>
-                        <title lang="en">Time table</title>
+                        <title lang="en">Time table second day</title>
                     </meta>
                     <types>
                         <type name="editor_image">
