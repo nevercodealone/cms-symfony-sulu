@@ -223,6 +223,16 @@
                         <title lang="en">Hours</title>
                     </meta>
                 </property>
+                <property name="donationHeadline" type="text_line">
+                    <meta>
+                        <title>Donation HL</title>
+                    </meta>
+                </property>
+                <property name="donationSubline" type="text_line">
+                    <meta>
+                        <title>Donation SL</title>
+                    </meta>
+                </property>
             </properties>
         </section>
         <section name="overview">
