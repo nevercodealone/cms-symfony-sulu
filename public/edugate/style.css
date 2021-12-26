@@ -33,6 +33,9 @@ a.color-white {color: #ffffff}
     background-image: url("/edugate/assets/images/background-best-stuff.jpg");
 }
 
-.edugate-layout-2 .edugate-content .title {
+.edugate-layout-2 .edugate-content .title,
+.edugate-layout-3 .edugate-content .title,
+.edugate-layout-3.news-gird .edugate-content .title {
     text-transform: unset;
 }
+
