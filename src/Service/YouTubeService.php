@@ -14,15 +14,21 @@ class YouTubeService
     public function getItemsFromChannel($playlistId = 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF')
     {
         $params = [
-            'maxResults' => 20,
+            'maxResults' => 100,
             'playlistId' => $playlistId
         ];
 
         $videoList = $this->playlistItemsListByPlaylistId('snippet', $params);
         $videos = $videoList['items'];
-        $videos = array_slice($videos, 0, 9);
+        usort($videos, function ($a, $b) {
+            $actual = strtotime($a['snippet']['publishedAt']);
+            $next = strtotime($b['snippet']['publishedAt']);
 
-        return $videos;
+            return $actual - $next;
+        });
+        $videos = array_reverse($videos);
+
+        return array_slice($videos, 0, 10);
     }
 
     private function playlistItemsListByPlaylistId($part, $params)
