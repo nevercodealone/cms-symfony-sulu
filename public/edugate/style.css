@@ -39,3 +39,8 @@ a.color-white {color: #ffffff}
     text-transform: unset;
 }
 
+.staff-socials a:hover
+{
+    color: #55acee !important;
+}
+
