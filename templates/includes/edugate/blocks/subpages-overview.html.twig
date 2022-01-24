@@ -1,0 +1,62 @@
+<div class="section section-padding courses">
+    <div class="container">
+        <div class="group-title-index">
+            <h2 class="center-title">{{ content.headline }}</h2>
+            <h4 class="top-title">{{ content.description|raw }}</h4>
+            <!--.bottom-title<i class="bottom-icon icon-a-1-01"></i>--></div>
+        <div class="courses-wrapper"><!-- Nav tabs-->
+            <!-- Tab panes-->
+            <div class="tab-content courses-content">
+                <div role="tabpanel" class="tab-pane fade in active">
+                    <div class="style-show style-grid row">
+                        {% for item in content.items %}
+                            <div class="col-style" data-q="list-item">
+                                <div class="edugate-layout-2">
+                                    <div class="edugate-layout-2-wrapper">
+                                        <div class="edugate-content">
+                                            <a href="{{ item.url }}" class="title" data-q="list-item-title">
+                                                {{ item.title }}
+                                            </a>
+                                            <div class="info">
+                                                <div data-q="list-item-category">
+                                                    <strong>
+                                                        {{ item.date|format_datetime('full', 'none', locale='de') }} {{ item.town }}
+                                                    </strong>
+                                                </div>
+                                                <div class="author item" data-q="list-item-trainer">
+                                                    {{ item.donation }},- Euro Spende<br>
+                                                    {% if item.socialInstitutionLink is defined and item.socialInstitutionLink is not empty %}
+                                                        <a href="{{ item.socialInstitutionLink }}" target="_blank" rel="nofollow">
+                                                            {{ item.socialInstitutionLinkText }}
+                                                        </a>
+                                                    {% else %}
+                                                        &nbsp;<br>&nbsp;
+                                                    {% endif %}
+                                                    <br>
+                                                    {% if item.blogLink is defined and item.blogLink is not empty %}
+                                                        <a href="{{ item.blogLink }}">
+                                                            {{ item.blogLinkText }}
+                                                        </a>
+                                                    {% else %}
+                                                        &nbsp;
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="description" data-q="list-item-description">
+                                                {{ item.excerptDescription|raw }}
+                                            </div>
+                                            <a href="{{ item.url }}" class="btn btn-green" data-q="list-item-url"><span>Zum Kurs</span></a>
+                                        </div>
+                                        <div class="edugate-image">
+                                            <img src="{{ item.image[0].formats['400x300'] }}" alt="{{ item.title }} - {{ item.seoDescription }}" title="{{ item.title }} - {{ item.seoDescription }}" class="img-responsive" data-q="list-item-img"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
