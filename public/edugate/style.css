@@ -44,3 +44,6 @@ a.color-white {color: #ffffff}
     color: #55acee !important;
 }
 
+.info .item {
+    text-transform: none;
+}

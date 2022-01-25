@@ -1,0 +1,68 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="subpages-overview">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+
+        <types>
+            <type name="subpages-overview">
+                <meta>
+                    <title lang="en">Subpages overview</title>
+                    <title lang="de">Unterseiten Übersicht</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <property name="description" type="text_editor">
+                        <meta>
+                            <title>Description</title>
+                        </meta>
+
+                        <params>
+                            <param name="table" value="false"/>
+                            <param name="link" value="true"/>
+                            <!-- CKEditor Parameters examples: -->
+                            <param name="extra_allowed_content"
+                                   value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                            <param name="ui_color" value="#ffcc00"/>
+                        </params>
+                    </property>
+                    <property name="items" type="smart_content">
+                        <meta>
+                            <title lang="en">Items</title>
+                        </meta>
+                        <params>
+                            <param name="provider" value="pages"/>
+                            <param name="max_per_page" value="50"/>
+                            <param name="page_parameter" value="p"/>
+                            <param name="properties" type="collection">
+                                <param name="image" value="excerpt.images"/>
+                                <param name="article" value="article"/>
+                                <param name="url" value="url"/>
+                                <param name="excerptTitle" value="excerpt.title"/>
+                                <param name="excerptTags" value="excerpt.tags"/>
+                                <param name="excerptImages" value="excerpt.images"/>
+                                <param name="excerptDescription" value="excerpt.description"/>
+                                <param name="seoDescription" value="seo.description"/>
+                                <param name="blogLink" value="blogLink"/>
+                                <param name="blogLinkText" value="blogLinkText"/>
+                                <param name="socialInstitutionLink" value="socialInstitutionLink"/>
+                                <param name="socialInstitutionLinkText" value="socialInstitutionLinkText"/>
+                                <param name="date" value="date"/>
+                                <param name="town" value="town"/>
+                                <param name="donation" value="donation"/>
+                                <param name="description" value="description"/>
+                            </param>
+                        </params>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
