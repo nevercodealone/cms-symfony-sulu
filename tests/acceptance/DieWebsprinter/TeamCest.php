@@ -21,7 +21,9 @@ class TeamCest
         $I->assertNotEmpty($hrefs, 'Social item links');
 
         foreach ($hrefs as $key => $href) {
-            $domain = explode('.', parse_url($href)['host'])[1];
+            // Twitter has no www
+            $part = strpos($href, 'www.') !== false ? 1 : 0;
+            $domain = explode('.', parse_url($href)['host'])[$part];
             $I->assertStringContainsString($domain, $classes[$key]);
         }
     }
