@@ -44,6 +44,9 @@ a.color-white {color: #ffffff}
     color: #55acee !important;
 }
 
-.info .item {
+.info .item,
+.group-title-index .center-title,
+.courses .top-title
+{
     text-transform: none;
 }
