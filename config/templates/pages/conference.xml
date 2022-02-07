@@ -80,6 +80,12 @@
                         <title lang="en">Donation</title>
                     </meta>
                 </property>
+                <property name="donationPerTicket" type="text_line">
+                    <meta>
+                        <title>per Ticket</title>
+                    </meta>
+                </property>
+
                 <property name="optionalPrice" type="text_line" colspan="4">
                     <meta>
                         <title lang="en">Optional Price</title>
@@ -90,7 +96,6 @@
                         <title lang="en">Optional button text</title>
                     </meta>
                 </property>
-
                 <property name="description" type="text_area">
                     <meta>
                         <title lang="en">Description</title>
@@ -496,6 +501,16 @@
                 <property name="priceBodytext" type="text_area">
                     <meta>
                         <title lang="en">Bodytext</title>
+                    </meta>
+                </property>
+                <property name="priceGreenHeadline" type="text_line">
+                    <meta>
+                        <title>Grüne Headline</title>
+                    </meta>
+                </property>
+                <property name="priceGreenSubline" type="text_line">
+                    <meta>
+                        <title>Grüne Subline</title>
                     </meta>
                 </property>
                 <block name="priceFeature" default-type="featureItem" minOccurs="0">
