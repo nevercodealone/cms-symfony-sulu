@@ -22,19 +22,10 @@
                 <title lang="en">Header</title>
             </meta>
             <properties>
-                <property name="tracking" type="text_editor">
+                <property name="tracking" type="text_area">
                     <meta>
-                        <title>Tracking</title>
+                        <title lang="en">Tracking</title>
                     </meta>
-
-                    <params>
-                        <param name="table" value="false"/>
-                        <param name="link" value="true"/>
-                        <!-- CKEditor Parameters examples: -->
-                        <param name="extra_allowed_content"
-                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
-                        <param name="ui_color" value="#ffcc00"/>
-                    </params>
                 </property>
                 <property name="sponsorLogo" type="media_selection" maxOccurs="1">
                     <meta>
