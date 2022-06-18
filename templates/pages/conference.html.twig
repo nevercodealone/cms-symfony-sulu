@@ -24,6 +24,9 @@
         </script>
         <link href="/klaro/klaro.min.css" rel="stylesheet"/>
         <link href="/klaro/klaro-custom.css" rel="stylesheet"/>
+        {% if content.tracking is defined and content.tracking is not empty %}
+            {{ content.tracking|raw }}
+        {% endif %}
     </head>
     <body>
         <!-- Google Tag Manager (noscript) -->
