@@ -6,6 +6,12 @@ a.color-white {color: #ffffff}
 .star-rating {width: 80px}
 .star-rating:before {content: ''}
 
+hr {
+    border-top: 1px solid #86bc42;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
 .video-container {
     position: relative;
     padding-bottom: 56.25%;
@@ -49,4 +55,18 @@ a.color-white {color: #ffffff}
 .courses .top-title
 {
     text-transform: none;
+}
+
+.course-price-widget .title-widget p:before,
+.course-price-widget .title-widget p::before
+{
+    content: none;
+}
+
+.course-price-widget-wrapper {
+    text-align: unset;
+}
+
+.text-center {
+    text-align: center;
 }

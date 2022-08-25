@@ -7,7 +7,7 @@
         <types>
             <type name="hl-des">
                 <meta>
-                    <title>Headline Description</title>
+                    <title>Überschrift und Beschreibung</title>
                 </meta>
                 <properties>
                     <property name="headline" type="text_line">
