@@ -70,3 +70,7 @@ hr {
 .text-center {
     text-align: center;
 }
+
+ul.list-detail li:hover {
+    color: #86bc42;
+}
