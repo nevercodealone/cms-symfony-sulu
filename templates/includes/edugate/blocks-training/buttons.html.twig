@@ -1,0 +1,13 @@
+<div class="text-center">
+    <a href="{{ paymenturl }}" class="btn btn-green color-white">
+        {% set buttonText = content.buttonText != '' ? content.buttonText : "Anmelden" %}
+        <span>{{ buttonText }}</span>
+    </a>
+    {% if content.pdfTarget[0].url is defined and content.pdfTarget[0].url is not empty %}
+        <a href="{{ content.pdfTarget[0].url }}" class="btn btn-red color-white">
+            {% set downloadText = content.downloadText != '' ? content.downloadText : "PDF Download" %}
+            <span>{{ downloadText }}</span>
+        </a>
+    {% endif %}
+</div>
+

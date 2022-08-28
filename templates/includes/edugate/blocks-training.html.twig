@@ -1,7 +1,11 @@
 {% if content.blocks|default([])|length %}
+    {% set paymenturl = content.paymenturl %}
+    {% set date = content.date %}
     {% for block in content.blocks %}
         {% include 'includes/edugate/blocks-training/' ~ block.type ~ '.html.twig' with {
             content: block,
+            paymenturl: paymenturl,
+            date: date,
             view: view.blocks[loop.index0],
         } only %}
     {% endfor %}
