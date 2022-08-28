@@ -1,0 +1,40 @@
+<div class="course-syllabus">
+    <div class="course-syllabus-title underline">{{ content.headline }}</div>
+    <div class="course-table">
+        <div class="outer-container">
+            <div class="inner-container">
+                <div class="table-header">
+                    <table class="edu-table-responsive">
+                        <thead>
+                        <tr class="heading-table">
+                            <th class="col-1">Inhalt</th>
+                            <th class="col-4">Art</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="table-body">
+                    <table class="edu-table-responsive table-hover">
+                        <tbody>
+                        {% if content.dayOneHeadline != '' and content.dayOneItems is not empty %}
+                            {% include "includes/edugate/table.html.twig" with {
+                                "day": 1,
+                                "headline": content.dayOneHeadline,
+                                "items": content.dayOneItems
+                            } %}
+                        {% endif %}
+
+                        {% if content.dayTwoHeadline != '' and content.dayTwoItems is not empty %}
+                            {% include "includes/edugate/table.html.twig" with {
+                                "day": 2,
+                                "headline": content.dayTwoHeadline,
+                                "items": content.dayTwoItems
+                            } %}
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

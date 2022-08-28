@@ -1,0 +1,127 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="schedule">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+        <types>
+            <type name="schedule">
+                <meta>
+                    <title>Ablauf</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <section name="dayOne">
+                        <meta>
+                            <title lang="en">Day 1</title>
+                        </meta>
+                        <properties>
+                            <property name="dayOneHeadline" type="text_line">
+                                <meta>
+                                    <title lang="en">Headline</title>
+                                </meta>
+                            </property>
+                            <block name="dayOneItems" default-type="dayOneItems" minOccurs="0">
+                                <meta>
+                                    <title lang="en">Schedule</title>
+                                </meta>
+                                <types>
+                                    <type name="dayOneItems">
+                                        <meta>
+                                            <title lang="en">Items</title>
+                                        </meta>
+                                        <properties>
+                                            <property name="title" type="text_line" colspan="6">
+                                                <meta>
+                                                    <title lang="en">Title</title>
+                                                </meta>
+                                            </property>
+                                            <property name="status" type="single_select" colspan="6">
+                                                <meta>
+                                                    <title lang="en">Status</title>
+                                                </meta>
+                                                <params>
+                                                    <param name="default_value" value="theory"/>
+                                                    <param name="values" type="collection">
+                                                        <param name="theory">
+                                                            <meta>
+                                                                <title lang="en">Theory</title>
+                                                            </meta>
+                                                        </param>
+                                                        <param name="team">
+                                                            <meta>
+                                                                <title lang="en">Team</title>
+                                                            </meta>
+                                                        </param>
+                                                    </param>
+                                                </params>
+                                            </property>
+                                        </properties>
+                                    </type>
+                                </types>
+                            </block>
+                        </properties>
+                    </section>
+                    <section name="dayTwo">
+                        <meta>
+                            <title lang="en">Day 2</title>
+                        </meta>
+                        <properties>
+                            <property name="dayTwoHeadline" type="text_line">
+                                <meta>
+                                    <title lang="en">Headline</title>
+                                </meta>
+                            </property>
+                            <block name="dayTwoItems" default-type="dayTwoItems" minOccurs="0">
+                                <meta>
+                                    <title lang="en">Schedule</title>
+                                </meta>
+                                <types>
+                                    <type name="dayTwoItems">
+                                        <meta>
+                                            <title lang="en">Items</title>
+                                        </meta>
+                                        <properties>
+                                            <property name="title" type="text_line" colspan="6">
+                                                <meta>
+                                                    <title lang="en">Title</title>
+                                                </meta>
+                                            </property>
+                                            <property name="status" type="single_select" colspan="6">
+                                                <meta>
+                                                    <title lang="en">Status</title>
+                                                </meta>
+                                                <params>
+                                                    <param name="default_value" value="theory"/>
+                                                    <param name="values" type="collection">
+                                                        <param name="theory">
+                                                            <meta>
+                                                                <title lang="en">Theory</title>
+                                                            </meta>
+                                                        </param>
+                                                        <param name="team">
+                                                            <meta>
+                                                                <title lang="en">Team</title>
+                                                            </meta>
+                                                        </param>
+                                                    </param>
+                                                </params>
+                                            </property>
+                                        </properties>
+                                    </type>
+                                </types>
+                            </block>
+                        </properties>
+                    </section>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
