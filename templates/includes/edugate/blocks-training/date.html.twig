@@ -1,0 +1,11 @@
+<!-- HL DES LIST START -->
+{% set date = content.date != '' ? content.date : date %}
+<div class="section section-padding choose-course">
+    <div class="container">
+        {% if content.headline != '' %}
+            <div class="course-syllabus-title underline">{{ content.headline }}</div>
+        {% endif %}
+        {{ date|raw }}
+    </div>
+</div>
+<!-- HL DES LIST STOP -->
