@@ -12,6 +12,9 @@ hr {
     margin-bottom: 10px;
 }
 
+.margin-bottom {margin-bottom: 30px}
+
+
 .video-container {
     position: relative;
     padding-bottom: 56.25%;
@@ -77,4 +80,54 @@ ul.list-detail li:hover {
 
 .btn.btn-red {
     background-color: #ff0000;
+}
+
+.staff-item {
+    background-color: #86bc42
+}
+
+.staff-item .staff-info .staff-avatar img {
+    max-width: 90px;
+    margin-bottom: 10px
+}
+
+.staff-item .staff-info .staff-name {
+    color: #fff;
+    font-weight: bold
+}
+
+.staff-item .staff-info .staff-job {
+    color: #fff;
+    margin-bottom: 10px
+}
+
+.staff-item .staff-info .staff-desctiption {
+    display: block
+}
+
+.staff-item .staff-socials a {
+    color: #a4abaf;
+    background-color: #fff
+}
+
+.staff-item .staff-socials a.facebook {
+    color: #3b5998
+}
+
+.staff-item .staff-socials a.google {
+    color: #dc4e41
+}
+
+.staff-item .staff-socials a.twitter {
+    color: #55acee
+}
+
+.staff-item {
+    right: 0px
+}
+
+.staff-item .staff-desctiption {
+    color: #fff;
+    height: 50px;
+
 }
