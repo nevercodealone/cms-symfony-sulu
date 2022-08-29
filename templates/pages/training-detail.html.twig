@@ -75,9 +75,12 @@
                                             </div>
                                             <div class="staff-socials">
                                                 {% for socialMedia in trainer.contactDetails.socialMedia %}
-                                                    {% set style = socialMedia.socialMediaType == 1 ? 'facebook' : 'twitter' %}
-                                                    <a href="{{ socialMedia.username }}" class="{{ style }}" rel="nofollow">
-                                                        <i class="fab fa-{{ style }}"></i>
+                                                    {% set class = socialMedia.username|split('.')[1] %}
+                                                    {% if 'twitter' in socialMedia.username  %}
+                                                        {% set class = 'twitter' %}
+                                                    {% endif %}
+                                                    <a href="{{ socialMedia.username }}" class="{{ class }}" rel="nofollow">
+                                                        <i class="fab fa-{{ class }}"></i>
                                                     </a>
                                                 {% endfor %}
                                             </div>
