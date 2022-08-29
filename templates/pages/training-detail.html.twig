@@ -49,6 +49,42 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="author-widget widget col-sm-6 col-md-12 col-xs-6 sd380">
+                                {% set speakerHeadline = "Webdevelopment Trainer" %}
+                                {% if content.speakerHeadline is defined and content.speakerHeadline is not empty %}
+                                    {% set speakerHeadline = content.speakerHeadline %}
+                                {% endif %}
+                                <div class="title-widget">{{ speakerHeadline }}</div>
+                                <div class="content-widget">
+                                    {% for trainer in content.trainerItems %}
+                                        <div class="staff-item author-widget-wrapper customize">
+                                            <div class="staff-item-wrapper">
+                                                <div class="staff-info">
+                                                    <a href="#" class="staff-avatar">
+                                                        <img src="{{ trainer.avatar.thumbnails['400x400'] }}" alt="{{ trainer.fullName }}" class="img-responsive"/>
+                                                    </a>
+                                                    <a href="#" class="staff-name">
+                                                        {{ trainer.fullName }}
+                                                    </a>
+
+                                                    <div class="staff-job">{{ trainer.salutation }}</div>
+                                                    <div class="staff-desctiption">
+                                                        {{ trainer.note }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="staff-socials">
+                                                {% for socialMedia in trainer.contactDetails.socialMedia %}
+                                                    {% set style = socialMedia.socialMediaType == 1 ? 'facebook' : 'twitter' %}
+                                                    <a href="{{ socialMedia.username }}" class="{{ style }}" rel="nofollow">
+                                                        <i class="fab fa-{{ style }}"></i>
+                                                    </a>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                             <div class="clearfix"></div>
                         </div>
                     </div>

@@ -40,6 +40,11 @@
                         <param name="ui_color" value="#ffcc00"/>
                     </params>
                 </property>
+                <property name="trainerItems" type="contact_account_selection">
+                    <meta>
+                        <title>Trainer</title>
+                    </meta>
+                </property>
             </properties>
         </section>
         <section name="facts">
