@@ -1,0 +1,19 @@
+<div class="section section-padding gallery-page gallery-4column">
+    <div class="container">
+        <div class="course-syllabus-title underline">{{ content.headline }}</div>
+        <div class="grid">
+            {% if content.image is not empty %}
+                {% for item in content.image %}
+                    {% set source = item.formats['gallery'] %}
+                    <div class="grid-item">
+                        <span class="content">
+                            <span class="content-title">{{ item.title }}</span>
+                        </span>
+                        <img src="{{ source }}" alt="{{ item.title }}"/>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+    </div>
+</div>
