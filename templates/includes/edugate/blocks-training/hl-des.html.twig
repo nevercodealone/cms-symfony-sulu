@@ -1,0 +1,6 @@
+{% if content.headline is not empty %}
+    <div class="course-des-title underline">{{ content.headline }}</div>
+{% endif %}
+{% if content.description is not empty %}
+    <div class="course-des-content">{{ content.description|raw }}</div>
+{% endif %}

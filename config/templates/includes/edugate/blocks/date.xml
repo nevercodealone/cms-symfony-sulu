@@ -1,0 +1,39 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="date">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+        <types>
+            <type name="date">
+                <meta>
+                    <title>Datum</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <property name="date" type="text_editor">
+                        <meta>
+                            <title>Datum</title>
+                        </meta>
+
+                        <params>
+                            <param name="table" value="false"/>
+                            <param name="link" value="true"/>
+                            <!-- CKEditor Parameters examples: -->
+                            <param name="extra_allowed_content"
+                                   value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                            <param name="ui_color" value="#ffcc00"/>
+                        </params>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

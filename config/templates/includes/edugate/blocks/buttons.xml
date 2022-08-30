@@ -1,0 +1,35 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="buttons">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+        <types>
+            <type name="buttons">
+                <meta>
+                    <title>Buttons</title>
+                </meta>
+                <properties>
+                    <property name="buttonText" type="text_line">
+                        <meta>
+                            <title>Button Text</title>
+                        </meta>
+                    </property>
+                    <property name="pdfTarget" type="media_selection" maxOccurs="1">
+                        <meta>
+                            <title>PDF</title>
+                        </meta>
+                        <params>
+                            <param name="types" value="document"/>
+                        </params>
+                    </property>
+                    <property name="downloadText" type="text_line" colspan="6">
+                        <meta>
+                            <title>Download Text</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

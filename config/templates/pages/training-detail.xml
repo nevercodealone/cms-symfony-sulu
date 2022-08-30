@@ -1,0 +1,113 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+    <key>training-detail</key>
+
+    <view>pages/training-detail</view>
+    <controller>Sulu\Bundle\WebsiteBundle\Controller\DefaultController::indexAction</controller>
+    <cacheLifetime>604800</cacheLifetime>
+
+    <meta>
+        <title>Training Detail</title>
+    </meta>
+
+    <properties>
+        <xi:include href="../includes/highlight.xml"/>
+        <section name="basedata">
+            <meta>
+                <title>Basis Daten</title>
+            </meta>
+            <properties>
+                <property name="paymenturl" type="url">
+                    <meta>
+                        <title>Payment URL</title>
+                    </meta>
+                </property>
+                <property name="date" type="text_editor">
+                    <meta>
+                        <title>Datum</title>
+                    </meta>
+
+                    <params>
+                        <param name="table" value="false"/>
+                        <param name="link" value="true"/>
+                        <!-- CKEditor Parameters examples: -->
+                        <param name="extra_allowed_content"
+                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                        <param name="ui_color" value="#ffcc00"/>
+                    </params>
+                </property>
+                <property name="trainerItems" type="contact_account_selection">
+                    <meta>
+                        <title>Trainer</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+        <section name="facts">
+            <meta>
+                <title>Fakten</title>
+            </meta>
+            <properties>
+                <block name="factItems" default-type="factItems" minOccurs="0">
+                    <meta>
+                        <title>Items</title>
+                    </meta>
+                    <types>
+                        <type name="factItems">
+                            <meta>
+                                <title>Item</title>
+                            </meta>
+                            <properties>
+                                <property name="headline" type="text_line">
+                                    <meta>
+                                        <title>Überschrift</title>
+                                    </meta>
+                                    <params>
+                                        <param name="headline" value="true"/>
+                                    </params>
+                                </property>
+                                <property name="description" type="text_editor">
+                                    <meta>
+                                        <title>Beschreibung</title>
+                                    </meta>
+
+                                    <params>
+                                        <param name="table" value="false"/>
+                                        <param name="link" value="true"/>
+                                        <!-- CKEditor Parameters examples: -->
+                                        <param name="extra_allowed_content"
+                                               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                                        <param name="ui_color" value="#ffcc00"/>
+                                    </params>
+                                </property>
+                            </properties>
+                        </type>
+                    </types>
+                </block>
+            </properties>
+        </section>
+        <section name="content">
+            <meta>
+                <title>Inhalte</title>
+            </meta>
+            <properties>
+                <block name="blocks" default-type="hl-des" minOccurs="0">
+                    <meta>
+                        <title lang="en">Content</title>
+                        <title lang="de">Inhalte</title>
+                    </meta>
+                    <types>
+                        <!-- @see https://docs.sulu.io/en/2.1/book/templates.html#including-other-templates -->
+                        <xi:include href="../includes/edugate/blocks-training-detail.xml"
+                                    xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/*)"/>
+                    </types>
+                </block>
+            </properties>
+        </section>
+
+    </properties>
+</template>

@@ -59,6 +59,12 @@
         </meta>
         <scale x="350" y="450"/>
     </format>
+    <format key="gallery">
+        <meta>
+            <title lang="en">Edugate Gallery</title>
+        </meta>
+        <scale x="370" y="250"/>
+    </format>
     <format key="400x300">
         <meta>
             <title lang="en">Courses overview</title>
