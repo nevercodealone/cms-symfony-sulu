@@ -9,7 +9,9 @@
                         <span class="content">
                             <span class="content-title">{{ item.title }}</span>
                         </span>
-                        <img src="{{ source }}" alt="{{ item.title }}"/>
+                        <a class="fancy" href="{{ item.formats['720x500'] }}">
+                            <img src="{{ source }}" alt="{{ item.title }}"/>
+                        </a>
                     </div>
                 {% endfor %}
             {% endif %}
