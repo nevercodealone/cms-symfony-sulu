@@ -1,0 +1,54 @@
+<div class="section gallery-page gallery-3column">
+    <div class="container">
+        <div class="group-title-index">
+            <h4 class="top-title">{{ content.headline }}</h4>
+            <h2>{{ content.subline }}</h2>
+            <div class="bottom-title">
+                <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X" target="_blank" rel="nofollow">
+                    <i class="fab fa-youtube" style="font-size: 40px"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-12">
+            <div class="row news-page-wrapper">
+                {% set videoList = youtube(content.playlistid) %}
+                {% for video in videoList %}
+                    {% if video['snippet']['thumbnails']['medium']['url'] is defined and video['snippet']['thumbnails']['medium']['url'] is not empty %}
+                        {% set url = 'https://www.youtube.com/watch?v=%s'|format(video.snippet.resourceId.videoId) %}
+                        <div class="col-sm-4" data-q="yt-item">
+                            <div class="edugate-layout-3 news-gird">
+                                <div class="edugate-layout-3-wrapper">
+                                    <a href="{{ url }}" class="edugate-image" title="{{ video['snippet']['title'] }}" target="_blank">
+                                        <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}" alt="{{ video['snippet']['title'] }}" class="img-responsive"/>
+                                    </a>
+                                    <div class="edugate-content">
+                                        <a href="{{ url }}" class="title" target="_blank" title="{{ video['snippet']['title'] }}">
+                                            {{ video['snippet']['title'] }}
+                                        </a>
+
+                                        <div class="info">
+                                            <div class="author item">
+                                                #NCAVideo
+                                            </div>
+                                            <div class="date-time item">
+                                                {{ video['snippet']['publishedAt']|date('D.M.Y', "Europe/Berlin")  }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>Review PHP-Schulung</strong>
+                                        </div>
+                                        <div class="description">
+                                            {{ video['snippet']['description'] }}
+                                        </div>
+                                        <a href="{{ url }}" title="{{ video['snippet']['title'] }}" class="btn btn-green"><span>YouTube</span></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

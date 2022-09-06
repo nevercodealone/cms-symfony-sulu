@@ -1,11 +1,13 @@
+body {color: #0b0b0b}
 header .header-main .logo .header-logo img {max-width: 150px}
 .course-price-widget .title-widget p:before {content: '€';}
 .course-price-widget-wrapper .length:after {content: 'Stunden'}
 blockquote:before, .star-rating span:before, .star-rating:before, .page-title .breadcrumb li + li:before {font-family: "Font Awesome 5 Free"; font-weight: 900}
+blockquote .sub-quote {color: unset;}
 a.color-white {color: #ffffff}
 .star-rating {width: 80px}
 .star-rating:before {content: ''}
-
+p {font-size: 15px}
 hr {
     border-top: 1px solid #86bc42;
     margin-top: 10px;
@@ -74,7 +76,9 @@ hr {
     text-align: center;
 }
 
-ul.list-detail li:hover {
+ul.list-detail li:hover,
+.hover-green:hover
+{
     color: #86bc42;
 }
 
@@ -122,6 +126,14 @@ ul.list-detail li:hover {
     color: #55acee
 }
 
+.staff-item .staff-socials a.linkedin {
+    color: #0a66c2
+}
+
+.staff-item .staff-socials a.xing {
+    color: #0698a0
+}
+
 .staff-item {
     right: 0px
 }
@@ -130,4 +142,14 @@ ul.list-detail li:hover {
     color: #fff;
     height: 50px;
 
+}
+
+.course-price-widget-wrapper .title {
+    color: #242c42;
+    font-size: 17px;
+}
+
+.course-price-widget-wrapper {
+    color: #242c42;
+    font-size: 15px;
 }
