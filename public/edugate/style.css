@@ -146,7 +146,8 @@ ul.list-detail li:hover,
 
 .course-price-widget-wrapper .title {
     color: #242c42;
-    font-size: 17px;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 .course-price-widget-wrapper {
