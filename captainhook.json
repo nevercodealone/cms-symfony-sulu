@@ -32,6 +32,11 @@
                 "conditions": []
             },
             {
+                "action": "vendor/bin/rector process src --dry-run --debug",
+                "options": [],
+                "conditions": []
+            },
+            {
                 "action": "vendor/bin/xmllint config -v",
                 "options": [],
                 "conditions": []

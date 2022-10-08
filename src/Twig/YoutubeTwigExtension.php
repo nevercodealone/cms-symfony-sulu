@@ -14,10 +14,7 @@ use Twig\TwigFunction;
  */
 class YoutubeTwigExtension extends AbstractExtension
 {
-    /**
-     * @var YouTubeService
-     */
-    private $youTubeService;
+    private \App\Service\YouTubeService $youTubeService;
 
     public function __construct(YouTubeService $youTubeService)
     {

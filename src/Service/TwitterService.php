@@ -6,15 +6,13 @@ use DG\Twitter\Twitter;
 
 class TwitterService
 {
-    /** @var Twitter */
-    private $twitter;
+    private \DG\Twitter\Twitter $twitter;
 
-    public $testify;
+    public $testify = 'testify';
 
     public function __construct(Twitter $twitter)
     {
         $this->twitter = $twitter;
-        $this->testify = 'testify';
     }
 
     public function statusesShowId($id)

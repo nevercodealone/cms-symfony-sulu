@@ -115,7 +115,7 @@ class SpamProtection
     {
         $string = strtolower($string);
         foreach ($this->spamWords as $spamWord) {
-            if (strpos($string, $spamWord) !== false) {
+            if (strpos($string, (string) $spamWord) !== false) {
                 return true;
             }
         }

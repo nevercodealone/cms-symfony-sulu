@@ -93,7 +93,7 @@ class PageController extends WebsiteController
     ) {
 
         $klaroCookie = $request->cookies->get('klaro');
-        $klaroItems = json_decode($klaroCookie, true);
+        $klaroItems = json_decode($klaroCookie, true, 512, JSON_THROW_ON_ERROR);
 
         return $this->renderStructure(
             $structure,
