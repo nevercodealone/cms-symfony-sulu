@@ -15,6 +15,7 @@ class SpamProtection
         'script',
         'href'
     ];
+
     public function validateUserInputs(array $data)
     {
         // Validate name
