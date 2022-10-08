@@ -87,20 +87,15 @@ class PageController extends WebsiteController
         StructureInterface $structure,
         WordpressService $wordpressService,
         MeetupService $meetupService,
-        Request $request,
         $preview = false,
         $partial = false
     ) {
-
-        $klaroCookie = $request->cookies->get('klaro');
-        $klaroItems = json_decode($klaroCookie, true);
 
         return $this->renderStructure(
             $structure,
             [
                 'blogList' => $wordpressService->getItemsFromBlog(),
-                'meetupNextEvents' => $meetupService->getNextEvents(),
-                'klaroItems' => $klaroItems
+                'meetupNextEvents' => $meetupService->getNextEvents()
             ],
             $preview,
             $partial

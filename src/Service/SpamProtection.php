@@ -15,6 +15,7 @@ class SpamProtection
         'script',
         'href'
     ];
+
     public function validateUserInputs(array $data)
     {
         // Validate name
@@ -55,7 +56,11 @@ class SpamProtection
 
     protected function validateIp(string $ip)
     {
-        if (strpos($ip, '127.0.0.1') !== false || strpos($ip, 'localhost') !== false) {
+        if (strpos($ip, '127.0.0.1') !== false) {
+            return true;
+        }
+
+        if (strpos($ip, 'localhost') !== false) {
             return true;
         }
 
@@ -115,7 +120,7 @@ class SpamProtection
     {
         $string = strtolower($string);
         foreach ($this->spamWords as $spamWord) {
-            if (strpos($string, $spamWord) !== false) {
+            if (strpos($string, (string) $spamWord) !== false) {
                 return true;
             }
         }

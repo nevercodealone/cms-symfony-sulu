@@ -15,7 +15,7 @@ class WordpressService
 
         $response = Request::get('https://blog.nevercodealone.de/wp-json/wp/v2/posts', $headers, $query);
 
-        $body = json_decode($response->raw_body, true);
+        $body = json_decode($response->raw_body, true, 512, JSON_THROW_ON_ERROR);
 
         return $body;
     }
