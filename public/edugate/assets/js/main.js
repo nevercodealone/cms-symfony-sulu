@@ -213,7 +213,7 @@
 
         var setTheme = function (color) {
             $('#color-skins').attr('href', 'assets/css/'+ color + '.css');
-            $('.logo .header-logo img').attr('src', 'assets/images/logo-' + color + '.png');    
+            $('.logo .header-logo img').attr('src', 'assets/images/logo-' + color + '.png');
             setTimeout(function(){
                 $('.theme-loading').hide();
             }, 1000);
@@ -511,5 +511,7 @@
     $(window).resize(function() {
         shw_set_height_width();
     });
+
+    $("a.fancy").fancybox();
 
 })(jQuery);

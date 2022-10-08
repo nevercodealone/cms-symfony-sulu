@@ -1,15 +1,14 @@
+<!-- table.html.twig -->
 <tr class="heading-content">
-    <td colspan="4" class="left heading-content">{{ day }}. {{ headline }}</td>
+    <td colspan="4" class="left heading-content">{{ headline }}</td>
 </tr>
 {% for item in items %}
     <tr class="table-row">
         <td class="left col-1">
-            <a href="#">
-                <i class="bg-green mr25 fa fa-caret-right"></i>
-                <span>
-                    {{ day }}.{{ loop.index }} {{ item.title }}
-                </span>
-            </a>
+            <i class="bg-green mr25 fa fa-caret-right"></i>
+            <span class="hover-green">
+                {{ item.title }}
+            </span>
         </td>
         <td class="green-color col-4">
             {% set faIconClass = item.status == 'team' ? 'w27 fa fa-users' : 'fas fa-chalkboard-teacher' %}
@@ -24,3 +23,4 @@
 <tr class="spacing-table">
     <td colspan="4"></td>
 </tr>
+<!-- end table.html.twig -->

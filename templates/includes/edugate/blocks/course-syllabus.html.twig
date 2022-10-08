@@ -1,36 +1,37 @@
+<!-- course-syllabus.html.twig -->
 <div class="section section-padding choose-course">
     <div class="container">
-                <div class="course-syllabus">
-                    <div class="course-syllabus-title underline">{{ content.headline }}</div>
-                    <div class="course-table">
-                        <div class="outer-container">
-                            <div class="inner-container">
-                                <div class="table-body">
-                                    <table class="edu-table-responsive table-hover">
-                                        <tbody>
-                                        {% if content.items is not empty %}
-                                            {% for item in content.items %}
-                                                <tr class="heading-content">
-                                                    <td colspan="4" class="left heading-content">{{ loop.index }}. {{ item.headline }} - {{ item.time }} Minuten</td>
+        <div class="course-syllabus">
+            <div class="course-syllabus-title underline">{{ content.headline }}</div>
+            <div class="course-table">
+                <div class="outer-container">
+                    <div class="inner-container">
+                        <div class="table-body">
+                            <table class="edu-table-responsive table-hover">
+                                <tbody>
+                                {% if content.items is not empty %}
+                                    {% for item in content.items %}
+                                        <tr class="heading-content">
+                                            <td colspan="4" class="left heading-content">{{ loop.index }}. {{ item.headline }} - {{ item.time }} Minuten</td>
+                                        </tr>
+                                        {% if item.points is not empty %}
+                                            {% for point in item.points %}
+                                                <tr class="table-row">
+                                                    <td class="left col-1">
+                                                        <i class="bg-green mr25 fa fa-caret-right"></i><span>1.{{ loop.index }} {{ point.points }}</span>
+                                                    </td>
                                                 </tr>
-                                                {% if item.points is not empty %}
-                                                    {% for point in item.points %}
-                                                        <tr class="table-row">
-                                                            <td class="left col-1">
-                                                                <i class="bg-green mr25 fa fa-caret-right"></i><span>1.{{ loop.index }} {{ point.points }}</span>
-                                                            </td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                {% endif %}
                                             {% endfor %}
                                         {% endif %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                    {% endfor %}
+                                {% endif %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 </div>
+<!-- end course-syllabus.html.twig -->
