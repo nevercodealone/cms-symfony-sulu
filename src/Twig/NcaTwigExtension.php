@@ -13,7 +13,7 @@ use Twig\TwigFunction;
  * This is just an example Twig Extension.
  * It is recommended to use `intl_country` from the `sulu/web-twig` package instead of this.
  */
-class TwigExtension extends AbstractExtension
+class NcaTwigExtension extends AbstractExtension
 {
     public function __construct(
         private readonly YouTubeService $youTubeService,
