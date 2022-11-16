@@ -13,8 +13,6 @@ use Sulu\Component\Content\Compat\StructureInterface;
 class PageController extends WebsiteController
 {
     /**
-     * @param StructureInterface $structure
-     * @param YouTubeService $youTubeService
      * @param bool $preview
      * @param bool $partial
      * @return Response
@@ -38,8 +36,6 @@ class PageController extends WebsiteController
     }
 
     /**
-     * @param StructureInterface $structure
-     * @param YouTubeService $youTubeService
      * @param bool $preview
      * @param bool $partial
      * @return Response
@@ -63,8 +59,6 @@ class PageController extends WebsiteController
     }
 
     /**
-     * @param StructureInterface $structure
-     * @param Request $request
      * @param bool $preview
      * @param bool $partial
      * @return Response
@@ -102,10 +96,6 @@ class PageController extends WebsiteController
         );
     }
 
-    /**
-     * @param Request $request
-     * @return string
-     */
     protected function getSourceParam(Request $request): string
     {
         $aff = 'website';

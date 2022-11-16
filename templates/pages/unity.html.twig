@@ -195,7 +195,7 @@
                         {% for tweet in content.socialMediaTweets %}
                             <figure class="item twitter">
                                 <div class="picture">
-                                    {{ twitter_service.getEmbedCodeByUrl(tweet.socialMediaTweetUrl)|raw }}
+                                    {{ twitterGetEmbedCodeByUrl(tweet.socialMediaTweetUrl)|raw }}
                                 </div>
                             </figure>
                         {% endfor %}
