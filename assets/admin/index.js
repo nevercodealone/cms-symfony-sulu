@@ -15,6 +15,7 @@ import 'sulu-route-bundle';
 import 'sulu-search-bundle';
 import 'sulu-security-bundle';
 import 'sulu-snippet-bundle';
+import 'sulu-trash-bundle';
 import 'sulu-website-bundle';
 
 // Add project specific javascript code and import of additional bundles to the following file:

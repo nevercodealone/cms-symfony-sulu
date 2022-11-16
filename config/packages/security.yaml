@@ -20,6 +20,7 @@ security:
         - { path: ^/admin$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/admin/$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/admin, roles: ROLE_USER }
+        - { path: ^/admin/p/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
 
     firewalls:
         dev:
