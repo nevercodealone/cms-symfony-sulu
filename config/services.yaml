@@ -14,7 +14,13 @@ services:
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
+        bind:
+            $twitter_api_key: '%twitter_api_key%'
+            $twitter_api_secret: '%twitter_api_secret%'
+            $twitter_access_token: '%twitter_access_token%'
+            $twitter_access_secret: '%twitter_access_secret%'
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -48,19 +54,6 @@ services:
         class: \Google_Service_YouTube
         arguments:
             - '@Google_Client'
-
-    Twitter:
-        class: DG\Twitter\Twitter
-        arguments:
-            - '%twitter_api_key%'
-            - '%twitter_api_secret%'
-            - '%twitter_access_token%'
-            - '%twitter_access_secret%'
-
-    Twitter_Service:
-        class: App\Service\TwitterService
-        arguments:
-            - '@Twitter'
 
     Unirest\Request:
         class: Unirest\Request

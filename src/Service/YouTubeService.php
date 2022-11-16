@@ -21,8 +21,8 @@ class YouTubeService
         $videoList = $this->playlistItemsListByPlaylistId('snippet', $params);
         $videos = $videoList['items'];
         usort($videos, static function ($a, $b) {
-            $actual = strtotime($a['snippet']['publishedAt']);
-            $next = strtotime($b['snippet']['publishedAt']);
+            $actual = strtotime((string) $a['snippet']['publishedAt']);
+            $next = strtotime((string) $b['snippet']['publishedAt']);
             return $actual - $next;
         });
         $videos = array_reverse($videos);

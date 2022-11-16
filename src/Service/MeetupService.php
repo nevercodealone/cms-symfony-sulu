@@ -6,11 +6,8 @@ use Unirest\Request;
 
 class MeetupService
 {
-    private \Unirest\Request $request;
-
-    public function __construct(Request $request)
+    public function __construct(private readonly Request $request)
     {
-        $this->request = $request;
     }
 
     public function getNextEvents()
@@ -21,6 +18,6 @@ class MeetupService
         
         $response = $this->request::get($meetupLink);
 
-        return json_decode($response->raw_body, true, 512, JSON_THROW_ON_ERROR);
+        return json_decode((string) $response->raw_body, true, 512, JSON_THROW_ON_ERROR);
     }
 }
