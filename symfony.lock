@@ -3,7 +3,7 @@
         "version": "1.4",
         "recipe": {
             "repo": "github.com/symfony/recipes-contrib",
-            "branch": "master",
+            "branch": "main",
             "version": "1.4",
             "ref": "6c1ceb662f8997085f739cd089bfbef67f245983"
         },
@@ -73,9 +73,6 @@
     },
     "codeception/module-webdriver": {
         "version": "1.1.4"
-    },
-    "codeception/phpunit-wrapper": {
-        "version": "9.0.5"
     },
     "codeception/stub": {
         "version": "3.7.0"
@@ -473,9 +470,6 @@
     "ramsey/uuid": {
         "version": "4.2.1"
     },
-    "sclable/xml-lint": {
-        "version": "0.4.0"
-    },
     "sebastian/cli-parser": {
         "version": "1.0.1"
     },
@@ -532,18 +526,6 @@
     },
     "sebastianfeldmann/git": {
         "version": "3.4.1"
-    },
-    "sensio/framework-extra-bundle": {
-        "version": "5.2",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "5.2",
-            "ref": "fb7e19da7f013d0d422fa9bce16f5c510e27609b"
-        },
-        "files": [
-            "config/packages/sensio_framework_extra.yaml"
-        ]
     },
     "softcreatr/jsonpath": {
         "version": "0.7.2"
@@ -943,6 +925,25 @@
             "config/packages/dev/web_profiler.yaml",
             "config/packages/test/web_profiler.yaml",
             "config/routes/dev/web_profiler.yaml"
+        ]
+    },
+    "symfony/webpack-encore-bundle": {
+        "version": "1.16",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "1.10",
+            "ref": "5878c7c28468ca0fdce2497a04cfc66bab0dc3ef"
+        },
+        "files": [
+            "assets/app.js",
+            "assets/bootstrap.js",
+            "assets/controllers.json",
+            "assets/controllers/hello_controller.js",
+            "assets/styles/app.css",
+            "config/packages/webpack_encore.yaml",
+            "package.json",
+            "webpack.config.js"
         ]
     },
     "symfony/yaml": {
