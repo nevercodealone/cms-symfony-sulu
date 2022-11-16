@@ -14,7 +14,7 @@ FROM composer AS composer-dev
 RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
 
 # Build actual image
-FROM php:7.4-apache AS webserver
+FROM php:8.1-apache AS webserver
 
 WORKDIR /var/www/html
 

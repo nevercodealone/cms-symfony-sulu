@@ -56,11 +56,11 @@ class SpamProtection
 
     protected function validateIp(string $ip)
     {
-        if (strpos($ip, '127.0.0.1') !== false) {
+        if (str_contains($ip, '127.0.0.1')) {
             return true;
         }
 
-        if (strpos($ip, 'localhost') !== false) {
+        if (str_contains($ip, 'localhost')) {
             return true;
         }
 
@@ -68,7 +68,7 @@ class SpamProtection
             return false;
         }
 
-        if (strpos($ip, '192') !== false) {
+        if (str_contains($ip, '192')) {
             return false;
         }
 
@@ -120,7 +120,7 @@ class SpamProtection
     {
         $string = strtolower($string);
         foreach ($this->spamWords as $spamWord) {
-            if (strpos($string, (string) $spamWord) !== false) {
+            if (str_contains($string, (string) $spamWord)) {
                 return true;
             }
         }
