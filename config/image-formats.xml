@@ -149,4 +149,12 @@
         </meta>
         <scale x="1920" y="1280"/>
     </format>
+
+    <!-- Tailwind -->
+    <format key="hero-newsletter">
+        <meta>
+            <title lang="en">Hero Newsletter</title>
+        </meta>
+        <scale x="480" y="600"/>
+    </format>
 </formats>
