@@ -1,0 +1,57 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="hero">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+        <types>
+            <type name="hero">
+                <meta>
+                    <title>Hero</title>
+                </meta>
+                <properties>
+                    <property name="image" type="media_selection" maxOccurs="1">
+                        <meta>
+                            <title>Bild</title>
+                        </meta>
+                        <params>
+                            <param name="types" value="image"/>
+                        </params>
+                    </property>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Überschrift</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <property name="description" type="text_editor">
+                        <meta>
+                            <title>Beschreibung</title>
+                        </meta>
+
+                        <params>
+                            <param name="table" value="false"/>
+                            <param name="link" value="true"/>
+                            <!-- CKEditor Parameters examples: -->
+                            <param name="extra_allowed_content"
+                                   value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                            <param name="ui_color" value="#ffcc00"/>
+                        </params>
+                    </property>
+                    <property name="buttonText" type="text_line" colspan="6">
+                        <meta>
+                            <title>Text</title>
+                        </meta>
+                    </property>
+                    <property name="url" type="url" colspan="6">
+                        <meta>
+                            <title>URL</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

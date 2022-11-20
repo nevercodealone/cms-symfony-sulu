@@ -36,13 +36,13 @@
         "doctrine/doctrine-fixtures-bundle": "^3.4",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "friendsofsymfony/http-cache-bundle": "^2.10",
+        "friendsofsymfony/rest-bundle": "^3.4",
         "google/apiclient": "^2.9",
         "handcraftedinthealps/zendsearch": "^2.1",
         "jackalope/jackalope-doctrine-dbal": "^1.6",
         "mashape/unirest-php": "^3.0",
-        "sensio/framework-extra-bundle": "^5.6",
         "sulu/form-bundle": "^2.1",
-        "sulu/sulu": "^2.4",
+        "sulu/sulu": "~2.4.1",
         "symfony/config": "^5.2",
         "symfony/dotenv": "^5.2",
         "symfony/flex": "^1.12",
@@ -52,20 +52,21 @@
         "symfony/security-bundle": "^5.2",
         "symfony/swiftmailer-bundle": "^3.5",
         "symfony/twig-bundle": "^5.2",
+        "symfony/webpack-encore-bundle": "^1.16",
         "twig/extra-bundle": "^3.3",
         "twig/intl-extra": "^3.3"
     },
     "require-dev": {
         "captainhook/captainhook": "^5.9",
-        "codeception/codeception": "^4.1",
-        "codeception/module-asserts": "^1.3",
-        "codeception/module-phpbrowser": "^1.0",
-        "codeception/module-rest": "^1.3",
-        "codeception/module-symfony": "^1.6",
-        "codeception/module-webdriver": "^1.2",
+        "codeception/codeception": "^5.0",
+        "codeception/module-asserts": "*",
+        "codeception/module-phpbrowser": "*",
+        "codeception/module-rest": "*",
+        "codeception/module-symfony": "*",
+        "codeception/module-webdriver": "*",
         "phpcr/phpcr-shell": "^1.3",
         "rector/rector": "^0.14.5",
-        "sclable/xml-lint": "^0.4.0",
+        "sclable/xml-lint": "^0.5.0",
         "squizlabs/php_codesniffer": "^3.6",
         "symfony/debug-bundle": "^5.2",
         "symfony/error-handler": "^5.2",
@@ -95,7 +96,7 @@
     "scripts": {
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
-            "assets:install %PUBLIC_DIR% --symlink --relative": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd",
             "bin/websiteconsole cache:clear": "php-script",
             "bin/adminconsole sulu:media:init": "php-script",
             "bin/adminconsole massive:search:init": "php-script"
@@ -107,11 +108,61 @@
             "@auto-scripts"
         ],
         "post-root-package-install": [
-            "php -r \"file_put_contents('.env.local', 'APP_ENV=dev' . PHP_EOL);\"",
-            "php -r \"file_put_contents('.env', str_replace('APP_SECRET=', 'APP_SECRET=' . bin2hex(random_bytes(16)), file_get_contents('.env')));\""
+            "@php -r \"file_put_contents('.env.local', 'APP_ENV=dev' . PHP_EOL);\"",
+            "@php -r \"file_put_contents('.env', str_replace('APP_SECRET=', 'APP_SECRET=' . bin2hex(random_bytes(16)), file_get_contents('.env')));\""
         ],
         "post-create-project-cmd": [
-            "php -r \"file_put_contents('.gitignore', str_replace(['composer.lock' . PHP_EOL, 'symfony.lock' . PHP_EOL, 'package-lock.json' . PHP_EOL], ['', '', ''], file_get_contents('.gitignore')));\""
+            "@php -r \"file_put_contents('.gitignore', str_replace(['composer.lock' . PHP_EOL, 'symfony.lock' . PHP_EOL, 'package-lock.json' . PHP_EOL], ['', '', ''], file_get_contents('.gitignore')));\"",
+            "@php bin/adminconsole sulu:admin:info --ansi"
+        ],
+        "bootstrap-test-environment": [
+            "@php bin/adminconsole doctrine:database:drop --if-exists --force --env test",
+            "@php bin/adminconsole doctrine:database:create --env test",
+            "@php bin/adminconsole doctrine:schema:create --env test"
+        ],
+        "test": "@php bin/phpunit",
+        "test-with-coverage": "@test --coverage-php var/reports/coverage.php --coverage-cobertura=var/reports/cobertura-coverage.xml --coverage-html var/reports/html --log-junit var/reports/junit.xml",
+        "lint": [
+            "@phpstan",
+            "@lint-php-cs",
+            "@lint-rector",
+            "@lint-twig",
+            "@lint-yaml",
+            "@lint-container",
+            "@lint-composer",
+            "@lint-doctrine"
+        ],
+        "security-check": "@composer audit",
+        "fix": [
+            "@rector",
+            "@php-cs-fix"
+        ],
+        "phpstan": [
+            "@php bin/websiteconsole cache:warmup --env=dev",
+            "@php vendor/bin/phpstan analyze"
+        ],
+        "rector": [
+            "@php vendor/bin/rector process"
+        ],
+        "lint-rector": [
+            "@php bin/websiteconsole cache:warmup --env=dev",
+            "@php vendor/bin/rector process --dry-run"
+        ],
+        "php-cs-fix": "@php vendor/bin/php-cs-fixer fix",
+        "lint-php-cs": "@php vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
+        "lint-composer": "@composer validate --no-check-publish --strict",
+        "lint-twig": "@php bin/console lint:twig templates/",
+        "lint-yaml": "@php bin/console lint:yaml config/ --parse-tags",
+        "lint-container": [
+            "@php bin/console lint:container --env dev",
+            "@php bin/console lint:container --env test",
+            "@php bin/console lint:container --env stage",
+            "@php bin/console lint:container --env prod"
+        ],
+        "lint-doctrine": [
+            "@php bin/console doctrine:schema:validate --skip-sync",
+            "@php bin/console doctrine:ensure-production-settings --env stage",
+            "@php bin/console doctrine:ensure-production-settings --env prod"
         ]
     },
     "config": {

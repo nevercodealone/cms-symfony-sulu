@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="scroll-smooth bg-white antialiased" lang="en">
+    <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% block meta %}
+        {% include "@SuluWebsite/Extension/seo.html.twig" with {
+            "seo": extension.seo|default([]),
+            "content": content|default([]),
+            "localizations": localizations|default([]),
+            "shadowBaseLocale": shadowBaseLocale|default(),
+        } %}
+    {% endblock %}
+
+    {% block style %}
+        {{ encore_entry_link_tags('app') }}
+    {% endblock %}
+</head>
+    <body>
+        <main>
+            {% block content %}
+                {% include 'includes/tailwind/blocks.html.twig' %}
+            {% endblock %}
+        </main>
+    </body>
+</html>
