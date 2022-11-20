@@ -151,6 +151,12 @@
     </format>
 
     <!-- Tailwind -->
+    <format key="format">
+        <meta>
+            <title lang="en">Format</title>
+        </meta>
+        <scale x="200" y="100"/>
+    </format>
     <format key="hero-newsletter">
         <meta>
             <title lang="en">Hero Newsletter</title>
