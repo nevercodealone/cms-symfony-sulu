@@ -11,20 +11,18 @@
     </div>
     <div class="mx-auto px-4 sm:px-6 md:max-w-2xl md:px-4 lg:max-w-7xl lg:px-8 mt-16">
         <ol role="list"
-            class="grid grid-cols-1 gap-y-10 gap-x-8 [counter-reset:video] sm:grid-cols-2 lg:grid-cols-4">
+            class="grid grid-cols-3 gap-y-10 gap-x-8">
             {% if content.items is not empty %}
                 {% for item in content.items %}
-                    <li class="[counter-increment:video]">
+                    <li class="">
                         <div class="relative flex h-44 items-center justify-center rounded-2xl px-6 shadow-lg"
                              style="background-image:conic-gradient(from -49.8deg at 50% 50%, #119325 0deg, #12df59 59.07deg, #45a33f 185.61deg, #67dc5a 284.23deg, #1f8b34 329.41deg, #378d2a 360deg)">
                             <div class="flex overflow-hidden rounded shadow-sm">
                                 {% set source = item.image[0].formats['format'] %}
                                 <img alt="{{ item.image[0].title }}"
                                      src="{{ source }}"
-                                     width="200" height="100"
-                                     decoding="async" data-nimg="{{ loop.index + 1 }}"
                                      loading="lazy"
-                                     style="color:transparent"/>
+                                     class="w-5/6 h-auto mx-auto"/>
                             </div>
                         </div>
                         <h3 class="mt-8 text-base font-medium tracking-tight text-slate-900 before:mb-2 before:block before:font-mono before:text-sm before:text-slate-500 before:content-[counter(video,decimal-leading-zero)]">
