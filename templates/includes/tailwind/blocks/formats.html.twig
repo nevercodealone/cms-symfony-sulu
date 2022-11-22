@@ -15,9 +15,8 @@
             {% if content.items is not empty %}
                 {% for item in content.items %}
                     <li class="">
-                        <div class="relative flex h-44 items-center justify-center rounded-2xl px-6 shadow-lg"
-                             style="background-image:conic-gradient(from -49.8deg at 50% 50%, #119325 0deg, #12df59 59.07deg, #45a33f 185.61deg, #67dc5a 284.23deg, #1f8b34 329.41deg, #378d2a 360deg)">
-                            <div class="flex overflow-hidden rounded shadow-sm">
+                        <div class="relative flex h-44 items-center justify-center rounded-2xl px-6 shadow-lg border border-dark">
+                            <div class="flex justify-center overflow-hidden rounded shadow-sm">
                                 {% set source = item.image[0].formats['format'] %}
                                 <img alt="{{ item.image[0].title }}"
                                      src="{{ source }}"
