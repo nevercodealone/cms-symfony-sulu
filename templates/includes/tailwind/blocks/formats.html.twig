@@ -22,7 +22,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <h3 class="mt-8 text-base font-medium tracking-tight text-slate-900 before:mb-2 before:block before:font-mono before:text-sm before:text-slate-500 before:content-[counter(video,decimal-leading-zero)]">
+                        <h3 before="{{ loop.index }}" class="mt-8 text-base font-medium tracking-tight text-slate-900 before:mb-2 before:block before:font-mono before:text-sm before:text-slate-500 before:content-['0'attr(before)]">
                             {{ item.headline }}
                         </h3>
                         <div class="mt-2 text-sm text-slate-600">
