@@ -5,9 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% include "partial/header.html.twig" %}
+    <script defer type="text/javascript" src="/klaro/config.js"></script>
+    <script
+            defer
+            data-config="klaroConfig"
+            type="application/javascript"
+            src="/klaro/klaro.js">
+    </script>
+    <link href="/klaro/klaro.min.css" rel="stylesheet"/>
+    <link href="/klaro/klaro-custom.css" rel="stylesheet"/>
     {% block style %}
         {{ encore_entry_link_tags('app') }}
     {% endblock %}
+    {% include 'partial/analytics.html.twig' %}
 </head>
     <body>
         <main>
