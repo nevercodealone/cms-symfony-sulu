@@ -42,12 +42,29 @@
                                     <title>Format</title>
                                 </meta>
                                 <properties>
-                                    <property name="image" type="media_selection" maxOccurs="1">
+                                    <property name="icon" type="single_select">
                                         <meta>
-                                            <title>Bild</title>
+                                            <title>Icon</title>
                                         </meta>
                                         <params>
-                                            <param name="types" value="image"/>
+                                            <param name="default_value" value="user"/>
+                                            <param name="values" type="collection">
+                                                <param name="user">
+                                                    <meta>
+                                                        <title>User</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="newsletter">
+                                                    <meta>
+                                                        <title>Newsletter</title>
+                                                    </meta>
+                                                </param>
+                                                <param name="github">
+                                                    <meta>
+                                                        <title>GitHub</title>
+                                                    </meta>
+                                                </param>
+                                            </param>
                                         </params>
                                     </property>
                                     <property name="headline" type="text_line">
