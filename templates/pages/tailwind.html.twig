@@ -20,7 +20,9 @@
     {% include 'partial/analytics.html.twig' %}
 </head>
     <body>
+
         <main>
+            {% include 'includes/tailwind/navigation.html.twig' %}
             {% block content %}
                 {% include 'includes/tailwind/blocks.html.twig' %}
             {% endblock %}
@@ -73,4 +75,7 @@
             </div>
         </footer>
     </body>
+    {% block javascripts %}
+        {{ encore_entry_script_tags('app') }}
+    {% endblock %}
 </html>
