@@ -9,7 +9,14 @@
             {
                 "action": "./dumpFinder.sh",
                 "options": [],
-                "conditions": []
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": [
+                            "twig"
+                        ]
+                    }
+                ]
             }
         ]
     },
@@ -19,27 +26,62 @@
             {
                 "action": "\\CaptainHook\\App\\Hook\\PHP\\Action\\Linting",
                 "options": [],
-                "conditions": []
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": [
+                            "php"
+                        ]
+                    }
+                ]
             },
             {
                 "action": "vendor/bin/phpcs",
                 "options": [],
-                "conditions": []
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": [
+                            "php"
+                        ]
+                    }
+                ]
             },
             {
                 "action": "vendor/bin/phpstan analyse src -c phpstan.neon",
                 "options": [],
-                "conditions": []
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": [
+                            "php"
+                        ]
+                    }
+                ]
             },
             {
                 "action": "vendor/bin/rector process src --dry-run --debug",
                 "options": [],
-                "conditions": []
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": [
+                            "php"
+                        ]
+                    }
+                ]
             },
             {
                 "action": "vendor/bin/xmllint config -v",
                 "options": [],
-                "conditions": []
+                "conditions": [
+                    {
+                        "exec": "\\CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": [
+                            "xml"
+                        ]
+                    }
+                ]
             }
         ]
     },
