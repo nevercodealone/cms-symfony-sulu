@@ -169,4 +169,10 @@
         </meta>
         <scale x="500" y="500"/>
     </format>
+    <format key="hero-startpage">
+        <meta>
+            <title lang="en">Hero Startpage</title>
+        </meta>
+        <scale x="2030" y="1940"/>
+    </format>
 </formats>

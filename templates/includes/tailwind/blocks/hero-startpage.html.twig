@@ -1,0 +1,33 @@
+<!-- Hero startpage -->
+<div class="relative">
+    <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gray-100"></div>
+    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="relative shadow-xl sm:overflow-hidden sm:rounded-2xl">
+            <div class="absolute inset-0">
+                {% set source = content.image[0].formats['hero-startpage'] %}
+                <img class="h-full w-full object-cover" src="{{ source }}" alt="People working on laptops">
+                <div class="absolute inset-0 bg-gradient-to-r from-green-800 to-green-700 mix-blend-multiply"></div>
+            </div>
+            <div class="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
+                <h1 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                    <span class="block text-white">{{ content.textone }}</span>
+                    <span class="block text-green-200">{{ content.texttwo }}</span>
+                </h1>
+                <div class="mx-auto mt-6 max-w-lg text-center text-xl text-green-200 sm:max-w-3xl">
+                    {{ content.description|raw }}
+                </div>
+                <div class="mx-auto mt-10 max-w-sm sm:flex sm:max-w-none sm:justify-center">
+                    <div class="space-y-4 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5 sm:space-y-0">
+                        <sulu-link href="{{ content.buttonLink }}" title="{{ content.buttonText }}" class="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-green-700 shadow-sm hover:bg-green-50 sm:px-8">
+                            {{ content.buttonText }}
+                        </sulu-link>
+                        <a href="{{ content.url }}" title="{{ content.buttonTextTwo }}" class="flex items-center justify-center rounded-md border border-transparent bg-green-500 bg-opacity-60 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-opacity-70 sm:px-8">
+                            {{ content.buttonTextTwo }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End hero startpage -->
