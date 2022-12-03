@@ -163,4 +163,10 @@
         </meta>
         <scale x="480" y="600"/>
     </format>
+    <format key="team">
+        <meta>
+            <title lang="en">Team</title>
+        </meta>
+        <scale x="500" y="500"/>
+    </format>
 </formats>
