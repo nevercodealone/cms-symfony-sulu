@@ -1,16 +1,4 @@
 {
-    "antishov/doctrine-extensions-bundle": {
-        "version": "1.4",
-        "recipe": {
-            "repo": "github.com/symfony/recipes-contrib",
-            "branch": "main",
-            "version": "1.4",
-            "ref": "6c1ceb662f8997085f739cd089bfbef67f245983"
-        },
-        "files": [
-            "config/packages/stof_doctrine_extensions.yaml"
-        ]
-    },
     "behat/gherkin": {
         "version": "v4.6.2"
     },
@@ -542,6 +530,18 @@
             "phpcs.xml.dist"
         ]
     },
+    "stof/doctrine-extensions-bundle": {
+        "version": "1.7",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.2",
+            "ref": "e805aba9eff5372e2d149a9ff56566769e22819d"
+        },
+        "files": [
+            "config/packages/stof_doctrine_extensions.yaml"
+        ]
+    },
     "sulu/form-bundle": {
         "version": "2.0",
         "recipe": {
@@ -557,9 +557,6 @@
     },
     "sulu/sulu": {
         "version": "2.3.3"
-    },
-    "swiftmailer/swiftmailer": {
-        "version": "v6.2.7"
     },
     "symfony-cmf/routing": {
         "version": "2.3.3"
@@ -844,20 +841,6 @@
     },
     "symfony/string": {
         "version": "v5.3.3"
-    },
-    "symfony/swiftmailer-bundle": {
-        "version": "2.5",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "2.5",
-            "ref": "f0b2fccdca2dfd97dc2fd5ad216d5e27c4f895ac"
-        },
-        "files": [
-            "config/packages/dev/swiftmailer.yaml",
-            "config/packages/swiftmailer.yaml",
-            "config/packages/test/swiftmailer.yaml"
-        ]
     },
     "symfony/thanks": {
         "version": "v1.2.10"

@@ -1,7 +1,8 @@
 <?php
 namespace NCATesting\Step\Acceptance;
 
-class Navigation extends \NCATesting\AcceptanceTester
+use NCATesting\AcceptanceTester;
+class Navigation extends AcceptanceTester
 {
 
     public function navigateToVorverkauf() :void

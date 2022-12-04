@@ -1,12 +1,14 @@
 <?php
 namespace App\Service;
 
+use Google_Service_YouTube;
+
 class YouTubeService
 {
     /** @var \Google_Service_YouTube */
     private $youtubeService;
 
-    public function __construct(\Google_Service_YouTube $youtubeService)
+    public function __construct(Google_Service_YouTube $youtubeService)
     {
         $this->youtubeService = $youtubeService;
     }

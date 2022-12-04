@@ -29,8 +29,6 @@ class mainCest
     }
 
     /**
-     * @param AcceptanceTester $I
-     * @param startpage $startpage
      * @return array
      */
     protected function getItems(AcceptanceTester $I, startpage $startpage)

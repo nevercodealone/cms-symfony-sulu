@@ -1,6 +1,8 @@
 <?php
 namespace NCATesting;
 
+use Codeception\Lib\Friend;
+use Codeception\Actor;
 use NCATesting\_generated\AcceptanceTesterActions;
 use diversen\meta;
 
@@ -15,11 +17,11 @@ use diversen\meta;
  * @method void am($role)
  * @method void lookForwardTo($achieveValue)
  * @method void comment($description)
- * @method \Codeception\Lib\Friend haveFriend($name, $actorClass = NULL)
+ * @method Friend haveFriend($name, $actorClass = null)
  *
  * @SuppressWarnings(PHPMD)
 */
-class AcceptanceTester extends \Codeception\Actor
+class AcceptanceTester extends Actor
 {
     use AcceptanceTesterActions;
 

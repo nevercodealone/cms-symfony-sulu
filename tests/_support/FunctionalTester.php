@@ -1,6 +1,9 @@
 <?php
 namespace App\Tests;
 
+use Codeception\Lib\Friend;
+use Codeception\Actor;
+use App\Tests\_generated\FunctionalTesterActions;
 /**
  * Inherited Methods
  * @method void wantToTest($text)
@@ -12,13 +15,13 @@ namespace App\Tests;
  * @method void am($role)
  * @method void lookForwardTo($achieveValue)
  * @method void comment($description)
- * @method \Codeception\Lib\Friend haveFriend($name, $actorClass = NULL)
+ * @method Friend haveFriend($name, $actorClass = null)
  *
  * @SuppressWarnings(PHPMD)
 */
-class FunctionalTester extends \Codeception\Actor
+class FunctionalTester extends Actor
 {
-    use _generated\FunctionalTesterActions;
+    use FunctionalTesterActions;
 
    /**
     * Define custom actions here
