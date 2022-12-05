@@ -1,6 +1,10 @@
 <?php
 namespace NCATesting;
 
+use Codeception\Lib\Friend;
+use Codeception\Actor;
+use ReflectionException;
+use ReflectionClass;
 use NCATesting\_generated\UnitTesterActions;
 
 /**
@@ -14,22 +18,23 @@ use NCATesting\_generated\UnitTesterActions;
  * @method void am($role)
  * @method void lookForwardTo($achieveValue)
  * @method void comment($description)
- * @method \Codeception\Lib\Friend haveFriend($name, $actorClass = NULL)
+ * @method Friend haveFriend($name, $actorClass = null)
  *
  * @SuppressWarnings(PHPMD)
 */
-class UnitTester extends \Codeception\Actor
+class UnitTester extends Actor
 {
     use UnitTesterActions;
 
     /**
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function getMethodReturn($fixture, $method, $param)
     {
-        $class = new \ReflectionClass($fixture);
+        $class = new ReflectionClass($fixture);
         $method = $class->getMethod($method);
         $method->setAccessible(true);
+
         $methodReturn = $method->invoke($fixture, $param);
         return $methodReturn;
     }

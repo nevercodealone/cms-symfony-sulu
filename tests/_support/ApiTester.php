@@ -1,6 +1,8 @@
 <?php
 namespace NCATesting;
 
+use Codeception\Actor;
+use NCATesting\_generated\ApiTesterActions;
 /**
  * Inherited Methods
  * @method void wantToTest($text)
@@ -16,9 +18,9 @@ namespace NCATesting;
  *
  * @SuppressWarnings(PHPMD)
 */
-class ApiTester extends \Codeception\Actor
+class ApiTester extends Actor
 {
-    use _generated\ApiTesterActions;
+    use ApiTesterActions;
 
    /**
     * Define custom actions here

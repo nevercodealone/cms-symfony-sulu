@@ -8,6 +8,7 @@ use Codeception\Stub;
 class spamProtectionCest
 {
     private $fixture;
+
     private $I;
 
     public function _before(UnitTester $I)
@@ -60,6 +61,7 @@ class spamProtectionCest
         $methodReturn = $I->getMethodReturn($this->fixture,'validateIp', $ip);
         $I->assertFalse($methodReturn, 'IP: ' . $ip);
     }
+
     /**
      * @return array
      */

@@ -30,7 +30,7 @@ class linksCest
 
         foreach ($items as $key => $item) {
             foreach ($specialLinksParts as $specialLink) {
-                if(strpos($item, $specialLink) !== false) {
+                if(str_contains($item, $specialLink)) {
                     continue 2;
                 }
             }

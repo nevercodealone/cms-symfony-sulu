@@ -1,6 +1,7 @@
 <?php
 namespace NCATesting\Page;
 
+use NCATesting\Tester;
 class influnecerdb
 {
     // include url of current page
@@ -27,7 +28,7 @@ class influnecerdb
      */
     protected $tester;
 
-    public function __construct(\NCATesting\Tester $I)
+    public function __construct(Tester $I)
     {
         $this->tester = $I;
     }
