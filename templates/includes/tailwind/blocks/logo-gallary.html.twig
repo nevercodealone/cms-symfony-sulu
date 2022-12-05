@@ -1,25 +1,17 @@
 <div class="bg-white">
     <div class="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl">
         <h3 class="font-bold py-5 px-5">{{ content.headline }}</h3>
-        <div class="grid grid-cols-2 gap-y-10 gap-x-3 text-gray-700 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+        <div class="grid grid-cols-2 items-center gap-y-10 gap-x-3 text-gray-700 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
             {% if content.items is not empty %}
                 {% for item in content.items %}
                     {% set source = item.image[0].formats['logos'] %}
                     <a href="{{ item.url }}" class="group hover:text-green-500" target="_blank" rel="nofollow" title="Link zu {{ item.headline }}">
-                        <div class="w-4/5 overflow-hidden rounded-lg bg-gray-200">
+                        <div class="w-4/5 align-middle overflow-hidden rounded-lg">
                             <img src="{{ source }}" alt="Logo von {{ item.headline }}" class="h-full w-full object-cover object-center group-hover:opacity-75">
                         </div>
-                        <h3 class="mt-4 mx-3 text-sm">
-                            {{ item.headline }}
-                        </h3>
                     </a>
                 {% endfor %}
             {% endif %}
-
-
-
-
-            <!-- More products... -->
         </div>
     </div>
 </div>
