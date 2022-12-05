@@ -4,7 +4,7 @@
                     <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
                         <div class="space-y-5 sm:space-y-4">
                             <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{{ content.headline }}</h2>
-                            <div class="text-xl text-gray-500">{{ content.description }}</div>
+                            <div class="text-xl text-gray-500">{{ content.description|raw }}</div>
                         </div>
                         <div class="lg:col-span-2">
                             <ul role="list" class="space-y-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:gap-x-8">
