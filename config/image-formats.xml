@@ -151,6 +151,12 @@
     </format>
 
     <!-- Tailwind -->
+    <format key="logos">
+        <meta>
+            <title lang="en">Logos</title>
+        </meta>
+        <scale x="250" y="250"/>
+    </format>
     <format key="format">
         <meta>
             <title lang="en">Format</title>
