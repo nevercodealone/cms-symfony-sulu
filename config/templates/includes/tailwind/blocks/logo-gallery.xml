@@ -1,0 +1,58 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="logo-gallary">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+        <types>
+            <type name="logo-gallary">
+                <meta>
+                    <title>Logo Galerie</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <block name="items" default-type="items" minOccurs="0">
+                        <meta>
+                            <title>Items</title>
+                        </meta>
+                        <types>
+                            <type name="items">
+                                <meta>
+                                    <title>Item</title>
+                                </meta>
+                                <properties>
+                                    <property name="headline" type="text_line" colspan="4">
+                                        <meta>
+                                            <title>Headline</title>
+                                        </meta>
+                                    </property>
+                                    <property name="url" type="url" colspan="4">
+                                        <meta>
+                                            <title>Url</title>
+                                        </meta>
+                                    </property>
+                                    <property name="image" type="media_selection" maxOccurs="1" colspan="4">
+                                        <meta>
+                                            <title>Image</title>
+                                        </meta>
+                                        <params>
+                                            <param name="types" value="image"/>
+                                        </params>
+                                    </property>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
+
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

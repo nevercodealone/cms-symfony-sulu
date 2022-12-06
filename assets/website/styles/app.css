@@ -3,3 +3,11 @@
 @tailwind utilities;
 
 [x-cloak] { display: none; }
+
+a {
+    @apply text-green-600;
+}
+
+a:hover, a:focus {
+    @apply text-green-800 underline;
+}
