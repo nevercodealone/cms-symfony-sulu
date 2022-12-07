@@ -1,47 +1,46 @@
-<!-- Tean -->
+<!-- Team -->
 <div class="bg-white">
-                <div class="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:px-8 lg:py-24">
-                    <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
-                        <div class="space-y-5 sm:space-y-4">
-                            <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{{ content.headline }}</h2>
-                            <div class="text-xl text-gray-500">{{ content.description|raw }}</div>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <ul role="list" class="space-y-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:gap-x-8">
-                                {% if content.organisation is not empty %}
-                                    {% for item in content.organisation %}
-                                        {% if item.avatar.thumbnails['400x400'] is defined and item.avatar.thumbnails['400x400'] is not empty %}
-                                            {% set source = item.avatar.thumbnails['team'] %}
-                                            <li>
-                                                <div class="space-y-4">
-                                                    <div class="w-full">
-                                                        <img class="rounded-lg object-cover shadow-lg" src="{{ source }}" alt="{{ item.fullName }}">
-                                                    </div>
-                                                    <div class="space-y-1 text-lg font-medium leading-6">
-                                                        <h3>{{ item.fullName }}</h3>
-                                                        <p class="text-indigo-600">{{ item.positionName }}</p>
-                                                    </div>
-                                                    <div class="text-lg">
-                                                        <p class="text-gray-500">{{ item.note }}</p>
-                                                    </div>
-
-                                                    <ul role="list" class="flex space-x-5">
-                                                        {% if item.contactDetails.socialMedia is not empty %}
-                                                            {% for social in item.contactDetails.socialMedia %}
-                                                                <li>
-                                                                    {% include 'includes/tailwind/link-social-media.html.twig' with {'socialLink': social.username } %}
-                                                                </li>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+    <div class="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:px-8 lg:py-24">
+        <div class="space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
+            <div class="space-y-5 sm:space-y-4">
+                <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{{ content.headline }}</h2>
+                <div class="text-xl text-gray-500">{{ content.description|raw }}</div>
             </div>
+            <div class="lg:col-span-2">
+                <ul role="list" class="space-y-12 grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-y-12 sm:space-y-0">
+                    {% if content.organisation is not empty %}
+                        {% for item in content.organisation %}
+                            {% if item.avatar.thumbnails['400x400'] is defined and item.avatar.thumbnails['400x400'] is not empty %}
+                                {% set source = item.avatar.thumbnails['team'] %}
+                                <li>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <img class="w-full rounded-lg object-cover shadow-lg" src="{{ source }}" alt="{{ item.fullName }}">
+                                        </div>
+                                        <div class="space-y-1 text-lg font-medium leading-6">
+                                            <h3>{{ item.fullName }}</h3>
+                                            <p class="text-green-600">{{ item.positionName }}</p>
+                                        </div>
+                                        <ul role="list" class="flex space-x-5">
+                                            {% if item.contactDetails.socialMedia is not empty %}
+                                                {% for social in item.contactDetails.socialMedia %}
+                                                    <li>
+                                                        {% include 'includes/tailwind/link-social-media.html.twig' with {'socialLink': social.username } %}
+                                                    </li>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </ul>
+                                        <div class="text-lg">
+                                            <p class="text-gray-500">{{ item.note }}</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- End Tean -->
