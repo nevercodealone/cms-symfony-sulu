@@ -42,7 +42,10 @@
                                                 </div>
                                                 <div class="ml-4">
                                                     <p class="text-base font-medium text-gray-900">{{ child.title }}</p>
-                                                    <p class="mt-1 text-sm text-gray-500">Alle Details</p>
+                                                    <p class="mt-1 text-sm text-gray-500">
+                                                        {% set description = child.excerpt.description != '' ? child.excerpt.description|striptags : 'Alle Details' %}
+                                                        {{ description }}
+                                                    </p>
                                                 </div>
                                             </a>
                                         {% endfor %}

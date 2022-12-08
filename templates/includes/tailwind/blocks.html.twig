@@ -1,7 +1,9 @@
 {% if content.blocks|default([])|length %}
     {% for block in content.blocks %}
+        <section aria-label="{{ block.type|capitalize }}" class="mx-auto max-w-7xl px-4 pt-12 pb-4">
         {% include 'includes/tailwind/blocks/' ~ block.type ~ '.html.twig' with {
             content: block
         } only %}
+        </section>
     {% endfor %}
 {% endif %}
