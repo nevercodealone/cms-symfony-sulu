@@ -79,6 +79,9 @@
                                                     {% if 'twitter' in socialMedia.username  %}
                                                         {% set class = 'twitter' %}
                                                     {% endif %}
+                                                    {% if 'github' in socialMedia.username  %}
+                                                        {% set class = 'github' %}
+                                                    {% endif %}
                                                     <a href="{{ socialMedia.username }}" class="{{ class }}" rel="nofollow">
                                                         <i class="fab fa-{{ class }}"></i>
                                                     </a>
