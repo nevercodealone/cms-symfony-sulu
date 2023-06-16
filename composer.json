@@ -26,7 +26,7 @@
         "docs": "http://docs.sulu.io/"
     },
     "require": {
-        "php": "8.1",
+        "php": "8.1.*",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-zip": "*",
@@ -177,7 +177,8 @@
             "composer/package-versions-deprecated": true,
             "symfony/flex": true,
             "symfony/thanks": true,
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "php-http/discovery": true
         }
     },
     "extra": {
