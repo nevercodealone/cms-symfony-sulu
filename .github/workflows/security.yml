@@ -12,8 +12,10 @@ jobs:
       with:
         php_version: "8.1"
         php_extensions: zip imagick
+        memory_limit: 512M
     - uses: php-actions/composer@v6
       with:
         php_version: "8.1"
         php_extensions: zip imagick
+        memory_limit: 512M
         command: audit
