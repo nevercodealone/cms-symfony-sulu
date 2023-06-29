@@ -32,3 +32,6 @@ sudo setfacl -dR -m u:"$HTTPDUSER":rwX -m u:`whoami`:rwX var/cache var/logs var/
 ```
 docker-compose exec web bash
 ```
+## E2E tests on browser stack
+This project is tested with [BrowserStack](https://www.browserstack.com/).
+
