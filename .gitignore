@@ -156,6 +156,11 @@ typings/
 .env
 .env.test
 
+# Cypress
 cypress/videos
 cypress/screenshots
+
+# Browserstack integration
+results/
+log/
 

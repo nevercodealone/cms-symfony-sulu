@@ -10,7 +10,7 @@
     "moduleResolution": "node",
     "target": "ES2019",
     "lib": ["esnext", "dom"],
-    "types": ["cypress", "node"],
+    "types": ["cypress", "node", "cypress-axe"],
     "allowSyntheticDefaultImports": true,
     "typeRoots": ["node_modules/@types"]
   },
