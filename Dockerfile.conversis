@@ -1,0 +1,72 @@
+FROM composer AS composer
+
+WORKDIR /var/www/html
+
+COPY composer.* /var/www/html/
+
+FROM composer AS composer-live
+
+# Application docker
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
+
+FROM composer AS composer-dev
+
+RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
+
+# Build actual image
+FROM php:8.2-apache AS webserver
+
+WORKDIR /var/www/html
+
+# install packages
+RUN apt-get update && apt-get install -y \
+        openssl \
+        git \
+        msmtp \
+        unzip \
+        libzip-dev \
+        libicu-dev \
+        libmagickwand-dev \
+        mariadb-client
+
+# install PHP extensions
+RUN docker-php-ext-configure intl && docker-php-ext-install -j$(nproc) \
+        intl \
+        pdo \
+        pdo_mysql \
+        opcache \
+        zip
+
+RUN pecl install imagick redis apcu && docker-php-ext-enable imagick redis apcu
+
+# apache config
+RUN /usr/sbin/a2enmod rewrite && /usr/sbin/a2enmod headers && /usr/sbin/a2enmod expires
+COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
+
+# php config
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# MSMTP config
+ADD ./deploy/config/msmtprc /etc/msmtprc
+
+ADD ./deploy/entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/usr/sbin/apachectl", "-DFOREGROUND"]
+
+FROM webserver AS webserver-live
+
+# copy needed files from build containers
+COPY --from=composer-live /var/www/html/vendor/ /var/www/html/vendor/
+RUN touch /var/www/html/.env
+COPY --chown=www-data:www-data . /var/www/html/
+RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var && rm -rf /var/www/html/var/cache/*
+
+FROM webserver AS webserver-dev
+
+# copy needed files from build containers
+COPY --from=composer-dev /var/www/html/vendor/ /var/www/html/vendor/
+RUN touch /var/www/html/.env
+COPY --chown=www-data:www-data . /var/www/html/
+RUN mkdir -p /var/www/html/var && chown www-data:www-data /var/www/html/var && chmod 775 /var/www/html/var && rm -rf /var/www/html/var/cache/*
