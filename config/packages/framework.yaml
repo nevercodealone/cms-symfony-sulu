@@ -17,6 +17,6 @@ framework:
         log: true
 
     # the IP address (or range) of your proxy
-    trusted_proxies: '172.17.0.1/16,172.18.0.1/16,10.42.0.1/16'
+    trusted_proxies: '172.21.0.1/16'
     # trust *all* "X-Forwarded-*" headers
     trusted_headers: [ 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix' ]
