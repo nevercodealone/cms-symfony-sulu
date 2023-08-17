@@ -20,6 +20,8 @@ import 'cypress-ncatestify-plugin';
 
 import 'cypress-axe';
 
+import '@percy/cypress';
+
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 

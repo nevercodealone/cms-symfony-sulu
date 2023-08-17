@@ -163,4 +163,5 @@ cypress/screenshots
 # Browserstack integration
 results/
 log/
+browserstack.json
 
