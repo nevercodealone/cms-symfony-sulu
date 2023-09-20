@@ -2,26 +2,21 @@ variables:
   CI_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
   CI_DEV_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/dev/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
   CYPRESS_PROJECT: $CYPRESS_PROJECT
-  CYPRESS_TRIGGER_TOKEN: $CYPRESS_TRIGGER_TOKEN  
+  CYPRESS_TRIGGER_TOKEN: $CYPRESS_TRIGGER_TOKEN
 
 stages:
   - build
   - deploy_stage
-  - trigger_test  
+  - trigger_test
   - deploy_live
 
 trigger_test:
   stage: trigger_test
-  before_script:
-    - apk add --no-cache curl  
-  script:
-    - >
-      curl -X POST -F token=$CYPRESS_TRIGGER_TOKEN -F ref=master -F "variables[BASE_URL]=https://rolandgolla.projects.nevercodealone.de"
-      https://git.nevercodealone.de/api/v4/projects/17/trigger/pipeline
-  when: always
-  allow_failure: false
-  tags:
-    - docker1  
+  trigger:
+    project: testify-clients/cypress-io-base-tests
+    branch: main
+  variables:
+    BASE_URL: https://nevercodealone.projects.nevercodealone.de
 
 build:
   stage: build
