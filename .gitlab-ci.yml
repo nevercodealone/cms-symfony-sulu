@@ -1,253 +1,102 @@
-#--------------------------------------------------------------------------------------------------
-# STAGES
-#--------------------------------------------------------------------------------------------------
-# build:        build docker image
-# deploy:       deploy application to environment
-# test:         run tests on deployed environment
-# posttest:     confirm or rollback
-# final:        remove environment / deploy to production
+variables:
+  CI_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
+  CI_DEV_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/dev/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
+  CYPRESS_PROJECT: $CYPRESS_PROJECT
+  CYPRESS_TRIGGER_TOKEN: $CYPRESS_TRIGGER_TOKEN
 
 stages:
   - build
-  - deploy
-  - codeanalyse
-  - test
-  - posttest
-  - rollout
-  - postrollout
+  - deploy_stage
+  - trigger_test
+  - deploy_live
 
-variables:
-  HTTP_URL: $CI_COMMIT_REF_SLUG.develop.nevercodealone.de
-  RANCHER_PROJECT_NAME: $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG
-  TOOLBOX_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG/toolbox:$CI_PIPELINE_ID
-  WEB_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
-  WEBDRIVER_URL: rancher.nevercodealone.de
-  WEBSITE_URL: https://$CI_COMMIT_REF_SLUG.develop.nevercodealone.de
+trigger_test:
+  stage: trigger_test
+  trigger:
+    project: testify-clients/cypress-io-base-tests
+    branch: main
+  variables:
+    BASE_URL: https://nevercodealone.projects.nevercodealone.de
 
-
-#--------------------------------------------------------------------------------------------------
-# JOBS
-#--------------------------------------------------------------------------------------------------
-
-# Stage: build
-build_development_image:
+build:
   stage: build
-  image: docker:stable
   before_script:
-    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    - docker build -t $WEB_IMAGE --target webserver --pull .
-    - docker push $WEB_IMAGE
+    - docker build -f Dockerfile.conversis --target webserver-live -t $CI_IMAGE --pull .
+    - docker push $CI_IMAGE
+    - docker build -f Dockerfile.conversis --target webserver-dev -t $CI_DEV_IMAGE --pull .
+    - docker push $CI_DEV_IMAGE
   tags:
-    - docker-executor
-  except:
-    - master
+    - docker1
 
-build_production_image:
-  stage: build
-  image: docker:stable
+.deploy:
+  image: docker:latest
   before_script:
-    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv ||true
+    - docker volume rm $SHORTCODE1"_var" ||true
   script:
-    - docker build -t $WEB_IMAGE --target webserver --pull --build-arg APP_ENV=prod .
-    - docker push $WEB_IMAGE
+    - docker exec mariadb /bin/clonedb.sh $DB_USER $DB_NAME ${PREFIX}_${DB_NAME}
+    - DB_NAME=${PREFIX}_${DB_NAME} docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
+    - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/
+    - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
+    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
+    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
+
+
+deploy_stage:
+  stage: deploy_stage
   tags:
-    - docker-executor
+    - docker2
   only:
-    - master
-
-build_toolbox_image:
-  stage: build
-  image: docker:stable
-  before_script:
-    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
-  script:
-    - docker build -t $TOOLBOX_IMAGE --target toolbox --pull .
-    - docker push $TOOLBOX_IMAGE
-  tags:
-    - docker-executor
-
-# Stage: deploy
-deploy_development_image_to_branch:
-  stage: deploy
-  image: $TOOLBOX_IMAGE
-  before_script:
-    - rancher rm --type stack --stop $RANCHER_PROJECT_NAME || true
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d --pull
-    - sleep 10
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d --pull
-  after_script:
-    - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
-    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/*' || true
-    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'mkdir /var/www/transfer/var; cp -a /var/www/html/var/uploads /var/www/transfer/var/; cp -a /var/www/html/uploads /var/www/transfer/' || true
-    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'rm -rf /var/www/html/var/*' || true
-    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/var/uploads /var/www/html/var/' || true
-    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'cp -a /var/www/transfer/uploads /var/www/html/' || true
-    - rancher exec -t $RANCHER_PROJECT_NAME/web /bin/bash -c 'chown www-data.www-data -R /var/www/html/' || true
-    - sleep 180s
-  tags:
-    - docker-executor
-  except:
-    - master
-
-deploy_production_image_to_stage:
-  stage: deploy
-  image: $TOOLBOX_IMAGE
+    - main
+  extends: .deploy
+  environment:
+    name: stage
+    url: https://$URL
   variables:
-    HTTP_URL: stage-cms.nevercodealone.de
-  before_script:
-    - rancher rm --type stack --stop stage-cms-nevercodealone-de || true
-  script:
-    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.rancher.yml -d --pull
-    - sleep 10
-    - rancher up -s stage-cms-nevercodealone-de -f docker-compose.rancher.yml -d --pull
-  after_script:
-    - rancher exec -t www-nevercodealone-de/db /bin/bash -c 'mysqldump -p`cat $MYSQL_ROOT_PASSWORD_FILE` --opt --single-transaction nca_sulu > /docker-entrypoint-initdb.d/nca_sulu.sql' || true
-    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/transfer/*' || true
-    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'mkdir /var/www/transfer/var; cp -a /var/www/html/var/uploads /var/www/transfer/var/; cp -a /var/www/html/uploads /var/www/transfer/' || true
-    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/html/var/*' || true
-    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/var/uploads /var/www/html/var/' || true
-    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'cp -a /var/www/transfer/uploads /var/www/html/' || true
-    - rancher exec -t stage-cms-nevercodealone-de/web /bin/bash -c 'chown www-data.www-data -R /var/www/html/' || true
-    - sleep 180s
-  tags:
-    - docker-executor
-  only:
-    - master
+    IMAGE: $CI_DEV_IMAGE
+    SHORTCODE1: stage-$SHORTCODE
+    DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/${PREFIX}_${DB_NAME}
+    PREFIX: stage
 
-# Stage: test
-phpstan_code_analyses_against_dev_environment:
-  stage: codeanalyse
-  image: $TOOLBOX_IMAGE
-  script:
-    - /var/www/html/vendor/bin/phpstan analyse src -c phpstan.neon
+deploy_branch:
+  stage: deploy_stage
   tags:
-    - docker-executor
+    - docker2
   except:
-    - master
-
-rector_code_analyses_against_dev_environment:
-  stage: codeanalyse
-  image: $TOOLBOX_IMAGE
-  script:
-    - /var/www/html/vendor/bin/rector process src --dry-run --debug
-  tags:
-    - docker-executor
-  except:
-    - master
-
-phpcs_code_analyses_against_dev_environment:
-  stage: codeanalyse
-  image: $TOOLBOX_IMAGE
-  script:
-    - /var/www/html/vendor/bin/phpcs
-  tags:
-    - docker-executor
-  except:
-    - master
-
-xml_code_analyses_against_dev_environment:
-  stage: codeanalyse
-  image: $TOOLBOX_IMAGE
-  script:
-    - /var/www/html/vendor/bin/xmllint config -v
-  tags:
-    - docker-executor
-  except:
-    - master
-
-run_tests_unit_against_dev_environment:
-  stage: test
-  image: $TOOLBOX_IMAGE
-  script:
-    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
-    - /var/www/html/vendor/bin/codecept run unit --html -vvv
-  artifacts:
-    when: always
-    paths:
-      - ./tests/_output/*
-    expire_in: 1 week
-  tags:
-    - docker-executor
-  except:
-    - master
-
-run_tests_acceptance_against_dev_environment:
-  stage: test
-  image: $TOOLBOX_IMAGE
-  script:
-    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
-    - /var/www/html/vendor/bin/codecept run acceptance --html --skip-group db -vvv
-  artifacts:
-    when: always
-    paths:
-      - ./tests/_output/*
-    expire_in: 1 week
-  tags:
-    - docker-executor
-  except:
-    - master
-
-run_tests_against_final_prod_environment:
-  stage: test
-  image: $TOOLBOX_IMAGE
+    - main
+  extends: .deploy
+  environment:
+    name: $CI_COMMIT_BRANCH
+    url: https://$URL
   variables:
-    WEBSITE_URL: https://stage-cms.nevercodealone.de
-  script:
-    - export SYMFONY_DEPRECATIONS_HELPER=disabled codecept run
-#    - /var/www/html/vendor/bin/codecept run acceptance --html -g live -vvv
-  artifacts:
-    when: always
-    paths:
-      - /builds/nevercodealone/sulu/tests/_output/*
-    expire_in: 1 week
-  tags:
-    - docker-executor
-  only:
-    - master
+    IMAGE: $CI_DEV_IMAGE
+    SHORTCODE1: $CI_COMMIT_BRANCH-$SHORTCODE
+    DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/${PREFIX}_${DB_NAME}
+    URL: $CI_COMMIT_BRANCH.$URL
+    PREFIX: $CI_COMMIT_BRANCH
 
-# Stage: posttest
-deploy_production_image_to_prod:
-  stage: rollout
-  image: $TOOLBOX_IMAGE
-  variables:
-    HTTP_URL: nevercodealone.de
-  script:
-    - rancher up -s www-nevercodealone-de -f docker-compose.rancher.yml  -d --pull --prune --upgrade
+deploy_live:
+  stage: deploy_live
   tags:
-    - docker-executor
+    - docker2
   only:
-    - master
+    - merge_request
+    - main
   when: manual
-
-# Stage: postrollout
-confirm_upgrade:
-  image: $TOOLBOX_IMAGE
+  needs: ["build"]
+  image: docker:latest
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d $RANCHER_OPTIONS
-  after_script:
-    - rancher exec -t www-nevercodealone-de/web /bin/bash -c 'rm -rf /var/www/html/var/cache' || true
-  tags:
-    - docker-executor
-  stage: postrollout
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
+    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
+  environment:
+    name: live
+    url: https://$URL
   variables:
-    RANCHER_OPTIONS: --confirm-upgrade
-    RANCHER_PROJECT_NAME: www-nevercodealone-de
-  only:
-    - master
-  when: manual
-
-rollback_upgrade:
-  image: $TOOLBOX_IMAGE
-  script:
-    - rancher up -s $RANCHER_PROJECT_NAME -f docker-compose.rancher.yml -d $RANCHER_OPTIONS
-  tags:
-    - docker-executor
-  stage: postrollout
-  variables:
-    RANCHER_OPTIONS: --rollback
-    RANCHER_PROJECT_NAME: www-nevercodealone-de
-  only:
-    - master
-  when: manual
+    IMAGE: $CI_IMAGE
+    SHORTCODE1: $SHORTCODE
+    DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/$DB_NAME

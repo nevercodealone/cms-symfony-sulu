@@ -1,0 +1,44 @@
+version: '3'
+services:
+  webserver:
+    container_name: $SHORTCODE1-web
+    image: $IMAGE
+    restart: unless-stopped
+    networks:
+      - proxy
+      - db
+    volumes:
+      - var:/var/www/html/var
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.$SHORTCODE1.entrypoints=http"
+      - "traefik.http.routers.$SHORTCODE1.rule=Host(`$URL`)"
+      - "traefik.http.middlewares.$SHORTCODE1-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.$SHORTCODE1.middlewares=$SHORTCODE1-https-redirect"
+      - "traefik.http.routers.$SHORTCODE1-secure.entrypoints=https"
+      - "traefik.http.routers.$SHORTCODE1-secure.rule=Host(`$URL`)"
+      - "traefik.http.routers.$SHORTCODE1-secure.tls=true"
+      - "traefik.http.routers.$SHORTCODE1-secure.tls.certresolver=http"
+      - "traefik.http.routers.$SHORTCODE1-secure.service=$SHORTCODE1"
+      - "traefik.http.services.$SHORTCODE1.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+    environment:
+      - DATABASE_URL=$DATABASE_URL
+      - DB_NAME=$DB_NAME
+      - DB_HOST=$DB_HOST
+      - DB_USER=$DB_USER
+      - DB_PWD=$DB_PWD
+      - APP_ENV=$APP_ENV
+      - APP_SECRET=$APP_SECRET
+      - GOOGLE_API_KEY=$GOOGLE_API_KEY
+      - TWITTER_API_KEY=$TWITTER_API_KEY
+      - TWITTER_API_SECRET=$TWITTER_API_SECRET
+      - TWITTER_ACCESS_TOKEN=$TWITTER_ACCESS_TOKEN
+      - TWITTER_ACCESS_SECRET=$TWITTER_ACCESS_SECRET
+networks:
+  proxy:
+    external: true
+  db:
+    external: true
+volumes:
+  var:

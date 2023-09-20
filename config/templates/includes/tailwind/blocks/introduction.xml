@@ -7,7 +7,7 @@
         <types>
             <type name="introduction">
                 <meta>
-                    <title>Vorstellung</title>
+                    <title>Textelement</title>
                 </meta>
                 <properties>
                     <property name="headline" type="text_line">
