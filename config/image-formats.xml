@@ -143,6 +143,12 @@
         </meta>
         <scale x="1920" y="1080"/>
     </format>
+    <format key="edugate-page-title">
+        <meta>
+            <title lang="en">Page Title Course Detail</title>
+        </meta>
+        <scale x="1920" y="300"/>
+    </format>
     <format key="1920x1280">
         <meta>
             <title lang="en">Employer branding testimorial background</title>

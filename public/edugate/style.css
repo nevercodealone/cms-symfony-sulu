@@ -154,3 +154,20 @@ ul.list-detail li:hover,
     color: #242c42;
     font-size: 15px;
 }
+
+.single-container {
+    position: relative;
+    width: 100%;
+    max-width: 1980px;
+    height: calc(25vh - 100px);
+    margin: 0 auto;
+    background-repeat: no-repeat;
+    background-attachment: unset;
+    background-position: center;
+    background-size: 100% auto;
+    text-align: center;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

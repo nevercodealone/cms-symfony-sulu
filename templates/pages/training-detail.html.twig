@@ -1,20 +1,15 @@
 {% extends "base-edugate.html.twig" %}
 
 {% block content %}
-    {% set image = extension.excerpt.images[0].formats['1920x1080'] is defined ? extension.excerpt.images[0].formats['1920x1080'] : '/uploads/media/1920x1080/00/210-nca-matrix-default.jpg' %}
-    <div class="section background-opacity page-title set-height-top" style="background-image: url('{{ image }}')">
-        <div class="container">
-            <div class="page-title-wrapper">
-                <h2 class="captions">Kurs Inhalt</h2>
-            </div>
-        </div>
+    {% set image = extension.excerpt.images[0].formats['edugate-page-title'] is defined ? extension.excerpt.images[0].formats['edugate-page-title'] : '/img/nca-matrix-default.jpg' %}
+    <div class="single-container" style="background-image: url('{{ image }}')">
+        <h1>{{ content.title }}</h1>
     </div>
     <div class="section section-padding courses-detail">
         <div class="container">
             <div class="courses-detail-wrapper">
                 <div class="row">
                     <div class="col-md-9 layout-left">
-                        <h1 class="course-title">{{ content.title }}</h1>
                         <div class="course-des">
                             {% include 'includes/edugate/blocks-training.html.twig' %}
                         </div>
