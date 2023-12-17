@@ -12,7 +12,7 @@ stages:
 trigger_test:
   stage: trigger_test
   trigger:
-    project: testify-clients/cypress-io-base-tests
+    project: never-code-alone/sulu-projects/sulu-testify-team
     branch: main
     strategy: depend
   variables:
