@@ -17,6 +17,8 @@ trigger_test:
     strategy: depend
   variables:
     BASE_URL: https://nevercodealone.projects.nevercodealone.de
+  tags:
+    - docker1  
 
 build:
   stage: build
