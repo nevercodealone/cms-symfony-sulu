@@ -18,15 +18,6 @@ trigger_test:
   variables:
     BASE_URL: https://nevercodealone.projects.nevercodealone.de
 
-trigger_project_test:
-  stage: trigger_test
-  trigger:
-    project: testify-internal/cypress-io-roland-golla-de
-    branch: main
-    strategy: depend
-  variables:
-    BASE_URL: https://nevercodealone.projects.nevercodealone.de
-    
 build:
   stage: build
   before_script:
