@@ -1,0 +1,190 @@
+{% extends "base-tailwind.html.twig" %}
+
+{% block content %}
+    {% if content.whyImage[0] is defined
+        and content.whyImage[0] is not empty
+        and content.whyHeadline is not empty
+        and content.whyDescription is not empty
+    %}
+        {% set source = content.whyImage[0].formats['tailwind-training-overview-header'] %}
+        {% set title = content.whyHeadline %}
+        <div class="relative bg-gray-900 rounded rounded-3xl">
+            <div class="relative rounded-r rounded-3xl h-80 overflow-hidden bg-green-600 md:absolute md:left-0 md:h-full md:w-1/3 lg:w-1/2">
+                <img class="h-full w-full object-cover"
+                     src="{{ source }}"
+                     alt="{{ title }}"
+                >
+                <svg viewBox="0 0 926 676" aria-hidden="true" class="absolute -bottom-24 left-24 w-[57.875rem] transform-gpu blur-[118px]">
+                    <path fill="url(#60c3c621-93e0-4a09-a0e6-4c228a0116d8)" fill-opacity=".4" d="m254.325 516.708-90.89 158.331L0 436.427l254.325 80.281 163.691-285.15c1.048 131.759 36.144 345.144 168.149 144.613C751.171 125.508 707.17-93.823 826.603 41.15c95.546 107.978 104.766 294.048 97.432 373.585L685.481 297.694l16.974 360.474-448.13-141.46Z" />
+                    <defs>
+                        <linearGradient id="60c3c621-93e0-4a09-a0e6-4c228a0116d8" x1="926.392" x2="-109.635" y1=".176" y2="321.024" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#776FFF" />
+                            <stop offset="1" stop-color="#FF4694" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div class="relative mx-auto max-w-7xl py-24 sm:py-32 lg:px-8 lg:py-40">
+                <div class="pl-6 pr-6 md:ml-auto md:w-2/3 md:pl-16 lg:w-1/2 lg:pl-24 lg:pr-0 xl:pl-32">
+                    {% if content.whySubline %}
+                        <h3 class="text-base font-semibold leading-7 text-green-400">
+                            {{ content.whySubline }}
+                        </h3>
+                    {% endif %}
+                    <h1 class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                        {{ title }}
+                    </h1>
+                    <div class="mt-6 text-base leading-7 text-gray-300">
+                        {{ content.whyDescription|raw }}
+                    </div>
+                    <div class="mt-8">
+                        <a href="mailto:roland@nevercodealone.de" class="inline-flex rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                            E-Mail schreiben
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {#<div class="section section-padding courses">
+        <div class="container">
+            <div class="group-title-index">
+                <h2 class="center-title">{{ content.coursesHeadline }}</h2>
+                <h4 class="top-title">{{ content.coursesSubline }}</h4>
+                <!--.bottom-title<i class="bottom-icon icon-a-1-01"></i>--></div>
+            <div class="courses-wrapper"><!-- Nav tabs-->
+                <div class="row top-content">
+                    <div class="col-md-3">
+                        <div class="result-output text-left">
+                            <p class="result-count">Kategorien</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <ul role="tablist" class="nav nav-tabs edugate-tabs">
+                            {% for category in sulu_categories('en') %}
+                                {% set class = loop.first ? 'active' : '' %}
+                                <li role="presentation" class="{{ class }}">
+                                    <a href="#{{ category.key }}" data-toggle="tab" class="text">{{ category.name }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <ul class="btn-list-grid list-unstyled text-right">
+                            <li class="active">
+                                <button class="btn-grid"><i class="fa fa-th-large"></i></button>
+                            </li>
+                            <li>
+                                <button class="btn-list"><i class="fa fa-th-list"></i></button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Tab panes-->
+                <div class="tab-content courses-content">
+                    {% for category in sulu_categories('en') %}
+                        <div id="{{ category.key }}" role="tabpanel" class="tab-pane fade in active">
+                            <div class="style-show style-grid row">
+                                {% for coursesOverviewItem in content.coursesOverviewItems %}
+                                    {% for itemCategory in coursesOverviewItem.categories %}
+                                        {% if itemCategory.key == category.key %}
+                                            <div class="col-style" data-q="list-item">
+                                                <div class="edugate-layout-2">
+                                                    <div class="edugate-layout-2-wrapper">
+                                                        <div class="edugate-content">
+                                                            <a href="{{ coursesOverviewItem.url }}" class="title" data-q="list-item-title">
+                                                                {{ coursesOverviewItem.title }}
+                                                            </a>
+
+                                                            <div class="info">
+                                                                <div data-q="list-item-category">
+                                                                    <strong>
+                                                                        {{ category.name }}
+                                                                    </strong>
+                                                                </div>
+                                                                <div class="author item" data-q="list-item-trainer">
+                                                                    {% for trainers in coursesOverviewItem.trainerItems %}
+                                                                        {{ trainers.fullName }}
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="star-rating">
+                                                                <span class="width-100"></span>
+                                                            </div>
+                                                            <div class="description" data-q="list-item-description">
+                                                                {{ coursesOverviewItem.seoDescription }}
+                                                            </div>
+                                                            <a href="{{ coursesOverviewItem.url }}" class="btn btn-green" data-q="list-item-url"><span>Zum Kurs</span></a>
+                                                        </div>
+                                                        <div class="edugate-image">
+                                                            <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive" data-q="list-item-img"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>#}
+    {#<div class="section gallery-page gallery-3column">
+        <div class="container">
+            <div class="group-title-index">
+                <h4 class="top-title">{{ content.youTubeHeadline }}</h4>
+                <h2>{{ content.youTubeSubline }}</h2>
+                <div class="bottom-title">
+                    <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X" target="_blank" rel="nofollow">
+                        <i class="fab fa-youtube" style="font-size: 40px"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <div class="row news-page-wrapper">
+                    {% for video in videoList %}
+                        {% set url = 'https://www.youtube.com/watch?v=%s'|format(video.snippet.resourceId.videoId) %}
+                        <div class="col-sm-4" data-q="yt-item">
+                            <div class="edugate-layout-3 news-gird">
+                                <div class="edugate-layout-3-wrapper">
+                                    <a href="{{ url }}" class="edugate-image" title="{{ video['snippet']['title'] }}" target="_blank">
+                                        <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}" alt="{{ video['snippet']['title'] }}" class="img-responsive"/>
+                                    </a>
+                                    <div class="edugate-content">
+                                        <a href="{{ url }}" class="title" target="_blank" title="{{ video['snippet']['title'] }}">
+                                            {{ video['snippet']['title'] }}
+                                        </a>
+
+                                        <div class="info">
+                                            <div class="author item">
+                                                #NCAVideo
+                                            </div>
+                                            <div class="date-time item">
+                                                {{ video['snippet']['publishedAt']|date('D.M.Y', "Europe/Berlin")  }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>Review PHP-Schulung</strong>
+                                        </div>
+                                        <div class="description">
+                                            {{ video['snippet']['description'] }}
+                                        </div>
+                                        <a href="{{ url }}" title="{{ video['snippet']['title'] }}" class="btn btn-green"><span>YouTube</span></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>#}
+{% endblock %}
+{% block javascript %}
+    <script src="/edugate/assets/js/pages/courses.js"></script>
+{% endblock %}
+

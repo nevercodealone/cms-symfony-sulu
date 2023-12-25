@@ -1,8 +1,7 @@
 variables:
   CI_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
   CI_DEV_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/dev/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
-  CYPRESS_PROJECT: $CYPRESS_PROJECT
-  CYPRESS_TRIGGER_TOKEN: $CYPRESS_TRIGGER_TOKEN
+  BASE_URL: https://nevercodealone.projects.nevercodealone.de
 
 stages:
   - build
@@ -13,11 +12,12 @@ stages:
 trigger_test:
   stage: trigger_test
   trigger:
-    project: testify-clients/cypress-io-base-tests
+    project: never-code-alone/never-code-alone-cypress-basis-tests
     branch: main
+    strategy: depend
   variables:
     BASE_URL: https://nevercodealone.projects.nevercodealone.de
-
+  
 build:
   stage: build
   before_script:
@@ -43,7 +43,6 @@ build:
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
-
 
 deploy_stage:
   stage: deploy_stage
@@ -85,8 +84,8 @@ deploy_live:
   only:
     - merge_request
     - main
-  when: manual
-  needs: ["build"]
+  needs: 
+    - trigger_test
   image: docker:latest
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY

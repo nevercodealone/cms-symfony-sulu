@@ -159,3 +159,7 @@ typings/
 cypress/videos
 cypress/screenshots
 
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###

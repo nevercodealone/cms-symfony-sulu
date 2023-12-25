@@ -192,4 +192,10 @@
             <option name="png_compression_level">6</option>
         </options>
     </format>
+    <format key="tailwind-training-overview-header">
+        <meta>
+            <title lang="en">Tailwind Training overview header</title>
+        </meta>
+        <scale x="912" />
+    </format>
 </formats>

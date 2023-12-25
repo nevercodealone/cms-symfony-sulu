@@ -5,9 +5,10 @@
 [x-cloak] { display: none; }
 
 a {
-    @apply text-green-600;
+    @apply text-green-400;
+    opacity: unset;
 }
 
 a:hover, a:focus {
-    @apply text-green-800 underline;
+    @apply text-green-500 underline;
 }
