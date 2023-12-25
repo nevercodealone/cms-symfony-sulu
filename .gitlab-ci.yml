@@ -92,6 +92,8 @@ deploy_live:
   script:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
+  after_script:
+    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
   environment:
     name: live
     url: https://$URL
