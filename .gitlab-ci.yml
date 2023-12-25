@@ -16,8 +16,8 @@ trigger_test:
     branch: main
     strategy: depend
   variables:
-    BASE_URL: https://nevercodealone.projects.nevercodealone.de
-  
+    CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+
 build:
   stage: build
   before_script:
@@ -84,7 +84,7 @@ deploy_live:
   only:
     - merge_request
     - main
-  needs: 
+  needs:
     - trigger_test
   image: docker:latest
   before_script:
@@ -92,6 +92,8 @@ deploy_live:
   script:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
+  after_script:
+    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
   environment:
     name: live
     url: https://$URL
