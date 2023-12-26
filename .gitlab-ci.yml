@@ -108,6 +108,7 @@ trigger_live_tests:
   trigger:
     project: never-code-alone/never-code-alone-cypress-basis-tests
     branch: main
+    strategy: depend
   variables:
     CYPRESS_BASE_URL: https://$URL
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
