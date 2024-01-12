@@ -128,3 +128,6 @@ cypress_internal_links_test_live:
   only:
     - merge_request
     - main
+  artifacts:
+    variables:
+      CYPRESS_SPEC: "$CYPRESS_SPEC"
