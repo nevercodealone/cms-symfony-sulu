@@ -128,6 +128,8 @@ cypress_internal_links_test_live:
   only:
     - merge_request
     - main
+  script:
+    - echo "CYPRESS_SPEC=$CYPRESS_SPEC" >> $CI_JOB_TOKEN.txt
   artifacts:
     paths:
-      - $CYPRESS_SPEC
+      - $CI_JOB_TOKEN.txt
