@@ -365,7 +365,9 @@
                                                     {% endif %}
                                                 </h4>
                                                 {% if content.priceGreenSubline is defined and content.priceGreenSubline is not empty %}
-                                                    <div class="price"><span class="currency">€</span>{{ content.donationPerTicket }},-<span class="ticket">/ Pro Ticket als Spende <b>{{ content.priceGreenSubline }}</b></span> </div>
+                                                    <div class="price">
+                                                      <b>{{ content.priceGreenSubline }}</b>
+                                                    </div>
                                                 {% else %}
                                                     <div class="price"><span class="currency">€</span>10,-<span class="ticket">/ Pro Ticket als Spende <b>Kinderkrebsstiftung in Bonn</b></span> </div>
                                                 {% endif %}
