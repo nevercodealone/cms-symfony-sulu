@@ -391,6 +391,15 @@
                 <title lang="en">Contact</title>
             </meta>
             <properties>
+                <property name="available" type="checkbox">
+                  <meta>
+                    <title lang="en">Available</title>
+                  </meta>
+                  <params>
+                    <param name="type" value="toggler"/>
+                    <param name="default_value" value="true"/>
+                  </params>
+                </property>
                 <property name="contactHeadline" type="text_line">
                     <meta>
                         <title lang="en">Headline</title>
