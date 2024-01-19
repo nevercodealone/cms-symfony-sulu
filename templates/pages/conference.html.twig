@@ -295,7 +295,8 @@
                             </div>
                         </section>
                     {% endif %}
-                    {% if content.available and content.contactHeadline != '' and content.contactBodytext != '' %}
+                    {% if content.hide is not defined or content.hide == false %}
+                      {% if content.contactHeadline != '' and content.contactBodytext != '' %}
                         <section class="speaker section-spacing text-center" id="contact">
                             <div class="container">
                                 <header>
@@ -344,6 +345,7 @@
                                 {% endif %}
                             </div>
                         </section>
+                    {% endif %}
                     {% endif %}
                     {% if content.priceHeadline != '' or content.priceSubline != '' or content.priceBodytext != '' %}
                         <section class="pricing section-spacing text-center" id="pricing">
