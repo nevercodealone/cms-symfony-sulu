@@ -708,6 +708,42 @@
                         <param name="default_value" value="true"/>
                     </params>
                 </property>
+              <block name="faqItems" default-type="items" minOccurs="0">
+                <meta>
+                  <title>Items</title>
+                </meta>
+                <types>
+                  <type name="items">
+                    <meta>
+                      <title>Item</title>
+                    </meta>
+                    <properties>
+                      <property name="headline" type="text_line">
+                        <meta>
+                          <title>Frage</title>
+                        </meta>
+                        <params>
+                          <param name="headline" value="true"/>
+                        </params>
+                      </property>
+                      <property name="description" type="text_editor">
+                        <meta>
+                          <title>Description</title>
+                        </meta>
+
+                        <params>
+                          <param name="table" value="false"/>
+                          <param name="link" value="true"/>
+                          <!-- CKEditor Parameters examples: -->
+                          <param name="extra_allowed_content"
+                                 value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                          <param name="ui_color" value="#ffcc00"/>
+                        </params>
+                      </property>
+                    </properties>
+                  </type>
+                </types>
+              </block>
             </properties>
         </section>
     </properties>

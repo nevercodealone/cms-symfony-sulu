@@ -456,26 +456,36 @@
                         <div class="row">
                             <div class="col-md-10 center-block">
                                 <ul class="cd-faq-group">
-                                    <li> <a class="cd-faq-trigger" href="#0">Brauche ich einen Laptop</a>
+                                  {% if content.faqItems is defined and content.faqItems is not empty %}
+                                    {% for item in content.faqItems %}
+                                      <li> <a class="cd-faq-trigger" href="#0">{{ item.headline }}</a>
                                         <div class="cd-faq-content">
-                                            <p>Nein, es reicht da zu sein. Hier hat auch nicht jeder einen Schreibtisch. Man kann aber gerne ein Gerät mitbringen. Steckdosen sind vorhanden.</p>
+                                          {{ item.description|raw }}
                                         </div>
+                                      </li>
+                                    {% endfor %}
+                                  {% else %}
+                                    <li> <a class="cd-faq-trigger" href="#0">Brauche ich einen Laptop</a>
+                                      <div class="cd-faq-content">
+                                        <p>Nein, es reicht da zu sein. Hier hat auch nicht jeder einen Schreibtisch. Man kann aber gerne ein Gerät mitbringen. Steckdosen sind vorhanden.</p>
+                                      </div>
                                     </li>
                                     <li> <a class="cd-faq-trigger" href="#0">Kann ich kostenlos parken?</a>
-                                        <div class="cd-faq-content">
-                                            <p>ja, es kann kostenlos geparkt werden.</p>
-                                        </div>
+                                      <div class="cd-faq-content">
+                                        <p>ja, es kann kostenlos geparkt werden.</p>
+                                      </div>
                                     </li>
                                     <li> <a class="cd-faq-trigger" href="#0">Live-Coding - Muß ich an die Tastatur?</a>
-                                        <div class="cd-faq-content">
-                                            <p>Keiner muß an die Tastatur. Sie wird Reihenweise an Freiwillige weiter gegeben. Alles ist ganz entspannt und freundlich. Darauf legen wir großen Wert und moderieren hier auch.</p>
-                                        </div>
+                                      <div class="cd-faq-content">
+                                        <p>Keiner muß an die Tastatur. Sie wird Reihenweise an Freiwillige weiter gegeben. Alles ist ganz entspannt und freundlich. Darauf legen wir großen Wert und moderieren hier auch.</p>
+                                      </div>
                                     </li>
                                     <li> <a class="cd-faq-trigger" href="#0">Gibt es vegetarisches Essen?</a>
-                                        <div class="cd-faq-content">
-                                            <p>Ja das wird auf jeden Fall berücksichtigt.</p>
-                                        </div>
+                                      <div class="cd-faq-content">
+                                        <p>Ja das wird auf jeden Fall berücksichtigt.</p>
+                                      </div>
                                     </li>
+                                  {% endif %}
                                 </ul>
                             </div>
                         </div>
