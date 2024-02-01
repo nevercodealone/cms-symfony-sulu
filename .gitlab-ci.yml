@@ -92,9 +92,6 @@ deploy_live:
   stage: deploy_live
   tags:
     - docker2
-  only:
-    - merge_request
-    - main
   needs:
     - cypress_full_test_preview_stage
     - playwright_screen_compare_live_against_preview
