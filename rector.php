@@ -7,7 +7,6 @@ use Rector\Config\RectorConfig;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 use Rector\Symfony\Set\SymfonyLevelSetList;
-use Sulu\Rector\Set\SuluLevelSetList;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([__DIR__ . '/src', __DIR__ . '/tests']);
@@ -26,7 +25,6 @@ return static function (RectorConfig $rectorConfig): void {
         LevelSetList::UP_TO_PHP_81,
         SetList::CODING_STYLE,
         SetList::EARLY_RETURN,
-        SymfonyLevelSetList::UP_TO_SYMFONY_54,
-        SuluLevelSetList::UP_TO_SULU_25
+        SymfonyLevelSetList::UP_TO_SYMFONY_54
     ]);
 };
