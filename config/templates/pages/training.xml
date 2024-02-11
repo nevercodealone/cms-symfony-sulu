@@ -7,7 +7,7 @@
     <key>training</key>
 
     <view>pages/training</view>
-    <controller>Sulu\Bundle\WebsiteBundle\Controller\DefaultController::indexAction</controller>
+    <controller>Sulu\Bundle\HeadlessBundle\Controller\HeadlessWebsiteController::indexAction</controller>
     <cacheLifetime>604800</cacheLifetime>
 
     <meta>
