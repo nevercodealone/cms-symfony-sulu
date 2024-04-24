@@ -8,8 +8,9 @@ stages:
   - deploy_stage
   - trigger_test
   - deploy_live
+  - trigger_live_tests
 
-trigger_test:
+cypress_full_test_preview_stage:
   stage: trigger_test
   trigger:
     project: never-code-alone/never-code-alone-cypress-basis-tests
@@ -17,6 +18,16 @@ trigger_test:
     strategy: depend
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+
+playwright_screen_compare_live_against_preview:
+  stage: trigger_test
+  trigger:
+    project: never-code-alone/playwright-visual-regression
+    branch: main
+    strategy: depend
+  variables:
+    BASE_URL: https://nevercodealone.de
+    COMPARE_URL: https://nevercodealone.projects.nevercodealone.de
 
 build:
   stage: build
@@ -81,11 +92,12 @@ deploy_live:
   stage: deploy_live
   tags:
     - docker2
-  only:
-    - merge_request
-    - main
-  needs:
-    - trigger_test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
+      when: manual
+      allow_failure: true
+    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
+      when: on_success
   image: docker:latest
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
@@ -101,3 +113,18 @@ deploy_live:
     IMAGE: $CI_IMAGE
     SHORTCODE1: $SHORTCODE
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/$DB_NAME
+
+cypress_internal_links_test_live:
+  stage: trigger_live_tests
+  trigger:
+    project: never-code-alone/never-code-alone-cypress-basis-tests
+    branch: main
+    strategy: depend
+  variables:
+    CYPRESS_BASE_URL: https://$URL
+    CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
+  needs:
+    - deploy_live
+  only:
+    - merge_request
+    - main

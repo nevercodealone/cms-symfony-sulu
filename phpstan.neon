@@ -9,5 +9,7 @@ parameters:
   symfony:
     container_xml_path: %currentWorkingDirectory%/var/cache/website/dev/App_KernelDevDebugContainer.xml
     console_application_loader: tests/phpstan/console-application.php
+  ignoreErrors:
+    - '#^PHP Fatal error:  Uncaught Error: Interface "PHPStan\\Reflection\\AdditionalConstructorsExtension" not found#'
   excludes_analyse:
     - src/Kernel.php

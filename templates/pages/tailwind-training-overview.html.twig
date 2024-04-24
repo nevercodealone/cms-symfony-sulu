@@ -8,7 +8,7 @@
     %}
         {% set source = content.whyImage[0].formats['tailwind-training-overview-header'] %}
         {% set title = content.whyHeadline %}
-        <div class="relative bg-gray-900 rounded rounded-3xl">
+        <div class="mb-7 relative bg-green-950 rounded rounded-3xl">
             <div class="relative rounded-r rounded-3xl h-80 overflow-hidden bg-green-600 md:absolute md:left-0 md:h-full md:w-1/3 lg:w-1/2">
                 <img class="h-full w-full object-cover"
                      src="{{ source }}"
@@ -34,7 +34,7 @@
                     <h1 class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
                         {{ title }}
                     </h1>
-                    <div class="mt-6 text-base leading-7 text-gray-300">
+                    <div class="mt-6 text-base leading-7 text-white">
                         {{ content.whyDescription|raw }}
                     </div>
                     <div class="mt-8">
@@ -46,6 +46,32 @@
             </div>
         </div>
     {% endif %}
+    {% if content.coursesOverviewItems is not empty %}
+      {% for item in content.coursesOverviewItems %}
+        {% if item.image|default and item.image[0]|default %}
+          {% set source = item.image[0].formats['tailwind-daisyui-training-overview-card'] %}
+          {% set title = item.image[0].title %}
+        {% else %}
+          {% set source = '/uploads/media/tailwind-daisyui-training-overview-card/09/509-webdevelopment-training-never-code-alone.jpg' %}
+          {% set title = item.title %}
+        {% endif %}
+        <div class="mb-3 bg-green-950 shadow-xl flex rounded rounded-3xl">
+          <figure class="flex-none w-64 relative">
+            <img class="h-full w-full object-cover rounded-r rounded-3xl" src="{{ source }}" alt="{{ title }}"/>
+          </figure>
+          <div class="flex-1 card-body text-white">
+            <h2 class="card-title">{{ item.title }}</h2>
+            <p>{{ item.seoDescription }}</p>
+            <div class="card-actions justify-end">
+              <a href="#" class="inline-flex rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                Zum Training
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
     {#<div class="section section-padding courses">
         <div class="container">
             <div class="group-title-index">

@@ -198,4 +198,10 @@
         </meta>
         <scale x="912" />
     </format>
+  <format key="tailwind-daisyui-training-overview-card">
+    <meta>
+      <title lang="en">Tailwind Daisy UI Training Overview Card</title>
+    </meta>
+    <scale x="200" y="280"/>
+  </format>
 </formats>
