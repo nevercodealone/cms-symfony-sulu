@@ -192,16 +192,22 @@
             <option name="png_compression_level">6</option>
         </options>
     </format>
+    <format key="content-full">
+        <meta>
+            <title lang="en">Content Full</title>
+        </meta>
+        <scale x="1200" y="675"/>
+    </format>
     <format key="tailwind-training-overview-header">
         <meta>
             <title lang="en">Tailwind Training overview header</title>
         </meta>
         <scale x="912" />
     </format>
-  <format key="tailwind-daisyui-training-overview-card">
-    <meta>
-      <title lang="en">Tailwind Daisy UI Training Overview Card</title>
-    </meta>
-    <scale x="200" y="280"/>
-  </format>
+    <format key="tailwind-daisyui-training-overview-card">
+      <meta>
+        <title lang="en">Tailwind Daisy UI Training Overview Card</title>
+      </meta>
+      <scale x="200" y="280"/>
+    </format>
 </formats>
