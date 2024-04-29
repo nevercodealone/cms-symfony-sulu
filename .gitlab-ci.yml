@@ -52,7 +52,7 @@ build:
     - DB_NAME=${PREFIX}_${DB_NAME} docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
-    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
+    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
 
 deploy_stage:
@@ -103,7 +103,7 @@ deploy_live:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
-    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
+    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
   environment:
     name: live
