@@ -3,8 +3,13 @@
     <article class="flex max-w-xl flex-col items-start justify-between">
       <div class="group relative">
         {% if item.excerptImages[0] is defined and item.excerptImages[0] is not empty %}
-          {% set source = item.excerptImages[0].formats['content-full.webp'] %}
-          <img class="h-auto max-w-full" src="{{ source }}" alt="{{ item.excerptImages[0].description }}">
+          {% set source = item.excerptImages[0].formats['tailwind-subpage-overview.webp'] %}
+          {% set sourceSet = item.excerptImages[0].formats['content-full-half.webp'] %}
+          <img src="{{ source }}"
+               srcset="{{ sourceSet }} 1023w"
+               class="h-auto max-w-full"
+               alt="{{ item.excerptImages[0].description }}"
+          >
         {% endif %}
         <h3 class="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
           <a href="{{ sulu_content_path(item.url) }}">
