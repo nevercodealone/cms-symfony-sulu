@@ -13,6 +13,8 @@
         <types>
             <xi:include href="blocks/image.xml"
                 xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+            <xi:include href="blocks/excerpt-image.xml"
+                xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
             <xi:include href="blocks/hero.xml"
                 xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
             <xi:include href="blocks/hero-startpage.xml"

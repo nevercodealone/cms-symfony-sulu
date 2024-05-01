@@ -1,0 +1,5 @@
+{% if extensionexcerpt.images[0] is defined and extensionexcerpt.images[0] is not empty %}
+  {% set source = extensionexcerpt.images[0].thumbnails['content-full.webp'] %}
+  {% set alt = extensionexcerpt.images[0].description %}
+  <img class="h-auto max-w-full" src="{{ source }}" alt="{{ alt }}">
+{% endif %}
