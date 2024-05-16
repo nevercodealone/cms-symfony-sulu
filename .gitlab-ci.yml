@@ -51,9 +51,12 @@ build:
     - docker exec mariadb /bin/clonedb.sh $DB_USER $DB_NAME ${PREFIX}_${DB_NAME}
     - DB_NAME=${PREFIX}_${DB_NAME} docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/
+    - docker cp $SHORTCODE-web:/var/www/html/public /tmp/
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
+    - docker cp /tmp/public $SHORTCODE1-web:/var/www/html/
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
+    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
 
 deploy_stage:
   stage: deploy_stage
@@ -105,6 +108,7 @@ deploy_live:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
+    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
   environment:
     name: live
     url: https://$URL
