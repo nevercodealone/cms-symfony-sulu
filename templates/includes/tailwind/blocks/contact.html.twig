@@ -1,0 +1,47 @@
+<!-- tailwind-contact-box -->
+{% set snippets = sulu_snippet_load_by_area('contact') %}
+{% set snippet = snippets.content %}
+
+{% set organisation = snippet.organisation  %}
+{% if content.organisation is defined and content.organisation is not empty %}
+    {% set organisation = content.organisation %}
+{% endif %}
+
+{% set item = organisation[0] %}
+<div class="mx-auto">
+  <div class="lg:grid lg:grid-cols-12">
+    <div class="relative lg:col-span-4 lg:col-start-1 lg:row-start-1">
+      <div class="relative mx-auto max-w-md px-6 py-6 sm:max-w-3xl">
+        <div class="aspect-w-10 aspect-h-6 sm:aspect-w-2 sm:aspect-h-1 lg:aspect-w-1">
+          {% set source = item.avatar.thumbnails['contact.webp'] %}
+          <img
+            class="rounded-3xl object-cover object-center shadow-2xl"
+            src="{{ source }}"
+            alt="{{ item.note }}"
+          >
+        </div>
+      </div>
+    </div>
+    <div class="relative bg-ttgreen lg:col-span-7 lg:col-start-5 lg:row-start-1 lg:flex lg:items-center">
+      <div class="relative text-center mx-auto px-6 sm:py-16 text-lg lg:px-0 lg:max-w-none lg:w-full">
+        <h3 class="text-center mx-auto text-3xl font-bold tracking-tight">
+          {{ snippet.title }}
+        </h3>
+        <div class="text-center">
+          {{ snippet.description|raw }}
+        </div>
+        <div class="text-center pt-6">
+          <a
+            class="w-2/3 rounded-md border border-transparent bg-green-600 py-3 px-5 text-center text-white shadow-md hover:text-white"
+            href="{{ item.mainPhone }}"
+            title="Roland anrufen"
+          >
+            {{ item.mainPhone }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- end tailwind-contact-box -->

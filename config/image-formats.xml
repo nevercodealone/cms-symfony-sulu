@@ -175,6 +175,12 @@
         </meta>
         <scale x="400" y="200"/>
     </format>
+    <format key="contact">
+      <meta>
+        <title lang="en">Kontakt</title>
+      </meta>
+      <scale x="420" y="420"/>
+    </format>
     <format key="hero-newsletter">
         <meta>
             <title lang="en">Hero Newsletter</title>
