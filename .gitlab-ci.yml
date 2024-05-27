@@ -53,7 +53,7 @@ build:
     - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/
     - docker cp $SHORTCODE-web:/var/www/html/public/uploads /tmp/public-uploads
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
-    - docker cp /tmp/folder/public-uploads/. $SHORTCODE-web:/var/www/html/public/uploads
+    - docker cp /tmp/public-uploads/. $SHORTCODE-web:/var/www/html/public/uploads
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
