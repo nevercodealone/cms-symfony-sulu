@@ -31,9 +31,11 @@
           {{ snippet.description|raw }}
         </div>
         <div class="text-center pt-6">
+          {% set phoneNumber = item.mainPhone|replace({'0': '+49'}) %}
+
           <a
             class="w-2/3 rounded-md border border-transparent bg-green-600 py-3 px-5 text-center text-white shadow-md hover:text-white"
-            href="{{ item.mainPhone }}"
+            href="{{ phoneNumber }}"
             title="Roland anrufen"
           >
             {{ item.mainPhone }}
