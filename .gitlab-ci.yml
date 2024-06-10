@@ -19,6 +19,15 @@ cypress_full_test_preview_stage:
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
 
+cypress_custom_tests_preview_stage:
+  stage: trigger_test
+  trigger:
+    project: never-code-alone/nca-cypress-nevercodealon-custom
+    branch: main
+    strategy: depend
+  variables:
+    CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+
 playwright_screen_compare_live_against_preview:
   stage: trigger_test
   trigger:
