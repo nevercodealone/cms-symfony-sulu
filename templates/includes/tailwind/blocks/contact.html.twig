@@ -1,6 +1,10 @@
 <!-- tailwind-contact-box -->
-{% set snippets = sulu_snippet_load_by_area('contact') %}
-{% set snippet = snippets.content %}
+{% if content.snippets is defined and content.snippets is not empty %}
+  {% set snippet = content.snippets[0] %}
+{% else %}
+  {% set snippets = sulu_snippet_load_by_area('contact') %}
+  {% set snippet = snippets.content %}
+{% endif %}
 
 {% set organisation = snippet.organisation  %}
 {% if content.organisation is defined and content.organisation is not empty %}

@@ -4,7 +4,7 @@
         <div class="relative shadow-xl sm:overflow-hidden sm:rounded-2xl">
             <div class="absolute inset-0">
                 {% set source = content.image[0].formats['hero-startpage'] %}
-                <img class="h-full w-full object-cover" src="{{ source }}" alt="{{ content.description|raw }}">
+                <img class="h-full w-full object-cover" src="{{ source }}" alt="{{ content.description|replace({'<p>': '', '</p>': ''}) }}">
                 <div class="absolute inset-0 bg-gradient-to-r from-green-800 to-green-700 mix-blend-multiply"></div>
             </div>
             <div class="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
