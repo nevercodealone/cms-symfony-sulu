@@ -1,0 +1,59 @@
+<section class="py-16 bg-gray-100" aria-labelledby="gallery-heading">
+  <div class="container mx-auto px-4">
+    <header class="text-center mb-12">
+      <h1 id="gallery-heading" class="text-4xl font-bold text-gray-900 mb-2 line-clamp-2">{{ content.headline }}</h1>
+      <p class="text-xl text-gray-700 mb-4">{{ content.subline }}</p>
+      <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="inline-block"
+         aria-label="View our YouTube playlist">
+        <svg class="w-12 h-12 text-red-600" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+        </svg>
+      </a>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% set videoList = youtube(content.playlistid) %}
+      {% for video in videoList %}
+        {% if video['snippet']['thumbnails']['medium']['url'] is defined and video['snippet']['thumbnails']['medium']['url'] is not empty %}
+          {% set url = 'https://www.youtube.com/watch?v=%s'|format(video.snippet.resourceId.videoId) %}
+          <article class="bg-white rounded-lg shadow-md overflow-hidden">
+            <a href="{{ url }}" class="block" target="_blank" rel="noopener noreferrer">
+              <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}"
+                   alt=""
+                   class="w-full h-48 object-cover underline"
+                   aria-hidden="true">
+            </a>
+            <div class="p-6">
+              <h2 class="text-xl font-semibold mb-2 line-clamp-2">
+                <a href="{{ url }}"
+                   class=" underline text-gray-900 hover:text-blue-700 focus:text-blue-700 hover:underline focus:outline-none focus:underline"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                  {{ video['snippet']['title'] }}
+                </a>
+              </h2>
+              <div class="flex justify-between items-center text-sm text-gray-600 mb-4">
+                <span>#NCAVideo</span>
+                <time datetime="{{ video['snippet']['publishedAt'] }}">
+                  {{ video['snippet']['publishedAt']|date('d.m.Y', "Europe/Berlin") }}
+                </time>
+              </div>
+              <p class="font-bold mb-2">Review PHP-Schulung</p>
+              <p class="text-gray-700 mb-4 line-clamp-4">{{ video['snippet']['description'] }}</p>
+              <a href="{{ url }}"
+                 class="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                 target="_blank"
+                 rel="noopener noreferrer">
+                Watch on YouTube
+                <span class="sr-only">: {{ video['snippet']['title'] }}</span>
+              </a>
+            </div>
+          </article>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
