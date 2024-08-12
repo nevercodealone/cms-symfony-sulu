@@ -111,7 +111,11 @@
                                                             <a href="{{ coursesOverviewItem.url }}" class="btn btn-green" data-q="list-item-url"><span>Zum Kurs</span></a>
                                                         </div>
                                                         <div class="edugate-image">
-                                                            <img src="{{ coursesOverviewItem.image[0].formats['400x300'] }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive" data-q="list-item-img"/>
+                                                          {% set source = "/uploads/media/1920x1080/09/479-nca-matrix-default.jpg" %}
+                                                          {% if coursesOverviewItem.image[0].formats['400x300'] is defined and coursesOverviewItem.image[0].formats['400x300'] is not empty %}
+                                                            {% set source = coursesOverviewItem.image[0].formats['400x300'] %}
+                                                          {% endif %}
+                                                          <img src="{{ source }}" alt="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" title="{{ coursesOverviewItem.title }} - {{ coursesOverviewItem.seoDescription }}" class="img-responsive" data-q="list-item-img"/>
                                                         </div>
                                                     </div>
                                                 </div>
