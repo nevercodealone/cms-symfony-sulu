@@ -15,12 +15,14 @@
       {% if item.excerptImages[0] is defined and item.excerptImages[0] is not empty %}
         {% set source = item.excerptImages[0].formats['tailwind-subpage-overview.webp'] %}
         {% set sourceSet = item.excerptImages[0].formats['content-full-half.webp'] %}
+      {% else %}
+        {% set source = '/uploads/media/1920x1080/09/479-nca-matrix-default.jpg' %}
+      {% endif %}
         <img src="{{ source }}"
              srcset="{{ sourceSet }} 1023w"
              class="order-first h-auto max-w-full"
              alt=""
         >
-      {% endif %}
     </article>
   {% endfor %}
 </div>
