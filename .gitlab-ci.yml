@@ -105,10 +105,9 @@ deploy_live_auto:
   tags:
     - docker2
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
-      when: manual
-      allow_failure: true
-    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
       when: on_success
   image: docker:latest
   before_script:
@@ -131,7 +130,9 @@ deploy_live_manual:
   tags:
     - docker2
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
       when: manual
   image: docker:latest
   before_script:
@@ -148,6 +149,7 @@ deploy_live_manual:
     IMAGE: $CI_IMAGE
     SHORTCODE1: $SHORTCODE
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/$DB_NAME
+  allow_failure: true
 
 cypress_internal_links_test_live:
   stage: trigger_live_tests
@@ -158,10 +160,8 @@ cypress_internal_links_test_live:
   variables:
     CYPRESS_BASE_URL: https://$URL
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
-  needs:
-    - job: deploy_live_auto
-      optional: true
-    - job: deploy_live_manual
-      optional: true
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+      when: on_success
