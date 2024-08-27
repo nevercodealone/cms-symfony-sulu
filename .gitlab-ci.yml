@@ -159,7 +159,9 @@ cypress_internal_links_test_live:
     CYPRESS_BASE_URL: https://$URL
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
   needs:
-    - deploy_live
-  only:
-    - merge_request
-    - main
+    - job: deploy_live_auto
+      optional: true
+    - job: deploy_live_manual
+      optional: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
