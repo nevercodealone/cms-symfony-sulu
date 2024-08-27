@@ -100,7 +100,7 @@ deploy_branch:
     URL: $CI_COMMIT_BRANCH.$URL
     PREFIX: $CI_COMMIT_BRANCH
 
-deploy_live:
+deploy_live_auto:
   stage: deploy_live
   tags:
     - docker2
@@ -110,9 +110,29 @@ deploy_live:
       allow_failure: true
     - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
       when: on_success
-      needs:
-        - cypress_full_test_preview_stage
-        - playwright_screen_compare_live_against_preview
+  image: docker:latest
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
+    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
+    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
+    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
+  environment:
+    name: live
+    url: https://$URL
+  variables:
+    IMAGE: $CI_IMAGE
+    SHORTCODE1: $SHORTCODE
+    DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/$DB_NAME
+
+deploy_live_manual:
+  stage: deploy_live
+  tags:
+    - docker2
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
+      when: manual
   image: docker:latest
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
