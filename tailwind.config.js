@@ -4,6 +4,7 @@ module.exports = {
     "./assets/**/*.js",
     "./templates/**/*.html.twig",
     "./templates/pages/**/*.html.twig",
+    "./templates/includes/tailwind/blocks/*.html.twig",
   ],
   theme: {
     extend: {},
