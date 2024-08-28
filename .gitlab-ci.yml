@@ -137,6 +137,7 @@ deploy_live_manual:
   extends: .deploy_live
   when: manual
   allow_failure: true
+  needs: []
 
 cypress_internal_links_test_live:
   stage: trigger_live_tests
