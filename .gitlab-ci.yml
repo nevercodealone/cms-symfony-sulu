@@ -149,8 +149,7 @@ cypress_internal_links_test_live:
     CYPRESS_BASE_URL: https://$URL
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: on_success
-      needs:
-        - job: deploy_live
-          optional: true
+    - when: always
+  needs:
+    - job: deploy_live
+    - job: deploy_live_manual
