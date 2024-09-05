@@ -9,6 +9,14 @@ The project follows the best practices for web accessibility. Web accessibility 
 ## Development Environment
 We use DDEV for our local development. DDEV is an open-source tool that uses Docker to build local development environments.
 
+```bash
+mkdir my-sulu-site && cd my-sulu-site
+ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
+ddev start
+ddev composer create sulu/skeleton
+```
+[DDEV docs quickstart Sulu section](https://github.com/ddev/ddev/blob/master/docs/content/users/quickstart.md#sulu)
+
 ## Building the Project
 
 We employ Webpack for handling all front-end resources. JavaScript, Stylesheets, Images and other files are all managed by Webpack.
