@@ -18,6 +18,7 @@ cypress_full_test_preview_stage:
     strategy: depend
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    TESTS_FAILED_cypress_full_test_preview_stage: $CI_JOB_STATUS == 'success'
 
 cypress_custom_tests_preview_stage:
   stage: trigger_test
@@ -27,6 +28,7 @@ cypress_custom_tests_preview_stage:
     strategy: depend
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    TESTS_FAILED_cypress_custom_tests_preview_stage: $CI_JOB_STATUS == 'success'
 
 playwright_screen_compare_live_against_preview:
   stage: trigger_test
@@ -37,6 +39,7 @@ playwright_screen_compare_live_against_preview:
   variables:
     BASE_URL: https://nevercodealone.de
     COMPARE_URL: https://nevercodealone.projects.nevercodealone.de
+    TESTS_FAILED_playwright_screen_compare_live_against_preview: $CI_JOB_STATUS == 'success'
 
 build:
   stage: build
@@ -100,19 +103,12 @@ deploy_branch:
     URL: $CI_COMMIT_BRANCH.$URL
     PREFIX: $CI_COMMIT_BRANCH
 
-deploy_live:
+.deploy_live:
   stage: deploy_live
   tags:
     - docker2
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
-      when: manual
-      allow_failure: true
-    - if: '$CI_PIPELINE_SOURCE == "merge_request" || $CI_COMMIT_BRANCH == "main"'
-      when: on_success
-      needs:
-        - cypress_full_test_preview_stage
-        - playwright_screen_compare_live_against_preview
+    - if: '$CI_COMMIT_BRANCH == "main"'
   image: docker:latest
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
@@ -129,6 +125,20 @@ deploy_live:
     SHORTCODE1: $SHORTCODE
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/$DB_NAME
 
+deploy_live:
+  extends: .deploy_live
+  when: on_success
+  needs:
+    - cypress_full_test_preview_stage
+    - cypress_custom_tests_preview_stage
+    - playwright_screen_compare_live_against_preview
+
+deploy_live_manual:
+  extends: .deploy_live
+  when: manual
+  allow_failure: true
+  needs: []
+
 cypress_internal_links_test_live:
   stage: trigger_live_tests
   trigger:
@@ -138,8 +148,8 @@ cypress_internal_links_test_live:
   variables:
     CYPRESS_BASE_URL: https://$URL
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
   needs:
-    - deploy_live
-  only:
-    - merge_request
-    - main
+    - job: deploy_live
