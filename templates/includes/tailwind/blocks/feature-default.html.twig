@@ -1,0 +1,23 @@
+<!-- feature-default.html.twig -->
+<section class="bg-white dark:bg-gray-900">
+  <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
+    <div class="max-w-screen-md mb-8 lg:mb-16">
+      <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">{{ content.headline }}</h2>
+      <div class="text-gray-500 sm:text-xl dark:text-gray-400">{{ content.description|raw }}</div>
+    </div>
+    {% if content.items is defined and content.items is not empty %}
+    <div class="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 md:space-y-0">
+      {% for item in content.items %}
+        <div>
+          <div class="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-primary-100 lg:h-12 lg:w-12 dark:bg-primary-900">
+            <svg class="w-5 h-5 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8 8-4 4 4 4m8 0 4-4-4-4m-2-3-4 14"/> </svg>
+          </div>
+          <h3 class="mb-2 text-xl font-bold dark:text-white">{{ item.headline }}</h3>
+          <div class="text-gray-500 dark:text-gray-400">{{ item.description|raw }}</div>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+<!-- end feature-default.html.twig -->
