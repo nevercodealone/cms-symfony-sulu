@@ -1,0 +1,80 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+  <block name="blocks" default-type="feature-with-icons">
+    <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+    <types>
+      <type name="feature-with-icons">
+        <meta>
+          <title>Feature mit Icons</title>
+        </meta>
+        <properties>
+          <property name="headline" type="text_line">
+            <meta>
+              <title>Headline</title>
+            </meta>
+            <params>
+              <param name="headline" value="true"/>
+            </params>
+          </property>
+          <property name="description" type="text_editor">
+            <meta>
+              <title>Beschreibung</title>
+            </meta>
+
+            <params>
+              <param name="table" value="false"/>
+              <param name="link" value="true"/>
+              <!-- CKEditor Parameters examples: -->
+              <param name="extra_allowed_content"
+                     value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+              <param name="ui_color" value="#ffcc00"/>
+            </params>
+          </property>
+          <block name="items" default-type="items" minOccurs="0">
+            <meta>
+              <title>Items</title>
+            </meta>
+            <types>
+              <type name="items">
+                <meta>
+                  <title>Item</title>
+                </meta>
+                <properties>
+                  <property name="headline" type="text_line">
+                    <meta>
+                      <title>Headline</title>
+                    </meta>
+                    <params>
+                      <param name="headline" value="true"/>
+                    </params>
+                  </property>
+                  <block name="items" default-type="items" minOccurs="0">
+                    <meta>
+                      <title>Items</title>
+                    </meta>
+                    <types>
+                      <type name="items">
+                        <meta>
+                          <title>Item</title>
+                        </meta>
+                        <properties>
+                          <property name="text" type="text_line">
+                            <meta>
+                              <title>Text</title>
+                            </meta>
+                          </property>
+                        </properties>
+                      </type>
+                    </types>
+                  </block>
+                </properties>
+              </type>
+            </types>
+          </block>
+        </properties>
+      </type>
+    </types>
+  </block>
+</properties>
