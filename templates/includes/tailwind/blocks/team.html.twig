@@ -11,27 +11,27 @@
                     {% if item.avatar.thumbnails['400x400'] is defined and item.avatar.thumbnails['400x400'] is not empty %}
                         {% set source = item.avatar.thumbnails['team'] %}
                         <li>
-                            <div class="space-y-4">
+                            <article class="space-y-4">
                                 <div>
                                     <img class="w-full rounded-lg object-cover shadow-lg" src="{{ source }}" alt="{{ item.fullName }}">
                                 </div>
                                 <div class="space-y-1 text-lg font-medium leading-6">
                                     <h3>{{ item.fullName }}</h3>
-                                    <p class="text-green-600">{{ item.positionName }}</p>
+                                    <p class="text-green-800">{{ item.positionName }}</p>
                                 </div>
-                                <ul role="list" class="flex space-x-5">
-                                    {% if item.contactDetails.socialMedia is not empty %}
-                                        {% for social in item.contactDetails.socialMedia %}
-                                            <li>
-                                              {% include 'includes/tailwind/link-social-media.html.twig' with {'socialLink': social.username, 'fullName': item.fullName } %}
-                                            </li>
-                                        {% endfor %}
-                                    {% endif %}
-                                </ul>
-                                <div class="text-lg">
-                                    <p class="text-gray-500">{{ item.note }}</p>
-                                </div>
-                            </div>
+                                {% if item.contactDetails.socialMedia is not empty %}
+                                  <ul role="list" class="flex space-x-5" aria-label="Social Link Liste">
+                                    {% for social in item.contactDetails.socialMedia %}
+                                        <li>
+                                          {% include 'includes/tailwind/link-social-media.html.twig' with {'socialLink': social.username, 'fullName': item.fullName } %}
+                                        </li>
+                                    {% endfor %}
+                                  </ul>
+                                {% endif %}
+                                <p class="text-lg">
+                                    {{ item.note }}
+                                </p>
+                            </article>
                         </li>
                     {% endif %}
                 {% endfor %}

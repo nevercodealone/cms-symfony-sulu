@@ -5,7 +5,7 @@
 [x-cloak] { display: none; }
 
 a {
-    @apply text-green-700;
+    @apply text-green-800 underline underline-offset-2;
     opacity: unset;
 }
 
