@@ -3,13 +3,13 @@
   <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
     <div class="grid gap-8 items-center mb-8 lg:mb-24 lg:gap-12 lg:grid-cols-12">
       <div class="col-span-6 text-center sm:mb-6 lg:text-left lg:mb-0">
-        <h1 class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl dark:text-white">{{ content.headline }}</h1>
-        <div class="mb-6 font-light text-gray-500 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400">{{ content.description|raw }}</div>
+        <h1 class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl">{{ content.headline }}</h1>
+        <div class="mb-6 font-light text-gray-800 lg:mb-8 md:text-lg lg:text-xl">{{ content.description|raw }}</div>
         <div class="gap-16 items-center sm:flex">
           {% if content.items is defined and content.items is not empty %}
             {% for item in content.items %}
-              <div class="mb-8 text-gray-500 sm:mb-0 dark:text-gray-400">
-                <h2 class="mb-3 text-xl font-semibold text-gray-900 dark:text-white" style="text-wrap: nowrap">{{ item.headline }}</h2>
+              <div class="mb-8 text-gray-800 sm:mb-0">
+                <h2 class="mb-3 text-xl font-semibold text-gray-900" style="text-wrap: nowrap">{{ item.headline }}</h2>
                 <p class="mb-4 font-light">{{ item.text }}</p>
                 <sulu-link href="{{ item.buttonLink }}" class="inline-flex text-white hover:text-white items-center bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-primary-900">
                   {{ item.buttonText }}
