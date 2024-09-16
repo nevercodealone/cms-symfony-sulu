@@ -60,14 +60,19 @@
                       <title>Text</title>
                     </meta>
                   </property>
-                  <property name="buttonText" type="text_line" colspan="6">
+                  <property name="buttonText" type="text_line" colspan="4">
                     <meta>
                       <title>Text</title>
                     </meta>
                   </property>
-                  <property name="buttonLink" type="single_page_selection" colspan="6">
+                  <property name="buttonLink" type="single_page_selection" colspan="4">
                     <meta>
                       <title>Page</title>
+                    </meta>
+                  </property>
+                  <property name="url" type="url" colspan="4">
+                    <meta>
+                      <title lang="en">URL</title>
                     </meta>
                   </property>
                 </properties>
