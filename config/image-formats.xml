@@ -169,6 +169,12 @@
         </meta>
         <scale x="250"/>
     </format>
+    <format key="images-with-heading-and-description">
+        <meta>
+            <title lang="en">Bilder mit Überschrift und Beschreibung</title>
+        </meta>
+        <scale x="284" y="394"/>
+    </format>
     <format key="format">
         <meta>
             <title lang="en">Format</title>

@@ -1,0 +1,22 @@
+<!-- images-with-heading-and-description -->
+<div class="gap-16 items-center py-8 px-4 mx-auto max-w-screen-xl lg:grid lg:grid-cols-2 lg:py-16 lg:px-6">
+  <div class="font-light text-gray-500 sm:text-lg dark:text-gray-400">
+    <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">{{ content.headline }}</h2>
+    <p class="mb-4">{{ content.description|raw }}</p>
+  </div>
+  {% if content.image is defined and content.image is not empty %}
+    <div class="grid grid-cols-2 gap-4 mt-8">
+      {% if content.image[0] %}
+        {% set source = content.image[0].formats['images-with-heading-and-description'] %}
+        {% set title = content.image[0].title %}
+        <img class="w-full rounded-lg" src="{{ source }}" alt="{{ title }}">
+      {% endif %}
+      {% if content.image[1] %}
+        {% set source = content.image[1].formats['images-with-heading-and-description'] %}
+        {% set title = content.image[1].title %}
+        <img class="mt-4 w-full lg:mt-10 rounded-lg" src="{{ source }}" alt="{{ title }}">
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+<!-- end images-with-heading-and-description -->
