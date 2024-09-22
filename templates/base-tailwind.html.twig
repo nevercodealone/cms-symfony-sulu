@@ -21,10 +21,12 @@
 </head>
 <body>
 
-<main class="mx-auto max-w-7xl py-24 sm:px-6 sm:py-32 lg:px-8">
+<div class="mx-auto max-w-7xl py-24 sm:px-6 sm:py-32 lg:px-8">
     {% include 'includes/tailwind/navigation.html.twig' %}
-    {% block content %}{% endblock %}
-</main>
+    <main id="content">
+      {% block content %}{% endblock %}
+    </main>
+</div>
 <footer class="bg-white">
     <div class="mx-auto max-w-7xl py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
         <div class="flex justify-center space-x-6 md:order-2">
