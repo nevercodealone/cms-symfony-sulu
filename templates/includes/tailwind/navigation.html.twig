@@ -20,7 +20,6 @@
                 {% for item in sulu_navigation_root_tree('main', 2, true) %}
                     {% if item.children|length > 0 %}
                         <div class="relative" x-data="{ dropdown: false }">
-                            <!-- Item active: "text-gray-900", Item inactive: "text-gray-500" -->
                             <button x-on:click="dropdown = ! dropdown" type="button" class="text-gray-500 group inline-flex items-center rounded-md bg-white text-base font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" aria-expanded="false">
                                 <span>{{ item.title }}</span>
                                 <svg class="text-gray-400 ml-2 h-5 w-5 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -76,10 +75,19 @@
                     {% endif %}
                 {% endfor %}
             </nav>
-            <div class="flex items-center md:ml-12">
-              <a href="mailto:roland@nevercodealone.de" class="ml-8 inline-flex items-center justify-center rounded-md border border-transparent bg-green-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-800">
-                Anfrage
-              </a>
+            <div class="flex items-center space-x-5">
+                <div class="flex space-x-5">
+                    {% for localization in localizations %}
+                        <a href="{{ localization.url }}"
+                           title="{{ localization.locale }}"
+                           class="{{ localization.locale == app.request.locale ? ' font-bold' : '' }}">
+                          {{ localization.locale|upper }}
+                        </a>
+                    {% endfor %}
+                </div>
+                <a href="mailto:roland@nevercodealone.de" class="inline-flex items-center justify-center rounded-md border border-transparent bg-green-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-800">
+                  Anfrage
+                </a>
             </div>
         </div>
     </div>
@@ -101,6 +109,15 @@
                         </a>
                     </div>
                     <div class="-mr-2">
+                      <div class="flex space-x-5">
+                      {% for localization in localizations %}
+                        <a href="{{ localization.url }}"
+                           title="{{ localization.locale }}"
+                           class="{{ localization.locale == app.request.locale ? ' font-bold' : '' }}">
+                          {{ localization.locale|upper }}
+                        </a>
+                      {% endfor %}
+                    </div>
                         <button x-on:click="dropdownmobile = ! dropdownmobile" type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
                             <span class="sr-only">Close menu</span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
