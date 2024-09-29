@@ -1,2 +1,7 @@
 User-agent: *
+
+Disallow: /nevercodealone.projects.nevercodealone.de/$
+Disallow: /nevercodealone.projects.nevercodealone.de/*/
+
 Disallow: /admin/
+
