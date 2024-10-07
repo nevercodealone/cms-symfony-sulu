@@ -1,3 +1,4 @@
+<!-- youtube-from-channel.html.twig -->
 <section class="py-16 bg-gray-100" aria-labelledby="gallery-heading">
   <div class="container mx-auto px-4">
     <header class="text-center mb-12">
@@ -27,21 +28,30 @@
                    aria-hidden="true">
             </a>
             <div class="p-6">
-              <h2 class="text-xl font-semibold mb-2 line-clamp-2">
-                <a href="{{ url }}"
-                   class=" underline text-gray-900 hover:text-blue-700 focus:text-blue-700 hover:underline focus:outline-none focus:underline"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                  {{ video['snippet']['title'] }}
-                </a>
-              </h2>
+              {% if loopIndex == 1 %}
+                <h1 class="text-2xl font-semibold mb-2 line-clamp-2">
+              {% else %}
+                <h2 class="text-2xl font-semibold mb-2 line-clamp-2">
+              {% endif %}
+                  <a href="{{ url }}" class="underline text-gray-900 hover:text-blue-700 focus:text-blue-700 hover:underline focus:outline-none focus:underline" target="_blank" rel="noopener noreferrer">
+                    {{ video['snippet']['title'] }}
+                  </a>
+              {% if loop.index0 == 0 %}
+                </h1>
+              {% else %}
+                </h2>
+              {% endif %}
               <div class="flex justify-between items-center text-sm text-gray-600 mb-4">
                 <span>#NCAVideo</span>
                 <time datetime="{{ video['snippet']['publishedAt'] }}">
                   {{ video['snippet']['publishedAt']|date('d.m.Y', "Europe/Berlin") }}
                 </time>
               </div>
-              <p class="font-bold mb-2">Review PHP-Schulung</p>
+              {% if loop.index0 == 0 %}
+                <h3 class="font-bold mb-2">Review PHP-Schulung</h3>
+              {% else %}
+                <h4 class="font-bold mb-2">Review PHP-Schulung</h4>
+              {% endif %}
               <p class="text-gray-700 mb-4 line-clamp-4">{{ video['snippet']['description'] }}</p>
               <a href="{{ url }}"
                  class="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -57,3 +67,4 @@
     </div>
   </div>
 </section>
+<!-- end youtube-from-channel.html.twig -->

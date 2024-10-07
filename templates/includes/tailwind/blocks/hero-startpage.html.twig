@@ -8,10 +8,17 @@
                 <div class="absolute inset-0 bg-gradient-to-r from-green-800 to-green-700 mix-blend-multiply"></div>
             </div>
             <div class="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
-                <h1 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                {% if loopIndex == 1 %}
+                  <h1 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                      <span class="block text-white">{{ content.textone }}</span>
+                      <span class="block text-green-200">{{ content.texttwo }}</span>
+                  </h1>
+                {% else %}
+                  <h2 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                     <span class="block text-white">{{ content.textone }}</span>
                     <span class="block text-green-200">{{ content.texttwo }}</span>
-                </h1>
+                  </h2>
+                {% endif %}
                 <div class="mx-auto mt-6 max-w-lg text-center text-xl text-green-200 sm:max-w-3xl">
                     {{ content.description|raw }}
                 </div>
