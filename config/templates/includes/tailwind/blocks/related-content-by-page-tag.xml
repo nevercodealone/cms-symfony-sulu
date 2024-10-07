@@ -15,8 +15,9 @@
             </meta>
             <params>
               <param name="default" value="related-content-by-page-tag"/>
-              <param name="loadExcerpt" value="true"/>
+              <param name="id" value="id"/>
               <param name="title" value="title"/>
+              <param name="loadExcerpt" value="true"/>
               <param name="excerptTitle" value="excerpt.title"/>
               <param name="excerptTags" value="excerpt.tags"/>
               <param name="excerptImages" value="excerpt.images"/>

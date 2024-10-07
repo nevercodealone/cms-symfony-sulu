@@ -5,6 +5,7 @@
         {% include 'includes/tailwind/blocks/' ~ block.type ~ '.html.twig' with {
             content: block,
             extension: extension,
+            id: id,
             seo: seo,
             loopIndex: loop.index
         } only %}
