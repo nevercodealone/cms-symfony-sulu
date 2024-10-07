@@ -3,7 +3,7 @@
   {% set snippet = content.snippets[0] %}
   <aside aria-label="Related articles" class="py-8 bg-white lg:py-16 dark:bg-gray-900 antialiased">
     <div class="px-4 mx-auto max-w-screen-xl">
-      <h2 class="mb-8 text-2xl font-bold text-gray-900 dark:text-white">{{ snippet.headline }}</h2>
+      <h2 class="mb-8 text-2xl font-bold text-gray-900 dark:text-white">{{ snippet.headline }}: {{ extension.excerpt.tags[0] }}</h2>
       <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {% set extensionTags = extension.excerpt.tags %}
 
@@ -30,7 +30,7 @@
               {% endif %}
               <div class="flex items-center space-x-4">
                 <span class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ page.authored|date("F d, Y") }}
+                    {{ seo.description }}
                 </span>
               </div>
             </article>
