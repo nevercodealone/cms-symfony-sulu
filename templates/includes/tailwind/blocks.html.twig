@@ -3,7 +3,7 @@
         <section aria-label="{{ block.type|capitalize }}" class="mx-auto max-w-7xl px-4 pt-12 pb-4">
         {% include 'includes/tailwind/blocks/' ~ block.type ~ '.html.twig' with {
             content: block,
-            extensionexcerpt: extension.excerpt
+            extension: extension
         } only %}
         </section>
     {% endfor %}

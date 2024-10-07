@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+  <key>related-content-by-page-tag</key>
+
+  <meta>
+    <title>Related Content by Tag</title>
+  </meta>
+
+  <properties>
+    <property name="title" type="text_line" mandatory="true">
+      <meta>
+        <title lang="en">Title</title>
+        <title lang="de">Titel</title>
+      </meta>
+      <tag name="sulu.node.name"/>
+    </property>
+    <property name="headline" type="text_line">
+      <meta>
+        <title>Headline</title>
+      </meta>
+      <params>
+        <param name="headline" value="true"/>
+      </params>
+    </property>
+    <property name="pages" type="smart_content">
+      <meta>
+        <title lang="en">Smart Content</title>
+      </meta>
+      <params>
+        <param name="provider" value="pages"/>
+        <param name="page_parameter" value="p"/>
+        <param name="properties" type="collection">
+          <param name="loadExcerpt" value="true"/>
+          <param name="article" value="article"/>
+          <param name="title" value="title"/>
+          <param name="excerptTitle" value="excerpt.title"/>
+          <param name="excerptTags" value="excerpt.tags"/>
+          <param name="excerptImages" value="excerpt.images"/>
+          <param name="excerptDescription" value="excerpt.description"/>
+        </param>
+      </params>
+    </property>
+  </properties>
+</template>

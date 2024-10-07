@@ -1,0 +1,43 @@
+<!-- related-content-by-page-tag.html.twig -->
+{% if content.snippets is defined and content.snippets is not empty %}
+  {% set snippet = content.snippets[0] %}
+  <aside aria-label="Related articles" class="py-8 bg-white lg:py-16 dark:bg-gray-900 antialiased">
+    <div class="px-4 mx-auto max-w-screen-xl">
+      <h2 class="mb-8 text-2xl font-bold text-gray-900 dark:text-white">{{ snippet.headline }}</h2>
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {% set extensionTags = extension.excerpt.tags %}
+
+        {% for page in snippet.pages %}
+          {% set pageHasMatchingTag = false %}
+          {% for tag in page.excerptTags %}
+            {% if tag in extensionTags %}
+              {% set pageHasMatchingTag = true %}
+            {% endif %}
+          {% endfor %}
+
+          {% if pageHasMatchingTag %}
+            <article>
+              <a href="{{ page.url }}">
+                {% if page.excerptImages[0] is defined %}
+                  <img src="{{ page.excerptImages[0].url }}" class="mb-5 w-full max-w-full rounded-lg" alt="{{ page.excerptImages[0].title }}" loading="lazy">
+                {% endif %}
+              </a>
+              <h2 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
+                <a href="{{ page.url }}">{{ page.title }}</a>
+              </h2>
+              {% if page.excerptDescription %}
+                <p class="mb-4 text-gray-500 dark:text-gray-400">{{ page.excerptDescription }}</p>
+              {% endif %}
+              <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ page.authored|date("F d, Y") }}
+                </span>
+              </div>
+            </article>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </aside>
+{% endif %}
+<!-- end related-content-by-page-tag.html.twig -->
