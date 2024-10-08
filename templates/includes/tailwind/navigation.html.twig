@@ -77,17 +77,24 @@
             </nav>
             <div class="flex items-center space-x-5">
                 <div class="flex space-x-5">
+                  {# Define the base and active classes as Twig variables #}
+                  {% set baseClasses = "text-black bg-gray-100 border-2 border-green-700 font-medium rounded-lg text-sm px-3 py-1.5 transition-all duration-300" %}
+                  {% set activeClasses = "text-white bg-green-700" %}
+                  {% set hoverClasses = "hover:text-white hover:bg-green-700" %}
+                  {% set focusClasses = "focus:text-white focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-white" %}
+
+                  <div class="flex flex-wrap justify-center items-center space-x-2 mt-4">
                     {% for localization in localizations %}
-                        <a href="{{ localization.url }}"
-                           title="{{ localization.locale }}"
-                           class="{{ localization.locale == app.request.locale ? ' font-bold' : '' }}">
-                          {{ localization.locale|upper }}
-                        </a>
+                      <a
+                        href="{{ localization.url }}"
+                        title="{{ localization.locale }}"
+                        class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}"
+                      >
+                        {{ localization.locale|upper }}
+                      </a>
                     {% endfor %}
+                  </div>
                 </div>
-                <a href="mailto:roland@nevercodealone.de" class="inline-flex items-center justify-center rounded-md border border-transparent bg-green-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-800">
-                  Anfrage
-                </a>
             </div>
         </div>
     </div>
