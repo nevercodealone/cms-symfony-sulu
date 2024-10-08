@@ -34,20 +34,27 @@
         <div class="text-center">
           {{ snippet.description|raw }}
         </div>
-        <div class="text-center pt-6">
-          {% set phoneNumber = item.mainPhone|replace({'0': '+49'}) %}
-
-          <a
-            class="w-2/3 rounded-md border border-transparent bg-green-600 py-3 px-5 text-center text-white shadow-md hover:text-white"
-            href="{{ phoneNumber }}"
-            title="Roland anrufen"
-          >
-            {{ item.mainPhone }}
-          </a>
+        <div class="mt-5 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+          {% if snippet.buttonText and snippet.buttonLink %}
+            <sulu-link
+              href="{{ snippet.buttonLink }}"
+              class="text-black bg-gray-100 border-2 border-green-700 hover:text-white hover:bg-green-700 focus:text-white focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-white font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300"
+            >
+              {{ snippet.buttonText }}
+            </sulu-link>
+          {% endif %}
+          {% if snippet.linkDisplay and snippet.url %}
+            <a
+              href="{{ snippet.url }}"
+              class="text-black bg-gray-100 border-2 border-green-700 hover:text-white hover:bg-green-700 focus:text-white focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-white font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300"
+            >
+              {{ snippet.linkDisplay }}
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
 </div>
-
+{% dump(content) %}
 <!-- end tailwind-contact-box -->
