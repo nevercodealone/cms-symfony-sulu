@@ -33,9 +33,10 @@
         <param name="provider" value="pages"/>
         <param name="page_parameter" value="p"/>
         <param name="properties" type="collection">
+          <param name="id" value="id"/>
+          <param name="max_per_page" value="100"/>
           <param name="article" value="article"/>
           <param name="title" value="title"/>
-          <param name="id" value="id"/>
           <param name="loadExcerpt" value="true"/>
           <param name="excerptTitle" value="excerpt.title"/>
           <param name="excerptTags" value="excerpt.tags"/>
