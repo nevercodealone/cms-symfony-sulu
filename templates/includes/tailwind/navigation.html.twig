@@ -1,154 +1,151 @@
 <div class="relative bg-white z-40">
-    <div class="flex items-center justify-between px-4 py-6 sm:px-6 md:justify-start md:space-x-10">
-        <div>
-            <a href="{{ sulu_content_root_path() }}" class="flex" title="Link zur Startseite auf dem Logo">
-                <span class="sr-only">Never Code Alone</span>
-                <img class="h-8 w-auto sm:h-10" src="/img/logo.png" alt="Logo Never Code Alone">
-            </a>
-        </div>
-        <div class="-my-2 -mr-2 md:hidden">
-            <button type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-green-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-expanded="false">
-                <span class="sr-only">Open menu</span>
-                <!-- Heroicon name: outline/bars-3 -->
-                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+  <div class="flex items-center justify-between px-4 py-6 sm:px-6 md:justify-start md:space-x-10">
+    <div>
+      <a href="{{ sulu_content_root_path() }}" class="flex" title="Link zur Startseite auf dem Logo">
+        <span class="sr-only">Never Code Alone</span>
+        <img class="h-8 w-auto sm:h-10" src="/img/logo.png" alt="Logo Never Code Alone">
+      </a>
+    </div>
+    <div class="-my-2 -mr-2 md:hidden">
+      <button type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-green-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-expanded="false">
+        <span class="sr-only">Open menu</span>
+        <!-- Heroicon name: outline/bars-3 -->
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+    </div>
+    <div class="hidden md:flex md:flex-1 md:items-center md:justify-between">
+      <nav class="flex space-x-6"> <!-- Changed from space-x-10 to space-x-6 -->
+        {% for item in sulu_navigation_root_tree('main', 2, true) %}
+          {% if item.children|length > 0 %}
+            <div class="relative" x-data="{ dropdown: false }">
+              <button x-on:click="dropdown = ! dropdown" type="button" class="text-gray-500 group inline-flex items-center rounded-md bg-white text-base font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" aria-expanded="false">
+                <span>{{ item.title }}</span>
+                <svg class="text-gray-400 ml-2 h-5 w-5 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
-            </button>
-        </div>
-        <div class="hidden md:flex md:flex-1 md:items-center md:justify-between">
-            <nav class="flex space-x-10">
-                {% for item in sulu_navigation_root_tree('main', 2, true) %}
-                    {% if item.children|length > 0 %}
-                        <div class="relative" x-data="{ dropdown: false }">
-                            <button x-on:click="dropdown = ! dropdown" type="button" class="text-gray-500 group inline-flex items-center rounded-md bg-white text-base font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" aria-expanded="false">
-                                <span>{{ item.title }}</span>
-                                <svg class="text-gray-400 ml-2 h-5 w-5 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
+              </button>
 
-                            <div x-show="dropdown" x-cloak x-transition.duration.1000ms class="absolute z-10 -ml-4 mt-3 w-screen max-w-md transform lg:max-w-3xl">
-                                <div class="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
-                                    <div class="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8 lg:grid-cols-2">
-                                        {% for child in item.children %}
-                                            <a href="{{ sulu_content_path(child.url) }}"
-                                               title="{{ child.title }}"
-                                               class="-m-3 flex items-start rounded-lg p-3 hover:bg-gray-50">
-                                                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-green-500 text-gray-100 sm:h-12 sm:w-12">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z" />
-                                                    </svg>
-                                                </div>
-                                                <div class="ml-4">
-                                                    <p class="text-base font-medium text-gray-900">{{ child.title }}</p>
-                                                    <p class="mt-1 text-sm text-gray-500 line-clamp-2">
-                                                        {% set description = child.excerpt.description != '' ? child.excerpt.description|striptags : 'Alle Details' %}
-                                                        {{ description }}
-                                                    </p>
-                                                </div>
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                    <div class="bg-gray-50 p-5 sm:p-8">
-                                        <a href="/de/nca-glossar-barrierefreiheit"
-                                           title="Glossar für Barrierefreiheit"
-                                           class="-m-3 flow-root rounded-md p-3 hover:bg-gray-100">
-                                            <div class="flex items-center">
-                                                <div class="text-base font-medium text-gray-900">Glossar für Barrierefreiheit</div>
-                                                <span class="ml-3 inline-flex items-center rounded-full bg-green-5  00 px-3 py-0.5 text-xs font-medium leading-5 text-gray-900">
-                                                    NEU
-                                                </span>
-                                            </div>
-                                            <p class="mt-1 text-sm text-gray-500">Wir sind Spezialisten für barrierefreies Webdesign</p>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+              <div x-show="dropdown" x-cloak x-transition.duration.1000ms class="absolute z-10 -ml-4 mt-3 w-screen max-w-md transform lg:max-w-3xl">
+                <div class="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+                  <div class="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8 lg:grid-cols-2">
+                    {% for child in item.children %}
+                      <a href="{{ sulu_content_path(child.url) }}"
+                         title="{{ child.title }}"
+                         class="-m-3 flex items-start rounded-lg p-3 hover:bg-gray-50">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-green-500 text-gray-100 sm:h-12 sm:w-12">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z" />
+                          </svg>
                         </div>
-                    {% else %}
-                        {% set url = sulu_content_path(item.url)  %}
-                        <a href="{{ url }}"
-                           title="{{ item.title }}"
-                           class="text-base font-medium {{ app.request.uri starts with url ? 'text-green-700' : 'text-gray-500' }} hover:text-gray-900">
-                            {{ item.title }}
-                        </a>
-                    {% endif %}
-                {% endfor %}
-            </nav>
-            <div class="flex items-center space-x-5">
-                <div class="flex space-x-5">
-                  {# Define the base and active classes as Twig variables #}
-                  {% set baseClasses = "text-black bg-gray-100 border-2 border-green-700 font-medium rounded-lg text-sm px-3 py-1.5 transition-all duration-300" %}
-                  {% set activeClasses = "text-white bg-green-700" %}
-                  {% set hoverClasses = "hover:text-white hover:bg-green-700" %}
-                  {% set focusClasses = "focus:text-white focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-white" %}
-
-                  <div class="flex flex-wrap justify-center items-center space-x-2 mt-4">
-                    {% for localization in localizations %}
-                      <a
-                        href="{{ localization.url }}"
-                        title="{{ localization.locale }}"
-                        class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}"
-                      >
-                        {{ localization.locale|upper }}
+                        <div class="ml-4">
+                          <p class="text-base font-medium text-gray-900">{{ child.title }}</p>
+                          <p class="mt-1 text-sm text-gray-500 line-clamp-2">
+                            {% set description = child.excerpt.description != '' ? child.excerpt.description|striptags : 'Alle Details' %}
+                            {{ description }}
+                          </p>
+                        </div>
                       </a>
                     {% endfor %}
                   </div>
+                  <div class="bg-gray-50 p-5 sm:p-8">
+                    <a href="/de/nca-glossar-barrierefreiheit"
+                       title="Glossar für Barrierefreiheit"
+                       class="-m-3 flow-root rounded-md p-3 hover:bg-gray-100">
+                      <div class="flex items-center">
+                        <div class="text-base font-medium text-gray-900">Glossar für Barrierefreiheit</div>
+                        <span class="ml-3 inline-flex items-center rounded-full bg-green-500 px-3 py-0.5 text-xs font-medium leading-5 text-gray-900">
+                                                    NEU
+                                                </span>
+                      </div>
+                      <p class="mt-1 text-sm text-gray-500">Wir sind Spezialisten für barrierefreies Webdesign</p>
+                    </a>
+                  </div>
                 </div>
+              </div>
             </div>
+          {% else %}
+            {% set url = sulu_content_path(item.url)  %}
+            <a href="{{ url }}"
+               title="{{ item.title }}"
+               class="text-base font-medium {{ app.request.uri starts with url ? 'text-green-700' : 'text-gray-500' }} hover:text-gray-900">
+              {{ item.title }}
+            </a>
+          {% endif %}
+        {% endfor %}
+      </nav>
+      <div class="flex items-center space-x-5">
+        <div class="flex flex-wrap justify-center items-center -mx-1">
+          {% set baseClasses = "text-black bg-gray-100 border-2 border-green-700 font-medium rounded-lg text-sm px-3 py-1.5 transition-all duration-300 m-1" %}
+          {% set activeClasses = "text-white bg-green-700" %}
+          {% set hoverClasses = "hover:text-white hover:bg-green-700" %}
+          {% set focusClasses = "focus:text-white focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-white" %}
+
+          {% for localization in localizations %}
+            <a
+              href="{{ localization.url }}"
+              title="{{ localization.locale }}"
+              class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}"
+            >
+              {{ localization.locale|upper }}
+            </a>
+          {% endfor %}
         </div>
+      </div>
     </div>
-    <div class="absolute inset-x-0 top-0 origin-top-right transform p-2 transition md:hidden">
-        <div class="divide-y-2 divide-gray-50 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-            <div class="px-5 pt-5 pb-6" x-data="{ dropdownmobile: false }">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <a href="{{ sulu_content_root_path() }}" class="flex" title="Link zur Startseite auf dem Logo">
-                            <span class="sr-only">Never Code Alone</span>
-                            <img class="h-8 w-auto" src="/img/logo.png" alt="Logo Never Code Alone">
-                        </a>
-                    </div>
-                    <div>
-                        <a href="tel:+4917624747727"
-                           title="Roland Golla anrufen"
-                           class="flex w-full items-center justify-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-base font-medium text-gray-800 shadow-sm hover:bg-indigo-700">
-                            Roland Golla anrufen
-                        </a>
-                    </div>
-                    <div class="-mr-2">
-                      <div class="flex space-x-5">
-                      {% for localization in localizations %}
-                        <a href="{{ localization.url }}"
-                           title="{{ localization.locale }}"
-                           class="{{ localization.locale == app.request.locale ? ' font-bold' : '' }}">
-                          {{ localization.locale|upper }}
-                        </a>
-                      {% endfor %}
-                    </div>
-                        <button x-on:click="dropdownmobile = ! dropdownmobile" type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                            <span class="sr-only">Close menu</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="mt-6" x-show="dropdownmobile" x-cloak x-transition.duration.100ms>
-                    <nav class="grid gap-6">
-                        {% for item in sulu_navigation_root_tree('main', 2, true) %}
-                            {% set url = sulu_content_path(item.url)  %}
-                            <a href="{{ url }}" title="{{ item.title }}" class="-m-3 flex items-center rounded-lg p-3 hover:bg-gray-50">
-                                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-green-500 text-gray-100">
-                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4 text-base font-medium text-gray-900">{{ item.title }}</div>
-                            </a>
-                        {% endfor %}
-                    </nav>
-                </div>
+  </div>
+  <div class="absolute inset-x-0 top-0 origin-top-right transform p-2 transition md:hidden">
+    <div class="divide-y-2 divide-gray-50 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+      <div class="px-5 pt-5 pb-6" x-data="{ dropdownmobile: false }">
+        <div class="flex items-center justify-between">
+          <div>
+            <a href="{{ sulu_content_root_path() }}" class="flex" title="Link zur Startseite auf dem Logo">
+              <span class="sr-only">Never Code Alone</span>
+              <img class="h-8 w-auto" src="/img/logo.png" alt="Logo Never Code Alone">
+            </a>
+          </div>
+          <div>
+            <a href="tel:+4917624747727"
+               title="Roland Golla anrufen"
+               class="flex w-full items-center justify-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-base font-medium text-gray-800 shadow-sm hover:bg-indigo-700">
+              Roland Golla anrufen
+            </a>
+          </div>
+          <div class="-mr-2">
+            <div class="flex flex-wrap justify-center items-center -mx-1">
+              {% for localization in localizations %}
+                <a href="{{ localization.url }}"
+                   title="{{ localization.locale }}"
+                   class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}">
+                  {{ localization.locale|upper }}
+                </a>
+              {% endfor %}
             </div>
+            <button x-on:click="dropdownmobile = ! dropdownmobile" type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+              <span class="sr-only">Close menu</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z" />
+              </svg>
+            </button>
+          </div>
         </div>
+        <div class="mt-6" x-show="dropdownmobile" x-cloak x-transition.duration.100ms>
+          <nav class="grid gap-6">
+            {% for item in sulu_navigation_root_tree('main', 2, true) %}
+              {% set url = sulu_content_path(item.url)  %}
+              <a href="{{ url }}" title="{{ item.title }}" class="-m-3 flex items-center rounded-lg p-3 hover:bg-gray-50">
+                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-green-500 text-gray-100">
+                  <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                  </svg>
+                </div>
+                <div class="ml-4 text-base font-medium text-gray-900">{{ item.title }}</div>
+              </a>
+            {% endfor %}
+          </nav>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
