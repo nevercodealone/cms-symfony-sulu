@@ -163,6 +163,12 @@
         </meta>
         <scale x="203" y="114"/>
     </format>
+    <format key="image-gallery">
+      <meta>
+        <title lang="en">Bilder Galerie</title>
+      </meta>
+      <scale y="250"/>
+    </format>
     <format key="logos">
         <meta>
             <title lang="en">Logos</title>
