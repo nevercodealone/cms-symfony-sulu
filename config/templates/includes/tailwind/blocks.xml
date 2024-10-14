@@ -2,7 +2,7 @@
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:xi="http://www.w3.org/2001/XInclude"
             xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
-    <block name="blocks" default-type="hero" minOccurs="0">
+    <block name="blocks" default-type="headline-paragraphs" minOccurs="0">
         <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
 
         <meta>
@@ -11,6 +11,8 @@
         </meta>
 
         <types>
+          <xi:include href="blocks/headline-paragraphs.xml"
+                      xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/button.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/contact.xml"
