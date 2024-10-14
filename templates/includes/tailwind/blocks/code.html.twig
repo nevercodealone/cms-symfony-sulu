@@ -1,0 +1,17 @@
+<!-- code.html.twig -->
+<div x-data="clipboardBlock" class="relative max-w-2xl mx-auto mt-24">
+  <div class="bg-gray-900 text-white p-4 rounded-md">
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-gray-400">Code:</span>
+      <button @click="copyCode" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-md">
+        <span x-text="copied ? 'Copied!' : 'Copy'"></span>
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+      <pre x-ref="codeBlock" class="text-gray-300">
+        <code>{{ content.description|raw }}</code>
+      </pre>
+    </div>
+  </div>
+</div>
+<!-- end code.html.twig -->
