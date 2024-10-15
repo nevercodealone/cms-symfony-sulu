@@ -12,7 +12,6 @@
       {% endif %}
     {% endif %}
     {% if content.items is defined and content.items is not empty %}
-      {% dump(content.items) %}
       {% for item in content.items %}
         {% if item.type == 'description' %}
           <div class="mb-4">{{ item.description|raw }}</div>
