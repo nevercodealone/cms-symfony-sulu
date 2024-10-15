@@ -4,8 +4,8 @@
   {% set description = content.description %}
 {% endif %}
 
-{% if item.description is defined %}
-  {% set description = item.description %}
+{% if item.code is defined %}
+  {% set description = item.code %}
 {% endif %}
 
 {% if description is defined and description is not empty %}
