@@ -1,13 +1,15 @@
-<div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
+<div class="px-4 mx-auto max-w-screen-xl lg:px-6">
   <div class="max-w-screen-lg text-gray-500 sm:text-lg">
-    {% if loopIndex == 1 %}
-      <h1 class="mb-4 text-4xl tracking-tight font-bold text-gray-900">
-        {{ content.headline }}
-      </h1>
-    {% else %}
-      <h2 class="mb-4 text-4xl tracking-tight font-bold text-gray-900">
-        {{ content.headline }}
-      </h2>
+    {% if content.headline is defined and content.headline is not empty %}
+      {% if loopIndex == 1 %}
+        <h1 class="mb-4 text-4xl tracking-tight font-bold text-gray-900">
+          {{ content.headline }}
+        </h1>
+      {% else %}
+        <h2 class="mb-4 text-4xl tracking-tight font-bold text-gray-900">
+          {{ content.headline }}
+        </h2>
+      {% endif %}
     {% endif %}
     {% if content.items is defined and content.items is not empty %}
       {% for item in content.items %}
