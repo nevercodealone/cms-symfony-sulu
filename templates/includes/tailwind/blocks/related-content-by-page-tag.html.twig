@@ -1,21 +1,33 @@
 <!-- related-content-by-page-tag.html.twig -->
 {% if content.snippets is defined and content.snippets is not empty %}
   {% set snippet = content.snippets[0] %}
+  {% set tags = '' %}
+  {% if extension.excerpt.tags is defined and extension.excerpt.tags is not empty %}
+    {% set tags = extension.excerpt.tags %}
+  {% endif %}
+  {% set pages = '' %}
+  {% if snippet.pages is defined and snippet.pages is not empty %}
+    {% set pages = snippet.pages %}
+  {% endif %}
+  {% if snippet.links is defined and snippet.links is not empty %}
+    {% set pages = snippet.links %}
+  {% endif %}
   <aside aria-label="Related articles" class="py-8 bg-white lg:py-16 antialiased">
     <div class="px-4 mx-auto max-w-screen-xl">
-      <h2 class="mb-8 text-2xl font-bold text-gray-900">{{ snippet.headline }}: {{ extension.excerpt.tags[0] }}</h2>
+      <h2 class="mb-8 text-2xl font-bold text-gray-900">
+        {{ snippet.headline }}{% if tags is not empty %}: {{ tags[0] }}{% endif %}
+      </h2>
       <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {% set extensionTags = extension.excerpt.tags %}
-        {% for page in snippet.pages %}
-          {% if page.id != id %}
+        {% for page in pages %}
+          {% if id is not defined or page.id != id %}
             {% set pageHasMatchingTag = false %}
-            {% for tag in page.excerptTags %}
-              {% if tag in extensionTags %}
+            {% for tag in tags %}
+              {% if tag in tags %}
                 {% set pageHasMatchingTag = true %}
               {% endif %}
             {% endfor %}
 
-            {% if pageHasMatchingTag %}
+            {% if notag is defined or pageHasMatchingTag %}
               {% set seo = sulu_content_load(page.id).extension.seo %}
               <article>
                 <a href="{{ page.url }}">
