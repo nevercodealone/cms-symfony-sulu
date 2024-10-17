@@ -1,0 +1,26 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+  <block name="blocks" default-type="highlights">
+    <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+    <types>
+      <type name="highlights">
+        <meta>
+          <title>Highlights</title>
+        </meta>
+        <properties>
+          <property name="snippets" type="snippet_selection">
+            <meta>
+              <title>Snippets</title>
+            </meta>
+
+            <params>
+              <param name="default" value="highlights"/>
+            </params>
+          </property>
+        </properties>
+      </type>
+    </types>
+  </block>
+</properties>

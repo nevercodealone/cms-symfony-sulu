@@ -1,0 +1,9 @@
+<!-- highlights.html.twig -->
+{% if content.snippets is defined and content.snippets is not empty %}
+
+  {% include 'includes/tailwind/blocks/related-content-by-page-tag.html.twig' with {
+    'content.snippets': content.snippets,
+    'notag': true
+  } %}
+{% endif %}
+<!-- end highlights.html.twig -->
