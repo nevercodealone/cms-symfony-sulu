@@ -22,7 +22,7 @@
           {% if id is not defined or page.id != id %}
             {% set pageHasMatchingTag = false %}
             {% for tag in tags %}
-              {% if tag in tags %}
+              {% if tag in page.excerptTags %}
                 {% set pageHasMatchingTag = true %}
               {% endif %}
             {% endfor %}
