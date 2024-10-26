@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<list xmlns="http://schemas.sulu.io/list-builder/list">
+  <key>clientrequestrefactorings</key>
+  <properties>
+    <property name="id" visibility="no" translation="sulu_admin.id">
+      <field-name>id</field-name>
+      <entity-name>App\Entity\ClientRequestRefactoring</entity-name>
+    </property>
+    <property name="email" visibility="always" searchability="yes" translation="app.email">
+      <field-name>email</field-name>
+      <entity-name>App\Entity\ClientRequestRefactoring</entity-name>
+    </property>
+    <property name="projectDescription" visibility="always" searchability="yes" translation="app.projectDesciption">
+      <field-name>projectDescription</field-name>
+      <entity-name>App\Entity\ClientRequestRefactoring</entity-name>
+    </property>
+  </properties>
+</list>
