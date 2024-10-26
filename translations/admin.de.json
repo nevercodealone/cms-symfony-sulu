@@ -1,0 +1,14 @@
+{
+    "app.music": "Musik",
+    "app.album": "Album",
+    "app.albums": "Alben",
+    "app.image": "Bild",
+    "app.tracklist": "Titelliste",
+    "app.track": "Titel",
+    "app.add_track": "Titel hinzufügen",
+    "app.interpreter": "Interpret",
+    "app.album_selection_label": "{count} {count, plural, =1 {Album} other {Alben}} ausgewählt",
+    "app.select_albums": "Alben auswählen",
+    "app.no_album_selected": "Kein Album ausgewählt",
+    "app.select_album": "Album auswählen"
+}
