@@ -1,8 +1,6 @@
 <?php
 namespace App\Controller\Website;
 
-use App\Service\MeetupService;
-use App\Service\TwitterService;
 use App\Service\WordpressService;
 use App\Service\YouTubeService;
 use Symfony\Component\HttpFoundation\Request;
@@ -80,7 +78,6 @@ class PageController extends WebsiteController
     public function homepage(
         StructureInterface $structure,
         WordpressService $wordpressService,
-        MeetupService $meetupService,
         $preview = false,
         $partial = false
     ) {
@@ -88,8 +85,7 @@ class PageController extends WebsiteController
         return $this->renderStructure(
             $structure,
             [
-                'blogList' => $wordpressService->getItemsFromBlog(),
-                'meetupNextEvents' => $meetupService->getNextEvents()
+                'blogList' => $wordpressService->getItemsFromBlog()
             ],
             $preview,
             $partial
