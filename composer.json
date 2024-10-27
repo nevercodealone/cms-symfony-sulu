@@ -41,7 +41,6 @@
         "google/apiclient": "^2.9",
         "handcraftedinthealps/zendsearch": "^2.1",
         "jackalope/jackalope-doctrine-dbal": "^1.6",
-        "mashape/unirest-php": "^3.0",
         "stof/doctrine-extensions-bundle": "^1.7",
         "sulu/form-bundle": "^2.1",
         "sulu/headless-bundle": "^0.10.0",

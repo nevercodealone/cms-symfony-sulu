@@ -297,9 +297,6 @@
     "laminas/laminas-code": {
         "version": "4.4.2"
     },
-    "mashape/unirest-php": {
-        "version": "v3.0.4"
-    },
     "massive/build-bundle": {
         "version": "0.5.3"
     },
