@@ -1,30 +1,21 @@
 {
-    "name": "sulu/skeleton",
+    "name": "rogoit/cms-symfony-sulu",
     "license": "MIT",
     "type": "project",
-    "description": "Project template for starting your new project based on the Sulu content management system",
-    "homepage": "https://sulu.io/",
+    "description": "Content marketing page with CMS based on Symfony and Sulu",
+    "homepage": "https://nevercodealone.de",
     "keywords": [
         "symfony",
         "sulu",
         "sulucms",
-        "cms",
-        "web-application",
-        "platform",
-        "data-managment",
-        "project-template"
+        "cms"
     ],
     "authors": [
         {
-            "name": "Sulu Community",
-            "homepage": "https://github.com/sulu/skeleton/graphs/contributors"
+            "name": "Roland Golla",
+            "homepage": "https://rolandgolla.de",
         }
     ],
-    "support": {
-        "issues": "https://github.com/sulu/skeleton/issues",
-        "source": "https://github.com/sulu/skeleton",
-        "docs": "http://docs.sulu.io/"
-    },
     "require": {
         "php": "8.1.*",
         "ext-ctype": "*",
