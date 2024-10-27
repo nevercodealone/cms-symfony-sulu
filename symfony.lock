@@ -74,9 +74,6 @@
     "dantleech/phpcr-migrations-bundle": {
         "version": "1.2.0"
     },
-    "dg/twitter-php": {
-        "version": "v4.1.2"
-    },
     "doctrine/annotations": {
         "version": "1.0",
         "recipe": {

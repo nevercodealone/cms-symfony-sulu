@@ -31,7 +31,6 @@
         "ext-iconv": "*",
         "ext-zip": "*",
         "dantleech/phpcr-migrations-bundle": "^1.2",
-        "dg/twitter-php": "^4.1",
         "doctrine/dbal": "^2.10",
         "doctrine/doctrine-bundle": "^2.3",
         "doctrine/doctrine-fixtures-bundle": "^3.4",
