@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1999045f666cff46b324d07dadd5f46f",
+    "content-hash": "e63c534191fcc40ff35b7b6762764943",
     "packages": [
         {
             "name": "behat/transliterator",
@@ -6014,105 +6014,6 @@
                 "source": "https://github.com/stof/StofDoctrineExtensionsBundle/tree/v1.10.1"
             },
             "time": "2023-12-09T09:33:39+00:00"
-        },
-        {
-            "name": "sulu/form-bundle",
-            "version": "2.5.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/sulu/SuluFormBundle.git",
-                "reference": "5943d8c6c5bce7f4933e7d516e0f4e4071da8ced"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/sulu/SuluFormBundle/zipball/5943d8c6c5bce7f4933e7d516e0f4e4071da8ced",
-                "reference": "5943d8c6c5bce7f4933e7d516e0f4e4071da8ced",
-                "shasum": ""
-            },
-            "require": {
-                "doctrine/collections": "^1.0",
-                "doctrine/orm": "^2.5.3",
-                "doctrine/persistence": "^1.3 || ^2.0",
-                "php": "^7.2 || ^8.0",
-                "sulu/sulu": "^2.4.1 || ^2.5.0@dev",
-                "symfony/config": "^4.4 || ^5.0 || ^6.0",
-                "symfony/console": "^4.4 || ^5.0 || ^6.0",
-                "symfony/dependency-injection": "^4.4 || ^5.0 || ^6.0",
-                "symfony/event-dispatcher": "^4.4 || ^5.0 || ^6.0",
-                "symfony/event-dispatcher-contracts": "^1.0 || ^2.0 || ^3.0",
-                "symfony/form": "^4.4 || ^5.0 || ^6.0",
-                "symfony/mailer": "^4.4 || ^5.0 || ^6.0",
-                "symfony/security-csrf": "^4.4 || ^5.0 || ^6.0",
-                "symfony/translation": "^4.4 || ^5.0 || ^6.0",
-                "symfony/validator": "^4.4 || ^5.0 || ^6.0",
-                "twig/twig": "^1.41 || ^2.0 || ^3.0"
-            },
-            "replace": {
-                "sulu/sulu-form-bundle": "self.version"
-            },
-            "require-dev": {
-                "dantleech/phpcr-migrations-bundle": "^1.3",
-                "doctrine/data-fixtures": "^1.3.3",
-                "doctrine/doctrine-bundle": "^1.10 || ^2.0",
-                "drewm/mailchimp-api": "^2.2",
-                "excelwebzone/recaptcha-bundle": "^1.4.2",
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "handcraftedinthealps/zendsearch": "^2.0",
-                "jackalope/jackalope-doctrine-dbal": "^1.3.2",
-                "jangregor/phpstan-prophecy": "^1.0",
-                "massive/search-bundle": "^2.0",
-                "phpspec/prophecy": "^1.14",
-                "phpstan/phpstan": "^1.0",
-                "phpstan/phpstan-doctrine": "^1.0",
-                "phpstan/phpstan-phpunit": "^1.0",
-                "phpstan/phpstan-symfony": "^1.0",
-                "phpunit/phpunit": "^8.0",
-                "sendinblue/api-v3-sdk": "^8.0",
-                "symfony/browser-kit": "^4.4 || ^5.0 || ^6.0",
-                "symfony/dotenv": "^4.4 || ^5.0 || ^6.0",
-                "symfony/mime": "^4.4 || ^5.0 || ^6.0",
-                "symfony/monolog-bundle": "^3.1",
-                "symfony/stopwatch": "^4.4 || ^5.0 || ^6.0",
-                "symfony/var-dumper": "^4.4 || ^5.0 || ^6.0",
-                "thecodingmachine/phpstan-strict-rules": "^1.0"
-            },
-            "suggest": {
-                "drewm/mailchimp-api": "Allows to add a newsletter subscription over mailchimp to any dynamic form",
-                "excelwebzone/recaptcha-bundle": "Allows to add recaptcha to any dynamic form",
-                "sendinblue/api-v3-sdk": "Allows to add a newsletter subscription over sendinblue to any dynamic form"
-            },
-            "type": "sulu-bundle",
-            "autoload": {
-                "psr-4": {
-                    "Sulu\\Bundle\\FormBundle\\": ""
-                },
-                "exclude-from-classmap": [
-                    "/Tests/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Sulu Form Contributors",
-                    "homepage": "https://github.com/sulu/SuluFormBundle/contributors"
-                }
-            ],
-            "description": "Bundle for creating forms in Sulu.",
-            "homepage": "https://github.com/sulu/SuluFormBundle",
-            "keywords": [
-                "dynamic",
-                "form",
-                "form manager",
-                "sulu"
-            ],
-            "support": {
-                "issues": "https://github.com/sulu/SuluFormBundle/issues",
-                "source": "https://github.com/sulu/SuluFormBundle/tree/2.5.2"
-            },
-            "time": "2023-03-22T23:37:17+00:00"
         },
         {
             "name": "sulu/headless-bundle",

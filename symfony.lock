@@ -551,19 +551,6 @@
             "config/packages/stof_doctrine_extensions.yaml"
         ]
     },
-    "sulu/form-bundle": {
-        "version": "2.0",
-        "recipe": {
-            "repo": "github.com/symfony/recipes-contrib",
-            "branch": "master",
-            "version": "2.0",
-            "ref": "7aebdb331ad5398dba88db656d7efbef28a2bb9d"
-        },
-        "files": [
-            "config/packages/sulu_form.yaml",
-            "config/routes/sulu_form_admin.yaml"
-        ]
-    },
     "sulu/headless-bundle": {
         "version": "0.10",
         "recipe": {
