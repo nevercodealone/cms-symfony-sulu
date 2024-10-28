@@ -12,10 +12,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class ClientRequestRefactoring
 {
-  final public const RESOURCE_KEY = 'clientrequestrefactorings';
-  final public const FORM_KEY = 'clientrequestrefactoringdetails';
-  final public const LIST_KEY = 'clientrequestrefactorings';
-  final public const SECURITY_CONTEXT = 'sulu.clientrequestrefactoring.clientrequestrefactorings';
+  final public const RESOURCE_KEY = 'client_request_refactorings';
+  final public const FORM_KEY = 'client_request_refactoring_details';
+  final public const LIST_KEY = 'client_request_refactorings';
+  final public const SECURITY_CONTEXT = 'sulu.client_request_refactoring.client_request_refactorings';
 
   /**
    * @ORM\Id

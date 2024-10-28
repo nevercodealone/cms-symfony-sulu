@@ -16,11 +16,11 @@ use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 
 class ClientRequestRefactoringAdmin extends Admin
 {
-  final public const LIST_VIEW = 'app.clientrequestrefactoring.list';
-  final public const ADD_FORM_VIEW = 'app.clientrequestrefactoring.add_form';
-  final public const ADD_FORM_DETAILS_VIEW = 'app.clientrequestrefactoring.add_form.details';
-  final public const EDIT_FORM_VIEW = 'app.clientrequestrefactoring.edit_form';
-  final public const EDIT_FORM_DETAILS_VIEW = 'app.clientrequestrefactoring.edit_form.details';
+  final public const LIST_VIEW = 'app.client_request_refactoring.list';
+  final public const ADD_FORM_VIEW = 'app.client_request_refactoring.add_form';
+  final public const ADD_FORM_DETAILS_VIEW = 'app.client_request_refactoring.add_form.details';
+  final public const EDIT_FORM_VIEW = 'app.client_request_refactoring.edit_form';
+  final public const EDIT_FORM_DETAILS_VIEW = 'app.client_request_refactoring.edit_form.details';
 
   public function __construct(private readonly ViewBuilderFactoryInterface $viewBuilderFactory, private readonly SecurityCheckerInterface $securityChecker)
   {
@@ -28,17 +28,17 @@ class ClientRequestRefactoringAdmin extends Admin
 
   public function configureNavigationItems(NavigationItemCollection $navigationItemCollection): void
   {
-    //if ($this->securityChecker->hasPermission(ClientRequestRefactoring::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
-      $rootNavigationItem = new NavigationItem('app.clientrequestrefactoring');
+    if ($this->securityChecker->hasPermission(ClientRequestRefactoring::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
+      $rootNavigationItem = new NavigationItem('app.client_request_refactoring');
       $rootNavigationItem->setIcon('fa-music');
       $rootNavigationItem->setPosition(25);
 
-      $navigationItem = new NavigationItem('app.clientrequestrefactoring');
+      $navigationItem = new NavigationItem('app.client_request_refactoring');
       $navigationItem->setView(static::LIST_VIEW);
 
       $rootNavigationItem->addChild($navigationItem);
       $navigationItemCollection->add($rootNavigationItem);
-    //}
+    }
   }
 
   public function configureViews(ViewCollection $viewCollection): void
@@ -111,7 +111,7 @@ class ClientRequestRefactoringAdmin extends Admin
   /**
    * @return array[]
    */
-  public function getSecurityContext(): array
+  public function getSecurityContexts(): array
   {
     return [
       self::SULU_ADMIN_SECURITY_SYSTEM => [
