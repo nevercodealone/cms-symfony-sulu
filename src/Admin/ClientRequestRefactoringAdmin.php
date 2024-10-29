@@ -16,27 +16,31 @@ use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 
 class ClientRequestRefactoringAdmin extends Admin
 {
-  final public const LIST_VIEW = 'app.client_request_refactoring.list';
-  final public const ADD_FORM_VIEW = 'app.client_request_refactoring.add_form';
-  final public const ADD_FORM_DETAILS_VIEW = 'app.client_request_refactoring.add_form.details';
-  final public const EDIT_FORM_VIEW = 'app.client_request_refactoring.edit_form';
-  final public const EDIT_FORM_DETAILS_VIEW = 'app.client_request_refactoring.edit_form.details';
+  public const LIST_VIEW = 'app.client_request_refactoring.list';
+  public const ADD_FORM_VIEW = 'app.client_request_refactoring.add_form';
+  public const ADD_FORM_DETAILS_VIEW = 'app.client_request_refactoring.add_form.details';
+  public const EDIT_FORM_VIEW = 'app.client_request_refactoring.edit_form';
+  public const EDIT_FORM_DETAILS_VIEW = 'app.client_request_refactoring.edit_form.details';
 
-  public function __construct(private readonly ViewBuilderFactoryInterface $viewBuilderFactory, private readonly SecurityCheckerInterface $securityChecker)
-  {
+  private ViewBuilderFactoryInterface $viewBuilderFactory;
+  private SecurityCheckerInterface $securityChecker;
+
+  public function __construct(
+    ViewBuilderFactoryInterface $viewBuilderFactory,
+    SecurityCheckerInterface $securityChecker
+  ) {
+    $this->viewBuilderFactory = $viewBuilderFactory;
+    $this->securityChecker = $securityChecker;
   }
 
   public function configureNavigationItems(NavigationItemCollection $navigationItemCollection): void
   {
     if ($this->securityChecker->hasPermission(ClientRequestRefactoring::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
-      $rootNavigationItem = new NavigationItem('app.client_request_refactoring');
-      $rootNavigationItem->setIcon('fa-music');
-      $rootNavigationItem->setPosition(25);
+      $rootNavigationItem = new NavigationItem('app.client_request_refactorings');
+      $rootNavigationItem->setIcon('su-calendar');
+      $rootNavigationItem->setPosition(30);
+      $rootNavigationItem->setView(static::LIST_VIEW);
 
-      $navigationItem = new NavigationItem('app.client_request_refactoring');
-      $navigationItem->setView(static::LIST_VIEW);
-
-      $rootNavigationItem->addChild($navigationItem);
       $navigationItemCollection->add($rootNavigationItem);
     }
   }
@@ -65,20 +69,20 @@ class ClientRequestRefactoringAdmin extends Admin
 
     if ($this->securityChecker->hasPermission(ClientRequestRefactoring::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
       $viewCollection->add(
-        $this->viewBuilderFactory->createListViewBuilder(static::LIST_VIEW, '/albums')
+        $this->viewBuilderFactory->createListViewBuilder(static::LIST_VIEW, '/client_request_refactorings')
           ->setResourceKey(ClientRequestRefactoring::RESOURCE_KEY)
           ->setListKey(ClientRequestRefactoring::LIST_KEY)
-          ->setTitle('app.albums')
+          ->setTitle('app.client_request_refactorings')
           ->addListAdapters(['table'])
           ->setAddView(static::ADD_FORM_VIEW)
           ->setEditView(static::EDIT_FORM_VIEW)
-          ->addToolbarActions($listToolbarActions),
+          ->addToolbarActions($listToolbarActions)
       );
 
       $viewCollection->add(
-        $this->viewBuilderFactory->createResourceTabViewBuilder(static::ADD_FORM_VIEW, '/albums/add')
+        $this->viewBuilderFactory->createResourceTabViewBuilder(static::ADD_FORM_VIEW, '/client_request_refactorings/add')
           ->setResourceKey(ClientRequestRefactoring::RESOURCE_KEY)
-          ->setBackView(static::LIST_VIEW),
+          ->setBackView(static::LIST_VIEW)
       );
 
       $viewCollection->add(
@@ -88,13 +92,13 @@ class ClientRequestRefactoringAdmin extends Admin
           ->setTabTitle('sulu_admin.details')
           ->setEditView(static::EDIT_FORM_VIEW)
           ->addToolbarActions($formToolbarActions)
-          ->setParent(static::ADD_FORM_VIEW),
+          ->setParent(static::ADD_FORM_VIEW)
       );
 
       $viewCollection->add(
-        $this->viewBuilderFactory->createResourceTabViewBuilder(static::EDIT_FORM_VIEW, '/albums/:id')
+        $this->viewBuilderFactory->createResourceTabViewBuilder(static::EDIT_FORM_VIEW, '/client_request_refactorings/:id')
           ->setResourceKey(ClientRequestRefactoring::RESOURCE_KEY)
-          ->setBackView(static::LIST_VIEW),
+          ->setBackView(static::LIST_VIEW)
       );
 
       $viewCollection->add(
@@ -103,19 +107,19 @@ class ClientRequestRefactoringAdmin extends Admin
           ->setFormKey(ClientRequestRefactoring::FORM_KEY)
           ->setTabTitle('sulu_admin.details')
           ->addToolbarActions($formToolbarActions)
-          ->setParent(static::EDIT_FORM_VIEW),
+          ->setParent(static::EDIT_FORM_VIEW)
       );
     }
   }
 
   /**
-   * @return array[]
+   * @return mixed[]
    */
   public function getSecurityContexts(): array
   {
     return [
       self::SULU_ADMIN_SECURITY_SYSTEM => [
-        'clientrequestrefactoring' => [
+        'client_request_refactorings' => [
           ClientRequestRefactoring::SECURITY_CONTEXT => [
             PermissionTypes::VIEW,
             PermissionTypes::ADD,

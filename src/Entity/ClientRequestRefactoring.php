@@ -32,6 +32,12 @@ class ClientRequestRefactoring
   private $email;
 
   /**
+   * @ORM\Column(type="string", length=255)
+   * @Assert\NotBlank()
+   */
+  private string $name;
+
+  /**
    * @ORM\Column(type="string", length=255, nullable=true)
    */
   private $projectUrl;
@@ -49,8 +55,7 @@ class ClientRequestRefactoring
   private $team;
 
   /**
-   * @ORM\Column(type="string", length=20)
-   * @Assert\Choice({"Phone", "VideoCall"})
+   * @ORM\Column(type="string", length=20, nullable=true)
    */
   private $contactType;
 
@@ -73,6 +78,17 @@ class ClientRequestRefactoring
   public function setEmail(string $email): self
   {
     $this->email = $email;
+    return $this;
+  }
+
+  public function getName(): ?string
+  {
+    return $this->name;
+  }
+
+  public function setName(string $name): self
+  {
+    $this->name = $name;
     return $this;
   }
 

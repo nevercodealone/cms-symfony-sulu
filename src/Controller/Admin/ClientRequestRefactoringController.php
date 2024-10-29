@@ -6,112 +6,144 @@ namespace App\Controller\Admin;
 
 use App\Common\DoctrineListRepresentationFactory;
 use App\Entity\ClientRequestRefactoring;
-use FOS\RestBundle\Controller\Annotations\RouteResource;
-use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @RouteResource ("client-request-refactoring")
+ * @phpstan-type EventData array{
+ *     id: int|null,
+ *     email: string,
+ *     name: string,
+ *     projectDescription: string,
+ *     team: string,
+ * }
  */
 class ClientRequestRefactoringController extends AbstractController implements SecuredControllerInterface
 {
-    public function __construct(private readonly DoctrineListRepresentationFactory $doctrineListRepresentationFactory, private readonly EntityManagerInterface $entityManager)
-    {
+  private DoctrineListRepresentationFactory $doctrineListRepresentationFactory;
+  private EntityManagerInterface $entityManager;
+  private MediaManagerInterface $mediaManager;
+
+  public function __construct(
+    DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
+    EntityManagerInterface $entityManager,
+    MediaManagerInterface $mediaManager
+  ) {
+    $this->doctrineListRepresentationFactory = $doctrineListRepresentationFactory;
+    $this->entityManager = $entityManager;
+    $this->mediaManager = $mediaManager;
+  }
+
+  /**
+   * @Route("/admin/api/client_request_refactorings/{id}", methods={"GET"}, name="app.get_client_request_refactoring")
+   */
+  public function getAction(int $id): Response
+  {
+    $clientRequestRefactoring = $this->entityManager->getRepository(ClientRequestRefactoring::class)->find($id);
+    if (!$clientRequestRefactoring) {
+      throw new NotFoundHttpException();
     }
 
-    /**
-     * @Route ("/admin/api/client-request-refactorings/{id}", name="app.get_client_request_refactoring", methods={"GET"})
-     */
-    public function get(int|string $id): Response
-    {
-        $clientRequestRefactoring = $this->entityManager->getRepository(ClientRequestRefactoring::class)->find($id);
-        if (!$clientRequestRefactoring instanceof ClientRequestRefactoring) {
-            throw new NotFoundHttpException();
-        }
+    return $this->json($this->getDataForEntity($clientRequestRefactoring));
+  }
 
-        return $this->json($this->getDataForEntity($clientRequestRefactoring));
+  /**
+   * @Route("/admin/api/client_request_refactorings/{id}", methods={"PUT"}, name="app.put_client_request_refactoring")
+   */
+  public function putAction(Request $request, int $id): Response
+  {
+    $clientRequestRefactoring = $this->entityManager->getRepository(ClientRequestRefactoring::class)->find($id);
+    if (!$clientRequestRefactoring) {
+      throw new NotFoundHttpException();
     }
 
-    /**
-     * @Route ("/admin/api/client-request-refactorings/{id}", name="app.put_client_request_refactoring", methods={"PUT"})
-    */
-    public function put(Request $request, int $id): Response
-    {
-        $clientRequestRefactoring = $this->entityManager->getRepository(ClientRequestRefactoring::class)->find($id);
-        if (!$clientRequestRefactoring instanceof ClientRequestRefactoring) {
-            throw new NotFoundHttpException();
-        }
-        $data = $request->toArray();
-        $this->mapDataToEntity($data, $clientRequestRefactoring);
-        $this->entityManager->flush();
+    /** @var EventData $data */
+    $data = $request->toArray();
+    $this->mapDataToEntity($data, $clientRequestRefactoring);
+    $this->entityManager->flush();
 
-        return $this->json($this->getDataForEntity($clientRequestRefactoring));
-    }
+    return $this->json($this->getDataForEntity($clientRequestRefactoring));
+  }
 
-    /**
-     * @Route ("/admin/api/client-request-refactorings", name="app.post_client_request_refactoring", methods={"POST"})
-     */
-    public function post(Request $request): Response
-    {
-        $data = $request->toArray();
-        $clientRequestRefactoring = new ClientRequestRefactoring();
-        $this->mapDataToEntity($data, $clientRequestRefactoring);
-        $this->entityManager->persist($clientRequestRefactoring);
-        $this->entityManager->flush();
+  /**
+   * @Route("/admin/api/client_request_refactorings", methods={"POST"}, name="app.post_client_request_refactoring")
+   */
+  public function postAction(Request $request): Response
+  {
+    $clientRequestRefactoring = new ClientRequestRefactoring();
 
-        return $this->json($this->getDataForEntity($clientRequestRefactoring));
-    }
+    /** @var EventData $data */
+    $data = $request->toArray();
+    $this->mapDataToEntity($data, $clientRequestRefactoring);
+    $this->entityManager->persist($clientRequestRefactoring);
+    $this->entityManager->flush();
 
-    /**
-     * @Route ("/admin/api/client-request-refactorings/{id}", name="app.delete_client_request_refactoring", methods={"DELETE"})
-     */
-    public function delete(int|string $id): Response
-    {
-        $clientRequestRefactoring = $this->entityManager->getRepository(ClientRequestRefactoring::class)->find($id);
-        if (!$clientRequestRefactoring instanceof ClientRequestRefactoring) {
-            throw new NotFoundHttpException();
-        }
-        $this->entityManager->remove($clientRequestRefactoring);
-        $this->entityManager->flush();
+    return $this->json($this->getDataForEntity($clientRequestRefactoring), 201);
+  }
 
-        return new Response(null, Response::HTTP_NO_CONTENT);
-    }
+  /**
+   * @Route("/admin/api/client_request_refactorings/{id}", methods={"DELETE"}, name="app.delete_client_request_refactoring")
+   */
+  public function deleteAction(int $id): Response
+  {
+    /** @var ClientRequestRefactoring $clientRequestRefactoring */
+    $clientRequestRefactoring = $this->entityManager->getReference(ClientRequestRefactoring::class, $id);
+    $this->entityManager->remove($clientRequestRefactoring);
+    $this->entityManager->flush();
 
-    /**
-     * @Route ("/admin/api/client-request-refactorings", name="app.get_client_request_refactoring_list", methods={"GET"})
-     */
-    public function getList(): Response
-    {
-        $clientRequestRefactorings = $this->entityManager->getRepository(ClientRequestRefactoring::class)->findAll();
+    return $this->json(null, 204);
+  }
 
-        return $this->json(array_map([$this, 'getDataForEntity'], $clientRequestRefactorings));
-    }
+  /**
+   * @Route("/admin/api/client_request_refactorings", methods={"GET"}, name="app.get_client_request_refactoring_list")
+   */
+  public function getListAction(): Response
+  {
+    $listRepresentation = $this->doctrineListRepresentationFactory->createDoctrineListRepresentation(
+      ClientRequestRefactoring::RESOURCE_KEY
+    );
 
-    private function getDataForEntity(ClientRequestRefactoring $clientRequestRefactoring)
-    {
-      return [
-        'id' => $clientRequestRefactoring->getId(),
-        'email' => $clientRequestRefactoring->getEmail(),
-        'projectUrl' => $clientRequestRefactoring->getProjectUrl(),
-        'projectDescription' => $clientRequestRefactoring->getProjectDescription(),
-        'team' => $clientRequestRefactoring->getTeam(),
-        'contactType' => $clientRequestRefactoring->getContactType(),
-        'additionalInformation' => $clientRequestRefactoring->getAdditionalInformation(),
-      ];
-    }
+    return $this->json($listRepresentation->toArray());
+  }
 
-    public function getSecurityContext(): string
-    {
-      return ClientRequestRefactoring::SECURITY_CONTEXT;
-    }
+  /**
+   * @return EventData $data
+   */
+  protected function getDataForEntity(ClientRequestRefactoring $entity): array
+  {
+    return [
+      'id' => $entity->getId(),
+      'email' => $entity->getEmail(),
+      'name' => $entity->getName(),
+      'projectDescription' => $entity->getProjectDescription(),
+      'team' => $entity->getTeam(),
+    ];
+  }
 
-    public function getLocale(Request $request): ?string
-    {
-      return $request->query->get('locale');
-    }
+  /**
+   * @param EventData $data
+   */
+  protected function mapDataToEntity(array $data, ClientRequestRefactoring $entity): void
+  {
+    $entity->setEmail($data['email']);
+    $entity->setName($data['name']);
+    $entity->setProjectDescription($data['projectDescription']);
+    $entity->setTeam($data['team']);
+  }
+
+  public function getSecurityContext(): string
+  {
+    return ClientRequestRefactoring::SECURITY_CONTEXT;
+  }
+
+  public function getLocale(Request $request): ?string
+  {
+    return $request->query->get('locale');
+  }
 }

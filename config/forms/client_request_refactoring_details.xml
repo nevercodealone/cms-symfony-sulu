@@ -10,24 +10,19 @@
         <title>sulu_admin.email</title>
       </meta>
     </property>
-    <property name="projectUrl" type="text_line">
+    <property name="name" type="text_line">
       <meta>
-        <title>Text</title>
+        <title>sulu_admin.name</title>
+      </meta>
+    </property>
+    <property name="projectDescription" type="text_line">
+      <meta>
+        <title>Projekt Beschreibung</title>
       </meta>
     </property>
     <property name="team" type="text_line">
       <meta>
-        <title>sulu_admin.team</title>
-      </meta>
-    </property>
-    <property name="contactType" type="text_line">
-      <meta>
-        <title>sulu_admin.contactType</title>
-      </meta>
-    </property>
-    <property name="additionalInformation" type="text_line">
-      <meta>
-        <title>sulu_admin.additionalInformation</title>
+        <title>Team</title>
       </meta>
     </property>
   </properties>
