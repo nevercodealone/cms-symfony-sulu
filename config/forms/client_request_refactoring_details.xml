@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<form xmlns="http://schemas.sulu.io/template/template"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd"
+>
+  <key>client_request_refactoring_details</key>
+  <properties>
+    <property name="email" type="text_line">
+      <meta>
+        <title>sulu_admin.email</title>
+      </meta>
+    </property>
+    <property name="name" type="text_line">
+      <meta>
+        <title>sulu_admin.name</title>
+      </meta>
+    </property>
+    <property name="projectDescription" type="text_line">
+      <meta>
+        <title>Projekt Beschreibung</title>
+      </meta>
+    </property>
+    <property name="team" type="text_line">
+      <meta>
+        <title>Team</title>
+      </meta>
+    </property>
+  </properties>
+</form>

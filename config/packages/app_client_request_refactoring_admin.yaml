@@ -1,0 +1,6 @@
+sulu_admin:
+  resources:
+    client_request_refactoring:
+      routes:
+        list: 'app.get_client_request_refactoring_list'
+        detail: 'app.get_client_request_refactoring'
