@@ -12,3 +12,7 @@ a {
 a:hover, a:focus {
     @apply text-green-800 underline;
 }
+
+li {
+    @apply list-none;
+}
