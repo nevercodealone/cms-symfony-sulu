@@ -1,0 +1,101 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+  <key>footer</key>
+
+  <meta>
+    <title>Footer</title>
+  </meta>
+
+  <properties>
+    <property name="title" type="text_line" mandatory="true">
+      <meta>
+        <title lang="en">Title</title>
+        <title lang="de">Titel</title>
+      </meta>
+      <tag name="sulu.node.name"/>
+    </property>
+    <property name="headline" type="text_line">
+      <meta>
+        <title>Headline</title>
+      </meta>
+      <params>
+        <param name="headline" value="true"/>
+      </params>
+    </property>
+    <property name="description" type="text_editor">
+      <meta>
+        <title>Beschreibung</title>
+      </meta>
+
+      <params>
+        <param name="table" value="false"/>
+        <param name="link" value="true"/>
+        <!-- CKEditor Parameters examples: -->
+        <param name="extra_allowed_content"
+               value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+        <param name="ui_color" value="#ffcc00"/>
+      </params>
+    </property>
+    <block name="columns" default-type="items" minOccurs="0">
+      <meta>
+        <title>Spalten</title>
+      </meta>
+      <types>
+        <type name="items">
+          <meta>
+            <title>Item</title>
+          </meta>
+          <properties>
+            <property name="headline" type="text_line">
+              <meta>
+                <title>Headline</title>
+              </meta>
+              <params>
+                <param name="headline" value="true"/>
+              </params>
+            </property>
+            <block name="links" default-type="intern" minOccurs="0">
+              <meta>
+                <title>Items</title>
+              </meta>
+              <types>
+                <type name="intern">
+                  <meta>
+                    <title>Intern</title>
+                  </meta>
+                  <properties>
+                    <property name="buttonLink" type="single_page_selection" colspan="6">
+                      <meta>
+                        <title>Page</title>
+                      </meta>
+                    </property>
+                  </properties>
+                </type>
+                <type name="extern">
+                  <meta>
+                    <title>Extern</title>
+                  </meta>
+                  <properties>
+                    <property name="display" type="text_line" colspan="6">
+                      <meta>
+                        <title>Text</title>
+                      </meta>
+                    </property>
+                    <property name="url" type="url" colspan="6">
+                      <meta>
+                        <title>URL</title>
+                      </meta>
+                    </property>
+                  </properties>
+                </type>
+              </types>
+            </block>
+          </properties>
+        </type>
+      </types>
+    </block>
+  </properties>
+</template>
