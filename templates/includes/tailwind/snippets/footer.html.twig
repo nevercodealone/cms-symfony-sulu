@@ -42,7 +42,6 @@
                       }) %}
                         <sulu-link href="{{ link.buttonLink }}">{{ page.content.title }}</sulu-link>
                       {% else %}
-                        {% dump(link) %}
                         <a href="{{ link.url }}" target="_blank">{{ link.display }}</a>
                       {% endif %}
                     </li>
