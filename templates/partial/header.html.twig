@@ -1,14 +1,15 @@
 {% block meta %}
+  {% dump(localizations) %}
     {% include "@SuluWebsite/Extension/seo.html.twig" with {
-        "seo": extension.seo|default([]),
-        "content": content|default([]),
-        "urls": urls|default([]),
-        "shadowBaseLocale": shadowBaseLocale|default(),
-        "defaultLocale": app.request.locale
+        seo: extension.seo|default([]),
+        content: content|default([]),
+        urls: localizations|default([]),
+        localizations: localizations|default([]),
+        shadowBaseLocale: shadowBaseLocale|default(),
+        defaultLocale: request.defaultLocale|default('de')
     } %}
     {% include "meta/meta-facebook.html.twig" %}
     {% include "meta/meta-twitter.html.twig" %}
 {% endblock %}
-<link rel=”canonical” href=”{{ app.request.uri|replace({'http:': 'https:'}) }}”/>
 <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
