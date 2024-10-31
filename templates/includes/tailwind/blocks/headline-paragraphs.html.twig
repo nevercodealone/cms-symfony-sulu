@@ -13,11 +13,13 @@
     {% endif %}
     {% if content.items is defined and content.items is not empty %}
       {% for item in content.items %}
-        {% if item.type == 'description' %}
-          <div class="mb-4">{{ item.description|raw }}</div>
-        {% elseif item.type == 'code' %}
-          {% include 'includes/tailwind/blocks/code.html.twig' with {'item': item} %}
-        {% endif %}
+        <div class="mb-4">
+          {% if item.type == 'description' %}
+            {{ item.description|raw }}
+          {% elseif item.type == 'code' %}
+            {% include 'includes/tailwind/blocks/code.html.twig' with {'item': item} %}
+          {% endif %}
+        </div>
       {% endfor %}
     {% endif %}
   </div>
