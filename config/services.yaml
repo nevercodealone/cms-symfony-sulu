@@ -55,5 +55,3 @@ services:
         arguments:
             - '@Google_Client'
 
-    Unirest\Request:
-        class: Unirest\Request

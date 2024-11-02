@@ -16,3 +16,7 @@ a:hover, a:focus {
 li {
     @apply list-none;
 }
+
+.description-list li {
+   list-style: unset;
+}

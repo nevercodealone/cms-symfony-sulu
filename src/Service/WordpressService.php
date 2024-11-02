@@ -1,22 +1,47 @@
 <?php
+
 namespace App\Service;
 
-use Unirest\Request;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class WordpressService
 {
-    public function getItemsFromBlog()
-    {
-        $headers = ['Accept' => 'application/json'];
-        $query = [
-            'per_page' => 10,
-            '_embed' => ''
-        ];
+  private HttpClientInterface $httpClient;
 
-        $response = Request::get('https://blog.nevercodealone.de/wp-json/wp/v2/posts', $headers, $query);
+  public function __construct(HttpClientInterface $httpClient)
+  {
+    $this->httpClient = $httpClient;
+  }
 
-        $body = json_decode((string) $response->raw_body, true, 512, JSON_THROW_ON_ERROR);
+  /**
+   * @throws TransportExceptionInterface
+   * @throws ServerExceptionInterface
+   * @throws RedirectionExceptionInterface
+   * @throws DecodingExceptionInterface
+   * @throws ClientExceptionInterface
+   */
+  public function getItemsFromBlog(): array
+  {
+    $response = $this->httpClient->request('GET', 'https://blog.nevercodealone.de/wp-json/wp/v2/posts', [
+      'headers' => [
+        'Accept' => 'application/json',
+      ],
+      'query' => [
+        'per_page' => 10,
+        '_embed' => '',
+      ],
+    ]);
 
-        return $body;
+    if ($response->getStatusCode() !== Response::HTTP_OK) {
+      throw new \RuntimeException('Failed to fetch blog posts');
     }
+
+    return $response->toArray(throw: true);
+  }
 }
