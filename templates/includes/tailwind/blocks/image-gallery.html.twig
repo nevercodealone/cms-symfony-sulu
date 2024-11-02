@@ -1,3 +1,4 @@
+<!-- image-gallary.html.twig -->
 <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
   <div class="mx-auto max-w-screen-md text-center mb-8 lg:mb-16">
     {% if loopIndex == 1 %}
@@ -9,18 +10,26 @@
   </div>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% if content.image is defined and content.image is not empty %}
-      {% for image in content.image %}
-        {% set source = image.formats['image-gallery'] %}
-        {% set title = image.title %}
-        <div class="bg-white p-5 rounded shadow overflow-hidden">
-          <img class="w-full h-48 object-cover" src="{{ source }}" alt="{{ title }}">
-          {% if title %}
-            <div class="p-4">
-              <h3 class="text-sm font-bold">{{ title }}</h3>
-            </div>
-          {% endif %}
-        </div>
-      {% endfor %}
+        {% for image in content.image %}
+          {% set source = image.formats['image-gallery'] %}
+          {% set title = image.description ?? image.title %}
+          {% set uniqueId = 'img-' ~ loop.index %}
+
+          <figure class="bg-white p-5 rounded shadow overflow-hidden">
+            <img
+              class="w-full h-48 object-cover"
+              src="{{ source }}"
+              aria-labelledby="{{ uniqueId }}"
+              alt=""
+            >
+            {% if title %}
+              <figcaption class="p-4">
+                <h3 id="{{ uniqueId }}" class="text-sm font-bold">{{ title }}</h3>
+              </figcaption>
+            {% endif %}
+          </figure>
+        {% endfor %}
     {% endif %}
   </div>
 </div>
+<!-- End of image-gallary.html.twig -->
