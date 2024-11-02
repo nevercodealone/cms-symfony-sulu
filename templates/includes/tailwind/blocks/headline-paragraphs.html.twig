@@ -13,7 +13,7 @@
     {% endif %}
     {% if content.items is defined and content.items is not empty %}
       {% for item in content.items %}
-        <div class="mb-4">
+        <div class="mb-4 description-list">
           {% if item.type == 'description' %}
             {{ item.description|raw }}
           {% elseif item.type == 'code' %}
