@@ -57,10 +57,8 @@ build:
 codeanalysis_phpunit:
   stage: codeanalysis
   image: $CI_DEV_IMAGE
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    - docker exec $SHORTCODE1-web phpunit --testdox
+    - pwd && phpunit --testdox
   tags:
     - docker1
 
