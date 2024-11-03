@@ -5,6 +5,7 @@ variables:
 
 stages:
   - build
+  - codeanalysis
   - deploy_stage
   - trigger_test
   - deploy_live
@@ -50,6 +51,25 @@ build:
     - docker push $CI_IMAGE
     - docker build -f Dockerfile.conversis --target webserver-dev -t $CI_DEV_IMAGE --pull .
     - docker push $CI_DEV_IMAGE
+  tags:
+    - docker1
+
+build_toolbox_image:
+  stage: build
+  image: docker:stable
+  before_script:
+    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
+  script:
+    - docker build -t $TOOLBOX_IMAGE --target toolbox --pull .
+    - docker push $TOOLBOX_IMAGE
+  tags:
+    - docker1
+
+codeanalysis_phpunit:
+  stage: codeanalysis
+  image: $TOOLBOX_IMAGE
+  script:
+    - phpunit --testdox
   tags:
     - docker1
 
