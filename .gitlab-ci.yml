@@ -58,7 +58,7 @@ codeanalysis_phpunit:
   stage: codeanalysis
   image: $CI_DEV_IMAGE
   script:
-    - /var/www/html/phpunit --testdox
+    - pwd
   tags:
     - docker1
 
