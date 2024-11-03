@@ -58,7 +58,7 @@ build_toolbox_image:
   stage: build
   image: docker:stable
   before_script:
-    - docker login --username gitlab-ci-token --password $CI_BUILD_TOKEN $CI_REGISTRY 2>/dev/null
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
     - docker build -t $TOOLBOX_IMAGE --target toolbox --pull .
     - docker push $TOOLBOX_IMAGE
