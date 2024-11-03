@@ -59,7 +59,7 @@ codeanalysis_phpunit:
   image: $CI_DEV_IMAGE
   script:
     - cd /var/www/html
-    - ls -la tests
+    - ls -la
     - vendor/bin/phpunit --testdox
   tags:
     - docker1
