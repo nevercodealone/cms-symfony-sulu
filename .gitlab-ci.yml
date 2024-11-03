@@ -58,7 +58,7 @@ codeanalysis_phpunit:
   stage: codeanalysis
   image: $CI_DEV_IMAGE
   script:
-    - docker exec $SHORTCODE1-web /var/www/html/phpunit --testdox
+    - /var/www/html/phpunit --testdox
   tags:
     - docker1
 
