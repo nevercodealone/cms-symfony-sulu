@@ -47,4 +47,5 @@ return [
     Symfony\WebpackEncoreBundle\WebpackEncoreBundle::class => ['all' => true],
     Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle::class => ['all' => true],
     Sulu\Bundle\HeadlessBundle\SuluHeadlessBundle::class => ['all' => true],
+    Robole\SuluAITranslatorBundle\SuluAITranslatorBundle::class => ['all' => true],
 ];

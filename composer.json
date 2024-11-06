@@ -31,6 +31,7 @@
         "google/apiclient": "^2.9",
         "handcraftedinthealps/zendsearch": "^2.1",
         "jackalope/jackalope-doctrine-dbal": "^1.6",
+        "robole/sulu-ai-translator-bundle": "^1.1",
         "stof/doctrine-extensions-bundle": "^1.7",
         "sulu/headless-bundle": "^0.10.0",
         "sulu/sulu": "~2.5.20",

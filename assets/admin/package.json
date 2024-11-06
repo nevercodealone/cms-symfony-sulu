@@ -27,7 +27,8 @@
         "sulu-security-bundle": "file:node_modules/@sulu/vendor/sulu/sulu/src/Sulu/Bundle/SecurityBundle/Resources/js",
         "sulu-snippet-bundle": "file:node_modules/@sulu/vendor/sulu/sulu/src/Sulu/Bundle/SnippetBundle/Resources/js",
         "sulu-trash-bundle": "file:node_modules/@sulu/vendor/sulu/sulu/src/Sulu/Bundle/TrashBundle/Resources/js",
-        "sulu-website-bundle": "file:node_modules/@sulu/vendor/sulu/sulu/src/Sulu/Bundle/WebsiteBundle/Resources/js"
+        "sulu-website-bundle": "file:node_modules/@sulu/vendor/sulu/sulu/src/Sulu/Bundle/WebsiteBundle/Resources/js",
+        "sulu-ai-translator-bundle": "file:../../vendor/robole/sulu-ai-translator-bundle/src/Resources/js"
     },
     "devDependencies": {
         "@babel/core": "^7.5.5",
@@ -66,6 +67,6 @@
     },
     "engines": {
         "node": ">=14",
-        "npm": ">=6 <7"
+        "npm": "8.* || 9.* || 10.*"
     }
 }
