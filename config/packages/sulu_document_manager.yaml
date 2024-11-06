@@ -1,3 +1,12 @@
+services:
+  doctrine_phpcr.meta_cache_provider:
+    class: Doctrine\Common\Cache\Psr6\DoctrineProvider
+    factory: ['Doctrine\Common\Cache\Psr6\DoctrineProvider', 'wrap']
+
+  doctrine_phpcr.nodes_cache_provider:
+    class: Doctrine\Common\Cache\Psr6\DoctrineProvider
+    factory: ['Doctrine\Common\Cache\Psr6\DoctrineProvider', 'wrap']
+
 parameters:
     env(PHPCR_WORKSPACE): 'default'
 
