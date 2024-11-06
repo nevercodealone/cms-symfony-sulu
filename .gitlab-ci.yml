@@ -31,17 +31,6 @@ cypress_custom_tests_preview_stage:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
     TESTS_FAILED_cypress_custom_tests_preview_stage: $CI_JOB_STATUS == 'success'
 
-playwright_screen_compare_live_against_preview:
-  stage: trigger_test
-  trigger:
-    project: never-code-alone/playwright-visual-regression
-    branch: main
-    strategy: depend
-  variables:
-    BASE_URL: https://nevercodealone.de
-    COMPARE_URL: https://nevercodealone.projects.nevercodealone.de
-    TESTS_FAILED_playwright_screen_compare_live_against_preview: $CI_JOB_STATUS == 'success'
-
 build:
   stage: build
   before_script:
