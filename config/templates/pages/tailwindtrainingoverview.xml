@@ -7,7 +7,7 @@
     <key>tailwindtrainingoverview</key>
 
     <view>pages/tailwind-training-overview</view>
-    <controller>App\Controller\Website\PageController:trainingOverview</controller>
+    <controller>Sulu\Bundle\HeadlessBundle\Controller\HeadlessWebsiteController::indexAction</controller>
     <cacheLifetime>604800</cacheLifetime>
 
     <meta>
