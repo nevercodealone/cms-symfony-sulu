@@ -1,0 +1,33 @@
+<!-- table-of-contents.html.twig -->
+<div class="px-4 mx-auto max-w-screen-xl lg:px-6">
+  <div class="max-w-screen-lg text-gray-500 sm:text-lg">
+    {% if content.headline is defined and content.headline is not empty %}
+      {% include "includes/tailwind/includes/headline.html.twig" with {
+        'content': content,
+        'loopIndex': loopIndex
+      } %}
+    {% endif %}
+    <nav aria-label="table-of-contents" class="toc mb-8 description-list">
+      <ul class="space-y-2" role="list" aria-labelledby="toc-heading">
+        {% for section in headlines %}
+          {% if section.headline is defined %}
+            {% set htmlId = section.headline|lower
+              |replace({'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss'})
+              |replace({' ': '-'})
+              |replace({'/[^a-z0-9\\-]/': ''}) %}
+            <li>
+              <a
+                href="#{{ htmlId }}"
+                class="text-blue-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded transition-colors"
+                {% if loop.first %}aria-current="true"{% endif %}
+              >
+                {{ section.headline }}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+</div>
+<!-- end table-of-contents.html.twig -->
