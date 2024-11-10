@@ -48,8 +48,16 @@ codeanalysis_phpunit:
   image: $CI_DEV_IMAGE
   script:
     - cd /var/www/html
-    - ls -la
     - vendor/bin/phpunit --testdox
+  tags:
+    - docker1
+
+dumpfinder:
+  stage: codeanalysis
+  image: $CI_DEV_IMAGE
+  script:
+    - cd /var/www/html
+    - ./dumpFinder.sh
   tags:
     - docker1
 
