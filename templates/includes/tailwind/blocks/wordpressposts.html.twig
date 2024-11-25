@@ -1,0 +1,35 @@
+<!-- wordpressPosts.html.twig -->
+{% set wordpressPosts = wordpressPosts() %}
+{% if wordpressPosts is defined and wordpressPosts is not empty %}
+  <aside aria-label="Blog Posts" class="py-8 bg-white lg:py-16 antialiased">
+  <div class="px-4 mx-auto max-w-screen-xl">
+    {% if content.headline is defined and content.headline is not empty %}
+      {% include "includes/tailwind/includes/headline.html.twig" with {
+        'content': content,
+        'loopIndex': loopIndex
+      } %}
+    {% endif %}
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      {% for wordpressPost in wordpressPosts %}
+          <article>
+            <a href="{{ wordpressPost.link }}" target="_blank">
+              {% if wordpressPost['_embedded']['wp:featuredmedia'][0]['source_url'] is defined %}
+                {% set featureMedia = wordpressPost['_embedded']['wp:featuredmedia'][0] %}
+                <img src="{{ featureMedia['source_url'] }}" class="mb-5 w-full max-w-full rounded-lg" alt="{{ featureMedia['alt_text'] }}" loading="lazy">
+              {% endif %}
+            </a>
+            <h3 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
+              <a href="{{ wordpressPost.link }}" target="_blank">{{ wordpressPost['title']['rendered'] }}</a>
+            </h3>
+            <p class="flex items-center space-x-4">
+                <span class="text-sm text-gray-800">
+                    {{ wordpressPost['excerpt']['rendered']|raw }}
+                </span>
+            </p>
+          </article>
+      {% endfor %}
+    </div>
+  </div>
+</aside>
+{% endif %}
+<!-- end wordpressPosts.html.twig -->

@@ -20,3 +20,7 @@ li {
 .description-list li {
    list-style: unset;
 }
+
+p {
+    @apply leading-relaxed;
+}
