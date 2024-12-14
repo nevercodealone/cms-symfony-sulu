@@ -32,7 +32,8 @@
               <article>
                 <a href="{{ page.url }}">
                   {% if page.excerptImages[0] is defined %}
-                    <img src="{{ page.excerptImages[0].url }}" class="mb-5 w-full max-w-full rounded-lg" alt="{{ page.excerptImages[0].title }}" loading="lazy">
+                    {% set source = page.excerptImages[0].formats['related-content-by-page.webp'] %}
+                    <img src="{{ source }}" class="mb-5 w-full max-w-full rounded-lg" alt="{{ page.excerptImages[0].title }}" loading="lazy">
                   {% endif %}
                 </a>
                 <h3 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
