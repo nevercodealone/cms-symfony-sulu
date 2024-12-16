@@ -64,5 +64,9 @@
         "webpack-cli": "^4.7.0",
         "webpack-manifest-plugin": "^4.0.2",
         "sulu-ai-translator-bundle": "file:../../vendor/robole/sulu-ai-translator-bundle/src/Resources/js"
+    },
+    "engines": {
+        "node": ">=14",
+        "npm": ">=6 <7"
     }
 }
