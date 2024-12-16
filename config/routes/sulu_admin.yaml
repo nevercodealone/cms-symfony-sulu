@@ -109,5 +109,6 @@ sulu_trash_api:
     prefix: /admin/api
 
 SuluAITranslatorBundle:
-  resource: "@SuluAITranslatorBundle/Resources/config/routes_admin.yml"
-  type: rest
+    resource: "@SuluAITranslatorBundle/Resources/config/routes_admin.yml"
+    type: rest
+    prefix: /admin/api
