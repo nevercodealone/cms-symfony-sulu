@@ -33,7 +33,7 @@ class WordpressService
         'Accept' => 'application/json',
       ],
       'query' => [
-        'per_page' => 6,
+        'per_page' => 10,
         '_embed' => '',
       ],
     ]);
@@ -42,8 +42,6 @@ class WordpressService
       throw new \RuntimeException('Failed to fetch blog posts');
     }
 
-    $result = $response->toArray(throw: true);
-
-    return array_slice($result, 0, 6);
+    return $response->toArray(throw: true);
   }
 }

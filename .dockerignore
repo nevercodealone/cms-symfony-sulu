@@ -1,6 +1,7 @@
 .git
 vendor
 node_modules
+tests
 var
 db-init
 db-live

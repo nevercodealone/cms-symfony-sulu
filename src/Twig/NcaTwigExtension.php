@@ -3,32 +3,27 @@
 namespace App\Twig;
 
 use App\Service\TwitterService;
-use App\Service\WordpressService;
 use App\Service\YouTubeService;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Custom Twig Extension for NCA functionality
+ * This is just an example Twig Extension.
+ * It is recommended to use `intl_country` from the `sulu/web-twig` package instead of this.
  */
 class NcaTwigExtension extends AbstractExtension
 {
   public function __construct(
-    private readonly YouTubeService $youTubeService,
-    private readonly WordpressService $wordpressService
+    private readonly YouTubeService $youTubeService
   ) {
   }
 
-  public function getFunctions(): array
+  public function getFunctions()
   {
     return [
       new TwigFunction(
         'youtube',
-        [$this, 'playlistItemsListByPlaylistId']
-      ),
-      new TwigFunction(
-        'wordpressPosts',
-        [$this, 'getWordpressPosts']
+        $this->playlistItemsListByPlaylistId(...)
       )
     ];
   }
@@ -38,8 +33,4 @@ class NcaTwigExtension extends AbstractExtension
     return $this->youTubeService->getItemsFromChannel($playlistId);
   }
 
-  public function getWordpressPosts(): array
-  {
-    return $this->wordpressService->getItemsFromBlog();
-  }
 }
