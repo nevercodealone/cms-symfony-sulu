@@ -1,0 +1,5 @@
+sulu_ai_translator:
+  deepl_api_key: "%env(DEEPL_API_KEY)%"
+  locale_mapping:
+    de: "DE"
+    en: "en-GB"
