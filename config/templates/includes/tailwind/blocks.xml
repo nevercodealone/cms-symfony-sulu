@@ -23,6 +23,8 @@
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/faq.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+          <xi:include href="blocks/table-of-contents.xml"
+                      xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/feature.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/feature-default.xml"
@@ -60,6 +62,8 @@
           <xi:include href="blocks/highlights.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/code.xml"
+                      xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+          <xi:include href="blocks/wordpressPosts.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
         </types>
     </block>

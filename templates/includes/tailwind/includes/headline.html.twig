@@ -1,0 +1,16 @@
+<!-- includes/headline.html.twig -->
+{% set htmlId = content.headline|lower
+  |replace({'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss'})
+  |replace({' ': '-'})
+  |replace({'/[^a-z0-9\\-]/': ''}) %}
+
+{% if loopIndex == 1 %}
+  <h1 class="mb-4 text-4xl tracking-tight font-bold text-gray-900" id="{{ htmlId }}">
+    {{ content.headline }}
+  </h1>
+{% else %}
+  <h2 class="mb-4 text-4xl tracking-tight font-bold text-gray-900" id="{{ htmlId }}">
+    {{ content.headline }}
+  </h2>
+{% endif %}
+<!-- end includes/headline.html.twig -->
