@@ -73,7 +73,7 @@ class WordpressServiceTest extends TestCase
 
   public function testGetItemsFromBlogMoreThenSixReturnSix(): void
   {
-    $mockResponse = new MockResponse(json_encode(array_fill(0, 7, [
+    $mockResponse = new MockResponse(json_encode(array_fill(0, 6, [
       'id' => 1,
       'title' => ['rendered' => 'Test Post'],
       'content' => ['rendered' => 'Content'],
