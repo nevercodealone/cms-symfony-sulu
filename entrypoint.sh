@@ -19,5 +19,6 @@
 [ -n "$TWITTER_ACCESS_TOKEN_FILE" ] && export TWITTER_ACCESS_TOKEN="$(cat $TWITTER_ACCESS_TOKEN_FILE)"
 [ -n "$TWITTER_ACCESS_SECRET_FILE" ] && export TWITTER_ACCESS_SECRET="$(cat $TWITTER_ACCESS_SECRET_FILE)"
 [ -n "$DEEPL_API_KEY" ] && export DEEPL_API_KEY="$(cat $DEEPL_API_KEY)"
+[ -n "$authKey" ] && export authKey="$(cat $authKey)"
 
 exec "$@"
