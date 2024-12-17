@@ -17,6 +17,10 @@
 .phpcs-cache
 ###< PHPStan ###
 
+###> inflection ###
+infection.html
+###> inflection ###
+
 ###> symfony/web-server-bundle ###
 /.web-server-pid
 ###< symfony/web-server-bundle ###

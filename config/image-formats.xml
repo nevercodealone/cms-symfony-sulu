@@ -199,6 +199,12 @@
         </meta>
         <scale x="480" y="600"/>
     </format>
+    <format key="related-content-by-page">
+      <meta>
+        <title lang="en">Related Content</title>
+      </meta>
+      <scale x="570" y="330"/>
+    </format>
     <format key="team">
         <meta>
             <title lang="en">Team</title>

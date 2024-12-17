@@ -5,7 +5,7 @@ variables:
 
 stages:
   - build
- # - codeanalysis
+  - codeanalysis
   - deploy_stage
   - trigger_test
   - deploy_live
@@ -43,15 +43,23 @@ build:
   tags:
     - docker1
 
-#codeanalysis_phpunit:
-#  stage: codeanalysis
-#  image: $CI_DEV_IMAGE
-#  script:
-#    - cd /var/www/html
-#    - ls -la
-#    - vendor/bin/phpunit --testdox
-#  tags:
-#    - docker1
+codeanalysis_phpunit:
+  stage: codeanalysis
+  image: $CI_DEV_IMAGE
+  script:
+    - cd /var/www/html
+    - vendor/bin/phpunit --testdox
+  tags:
+    - docker1
+
+dumpfinder:
+  stage: codeanalysis
+  image: $CI_DEV_IMAGE
+  script:
+    - cd /var/www/html
+    - ./dumpFinder.sh
+  tags:
+    - docker1
 
 .deploy:
   image: docker:latest
