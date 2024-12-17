@@ -1,14 +1,45 @@
 {% set seo = (extension.seo is defined) ? extension.seo : [] %}
 {% if content.blocks|default([])|length %}
+    {% set headlines = [] %}
+    {% set faqArray = [] %}
+    {% for block in content.blocks %}
+      {% if block.type == 'headline-paragraphs' %}
+        {% set headlines = headlines|merge([block]) %}
+      {% endif %}
+    {% endfor %}
     {% for block in content.blocks %}
         <section aria-label="{{ block.type|capitalize }}" class="mx-auto max-w-7xl px-4 pt-12 pb-4">
-        {% include 'includes/tailwind/blocks/' ~ block.type ~ '.html.twig' with {
-            content: block,
-            extension: extension,
-            id: id,
-            seo: seo,
-            loopIndex: loop.index
-        } only %}
+          {% include 'includes/tailwind/blocks/' ~ block.type ~ '.html.twig' with {
+              content: block,
+              headlines: headlines,
+              extension: extension,
+              id: id,
+              seo: seo,
+              loopIndex: loop.index
+          } only %}
         </section>
+      {% if block.type == 'faq' %}
+        {% set faqArray = faqArray|merge(block.faqs) %}
+      {% endif %}
     {% endfor %}
+{% endif %}
+{% if faqArray is defined and faqArray is not empty %}
+  <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {% for item in faqArray %}
+            {
+                "@type": "Question",
+                "name": "{{ item.headline }}",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "{{ item.subline }}"
+                }
+            }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+}
+  </script>
 {% endif %}
