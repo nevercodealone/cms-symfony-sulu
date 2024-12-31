@@ -7,7 +7,7 @@
     <key>trainingoverview</key>
 
     <view>pages/training-overview</view>
-    <controller>App\Controller\Website\PageController:trainingOverview</controller>
+    <controller>App\Controller\Website\PageController::trainingOverview</controller>
     <cacheLifetime>604800</cacheLifetime>
 
     <meta>
