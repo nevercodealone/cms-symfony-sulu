@@ -7,7 +7,7 @@
     <key>homepage</key>
 
     <view>pages/homepage</view>
-    <controller>App\Controller\Website\PageController:homepage</controller>
+    <controller>App\Controller\Website\PageController::homepage</controller>
     <cacheLifetime>86400</cacheLifetime>
 
     <meta>
