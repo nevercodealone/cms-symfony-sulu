@@ -21,11 +21,9 @@
             <h3 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
               <a href="{{ wordpressPost.link }}" target="_blank">{{ wordpressPost['title']['rendered'] }}</a>
             </h3>
-            <p class="flex items-center space-x-4">
-                <span class="text-sm text-gray-800">
-                    {{ wordpressPost['excerpt']['rendered']|raw }}
-                </span>
-            </p>
+            <div class="text-sm text-gray-800">
+              {{ wordpressPost['excerpt']['rendered']|raw }}
+            </div>
           </article>
       {% endfor %}
     </div>
