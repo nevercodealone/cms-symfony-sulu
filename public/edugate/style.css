@@ -171,3 +171,7 @@ ul.list-detail li:hover,
     align-items: center;
     justify-content: center;
 }
+
+.footer-main .title-widget {
+  color: #FFFFFF;
+}
