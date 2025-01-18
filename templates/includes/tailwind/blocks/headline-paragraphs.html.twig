@@ -3,7 +3,8 @@
     {% if content.headline is defined and content.headline is not empty %}
       {% include "includes/tailwind/includes/headline.html.twig" with {
         'content': content,
-        'loopIndex': loopIndex
+        'loopIndex': loopIndex,
+        'isFirstHeadline': isFirstHeadline
       } %}
     {% endif %}
     {% if content.items is defined and content.items is not empty %}
