@@ -8,6 +8,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        xl: ['1.25rem', '1.5'],
+        sm: ['0.875rem', '1.5']
+      },
       listStyleType: {
         none: "none",
         disc: "disc",

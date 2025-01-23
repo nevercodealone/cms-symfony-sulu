@@ -4,8 +4,12 @@
 
 [x-cloak] { display: none; }
 
+blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
+    line-height: 1.5;
+}
+
 a {
-    @apply text-green-800 underline underline-offset-2;
+    @apply text-green-900 underline underline-offset-2;
     opacity: unset;
 }
 
