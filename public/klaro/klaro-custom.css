@@ -1,3 +1,7 @@
+.klaro .cookie-notice {
+  line-height: 1.5 !important;
+}
+
 .klaro .cookie-notice:not(.cookie-modal-notice),
 .klaro .cookie-modal .cm-modal.cm-klaro {
   border: 1px solid #59ad2b;
