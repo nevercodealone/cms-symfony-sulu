@@ -1,8 +1,14 @@
-.klaro .cookie-notice:not(.cookie-modal-notice),
-.klaro .cookie-modal .cm-modal.cm-klaro
-{
-    background-color: #59ad2b !important;
+.klaro .cookie-notice {
+  line-height: 1.5 !important;
 }
+
+.klaro .cookie-notice:not(.cookie-modal-notice),
+.klaro .cookie-modal .cm-modal.cm-klaro {
+  border: 1px solid #59ad2b;
+  border-radius: 4px;
+  background: #FFFFFF !important;
+}
+
 
 .klaro .cookie-modal .cm-btn, .klaro .cookie-notice .cm-btn,
 {
@@ -35,5 +41,7 @@
 }
 
 .klaro .cookie-modal .cm-btn, .klaro .cookie-notice .cm-btn {
-    background: #e62020;
+    background: #000000 !important;
 }
+
+
