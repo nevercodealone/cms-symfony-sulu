@@ -5,10 +5,7 @@
 {% for item in items %}
     <tr class="table-row">
         <td class="left col-1">
-            <i class="bg-green mr25 fa fa-caret-right"></i>
-            <span class="hover-green">
-                {{ item.title }}
-            </span>
+            <i class="bg-green mr25 fa fa-caret-right"></i> {{ item.title }}
         </td>
         <td class="green-color col-4">
             {% set faIconClass = item.status == 'team' ? 'w27 fa fa-users' : 'fas fa-chalkboard-teacher' %}

@@ -6,17 +6,14 @@
             <div class="inner-container">
                 <div class="table-header">
                     <table class="edu-table-responsive">
-                        <thead>
                         <tr class="heading-table">
-                            <th class="col-1">Inhalt</th>
-                            <th class="col-4">Art</th>
+                            <td class="col-1">Inhalt</td>
+                            <td class="col-4">Art</td>
                         </tr>
-                        </thead>
                     </table>
                 </div>
                 <div class="table-body">
                     <table class="edu-table-responsive table-hover">
-                        <tbody>
                         {% if content.dayOneHeadline != '' and content.dayOneItems is not empty %}
                             {% include "includes/edugate/table.html.twig" with {
                                 "day": 1,
@@ -32,7 +29,6 @@
                                 "items": content.dayTwoItems
                             } %}
                         {% endif %}
-                        </tbody>
                     </table>
                 </div>
             </div>

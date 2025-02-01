@@ -77,12 +77,6 @@ hr {
     text-align: center;
 }
 
-ul.list-detail li:hover,
-.hover-green:hover
-{
-    color: #86bc42;
-}
-
 .btn.btn-red {
     background-color: #ff0000;
 }
@@ -139,12 +133,6 @@ ul.list-detail li:hover,
     right: 0px
 }
 
-.staff-item .staff-desctiption {
-    color: #fff;
-    height: 50px;
-
-}
-
 .course-price-widget-wrapper .title {
     color: #242c42;
     font-size: 20px;
@@ -180,4 +168,56 @@ ul.list-detail li:hover,
 
 .footer-main .title-widget {
   color: #FFFFFF;
+}
+
+.edu-table-responsive tr.heading-table {
+  background-color: #000000;
+}
+
+.edu-table-responsive td {
+  color: #000000;
+}
+
+.edugate-content .title,
+.edugate-content .description,
+.edu-table-responsive td.green-color,
+.edu-table-responsive td i.fa-caret-right,
+.widget a:hover {
+  color: #2e4511;
+}
+
+.btn.btn-red {
+    background-color: #cc0000;
+}
+
+.sidebar a {
+    color: #000000;
+    text-decoration: underline;
+}
+
+.staff-item {
+    background-color: unset;
+    border: 1px solid #86bc42;
+    color: #242c42;
+}
+
+.staff-item:hover {
+    background-color: unset;
+}
+
+.staff-item:hover .staff-info .staff-name,
+.staff-item .staff-info .staff-name,
+.staff-item:hover .staff-info .staff-description,
+.staff-item .staff-info .staff-description
+
+{
+    color: #000000;
+}
+
+.staff-item .staff-item-wrapper {
+    height: unset;
+}
+
+.edugate-layout-3 {
+  min-height: unset;
 }
