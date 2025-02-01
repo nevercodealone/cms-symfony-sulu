@@ -136,7 +136,7 @@
                 <h4 class="top-title">{{ content.youTubeHeadline }}</h4>
                 <h2>{{ content.youTubeSubline }}</h2>
                 <div class="bottom-title">
-                    <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X" target="_blank" rel="nofollow">
+                    <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X" aria-label="YouTube Playlist zu unseren Workshops" target="_blank" rel="nofollow">
                         <i class="fab fa-youtube" style="font-size: 40px"></i>
                     </a>
                 </div>
@@ -153,7 +153,7 @@
                                         <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}" alt="{{ video['snippet']['title'] }}" class="img-responsive"/>
                                     </a>
                                     <div class="edugate-content">
-                                        <a href="{{ url }}" class="title" target="_blank" title="{{ video['snippet']['title'] }}">
+                                        <a href="{{ url }}" class="title" target="_blank" title="{{ video['snippet']['title'] }}" aria-label="{{ video['snippet']['title'] }}">
                                             {{ video['snippet']['title'] }}
                                         </a>
 
