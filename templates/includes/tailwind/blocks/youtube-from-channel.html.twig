@@ -2,7 +2,7 @@
 <section class="py-16 bg-gray-100" aria-labelledby="gallery-heading">
   <div class="container mx-auto px-4">
     <header class="text-center mb-12">
-      <h1 id="gallery-heading" class="text-4xl font-bold text-gray-900 mb-2 line-clamp-2">{{ content.headline }}</h1>
+      <h2 id="gallery-heading" class="text-4xl font-bold text-gray-900 mb-2 line-clamp-2">{{ content.headline }}</h2>
       <p class="text-xl text-gray-700 mb-4">{{ content.subline }}</p>
       <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X"
          target="_blank"
@@ -21,45 +21,17 @@
         {% if video['snippet']['thumbnails']['medium']['url'] is defined and video['snippet']['thumbnails']['medium']['url'] is not empty %}
           {% set url = 'https://www.youtube.com/watch?v=%s'|format(video.snippet.resourceId.videoId) %}
           <article class="bg-white rounded-lg shadow-md overflow-hidden">
-            <a href="{{ url }}" class="block" target="_blank" rel="noopener noreferrer">
-              <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}"
-                   alt="YouTube Thumbnail des Videos"
-                   class="w-full h-48 object-cover underline"
-                   aria-hidden="true">
-            </a>
+            <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}"
+                 alt="YouTube Thumbnail des Videos"
+                 class="w-full h-48 object-cover underline"
+                 aria-hidden="true">
             <div class="p-6">
-              {% if loopIndex == 1 %}
-                <h1 class="text-2xl font-semibold mb-2 line-clamp-2">
-              {% else %}
-                <h2 class="text-2xl font-semibold mb-2 line-clamp-2">
-              {% endif %}
-                  <a href="{{ url }}" class="underline text-gray-900 hover:text-blue-700 focus:text-blue-700 hover:underline focus:outline-none focus:underline" target="_blank" rel="noopener noreferrer">
-                    {{ video['snippet']['title'] }}
-                  </a>
-              {% if loop.index0 == 0 %}
-                </h1>
-              {% else %}
-                </h2>
-              {% endif %}
-              <div class="flex justify-between items-center text-sm text-gray-600 mb-4">
-                <span>#NCAVideo</span>
-                <time datetime="{{ video['snippet']['publishedAt'] }}">
-                  {{ video['snippet']['publishedAt']|date('d.m.Y', "Europe/Berlin") }}
-                </time>
-              </div>
-              {% if loop.index0 == 0 %}
-                <h3 class="font-bold mb-2">Review PHP-Schulung</h3>
-              {% else %}
-                <h4 class="font-bold mb-2">Review PHP-Schulung</h4>
-              {% endif %}
+              <h3 class="text-2xl font-semibold mb-2 line-clamp-2">
+                <a href="{{ url }}" class="underline text-gray-900 hover:text-blue-700 focus:text-blue-700 hover:underline focus:outline-none focus:underline" target="_blank" rel="noopener noreferrer">
+                  {{ video['snippet']['title'] }}
+                </a>
+              </h3>
               <p class="text-gray-700 mb-4 line-clamp-4">{{ video['snippet']['description'] }}</p>
-              <a href="{{ url }}"
-                 class="inline-block bg-green-800 text-white px-4 py-2 rounded hover:bg-green-600 focus:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                 target="_blank"
-                 rel="noopener noreferrer">
-                Watch on YouTube
-                <span class="sr-only">: {{ video['snippet']['title'] }}</span>
-              </a>
             </div>
           </article>
         {% endif %}
