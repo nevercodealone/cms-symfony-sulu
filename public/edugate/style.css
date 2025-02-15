@@ -42,7 +42,7 @@ hr {
 }
 
 .best-staff {
-    background-image: url("/edugate/assets/images/background-best-stuff.jpg");
+    background-image: unset;
 }
 
 .edugate-layout-2 .edugate-content .title,
