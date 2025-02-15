@@ -1,5 +1,5 @@
 <!-- BEST STAFF START-->
-<div class="section section-padding background-opacity best-staff">
+<div class="section section-padding best-staff">
     <div class="container">
         <div class="group-title-index"><h4 class="top-title">{{ content.subline }}</h4>
 
@@ -8,43 +8,44 @@
             <div class="bottom-title"><i class="bottom-icon icon-icon-05"></i></div>
         </div>
         <div class="best-staff-wrapper">
-            <div class="best-staff-content">
-                {% if content.organisation is not empty %}
-                    {% for item in content.organisation %}
-                        {% if item.avatar.thumbnails['400x400'] is defined and item.avatar.thumbnails['400x400'] is not empty %}
-                            {% set source = item.avatar.thumbnails['400x400'] %}
-                            <div class="staff-item">
-                                <div class="staff-item-wrapper">
-                                    <div class="staff-info">
-                                        <a href="#" class="staff-avatar">
-                                            <img src="{{ source }}" alt="{{ item.fullName }} {{ item.positionName }}" class="img-responsive"/>
-                                        </a>
-                                        <a href="#" class="staff-name">{{ item.fullName }}</a>
-                                        <div class="staff-job">{{ item.positionName }}</div>
-                                        <div class="staff-desctiption">{{ item.note }}</div>
-                                    </div>
-                                </div>
-                                <div class="staff-socials">
-                                    {% if item.contactDetails.socialMedia is not empty %}
-                                        {% for socialMedia in item.contactDetails.socialMedia %}
-                                            {% set class = socialMedia.username|split('.')[1] %}
-                                            {% if 'twitter' in socialMedia.username  %}
-                                                {% set class = 'twitter' %}
-                                            {% endif %}
-                                            <a href="{{ socialMedia.username }}" data-q="social-link" class="{{ class }}"><i class="fab fa-{{ class }}"></i></a>
-                                        {% endfor %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+          <div class="best-staff-content">
+            {% if content.organisation is not empty %}
+              {% for item in content.organisation %}
+                {% if item.avatar.thumbnails['400x400'] is defined and item.avatar.thumbnails['400x400'] is not empty %}
+                  {% set source = item.avatar.thumbnails['400x400'] %}
+                  <div class="staff-item" style="height: 330px;">
+                    <div class="staff-item-wrapper">
+                      <div class="staff-info">
+                        <div class="staff-avatar">
+                          <img src="{{ source }}" alt="{{ item.fullName }} {{ item.positionName }}" class="img-responsive"/>
+                        </div>
+                        <div class="staff-name" style="color: #000000">{{ item.fullName }}</div>
+                        <div class="staff-job" style="color: #000000">{{ item.positionName }}</div>
+                        <div class="staff-description" style="color: #000000">{{ item.note }}</div>
+                      </div>
+                    </div>
+                    <div class="staff-socials">
+                      {% if item.contactDetails.socialMedia is not empty %}
+                        {% for socialMedia in item.contactDetails.socialMedia %}
+                          {% set class = socialMedia.username|split('.')[1] %}
+                          {% if 'twitter' in socialMedia.username  %}
+                            {% set class = 'twitter' %}
+                          {% endif %}
+                          <a href="{{ socialMedia.username }}" target="_blank" aria-label="Externes Profil {{ class|capitalize }}" data-q="social-link" class="{{ class }}" style="color: darkgreen"><i class="fab fa-{{ class }}"></i></a>
+                        {% endfor %}
+                      {% endif %}
+                    </div>
+                  </div>
                 {% endif %}
-            </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+
         </div>
     </div>
     <div class="group-btn-slider">
-        <div class="btn-prev"><i class="fa fa-angle-left"></i></div>
-        <div class="btn-next"><i class="fa fa-angle-right"></i></div>
+        <div class="btn-prev"><i class="fa fa-angle-left" style="color: darkgreen"></i></div>
+        <div class="btn-next"><i class="fa fa-angle-right" style="color: darkgreen"></i></div>
     </div>
 </div>
 <!-- BEST STAFF END-->
