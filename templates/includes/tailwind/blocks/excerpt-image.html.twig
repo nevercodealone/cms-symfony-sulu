@@ -1,6 +1,6 @@
 {% if extension.excerpt.images[0] is defined and extension.excerpt.images[0] is not empty %}
   {% set source = extension.excerpt.images[0].thumbnails['content-full.webp'] %}
-  {% set sourceMeta = extension.excerpt.images[0].thumbnails['800x800'] %}
+  {% set sourceMeta = extension.excerpt.images[0].thumbnails['800x800.jpg'] %}
   {% set alt = extension.excerpt.images[0].description %}
   <figure class="text-center">
     <img class="h-auto max-w-full mx-auto" src="{{ source }}" data-meta="{{ sourceMeta }}" alt="">
