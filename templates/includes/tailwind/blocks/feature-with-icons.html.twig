@@ -2,7 +2,7 @@
 <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
   <div class="max-w-screen-md mb-8 lg:mb-16">
     <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900">{{ content.headline }}</h2>
-    <div class="font-light text-gray-500 sm:text-xl">{{ content.description|raw }}</div>
+    <div class="font-light text-gray-800 sm:text-xl">{{ content.description|raw }}</div>
   </div>
   <div class="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 xl:gap-12 md:space-y-0">
     {% for item in content.items %}
@@ -15,7 +15,7 @@
           {% for iteminner in item.items %}
             <li class="flex space-x-2.5">
               <svg class="flex-shrink-0 w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-              <span class="leading-tight text-gray-500">{{ iteminner.text }}</span>
+              <span class="leading-tight text-gray-800">{{ iteminner.text }}</span>
             </li>
           {% endfor %}
         </ul>
