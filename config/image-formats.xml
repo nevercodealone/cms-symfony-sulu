@@ -258,4 +258,10 @@
       </meta>
       <scale x="1000" y="1500"/>
     </format>
+    <format key="mastrodon">
+      <meta>
+        <title lang="en">Mastrodon</title>
+      </meta>
+      <scale x="1280" y="1280"/>
+    </format>
 </formats>
