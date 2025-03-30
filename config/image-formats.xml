@@ -252,4 +252,10 @@
       </meta>
       <scale x="200" y="280"/>
     </format>
+    <format key="pinterest">
+      <meta>
+        <title lang="en">Pinterest</title>
+      </meta>
+      <scale x="1000" y="1500"/>
+    </format>
 </formats>
