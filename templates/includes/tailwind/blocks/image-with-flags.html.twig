@@ -10,7 +10,8 @@
         {% set title = content.image[0].title %}
         <img class="mx-auto w-full max-w-2xl rounded rounded-lg" src="{{ source }}" title="{{ title }}" alt="{{ title }}"/>
         {% if content.flags is defined and content.flags is not empty %}
-            <div class="mt-8 flex flex-wrap justify-center gap-8">
+            {% set current_locale = app.request.locale|split('_')[0] %}
+            <div class="mt-8 flex flex-wrap justify-center gap-8" aria-label="{% if current_locale == 'de' %}YouTube-Videos in verschiedenen Sprachen{% else %}YouTube videos in different languages{% endif %}">
                 {% set language_data = {
                     'es': {
                         'name': 'Español',
@@ -50,9 +51,35 @@
                     }
                 } %}
                 {% for flag in content.flags %}
-                    <a href="{{ flag.url }}" class="group flex flex-col items-center" target="_blank">
+                    {% set current_locale = app.request.locale|split('_')[0] %}
+                    {% set language_translations = {
+                        'de': {
+                            'es': 'Spanische Version',
+                            'en': 'Englische Version',
+                            'de': 'Deutsche Version',
+                            'fr': 'Französische Version',
+                            'nl': 'Niederländische Version',
+                            'da': 'Dänische Version',
+                            'fi': 'Finnische Version',
+                            'sw': 'Schwedische Version',
+                            'no': 'Norwegische Version'
+                        },
+                        'en': {
+                            'es': 'Spanish version',
+                            'en': 'English version',
+                            'de': 'German version',
+                            'fr': 'French version',
+                            'nl': 'Dutch version',
+                            'da': 'Danish version',
+                            'fi': 'Finnish version',
+                            'sw': 'Swedish version',
+                            'no': 'Norwegian version'
+                        }
+                    } %}
+                    <a href="{{ flag.url }}" class="group flex flex-col items-center" target="_blank" 
+                       aria-label="{% if current_locale == 'de' %}{{ language_translations.de[flag.language] }}{% else %}{{ language_translations.en[flag.language] }}{% endif %}">
                         <div class="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 group-hover:bg-gray-200">
-                            <svg class="h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+                            <svg class="h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-hidden="true">
                                 {{ language_data[flag.language].svg|raw }}
                                 <path d="M27,4H5c-2.209,0-4,1.791-4,4V24c0,2.209,1.791,4,4,4H27c2.209,0,4-1.791,4-4V8c0-2.209-1.791-4-4-4Zm3,20c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3V8c0-1.654,1.346-3,3-3H27c1.654,0,3,1.346,3,3V24Z" opacity=".15"></path>
                                 <path d="M27,5H5c-1.657,0-3,1.343-3,3v1c0-1.657,1.343-3,3-3H27c1.657,0,3,1.343,3,3v-1c0-1.657-1.343-3-3-3Z" fill="#fff" opacity=".2"></path>
