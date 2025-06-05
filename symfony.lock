@@ -297,6 +297,9 @@
     "phpcr/phpcr-migrations": {
         "version": "1.3.0"
     },
+    "phpcr/phpcr-migrations-bundle": {
+        "version": "1.6.0"
+    },
     "phpcr/phpcr-shell": {
         "version": "1.3.0"
     },
@@ -378,7 +381,7 @@
         "version": "4.2.1"
     },
     "robole/sulu-ai-translator-bundle": {
-        "version": "v1.1.0"
+        "version": "dev-main"
     },
     "sebastian/resource-operations": {
         "version": "3.0.3"

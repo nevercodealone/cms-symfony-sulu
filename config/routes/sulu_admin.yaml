@@ -111,3 +111,8 @@ sulu_trash_api:
 SuluAITranslatorBundle:
     resource: "@SuluAITranslatorBundle/Resources/config/routes_admin.yml"
     type: rest
+
+sulu_reference_api:
+    resource: "@SuluReferenceBundle/Resources/config/routing_api.yml"
+    type: rest
+    prefix: /admin/api
