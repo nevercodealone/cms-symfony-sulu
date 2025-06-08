@@ -33,6 +33,36 @@
         <!-- Sidebar Navigation -->
         <aside class="w-full lg:w-80 order-1 lg:order-2">
             <div class="lg:sticky lg:top-8 space-y-6">
+                <!-- Quick Navigation -->
+                {% if content.blocks|default([])|length %}
+                    {% set headlines = [] %}
+                    {% for block in content.blocks %}
+                        {% if block.type == 'hl-des' and block.headline is not empty %}
+                            {% set headlines = headlines|merge([block]) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if headlines|length > 0 %}
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-900">Inhaltsverzeichnis</h3>
+                            </div>
+                            <nav class="p-6" aria-label="Table of contents">
+                                <ul class="space-y-2">
+                                    {% for headline in headlines %}
+                                        <li>
+                                            <a href="#section-{{ loop.index }}" 
+                                               class="text-sm text-gray-600 hover:text-primary-700 hover:underline">
+                                                {{ headline.headline }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </nav>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
                 <!-- Course Facts Card -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
@@ -109,36 +139,6 @@
                             </div>
                         </div>
                     </div>
-                {% endif %}
-
-                <!-- Quick Navigation -->
-                {% if content.blocks|default([])|length %}
-                    {% set headlines = [] %}
-                    {% for block in content.blocks %}
-                        {% if block.type == 'hl-des' and block.headline is not empty %}
-                            {% set headlines = headlines|merge([block]) %}
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if headlines|length > 0 %}
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                                <h3 class="text-lg font-semibold text-gray-900">Inhaltsverzeichnis</h3>
-                            </div>
-                            <nav class="p-6" aria-label="Table of contents">
-                                <ul class="space-y-2">
-                                    {% for headline in headlines %}
-                                        <li>
-                                            <a href="#section-{{ loop.index }}" 
-                                               class="text-sm text-gray-600 hover:text-primary-700 hover:underline">
-                                                {{ headline.headline }}
-                                            </a>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </nav>
-                        </div>
-                    {% endif %}
                 {% endif %}
             </div>
         </aside>
