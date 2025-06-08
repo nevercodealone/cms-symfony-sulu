@@ -50,9 +50,13 @@
                             <nav class="p-6" aria-label="Table of contents">
                                 <ul class="space-y-2">
                                     {% for headline in headlines %}
+                                        {% set htmlId = headline.headline|lower
+                                            |replace({'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss'})
+                                            |replace({' ': '-'})
+                                            |replace({'/[^a-z0-9\\-]/': ''}) %}
                                         <li>
-                                            <a href="#section-{{ loop.index }}" 
-                                               class="text-sm text-gray-600 hover:text-primary-700 hover:underline">
+                                            <a href="#{{ htmlId }}" 
+                                               class="text-sm text-gray-600 hover:text-primary-700 hover:underline scroll-smooth">
                                                 {{ headline.headline }}
                                             </a>
                                         </li>

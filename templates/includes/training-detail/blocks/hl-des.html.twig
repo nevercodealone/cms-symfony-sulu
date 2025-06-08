@@ -1,6 +1,6 @@
 <!-- hl-des.html.twig -->
 {% if content.headline is not empty or content.description is not empty %}
-    <article id="section-{{ loopIndex }}" class="scroll-mt-20">
+    <article class="scroll-mt-20">
         {% if content.headline is not empty %}
             {% include 'includes/tailwind/includes/headline.html.twig' with {
                 content: content,
