@@ -29,6 +29,38 @@
                         xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
             <xi:include href="blocks/youTubeFromChannel.xml"
                         xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+            <type name="team">
+                <meta>
+                    <title>Team</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Überschrift</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <property name="description" type="text_editor">
+                        <meta>
+                            <title>Beschreibung</title>
+                        </meta>
+                        <params>
+                            <param name="table" value="false"/>
+                            <param name="link" value="true"/>
+                            <param name="extra_allowed_content"
+                                   value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]"/>
+                            <param name="ui_color" value="#ffcc00"/>
+                        </params>
+                    </property>
+                    <property name="organisation" type="contact_account_selection">
+                        <meta>
+                            <title>Team Mitglieder</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
         </types>
     </block>
 </properties>
