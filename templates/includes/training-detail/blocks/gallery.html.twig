@@ -1,0 +1,26 @@
+{% if (content.headline is defined and content.headline is not empty) or (content.images is defined and content.images is not empty) %}
+    <div>
+        {% if content.headline is defined and content.headline is not empty %}
+            <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-6">{{ content.headline }}</h3>
+        {% endif %}
+        
+        {% if content.images is defined and content.images is not empty %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for image in content.images %}
+                    <div class="group relative overflow-hidden rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+                        <img src="{{ image.formats['400x400'] | default(image.url) }}" 
+                             alt="{{ image.title | default('Gallery image') }}"
+                             class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300">
+                        {% if image.title is defined and image.title %}
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div class="absolute bottom-0 left-0 right-0 p-4">
+                                    <p class="text-white text-sm font-medium">{{ image.title }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endif %}

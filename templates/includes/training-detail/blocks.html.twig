@@ -1,0 +1,27 @@
+{% if content.blocks|default([])|length %}
+    {% set headlines = [] %}
+    {% set isFirstHeadline = true %}
+
+    {% for block in content.blocks %}
+        {% if block.type == 'hl-des' %}
+            {% set headlines = headlines|merge([block]) %}
+        {% endif %}
+    {% endfor %}
+
+    {% for block in content.blocks %}
+        <div class="mb-8 {% if not loop.first %}pt-8 border-t border-gray-200{% endif %}">
+            {% include 'includes/training-detail/blocks/' ~ block.type ~ '.html.twig' with {
+                content: block,
+                headlines: headlines,
+                extension: extension,
+                id: id,
+                loopIndex: loop.index,
+                isFirstHeadline: isFirstHeadline
+            } only %}
+        </div>
+
+        {% if block.type == 'hl-des' and isFirstHeadline %}
+            {% set isFirstHeadline = false %}
+        {% endif %}
+    {% endfor %}
+{% endif %}

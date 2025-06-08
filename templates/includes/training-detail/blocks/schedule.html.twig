@@ -1,0 +1,89 @@
+{% if (content.headline is defined and content.headline is not empty) or 
+     (content.dayOneHeadline is defined and content.dayOneHeadline != '' and content.dayOneItems is defined and content.dayOneItems is not empty) or
+     (content.dayTwoHeadline is defined and content.dayTwoHeadline != '' and content.dayTwoItems is defined and content.dayTwoItems is not empty) %}
+<div class="bg-gray-50 rounded-lg p-6 lg:p-8">
+    {% if content.headline is defined and content.headline is not empty %}
+        <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-6">{{ content.headline }}</h3>
+    {% endif %}
+    
+    <div class="space-y-8">
+        {% if content.dayOneHeadline is defined and content.dayOneHeadline != '' and content.dayOneItems is defined and content.dayOneItems is not empty %}
+            <div>
+                <h4 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                    {{ content.dayOneHeadline }}
+                </h4>
+                <div class="space-y-3">
+                    {% for item in content.dayOneItems %}
+                        <div class="flex items-start p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex-shrink-0 mr-4">
+                                {% if item.status == 'team' %}
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <h5 class="text-base font-medium text-gray-900">{{ item.title }}</h5>
+                                <p class="mt-1 text-sm text-gray-600">
+                                    {% if item.status == 'team' %}
+                                        Teamarbeit
+                                    {% else %}
+                                        Theorie
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if content.dayTwoHeadline is defined and content.dayTwoHeadline != '' and content.dayTwoItems is defined and content.dayTwoItems is not empty %}
+            <div>
+                <h4 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                    {{ content.dayTwoHeadline }}
+                </h4>
+                <div class="space-y-3">
+                    {% for item in content.dayTwoItems %}
+                        <div class="flex items-start p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex-shrink-0 mr-4">
+                                {% if item.status == 'team' %}
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                        </svg>
+                                    </div>
+                                {% else %}
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <h5 class="text-base font-medium text-gray-900">{{ item.title }}</h5>
+                                <p class="mt-1 text-sm text-gray-600">
+                                    {% if item.status == 'team' %}
+                                        Teamarbeit
+                                    {% else %}
+                                        Theorie
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

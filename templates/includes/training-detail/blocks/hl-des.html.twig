@@ -1,0 +1,15 @@
+{% if content.headline is not empty or content.description is not empty %}
+    <article id="section-{{ loopIndex }}" class="scroll-mt-20">
+        {% if content.headline is not empty %}
+            {% include 'includes/tailwind/includes/headline.html.twig' with {
+                content: content,
+                isFirstHeadline: isFirstHeadline
+            } %}
+        {% endif %}
+        {% if content.description is not empty %}
+            <div class="prose prose-lg prose-gray max-w-none">
+                {{ content.description|raw }}
+            </div>
+        {% endif %}
+    </article>
+{% endif %}

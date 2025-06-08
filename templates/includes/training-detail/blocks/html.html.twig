@@ -1,0 +1,5 @@
+{% if content.html is defined and content.html is not empty %}
+    <div class="prose prose-lg prose-gray max-w-none">
+        {{ content.html|raw }}
+    </div>
+{% endif %}
