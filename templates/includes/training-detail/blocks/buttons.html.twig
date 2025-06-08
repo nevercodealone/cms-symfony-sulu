@@ -1,3 +1,4 @@
+<!-- buttons.html.twig -->
 {% if content.buttons is defined and content.buttons is not empty %}
     <div class="flex flex-wrap gap-4 {% if content.align is defined and content.align == 'center' %}justify-center{% elseif content.align is defined and content.align == 'right' %}justify-end{% endif %}">
         {% for button in content.buttons %}
@@ -16,3 +17,4 @@
         {% endfor %}
     </div>
 {% endif %}
+<!-- end buttons.html.twig -->

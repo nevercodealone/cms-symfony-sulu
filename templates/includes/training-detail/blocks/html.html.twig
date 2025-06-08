@@ -1,5 +1,9 @@
+<!-- html.html.twig -->
 {% if content.html is defined and content.html is not empty %}
     <div class="prose prose-lg prose-gray max-w-none">
-        {{ content.html|raw }}
+        <div class="video-container">
+            {{ content.html|raw }}
+        </div>
     </div>
 {% endif %}
+<!-- end html.html.twig -->
