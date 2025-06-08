@@ -24,3 +24,16 @@ li {
 .description-list li {
    list-style: unset;
 }
+
+/* Responsive video container for embedded videos */
+.video-container {
+    @apply relative h-0 overflow-hidden mb-[70px];
+    padding-bottom: 56.25%;
+    padding-top: 30px;
+}
+
+.video-container iframe,
+.video-container object,
+.video-container embed {
+    @apply absolute top-0 left-0 w-full h-full;
+}

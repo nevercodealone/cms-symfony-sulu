@@ -1,0 +1,59 @@
+<!-- team.html.twig -->
+{% if (content.headline is defined and content.headline is not empty) or (content.organisation is defined and content.organisation is not empty) %}
+    <div class="bg-gray-50 rounded-lg p-6 lg:p-8">
+        {% if content.headline is defined and content.headline is not empty %}
+            <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-2">{{ content.headline }}</h3>
+        {% endif %}
+        {% if content.description is defined and content.description is not empty %}
+            <div class="text-lg text-gray-700 mb-6">{{ content.description|raw }}</div>
+        {% endif %}
+        
+        {% if content.organisation is defined and content.organisation is not empty %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for member in content.organisation %}
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
+                        {% if member.avatar is defined and member.avatar.thumbnails['400x400'] is defined %}
+                            <img class="w-full h-64 object-cover" 
+                                 src="{{ member.avatar.thumbnails['400x400'] }}" 
+                                 alt="{{ member.fullName }}">
+                        {% else %}
+                            <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                <svg class="w-24 h-24 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="p-6">
+                            <h4 class="text-xl font-semibold text-gray-900">{{ member.fullName }}</h4>
+                            {% if member.position is defined and member.position %}
+                                <p class="text-base text-primary-600 font-medium">{{ member.position }}</p>
+                            {% elseif member.positionName is defined and member.positionName %}
+                                <p class="text-base text-primary-600 font-medium">{{ member.positionName }}</p>
+                            {% endif %}
+                            
+                            {% if member.note is defined and member.note %}
+                                <p class="mt-3 text-sm text-gray-600">{{ member.note }}</p>
+                            {% endif %}
+                            
+                            {# Social Media Links #}
+                            {% if member.contactDetails is defined and member.contactDetails.socialMedia is defined and member.contactDetails.socialMedia is not empty %}
+                                <ul role="list" class="flex gap-3 mt-4 pt-4 border-t border-gray-100 p-0" aria-label="Social Links">
+                                    {% for social in member.contactDetails.socialMedia %}
+                                        <li>
+                                            {% include 'includes/tailwind/link-social-media.html.twig' with {
+                                                socialLink: social.username,
+                                                fullName: member.fullName
+                                            } %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+<!-- end team.html.twig -->

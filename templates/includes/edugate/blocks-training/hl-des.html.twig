@@ -1,6 +1,10 @@
-{% if content.headline is not empty %}
-    <div class="course-des-title underline">{{ content.headline }}</div>
-{% endif %}
-{% if content.description is not empty %}
-    <div class="course-des-content">{{ content.description|raw }}</div>
-{% endif %}
+<div id="section-{{ loopIndex }}" class="scroll-mt-20">
+    {% if content.headline is not empty %}
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ content.headline }}</h2>
+    {% endif %}
+    {% if content.description is not empty %}
+        <div class="prose prose-gray max-w-none">
+            {{ content.description|raw }}
+        </div>
+    {% endif %}
+</div>
