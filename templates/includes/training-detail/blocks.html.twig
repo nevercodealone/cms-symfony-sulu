@@ -1,3 +1,4 @@
+<!-- blocks.html.twig -->
 {% if content.blocks|default([])|length %}
     {% set headlines = [] %}
     {% set isFirstHeadline = true %}
@@ -9,19 +10,87 @@
     {% endfor %}
 
     {% for block in content.blocks %}
-        <div class="mb-8 {% if not loop.first %}pt-8 border-t border-gray-200{% endif %}">
-            {% include 'includes/training-detail/blocks/' ~ block.type ~ '.html.twig' with {
-                content: block,
-                headlines: headlines,
-                extension: extension,
-                id: id,
-                loopIndex: loop.index,
-                isFirstHeadline: isFirstHeadline
-            } only %}
-        </div>
+        {% if block.type == 'youTubeFromChannel' %}
+            {# Close main content container for full-width YouTube section #}
+            </div>
+        </main>
+        
+        <!-- Full width YouTube section -->
+        <section class="py-8 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4">
+                {% if block.headline is defined and block.headline is not empty %}
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{{ block.headline }}</h2>
+                        {% if block.subline is defined and block.subline is not empty %}
+                            <p class="text-xl text-gray-600">{{ block.subline }}</p>
+                        {% endif %}
+                        <div class="mt-4">
+                            <a href="https://www.youtube.com/watch?v=G1dlCxeKTeg&list=PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X" 
+                               target="_blank" 
+                               rel="noopener" 
+                               class="inline-flex items-center text-red-600 hover:text-red-700">
+                                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {% set videoList = youtube(block.youTubeChannel) %}
+                    {% set maxVideos = block.youTubeVideos|default(6) %}
+                    {% for video in videoList|slice(0, maxVideos) %}
+                        {% if video['snippet']['thumbnails']['medium']['url'] is defined and video['snippet']['thumbnails']['medium']['url'] is not empty %}
+                            {% set videoId = video.snippet.resourceId.videoId %}
+                            {% set videoTitle = video['snippet']['title'] %}
+                            {% set videoUrl = 'https://www.youtube.com/watch?v=%s'|format(videoId) %}
+                            <div class="bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow overflow-hidden">
+                                <a href="{{ videoUrl }}" target="_blank" rel="noopener" class="block">
+                                    <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}" 
+                                         alt="{{ videoTitle }}"
+                                         class="w-full h-48 object-cover">
+                                </a>
+                                <div class="p-6">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                        <a href="{{ videoUrl }}" target="_blank" rel="noopener" class="hover:text-primary-700">
+                                            {{ videoTitle }}
+                                        </a>
+                                    </h3>
+                                    <div class="text-sm font-medium text-primary-600 mb-2">
+                                        Review PHP-Schulung
+                                    </div>
+                                    {% if video['snippet']['description'] is defined %}
+                                        <p class="text-sm text-gray-600 line-clamp-3">{{ video['snippet']['description'] }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        
+        {# Reopen main content container #}
+        <div class="flex flex-col lg:flex-row gap-8">
+            <main class="flex-1 order-2 lg:order-1">
+                <div class="bg-white rounded-lg shadow-sm p-6 lg:p-8">
+        {% else %}
+            <div class="mb-8 {% if not loop.first %}pt-8 border-t border-gray-200{% endif %}">
+                {% include 'includes/training-detail/blocks/' ~ block.type ~ '.html.twig' with {
+                    content: block,
+                    headlines: headlines,
+                    extension: extension,
+                    id: id,
+                    loopIndex: loop.index,
+                    isFirstHeadline: isFirstHeadline
+                } only %}
+            </div>
+        {% endif %}
 
         {% if block.type == 'hl-des' and isFirstHeadline %}
             {% set isFirstHeadline = false %}
         {% endif %}
     {% endfor %}
 {% endif %}
+<!-- end blocks.html.twig -->

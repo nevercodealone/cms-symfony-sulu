@@ -1,5 +1,6 @@
+<!-- youtube-from-channel.html.twig -->
 {% if content.youTubeChannel is defined and content.youTubeChannel is not empty %}
-    <div>
+    <div class="mb-8">
         {% if content.headline is defined and content.headline is not empty %}
             <h3 class="text-xl lg:text-2xl font-bold text-gray-900 mb-6">{{ content.headline }}</h3>
         {% endif %}
@@ -11,21 +12,24 @@
                 {% if video['snippet']['thumbnails']['medium']['url'] is defined and video['snippet']['thumbnails']['medium']['url'] is not empty %}
                     {% set videoId = video.snippet.resourceId.videoId %}
                     {% set videoTitle = video['snippet']['title'] %}
+                    {% set videoUrl = 'https://www.youtube.com/watch?v=%s'|format(videoId) %}
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow overflow-hidden">
-                        <div class="relative pb-[56.25%]">
-                            <iframe 
-                                class="absolute top-0 left-0 w-full h-full"
-                                src="https://www.youtube.com/embed/{{ videoId }}"
-                                title="{{ videoTitle }}"
-                                frameborder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen>
-                            </iframe>
-                        </div>
+                        <a href="{{ videoUrl }}" target="_blank" rel="noopener" class="block">
+                            <img src="{{ video['snippet']['thumbnails']['medium']['url'] }}" 
+                                 alt="{{ videoTitle }}"
+                                 class="w-full h-48 object-cover">
+                        </a>
                         <div class="p-4">
-                            <h4 class="text-base font-medium text-gray-900 line-clamp-2">{{ videoTitle }}</h4>
+                            <h4 class="text-base font-medium text-gray-900 mb-2">
+                                <a href="{{ videoUrl }}" target="_blank" rel="noopener" class="hover:text-primary-700">
+                                    {{ videoTitle }}
+                                </a>
+                            </h4>
+                            <div class="text-sm font-medium text-primary-600 mb-2">
+                                Review PHP-Schulung
+                            </div>
                             {% if video['snippet']['description'] is defined %}
-                                <p class="mt-2 text-sm text-gray-600 line-clamp-3">{{ video['snippet']['description'] }}</p>
+                                <p class="text-sm text-gray-600 line-clamp-3">{{ video['snippet']['description'] }}</p>
                             {% endif %}
                         </div>
                     </div>
@@ -34,3 +38,4 @@
         </div>
     </div>
 {% endif %}
+<!-- end youtube-from-channel.html.twig -->
