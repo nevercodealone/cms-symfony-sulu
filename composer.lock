@@ -3294,16 +3294,16 @@
         },
         {
             "name": "handcraftedinthealps/goodby-csv",
-            "version": "1.4.2",
+            "version": "1.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/handcraftedinthealps/goodby-csv.git",
-                "reference": "6dc287cb3c3b8d055a0a4889661ef2aeb0bbdfa8"
+                "reference": "acd14c6ed85116bb2cb4da35ab62821e5cf54519"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/handcraftedinthealps/goodby-csv/zipball/6dc287cb3c3b8d055a0a4889661ef2aeb0bbdfa8",
-                "reference": "6dc287cb3c3b8d055a0a4889661ef2aeb0bbdfa8",
+                "url": "https://api.github.com/repos/handcraftedinthealps/goodby-csv/zipball/acd14c6ed85116bb2cb4da35ab62821e5cf54519",
+                "reference": "acd14c6ed85116bb2cb4da35ab62821e5cf54519",
                 "shasum": ""
             },
             "require": {
@@ -3363,9 +3363,9 @@
                 "import"
             ],
             "support": {
-                "source": "https://github.com/handcraftedinthealps/goodby-csv/tree/1.4.2"
+                "source": "https://github.com/handcraftedinthealps/goodby-csv/tree/1.4.3"
             },
-            "time": "2023-03-15T19:52:06+00:00"
+            "time": "2025-06-13T06:46:46+00:00"
         },
         {
             "name": "handcraftedinthealps/rest-routing-bundle",
@@ -16016,7 +16016,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -16025,6 +16025,6 @@
         "ext-iconv": "*",
         "ext-zip": "*"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
