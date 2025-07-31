@@ -1,0 +1,61 @@
+<!-- tabledynamic.html.twig -->
+<div class="table-block py-8">
+    
+    <!-- Main Headline -->
+    {% if content.headline %}
+        <h2 class="text-3xl font-bold mb-4">{{ content.headline }}</h2>
+    {% endif %}
+    
+    <!-- Description -->
+    {% if content.description %}
+        <div class="mb-6 text-lg">
+            {{ content.description|raw }}
+        </div>
+    {% endif %}
+    
+    <!-- Table -->
+    {% if content.headers or content.rows %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse border border-gray-300">
+                
+                <!-- Table Headers -->
+                {% if content.headers %}
+                    <thead class="bg-gray-100">
+                        <tr>
+                            {% for header in content.headers %}
+                                <th class="border border-gray-300 px-4 py-2 text-left font-semibold">
+                                    {{ header.header_text }}
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                {% endif %}
+                
+                <!-- Table Body -->
+                {% if content.rows %}
+                    <tbody>
+                        {% for row in content.rows %}
+                            <tr class="{% if loop.index is odd %}bg-white{% else %}bg-gray-50{% endif %}">
+                                {% for cell in row.cells %}
+                                    <td class="border border-gray-300 px-4 py-2">
+                                        {{ cell.cell_content }}
+                                    </td>
+                                {% endfor %}
+                                
+                                <!-- Fill empty cells if row has fewer cells than headers -->
+                                {% if content.headers and row.cells|length < content.headers|length %}
+                                    {% for i in range(row.cells|length + 1, content.headers|length) %}
+                                        <td class="border border-gray-300 px-4 py-2">&nbsp;</td>
+                                    {% endfor %}
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                {% endif %}
+                
+            </table>
+        </div>
+    {% endif %}
+    
+</div>
+<!-- end tabledynamic.html.twig -->
