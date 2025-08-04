@@ -1,0 +1,49 @@
+<!-- table.html.twig -->
+
+<div class="relative overflow-x-auto">
+    
+    {% if content.headline %}
+        <h2 class="text-3xl font-bold mb-4">{{ content.headline }}</h2>
+    {% endif %}
+    
+    {% if content.description %}
+        <div class="mb-6 text-lg">
+            {{ content.description|raw }}
+        </div>
+    {% endif %}
+    
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            {% if content.columnheader1 or content.columnheader2 or content.columnheader3 %}
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th class="px-6 py-3 text-left">
+                            {{ content.columnheader1 }}
+                        </th>
+                        <th class="px-6 py-3 text-left">
+                            {{ content.columnheader2 }}
+                        </th>
+                        <th class="px-6 py-3 text-left">
+                            {{ content.columnheader3 }}
+                        </th>
+                    </tr>
+                </thead>
+            {% endif %}
+                
+            {% if content.rows %}
+                <tbody>
+                    {% for row in content.rows %}
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                            <td class="px-6 py-4">{{ row.cell1 }}</td>
+                            <td class="px-6 py-4">{{ row.cell2 }}</td>
+                            <td class="px-6 py-4">{{ row.cell3 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            {% endif %}
+            
+        </table>
+    </div>
+</div>
+
+<!-- end table.html.twig -->
