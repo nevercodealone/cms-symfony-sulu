@@ -55,8 +55,6 @@
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/tableironman.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
-          <xi:include href="blocks/tabledynamic.xml"
-                      xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/team.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/youTubeFromChannel.xml"
