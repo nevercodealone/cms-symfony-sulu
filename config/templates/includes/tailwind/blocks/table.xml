@@ -3,12 +3,12 @@
           xmlns:xi="http://www.w3.org/2001/XInclude"
           xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
 
-    <block name="blocks" default-type="tableironman">
+    <block name="blocks" default-type="table">
         <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
         <types>
-            <type name="tableironman">
+            <type name="table">
                 <meta>
-                    <title>Table Iron Man</title>
+                    <title>Table</title>
                 </meta>
     
                 <properties>
