@@ -228,6 +228,12 @@
             <option name="png_compression_level">6</option>
         </options>
     </format>
+    <format key="heroslider">
+        <meta>
+            <title lang="en">Hero slider</title>
+        </meta>
+        <scale x="1152" y="720"/>
+    </format>
     <format key="content-full-half">
       <meta>
         <title lang="en">Content Full</title>
