@@ -1,5 +1,5 @@
 import "./styles/app.css";
-import "flowbite";
+import { initCarousels } from 'flowbite';
 import Alpine from "alpinejs";
 
 window.Alpine = Alpine;
@@ -25,3 +25,10 @@ Alpine.data("clipboardBlock", () => ({
 }));
 
 Alpine.start();
+
+// Initialize Flowbite carousels after Alpine.js
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(() => {
+    initCarousels();
+  }, 100);
+});
