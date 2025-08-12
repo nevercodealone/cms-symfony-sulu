@@ -5,9 +5,13 @@ module.exports = {
     "./templates/**/*.html.twig",
     "./templates/pages/**/*.html.twig",
     "./templates/includes/tailwind/blocks/*.html.twig",
+    "./node_modules/flowbite/**/*.js"
   ],
   theme: {
     extend: {
+      colors: {
+        'nca': '#59d814'
+      },
       fontSize: {
         xl: ['1.25rem', '1.5'],
         sm: ['0.875rem', '1.5']
@@ -23,7 +27,7 @@ module.exports = {
   },
   plugins: [
     require('@tailwindcss/aspect-ratio'),
-    require("daisyui"),
+    require('flowbite/plugin'),
     function({ addBase, theme }) {
       addBase({
         'ul': {
@@ -50,8 +54,5 @@ module.exports = {
         }
       })
     },
-  ],
-  daisyui: {
-    themes: ["light", "dark", "cupcake"],
-  },
+  ]
 }
