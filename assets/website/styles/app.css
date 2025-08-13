@@ -2,38 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-[x-cloak] { display: none; }
+[x-cloak] {
+  display: none;
+}
+@import "flowbite/src/themes/default";
 
-blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
-    line-height: 1.5;
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  line-height: 1.5;
 }
 
 a {
-    @apply text-green-900 underline underline-offset-2;
-    opacity: unset;
+  @apply text-green-900 underline underline-offset-2;
+  opacity: unset;
 }
 
-a:hover, a:focus {
-    @apply text-green-800 underline;
+a:hover,
+a:focus {
+  @apply text-green-800 underline;
 }
 
 li {
-    @apply list-none;
+  @apply list-none;
 }
 
 .description-list li {
-   list-style: unset;
+  list-style: unset;
 }
 
 /* Responsive video container for embedded videos */
 .video-container {
-    @apply relative h-0 overflow-hidden mb-[70px];
-    padding-bottom: 56.25%;
-    padding-top: 30px;
+  @apply relative h-0 overflow-hidden mb-[70px];
+  padding-bottom: 56.25%;
+  padding-top: 30px;
 }
 
 .video-container iframe,
 .video-container object,
 .video-container embed {
-    @apply absolute top-0 left-0 w-full h-full;
+  @apply absolute top-0 left-0 w-full h-full;
 }

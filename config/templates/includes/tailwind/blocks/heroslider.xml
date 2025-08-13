@@ -1,0 +1,71 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="heroslider">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+
+        <types>
+            <type name="heroslider">
+                <meta>
+                    <title>Hero Slider</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <property name="description" type="text_editor">
+                        <meta>
+                            <title>Description (optional)</title>
+                        </meta>
+                    </property>
+
+                    <property name="pageurl1" type="page_selection">
+                        <meta>
+                            <title>Page 1 URL (optional)</title>
+                        </meta>
+                        <params>
+                            <param name="properties" type="collection">
+                                <param name="title" value="title"/>
+                                <param name="article" value="article"/>
+                                <param name="max" value="1"/>
+                                <param name="excerptTitle" value="excerpt.title"/>
+                                <param name="excerptDescription" value="excerpt.description"/>
+                            </param>
+                        </params>
+                    </property>
+
+                    <property name="pageurl2" type="page_selection">
+                        <meta>
+                            <title>Page 2 URL (optional)</title>
+                        </meta>
+                        <params>
+                            <param name="properties" type="collection">
+                                <param name="title" value="title"/>
+                                <param name="article" value="article"/>
+                                <param name="max" value="1"/>
+                                <param name="excerptTitle" value="excerpt.title"/>
+                                <param name="excerptDescription" value="excerpt.description"/>
+                            </param>
+                        </params>
+                    </property>
+
+                    <property name="images" type="media_selection">
+                        <meta>
+                            <title>Slider Images</title>
+                        </meta>
+                        <params>
+                            <param name="types" value="image"/>
+                            <param name="min" value="1"/>
+                            <param name="max" value="6"/>
+                        </params>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
