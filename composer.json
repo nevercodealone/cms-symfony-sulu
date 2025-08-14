@@ -169,5 +169,6 @@
             "require": "6.3.*",
             "allow-contrib": true
         }
-    }
+    },
+    "minimum-stability": "stable"
 }

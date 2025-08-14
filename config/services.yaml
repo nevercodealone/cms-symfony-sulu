@@ -9,6 +9,11 @@ parameters:
     twitter_api_secret: '%env(TWITTER_API_SECRET)%'
     twitter_access_token: '%env(TWITTER_ACCESS_TOKEN)%'
     twitter_access_secret: '%env(TWITTER_ACCESS_SECRET)%'
+    
+    # AI Parameters
+    gemini_api_key: '%env(GEMINI_API_KEY)%'
+    gemini_model: 'gemini-1.5-flash'
+    gemini_base_url: 'https://generativelanguage.googleapis.com/v1beta'
 
 services:
     # default configuration for services in *this* file
@@ -20,6 +25,7 @@ services:
             $twitter_access_token: '%twitter_access_token%'
             $twitter_access_secret: '%twitter_access_secret%'
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
 
 
     # makes classes in src/ available to be used as services
@@ -54,4 +60,39 @@ services:
         class: \Google_Service_YouTube
         arguments:
             - '@Google_Client'
+    
+    # AI Platform Services
+    App\AI\GeminiProvider:
+        arguments:
+            $apiKey: '%gemini_api_key%'
+            $model: '%gemini_model%'
+            $baseUrl: '%gemini_base_url%'
+        public: true
+    
+    App\AI\Platform\AIPlatform:
+        calls:
+            - method: addProvider
+              arguments:
+                - 'gemini'
+                - '@App\AI\GeminiProvider'
+            - method: setDefaultProvider
+              arguments:
+                - 'gemini'
+        public: true
+        
+    App\AI\AIContentService:
+        arguments:
+            $enabled: true
+        public: true
+        
+    # AI Service Aliases (public for testing)
+    ai.content:
+        alias: App\AI\AIContentService
+        public: true
+    ai.platform:
+        alias: App\AI\Platform\AIPlatform
+        public: true
+    ai.gemini:
+        alias: App\AI\GeminiProvider
+        public: true
 
