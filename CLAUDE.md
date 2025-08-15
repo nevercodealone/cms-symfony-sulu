@@ -8,3 +8,12 @@ Example:
 - Use: `ddev exec composer remove package`
 
 This ensures all commands run within the proper development environment.
+
+## Git Usage
+Always use git commands from the local system, NOT from within DDEV container.
+
+Example:
+- Instead of: `ddev exec git status`
+- Use: `git status`
+
+This ensures proper global gitignore rules and local git configuration are respected.
