@@ -82,7 +82,7 @@ class GeminiProvider implements AIProviderInterface
         $structuredPrompt = $prompt;
         
         if (!empty($schema)) {
-            $structuredPrompt .= "\n\nRespond in the following JSON structure:\n" . json_encode($schema, JSON_PRETTY_PRINT);
+            $structuredPrompt .= "\n\nIMPORTANT: Respond ONLY with valid JSON in the following structure (no markdown, no code blocks, no extra text):\n" . json_encode($schema, JSON_PRETTY_PRINT);
         }
 
         $response = $this->generateContent($structuredPrompt, [
@@ -92,20 +92,39 @@ class GeminiProvider implements AIProviderInterface
         ]);
 
         $metadata = $response->getMetadata();
+        $content = $response->getContent();
+        
+        // Clean the response - remove markdown code blocks if present
+        $content = preg_replace('/^```json\s*/i', '', $content);
+        $content = preg_replace('/^```\s*/i', '', $content);
+        $content = preg_replace('/\s*```$/i', '', $content);
+        $content = trim($content);
         
         // Try to parse JSON if schema was provided
         if (!empty($schema)) {
             try {
-                $jsonContent = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+                $jsonContent = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
                 $metadata['structured_content'] = $jsonContent;
             } catch (\JsonException $e) {
-                // Fallback: return raw content if JSON parsing fails
-                $metadata['json_error'] = $e->getMessage();
+                // Try to extract JSON from the content
+                if (preg_match('/\{[\s\S]*\}/m', $content, $matches)) {
+                    try {
+                        $jsonContent = json_decode($matches[0], true, 512, JSON_THROW_ON_ERROR);
+                        $metadata['structured_content'] = $jsonContent;
+                    } catch (\JsonException $e2) {
+                        // Fallback: return raw content if JSON parsing fails
+                        $metadata['json_error'] = 'Failed to parse JSON: ' . $e2->getMessage();
+                        $metadata['raw_content'] = $content;
+                    }
+                } else {
+                    $metadata['json_error'] = 'No JSON found in response: ' . $e->getMessage();
+                    $metadata['raw_content'] = $content;
+                }
             }
         }
 
         return new AIResponse(
-            $response->getContent(),
+            $content,
             $response->getUsage(),
             $response->getFinishReason(),
             $metadata
@@ -125,9 +144,17 @@ class GeminiProvider implements AIProviderInterface
             
             $content = $response->getContent();
             
+            // Ensure proper UTF-8 encoding
+            if (!mb_check_encoding($content, 'UTF-8')) {
+                $content = mb_convert_encoding($content, 'UTF-8', 'auto');
+            }
+            
             // Clean and truncate content for API limits
             $cleanContent = strip_tags($content);
             $cleanContent = preg_replace('/\s+/', ' ', $cleanContent);
+            
+            // Remove any remaining non-UTF-8 characters
+            $cleanContent = mb_convert_encoding($cleanContent, 'UTF-8', 'UTF-8');
             
             // Truncate to roughly 30k characters to stay within token limits
             if (strlen($cleanContent) > 30000) {
