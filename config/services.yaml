@@ -95,4 +95,9 @@ services:
     ai.gemini:
         alias: App\AI\GeminiProvider
         public: true
+        
+    # Sulu Document Manager Alias for API Controller
+    Sulu\Component\DocumentManager\DocumentManagerInterface:
+        alias: sulu_document_manager.document_manager
+        public: true
 
