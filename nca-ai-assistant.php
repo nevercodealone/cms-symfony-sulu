@@ -43,11 +43,11 @@ function prompt($question, $default = null) {
 
 function displayHeader() {
     echo colorize("
-╔══════════════════════════════════════════════════════════════╗
-║                    🤖 NCA AI Assistant                      ║
-║              Interactive Content Generator                   ║
-║                 Powered by Gemini AI                        ║
-╚══════════════════════════════════════════════════════════════╝
+
+                     NCA AI Assistant                      
+              Interactive Content Generator                   
+                 Powered by Gemini AI                        
+
 ", 'cyan') . "\n\n";
 }
 
@@ -71,51 +71,51 @@ try {
     $aiPlatform->addProvider('gemini', $geminiProvider);
     $aiPlatform->setDefaultProvider('gemini');
     
-    echo colorize("✅ AI Platform ready!", 'green') . "\n\n";
+    echo colorize(" AI Platform ready!", 'green') . "\n\n";
 } catch (Exception $e) {
-    echo colorize("❌ Failed to initialize AI Platform: " . $e->getMessage(), 'red') . "\n";
-    echo colorize("💡 Make sure GEMINI_API_KEY is set in your .env.local file", 'yellow') . "\n";
+    echo colorize("ERROR: Failed to initialize AI Platform: " . $e->getMessage(), 'red') . "\n";
+    echo colorize("Tip: Make sure GEMINI_API_KEY is set in your .env.local file", 'yellow') . "\n";
     exit(1);
 }
 
 // Step 1: Get Target Information
 displayStep(1, "Target Configuration");
 echo colorize("Where should the content be published?", 'white') . "\n";
-echo colorize("💡 You can use either:", 'cyan') . "\n";
+echo colorize("Tip: You can use either:", 'cyan') . "\n";
 echo "  - Full URL: https://sulu-never-code-alone.ddev.site/de/php-glossar/class-leak\n";
 echo "  - CMF Path: /cmf/example/contents/nca-php-glossar/class-leak\n\n";
 
-$pageInput = prompt("🎯 Sulu Page (URL or CMF Path)", "/cmf/example/contents/blog/ai-generated");
+$pageInput = prompt("Target: Sulu Page (URL or CMF Path)", "/cmf/example/contents/blog/ai-generated");
 $pagePath = convertToPagePath($pageInput);
 
 $position = 2;
 while (true) {
-    $positionInput = prompt("📍 Insert Position", "2");
+    $positionInput = prompt(" Insert Position", "2");
     $position = (int) $positionInput;
     
     if ($position >= 0 && $position <= 50) {
         break;
     }
     
-    echo colorize("❌ Position must be between 0 and 50", 'red') . "\n";
-    $retry = prompt("🔄 Try again? [Y/n]", "y");
+    echo colorize("ERROR: Position must be between 0 and 50", 'red') . "\n";
+    $retry = prompt(" Try again? [Y/n]", "y");
     if (strtolower($retry) === 'n') {
-        echo colorize("❌ Operation cancelled by user", 'yellow') . "\n";
+        echo colorize("ERROR: Operation cancelled by user", 'yellow') . "\n";
         exit(0);
     }
 }
 
 $locale = '';
 while (empty($locale)) {
-    $locale = prompt("🌐 Locale", "de");
+    $locale = prompt(" Locale", "de");
     
     if (!preg_match('/^[a-z]{2}$/', $locale)) {
-        echo colorize("❌ Locale must be a 2-letter language code (e.g., 'de', 'en')", 'red') . "\n";
+        echo colorize("ERROR: Locale must be a 2-letter language code (e.g., 'de', 'en')", 'red') . "\n";
         $locale = '';
         
-        $retry = prompt("🔄 Try again? [Y/n]", "y");
+        $retry = prompt(" Try again? [Y/n]", "y");
         if (strtolower($retry) === 'n') {
-            echo colorize("👋 Operation cancelled by user. No changes made.", 'yellow') . "\n";
+            echo colorize(" Operation cancelled by user. No changes made.", 'yellow') . "\n";
             exit(0);
         }
     }
@@ -129,28 +129,28 @@ echo colorize("What URL should be analyzed for content?", 'white') . "\n";
 
 $url = '';
 while (empty($url)) {
-    $url = prompt("🔗 Source URL (GitHub, docs, articles)");
+    $url = prompt(" Source URL (GitHub, docs, articles)");
     
     if (empty($url)) {
-        echo colorize("❌ URL is required! Please enter a valid URL.", 'red') . "\n";
-        echo colorize("💡 Examples:", 'cyan') . "\n";
+        echo colorize("ERROR: URL is required! Please enter a valid URL.", 'red') . "\n";
+        echo colorize("Tip: Examples:", 'cyan') . "\n";
         echo "  - https://github.com/symfony/symfony\n";
         echo "  - https://tomasvotruba.com/blog/some-article\n";
         echo "  - https://docs.php.net/\n\n";
         
-        $retry = prompt("🔄 Try again? [Y/n]", "y");
+        $retry = prompt(" Try again? [Y/n]", "y");
         if (strtolower($retry) === 'n') {
-            echo colorize("👋 Operation cancelled by user. No changes made.", 'yellow') . "\n";
+            echo colorize(" Operation cancelled by user. No changes made.", 'yellow') . "\n";
             exit(0);
         }
     } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
-        echo colorize("❌ Invalid URL format! Please enter a valid HTTP/HTTPS URL.", 'red') . "\n";
-        echo colorize("💡 URL must start with http:// or https://", 'cyan') . "\n\n";
+        echo colorize("ERROR: Invalid URL format! Please enter a valid HTTP/HTTPS URL.", 'red') . "\n";
+        echo colorize("Tip: URL must start with http:// or https://", 'cyan') . "\n\n";
         
         $url = '';
-        $retry = prompt("🔄 Try again? [Y/n]", "y");
+        $retry = prompt(" Try again? [Y/n]", "y");
         if (strtolower($retry) === 'n') {
-            echo colorize("👋 Operation cancelled by user. No changes made.", 'yellow') . "\n";
+            echo colorize(" Operation cancelled by user. No changes made.", 'yellow') . "\n";
             exit(0);
         }
     }
@@ -169,7 +169,7 @@ echo "  " . colorize("3", 'cyan') . " - Tutorial (Step-by-step, learning oriente
 
 $format = 'seo';
 while (true) {
-    $formatChoice = prompt("📊 Choose format [1-3]", "1");
+    $formatChoice = prompt(" Choose format [1-3]", "1");
     $formatMap = ['1' => 'seo', '2' => 'technical', '3' => 'tutorial'];
     
     if (isset($formatMap[$formatChoice])) {
@@ -177,27 +177,27 @@ while (true) {
         break;
     }
     
-    echo colorize("❌ Please choose 1, 2, or 3", 'red') . "\n";
-    $retry = prompt("🔄 Try again? [Y/n]", "y");
+    echo colorize("ERROR: Please choose 1, 2, or 3", 'red') . "\n";
+    $retry = prompt(" Try again? [Y/n]", "y");
     if (strtolower($retry) === 'n') {
-        echo colorize("❌ Operation cancelled by user", 'yellow') . "\n";
+        echo colorize("ERROR: Operation cancelled by user", 'yellow') . "\n";
         exit(0);
     }
 }
 
 $temperature = 0.3;
 while (true) {
-    $tempInput = prompt("🎛️  AI Temperature (0.1-1.0, lower=more focused)", "0.3");
+    $tempInput = prompt("  AI Temperature (0.1-1.0, lower=more focused)", "0.3");
     $temperature = (float) $tempInput;
     
     if ($temperature >= 0.1 && $temperature <= 1.0) {
         break;
     }
     
-    echo colorize("❌ Temperature must be between 0.1 and 1.0", 'red') . "\n";
-    $retry = prompt("🔄 Try again? [Y/n]", "y");
+    echo colorize("ERROR: Temperature must be between 0.1 and 1.0", 'red') . "\n";
+    $retry = prompt(" Try again? [Y/n]", "y");
     if (strtolower($retry) === 'n') {
-        echo colorize("❌ Operation cancelled by user", 'yellow') . "\n";
+        echo colorize("ERROR: Operation cancelled by user", 'yellow') . "\n";
         exit(0);
     }
 }
@@ -207,28 +207,28 @@ echo "\n";
 // Step 4: Custom Prompt
 displayStep(4, "Content Request");
 echo colorize("Describe what content you want to create:", 'white') . "\n";
-echo colorize("💡 Example: 'Erstelle einen deutschen Artikel über die neuesten PHP Features'", 'cyan') . "\n";
+echo colorize("Tip: Example: 'Erstelle einen deutschen Artikel über die neuesten PHP Features'", 'cyan') . "\n";
 
 $customPrompt = '';
 while (empty($customPrompt)) {
-    $customPrompt = prompt("✍️  Your prompt");
+    $customPrompt = prompt("Prompt:  Your prompt");
     
     if (empty($customPrompt)) {
-        echo colorize("❌ Content prompt is required! Please describe what you want to create.", 'red') . "\n";
-        echo colorize("💡 Examples:", 'cyan') . "\n";
+        echo colorize("ERROR: Content prompt is required! Please describe what you want to create.", 'red') . "\n";
+        echo colorize("Tip: Examples:", 'cyan') . "\n";
         echo "  - 'Erstelle einen deutschen Artikel über die neuesten PHP Features'\n";
         echo "  - 'Erkläre die Installation und Nutzung dieses Tools'\n";
         echo "  - 'Schreibe einen technischen Guide für deutsche Entwickler'\n\n";
         
-        $retry = prompt("🔄 Try again? [Y/n]", "y");
+        $retry = prompt(" Try again? [Y/n]", "y");
         if (strtolower($retry) === 'n') {
-            echo colorize("👋 Operation cancelled by user. No changes made.", 'yellow') . "\n";
+            echo colorize(" Operation cancelled by user. No changes made.", 'yellow') . "\n";
             exit(0);
         }
     }
 }
 
-$headline = prompt("📰 Custom Headline (optional, auto-generated if empty)");
+$headline = prompt(" Custom Headline (optional, auto-generated if empty)");
 
 echo "\n";
 
@@ -241,17 +241,17 @@ echo "  " . colorize("2", 'cyan') . " - Live Update (Modify Sulu page)\n";
 
 $dryRun = true;
 while (true) {
-    $modeChoice = prompt("🚀 Choose mode [1-2]", "1");
+    $modeChoice = prompt(" Choose mode [1-2]", "1");
     
     if ($modeChoice === "1" || $modeChoice === "2") {
         $dryRun = $modeChoice !== "2";
         break;
     }
     
-    echo colorize("❌ Please choose 1 (Dry Run) or 2 (Live Update)", 'red') . "\n";
-    $retry = prompt("🔄 Try again? [Y/n]", "y");
+    echo colorize("ERROR: Please choose 1 (Dry Run) or 2 (Live Update)", 'red') . "\n";
+    $retry = prompt(" Try again? [Y/n]", "y");
     if (strtolower($retry) === 'n') {
-        echo colorize("❌ Operation cancelled by user", 'yellow') . "\n";
+        echo colorize("ERROR: Operation cancelled by user", 'yellow') . "\n";
         exit(0);
     }
 }
@@ -259,51 +259,51 @@ while (true) {
 echo "\n";
 
 // Summary
-echo colorize("📋 Summary", 'magenta') . "\n";
-echo colorize("═══════════", 'magenta') . "\n";
-echo "🎯 Target: " . colorize($pagePath, 'cyan') . " (position $position, locale: $locale)\n";
-echo "🔗 Source: " . colorize($url, 'cyan') . "\n";
-echo "📊 Format: " . colorize($format, 'cyan') . " (temperature: $temperature)\n";
-echo "✍️  Prompt: " . colorize(substr($customPrompt, 0, 60) . (strlen($customPrompt) > 60 ? '...' : ''), 'cyan') . "\n";
+echo colorize(" Summary", 'magenta') . "\n";
+echo colorize("", 'magenta') . "\n";
+echo "Target: Target: " . colorize($pagePath, 'cyan') . " (position $position, locale: $locale)\n";
+echo " Source: " . colorize($url, 'cyan') . "\n";
+echo " Format: " . colorize($format, 'cyan') . " (temperature: $temperature)\n";
+echo "Prompt:  Prompt: " . colorize(substr($customPrompt, 0, 60) . (strlen($customPrompt) > 60 ? '...' : ''), 'cyan') . "\n";
 if ($headline) {
-    echo "📰 Headline: " . colorize($headline, 'cyan') . "\n";
+    echo " Headline: " . colorize($headline, 'cyan') . "\n";
 }
-echo "🚀 Mode: " . colorize($dryRun ? 'Preview Only' : 'Live Update', $dryRun ? 'yellow' : 'red') . "\n";
+echo " Mode: " . colorize($dryRun ? 'Preview Only' : 'Live Update', $dryRun ? 'yellow' : 'red') . "\n";
 
 echo "\n" . colorize("Continue with this configuration? [Y/n]", 'yellow') . ": ";
 $confirm = trim(fgets(STDIN));
 if (strtolower($confirm) === 'n') {
-    echo colorize("❌ Operation cancelled", 'red') . "\n";
+    echo colorize("ERROR: Operation cancelled", 'red') . "\n";
     exit(0);
 }
 
 echo "\n";
 
 // Execute the AI content generation
-echo colorize("🔄 Starting AI Content Generation...", 'blue') . "\n";
-echo colorize("════════════════════════════════════", 'blue') . "\n";
+echo colorize(" Starting AI Content Generation...", 'blue') . "\n";
+echo colorize("", 'blue') . "\n";
 
 // Create analysis prompt
 $analysisPrompt = createAnalysisPrompt($customPrompt, $format, $locale);
 
 // Step 1: Analyze URL
-echo colorize("🔍 Analyzing source URL...", 'blue') . "\n";
+echo colorize(" Analyzing source URL...", 'blue') . "\n";
 try {
     $startTime = microtime(true);
     $analysisResponse = $aiPlatform->analyzeUrl($url, $analysisPrompt);
     $analysisTime = round((microtime(true) - $startTime) * 1000);
     
-    echo colorize("✅ Analysis completed in {$analysisTime}ms", 'green') . "\n";
+    echo colorize(" Analysis completed in {$analysisTime}ms", 'green') . "\n";
     $analysisTokens = $analysisResponse->getUsage()['totalTokens'] ?? 0;
-    echo colorize("📊 Tokens used: $analysisTokens", 'green') . "\n\n";
+    echo colorize(" Tokens used: $analysisTokens", 'green') . "\n\n";
     
 } catch (Exception $e) {
-    echo colorize("❌ Analysis failed: " . $e->getMessage(), 'red') . "\n";
+    echo colorize("ERROR: Analysis failed: " . $e->getMessage(), 'red') . "\n";
     exit(1);
 }
 
 // Step 2: Generate content
-echo colorize("📝 Generating structured content...", 'blue') . "\n";
+echo colorize(" Generating structured content...", 'blue') . "\n";
 try {
     $contentPrompt = createContentPrompt($analysisResponse->getContent(), $customPrompt, $format, $temperature, $locale);
     
@@ -314,12 +314,12 @@ try {
     );
     $contentTime = round((microtime(true) - $startTime) * 1000);
     
-    echo colorize("✅ Content generated in {$contentTime}ms", 'green') . "\n";
+    echo colorize(" Content generated in {$contentTime}ms", 'green') . "\n";
     $contentTokens = $contentResponse->getUsage()['totalTokens'] ?? 0;
-    echo colorize("📊 Tokens used: $contentTokens", 'green') . "\n\n";
+    echo colorize(" Tokens used: $contentTokens", 'green') . "\n\n";
     
 } catch (Exception $e) {
-    echo colorize("❌ Content generation failed: " . $e->getMessage(), 'red') . "\n";
+    echo colorize("ERROR: Content generation failed: " . $e->getMessage(), 'red') . "\n";
     exit(1);
 }
 
@@ -327,25 +327,25 @@ try {
 $suluContent = processAIContent($contentResponse, $headline, $url);
 
 // Show preview
-echo colorize("👀 Content Preview", 'magenta') . "\n";
-echo colorize("═══════════════════", 'magenta') . "\n";
+echo colorize(" Content Preview", 'magenta') . "\n";
+echo colorize("", 'magenta') . "\n";
 showContentPreview($suluContent);
 
 if (!$dryRun) {
     echo "\n" . colorize("Add this content to Sulu page? [Y/n]", 'yellow') . ": ";
     $finalConfirm = trim(fgets(STDIN));
     if (strtolower($finalConfirm) === 'n') {
-        echo colorize("❌ Operation cancelled", 'red') . "\n";
+        echo colorize("ERROR: Operation cancelled", 'red') . "\n";
         exit(0);
     }
     
-    echo colorize("💾 Adding content to Sulu page...", 'blue') . "\n";
+    echo colorize(" Adding content to Sulu page...", 'blue') . "\n";
     $result = addContentToSuluPage($pagePath, $suluContent, $position, $locale);
     
     if ($result) {
-        echo colorize("🎉 Content successfully added to Sulu!", 'green') . "\n";
+        echo colorize(" Content successfully added to Sulu!", 'green') . "\n";
         $webPath = str_replace('/cmf/example/contents', '', $pagePath);
-        echo colorize("🌐 Visit: https://sulu-never-code-alone.ddev.site/{$locale}{$webPath}", 'cyan') . "\n";
+        echo colorize(" Visit: https://sulu-never-code-alone.ddev.site/{$locale}{$webPath}", 'cyan') . "\n";
         
         // Log AI content generation activity
         try {
@@ -358,26 +358,26 @@ if (!$dryRun) {
                 'gemini',
                 $prompt
             )) {
-                echo colorize("📝 Activity logged to Sulu", 'green') . "\n";
+                echo colorize(" Activity logged to Sulu", 'green') . "\n";
             }
         } catch (Exception $e) {
             // Log error but don't fail the operation
-            echo colorize("⚠️  Activity logging failed: " . $e->getMessage(), 'yellow') . "\n";
+            echo colorize("WARNING:  Activity logging failed: " . $e->getMessage(), 'yellow') . "\n";
         }
     } else {
-        echo colorize("❌ Failed to add content to Sulu page", 'red') . "\n";
+        echo colorize("ERROR: Failed to add content to Sulu page", 'red') . "\n";
         exit(1);
     }
 } else {
-    echo "\n" . colorize("🔍 Dry run completed - no changes made to Sulu page", 'yellow') . "\n";
+    echo "\n" . colorize(" Dry run completed - no changes made to Sulu page", 'yellow') . "\n";
 }
 
 // Final stats
 $totalTokens = $analysisTokens + $contentTokens;
-echo colorize("📈 Total tokens used: $totalTokens", 'cyan') . "\n";
-echo colorize("⚡ Total processing time: " . ($analysisTime + $contentTime) . "ms", 'cyan') . "\n\n";
+echo colorize(" Total tokens used: $totalTokens", 'cyan') . "\n";
+echo colorize(" Total processing time: " . ($analysisTime + $contentTime) . "ms", 'cyan') . "\n\n";
 
-echo colorize("🎉 NCA AI Assistant completed successfully!", 'green') . "\n";
+echo colorize(" NCA AI Assistant completed successfully!", 'green') . "\n";
 
 // Helper functions
 function createAnalysisPrompt(string $userPrompt, string $format, string $locale): string
@@ -566,6 +566,10 @@ function createSuluBlocksFromStructured(array $structured, $customHeadline, stri
     ];
     
     $headline = $customHeadline ?: ($structured['headline'] ?? "AI Content - " . date('d.m.Y'));
+    // Remove markdown headers if present
+    $headline = preg_replace('/^#{1,6}\s+/', '', $headline);
+    // Strip any HTML tags
+    $headline = strip_tags($headline);
     
     return [
         'type' => 'headline-paragraphs',
@@ -610,6 +614,10 @@ function createSuluBlocksFromText(string $content, $customHeadline, string $url)
     ];
     
     $headline = $customHeadline ?: "AI Content - " . date('d.m.Y');
+    // Remove markdown headers if present
+    $headline = preg_replace('/^#{1,6}\s+/', '', $headline);
+    // Strip any HTML tags
+    $headline = strip_tags($headline);
     
     return [
         'type' => 'headline-paragraphs',
@@ -621,10 +629,10 @@ function createSuluBlocksFromText(string $content, $customHeadline, string $url)
 
 function showContentPreview(array $content): void
 {
-    echo colorize("📰 " . $content['headline'], 'cyan') . "\n\n";
+    echo colorize(" " . $content['headline'], 'cyan') . "\n\n";
     
     foreach ($content['items'] as $index => $item) {
-        echo colorize("▶ Block " . ($index + 1), 'yellow') . " (" . colorize($item['type'], 'magenta') . ")\n";
+        echo colorize(" Block " . ($index + 1), 'yellow') . " (" . colorize($item['type'], 'magenta') . ")\n";
         
         if ($item['type'] === 'description') {
             $preview = strip_tags($item['description']);
@@ -650,7 +658,7 @@ function addContentToSuluPage(string $pagePath, array $content, int $position, s
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$result) {
-            echo colorize("❌ Page not found: $pagePath", 'red') . "\n";
+            echo colorize("ERROR: Page not found: $pagePath", 'red') . "\n";
             return false;
         }
         
@@ -665,16 +673,16 @@ function addContentToSuluPage(string $pagePath, array $content, int $position, s
         
         if ($blocksNodes->length > 0) {
             // Format 1: Serialized blocks (newer format)
-            echo colorize("📦 Using serialized blocks format", 'cyan') . "\n";
+            echo colorize(" Using serialized blocks format", 'cyan') . "\n";
             return addContentSerializedFormat($xml, $xpath, $content, $position, $locale, $pagePath, $pdo);
         } else {
             // Format 2: Individual XML properties (older format)
-            echo colorize("📄 Using XML properties format", 'cyan') . "\n";
+            echo colorize(" Using XML properties format", 'cyan') . "\n";
             return addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath, $pdo);
         }
         
     } catch (Exception $e) {
-        echo colorize("❌ Database error: " . $e->getMessage(), 'red') . "\n";
+        echo colorize("ERROR: Database error: " . $e->getMessage(), 'red') . "\n";
         return false;
     }
 }
@@ -703,7 +711,7 @@ function addContentSerializedFormat($xml, $xpath, $content, $position, $locale, 
     $updateStmt->execute([$updatedXml, $pagePath, 'default']);
     $updateStmt->execute([$updatedXml, $pagePath, 'default_live']);
     
-    echo colorize("✅ Content added using serialized format", 'green') . "\n";
+    echo colorize(" Content added using serialized format", 'green') . "\n";
     return true;
 }
 
@@ -712,23 +720,23 @@ function addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePa
     // Get current blocks length
     $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
     if ($lengthNodes->length === 0) {
-        echo colorize("❌ No blocks-length property found", 'red') . "\n";
+        echo colorize("ERROR: No blocks-length property found", 'red') . "\n";
         return false;
     }
     
     $currentLength = (int) $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue;
-    echo colorize("📊 Current blocks: $currentLength", 'yellow') . "\n";
+    echo colorize(" Current blocks: $currentLength", 'yellow') . "\n";
     
     // Shift existing blocks from position onwards to make room
     if ($position < $currentLength) {
-        echo colorize("🔄 Shifting blocks from position $position", 'yellow') . "\n";
+        echo colorize(" Shifting blocks from position $position", 'yellow') . "\n";
         for ($i = $currentLength - 1; $i >= $position; $i--) {
             shiftBlockProperties($xml, $xpath, $locale, $i, $i + 1);
         }
     }
     
     // Add the new block at the specified position
-    echo colorize("📝 Adding new block at position $position", 'yellow') . "\n";
+    echo colorize(" Adding new block at position $position", 'yellow') . "\n";
     addBlockProperties($xml, $xpath, $locale, $position, $content);
     
     // Update the blocks length
@@ -741,8 +749,8 @@ function addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePa
     $updateStmt->execute([$updatedXml, $pagePath, 'default']);
     $updateStmt->execute([$updatedXml, $pagePath, 'default_live']);
     
-    echo colorize("✅ Content added using XML format", 'green') . "\n";
-    echo colorize("📈 New blocks count: " . ($currentLength + 1), 'green') . "\n";
+    echo colorize(" Content added using XML format", 'green') . "\n";
+    echo colorize(" New blocks count: " . ($currentLength + 1), 'green') . "\n";
     return true;
 }
 
@@ -879,14 +887,14 @@ function convertToPagePath(string $input): string
         // Replace URL segments with proper CMF structure
         $cmfPath = str_replace('/php-glossar/', '/nca-php-glossar/', $cmfPath);
         
-        echo colorize("🔄 Converted URL to CMF path: $cmfPath", 'green') . "\n";
+        echo colorize(" Converted URL to CMF path: $cmfPath", 'green') . "\n";
         return $cmfPath;
     }
     
     // If it's a relative path, assume it's under /cmf/example/contents
     if (strpos($input, '/') === 0 && strpos($input, '/cmf/') !== 0) {
         $cmfPath = '/cmf/example/contents' . $input;
-        echo colorize("🔄 Converted relative path to CMF path: $cmfPath", 'green') . "\n";
+        echo colorize(" Converted relative path to CMF path: $cmfPath", 'green') . "\n";
         return $cmfPath;
     }
     
