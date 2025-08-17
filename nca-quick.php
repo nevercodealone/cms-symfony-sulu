@@ -121,6 +121,12 @@ try {
 
 // Process content
 $content = $contentResponse->getContent();
+
+// Clean up HTML from markdown code blocks if present
+if (preg_match('/^```(?:html)?\s*\n?(.*?)\n?```$/s', trim($content), $matches)) {
+    $content = trim($matches[1]);
+}
+
 $headline = $options['headline'] ?: generateHeadline($content, $prompt);
 
 $suluContent = [
@@ -207,45 +213,105 @@ function generateHeadline($content, $prompt): string
 function parseContentToSuluBlocks($content, $url): array
 {
     $blocks = [];
-    $paragraphs = explode("\n\n", $content);
     
-    foreach ($paragraphs as $paragraph) {
-        $paragraph = trim($paragraph);
-        if (empty($paragraph)) continue;
+    // Check if content already contains HTML tags
+    $hasHtml = preg_match('/<[^>]+>/', $content);
+    
+    if ($hasHtml) {
+        // Content already has HTML, just wrap it in a single block
+        // Remove any markdown headers since we have HTML
+        $content = preg_replace('/^#{1,6}\s+/m', '', $content);
         
-        // Code blocks
-        if (str_contains($paragraph, '```')) {
-            $codeContent = preg_replace('/```\w*\n?/', '', $paragraph);
-            $codeContent = preg_replace('/```$/', '', $codeContent);
+        // Split by double newlines or major HTML block tags
+        $parts = preg_split('/\n\n|(?=<h[1-6]>)|(?<=<\/h[1-6]>)|(?=<ul>)|(?<=<\/ul>)|(?=<ol>)|(?<=<\/ol>)/', $content);
+        
+        foreach ($parts as $part) {
+            $part = trim($part);
+            if (empty($part)) continue;
             
-            $blocks[] = [
-                'type' => 'code',
-                'settings' => [],
-                'code' => '<pre><code>' . htmlspecialchars(trim($codeContent)) . '</code></pre>'
-            ];
-            continue;
+            // Check for code blocks
+            if (str_contains($part, '```')) {
+                $codeContent = preg_replace('/```\w*\n?/', '', $part);
+                $codeContent = preg_replace('/```$/', '', $codeContent);
+                
+                $blocks[] = [
+                    'type' => 'code',
+                    'settings' => [],
+                    'code' => '<pre><code>' . htmlspecialchars(trim($codeContent)) . '</code></pre>'
+                ];
+            } else {
+                // For HTML content, don't escape it
+                $blocks[] = [
+                    'type' => 'description',
+                    'settings' => [],
+                    'description' => $part
+                ];
+            }
         }
+    } else {
+        // Parse markdown-style content
+        $paragraphs = explode("\n\n", $content);
         
-        // Headings
-        if (preg_match('/^(#{1,3})\s*(.+)/', $paragraph, $matches)) {
-            $level = strlen($matches[1]);
-            $text = $matches[2];
-            $tag = $level === 1 ? 'h2' : 'h3';
+        foreach ($paragraphs as $paragraph) {
+            $paragraph = trim($paragraph);
+            if (empty($paragraph)) continue;
+            
+            // Code blocks
+            if (str_contains($paragraph, '```')) {
+                $codeContent = preg_replace('/```\w*\n?/', '', $paragraph);
+                $codeContent = preg_replace('/```$/', '', $codeContent);
+                
+                $blocks[] = [
+                    'type' => 'code',
+                    'settings' => [],
+                    'code' => '<pre><code>' . htmlspecialchars(trim($codeContent)) . '</code></pre>'
+                ];
+                continue;
+            }
+            
+            // Headings
+            if (preg_match('/^(#{1,3})\s*(.+)/', $paragraph, $matches)) {
+                $level = strlen($matches[1]);
+                $text = $matches[2];
+                $tag = $level === 1 ? 'h2' : 'h3';
+                
+                $blocks[] = [
+                    'type' => 'description',
+                    'settings' => [],
+                    'description' => "<{$tag}>" . $text . "</{$tag}>"
+                ];
+                continue;
+            }
+            
+            // Bullet points - convert to HTML list
+            if (preg_match('/^\*\s+/', $paragraph)) {
+                $lines = explode("\n", $paragraph);
+                $listItems = [];
+                foreach ($lines as $line) {
+                    if (preg_match('/^\*\s+(.+)/', $line, $matches)) {
+                        $listItems[] = '<li>' . $matches[1] . '</li>';
+                    }
+                }
+                if (!empty($listItems)) {
+                    $blocks[] = [
+                        'type' => 'description',
+                        'settings' => [],
+                        'description' => '<ul>' . implode('', $listItems) . '</ul>'
+                    ];
+                    continue;
+                }
+            }
+            
+            // Regular paragraphs - check for inline markdown
+            $paragraph = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $paragraph);
+            $paragraph = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $paragraph);
             
             $blocks[] = [
                 'type' => 'description',
                 'settings' => [],
-                'description' => "<{$tag}>" . htmlspecialchars($text) . "</{$tag}>"
+                'description' => '<p>' . nl2br($paragraph) . '</p>'
             ];
-            continue;
         }
-        
-        // Regular paragraphs
-        $blocks[] = [
-            'type' => 'description',
-            'settings' => [],
-            'description' => '<p>' . nl2br(htmlspecialchars($paragraph)) . '</p>'
-        ];
     }
     
     // Add source
