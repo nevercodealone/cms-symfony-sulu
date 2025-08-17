@@ -49,60 +49,61 @@ Here is a great read on Symfony CMS Sulu:
 
 ## AI Content Generation System
 
-This project includes an AI-powered content generation system that integrates with Sulu CMS to automatically create and manage content using Google's Gemini AI.
+This project includes an AI-powered content generation system that integrates with Sulu CMS to automatically create and manage content using Google's Gemini AI. The system is built as Symfony console commands for proper integration with the framework.
 
 ### Features
 
-- **Three CLI tools** for different use cases
+- **Three Symfony console commands** for different use cases
 - **Automatic URL analysis** to extract relevant information
 - **German-optimized content** for PHP/Symfony developers
 - **Full Sulu integration** with proper block creation
 - **Activity logging** for complete audit trail
 - **Support for both URL and CMF path inputs**
+- **Proper Symfony dependency injection** and error handling
 
-### CLI Tools
+### Console Commands
 
-#### 1. NCA Quick (Fast One-Liner)
-Quick content generation with minimal configuration.
+#### 1. Quick Content Generation
+Fast content generation with minimal configuration.
 
 ```bash
 # Basic usage
-ddev exec php nca-quick.php "<source-url>" "<prompt>"
+ddev exec bin/console ai:content:quick "<source-url>" "<prompt>"
 
 # With options
-ddev exec php nca-quick.php "https://github.com/symfony/symfony" "Symfony News" \
+ddev exec bin/console ai:content:quick "https://github.com/symfony/symfony" "Symfony News" \
   --page="/cmf/example/contents/blog" \
   --position=2 \
   --format=seo \
   --live
 
 # Dry run (preview only)
-ddev exec php nca-quick.php "https://example.com" "Your prompt" --dry-run
+ddev exec bin/console ai:content:quick "https://example.com" "Your prompt" --dry-run
 ```
 
-Options:
-- `--page=PATH` - Sulu page path (default: /cmf/example/contents/blog/quick-ai)
+**Options:**
+- `-p, --page=PATH` - Sulu page path (default: /cmf/example/contents/blog/quick-ai)
 - `--position=N` - Insert position (default: 2)
-- `--format=FORMAT` - Content format: seo|technical|tutorial (default: seo)
-- `--headline='TEXT'` - Custom headline
-- `--dry-run` - Preview only
-- `--live` - Execute immediately (skip confirmations)
+- `-f, --format=FORMAT` - Content format: seo|technical|tutorial (default: seo)
+- `--headline=TEXT` - Custom headline
+- `--dry-run` - Preview only, do not save
+- `--live` - Execute immediately without confirmation
 
-#### 2. AI Content Generator (Advanced)
-Full-featured tool with extensive options and interactive approval.
+#### 2. Advanced Content Generation
+Full-featured tool with extensive options and interactive approval workflow.
 
 ```bash
 # Basic usage
-ddev exec php ai_content_generator_gemini.php "<page-path>" "<url>" "<prompt>"
+ddev exec bin/console ai:content:generate "<page-path>" "<url>" "<prompt>"
 
 # With URL instead of CMF path
-ddev exec php ai_content_generator_gemini.php \
+ddev exec bin/console ai:content:generate \
   "https://sulu-never-code-alone.ddev.site/de/blog/my-article" \
   "https://example.com" \
   "Create content about..."
 
 # With all options
-ddev exec php ai_content_generator_gemini.php \
+ddev exec bin/console ai:content:generate \
   "/cmf/example/contents/tutorials/symfony" \
   "https://symfony.com/doc/current" \
   "Symfony Tutorial für Einsteiger" \
@@ -112,27 +113,36 @@ ddev exec php ai_content_generator_gemini.php \
   --temperature=0.5
 ```
 
-Options:
-- `--position=N` - Position to insert content (default: 2)
-- `--locale=LOCALE` - Target locale (default: de)
-- `--headline='TEXT'` - Custom headline
-- `--dry-run` - Preview only
-- `--temperature=N` - AI creativity 0.1-1.0 (default: 0.3)
-- `--format=FORMAT` - Content format: seo|technical|tutorial
+**Options:**
+- `--position=N` - Insert position (default: 2)
+- `-l, --locale=LOCALE` - Target locale (default: de)
+- `--headline=TEXT` - Custom headline
+- `-t, --temperature=N` - AI creativity level 0.1-1.0 (default: 0.3)
+- `-f, --format=FORMAT` - Content format: seo|technical|tutorial (default: seo)
+- `--dry-run` - Preview only, do not save
 
-#### 3. NCA AI Assistant (Interactive)
-Step-by-step interactive assistant for guided content generation.
+#### 3. Interactive Content Generation
+Step-by-step interactive assistant with guided input validation.
 
 ```bash
-ddev exec php nca-ai-assistant.php
+ddev exec bin/console ai:content:interactive
 ```
 
-The assistant will prompt you for:
-1. Page URL or CMF path
-2. Source URL to analyze
-3. Your content prompt
-4. Position (optional)
-5. Review and approval
+**Optional default options:**
+- `-p, --page=PATH` - Default Sulu page path
+- `--position=N` - Default insert position
+- `-l, --locale=LOCALE` - Default locale
+- `-f, --format=FORMAT` - Default format
+- `-t, --temperature=N` - Default AI temperature
+- `--dry-run` - Default to dry run mode
+
+The interactive assistant will guide you through:
+1. Target page configuration (path, position, locale)
+2. Source URL input with validation
+3. Content strategy selection (format, temperature)
+4. Custom prompt input
+5. Execution mode selection
+6. Configuration review and approval
 
 ### Activity Logging
 
@@ -156,6 +166,20 @@ GEMINI_API_KEY=your-api-key-here
 GEMINI_MODEL=gemini-1.5-flash
 ```
 
+### Getting Help
+
+View available AI commands:
+```bash
+ddev exec bin/console list ai
+```
+
+Get detailed help for any command:
+```bash
+ddev exec bin/console ai:content:quick --help
+ddev exec bin/console ai:content:generate --help
+ddev exec bin/console ai:content:interactive --help
+```
+
 ### Content Formats
 
 - **SEO**: Optimized for search engines with keywords and structure
@@ -175,12 +199,34 @@ Test the logging system:
 ddev exec php test-direct-logging.php
 ```
 
+Test a quick generation (dry run):
+```bash
+ddev exec bin/console ai:content:quick \
+  "https://github.com/symfony/symfony" \
+  "Erstelle einen deutschen Artikel über Symfony Features" \
+  --dry-run
+```
+
 ### Architecture
 
-- **AI Platform**: Abstraction layer for multiple AI providers
+- **Symfony Console Commands**: Three specialized commands for different use cases
+- **AI Platform**: Abstraction layer for multiple AI providers with dependency injection
 - **GeminiProvider**: Implementation for Google's Gemini AI
 - **AIActivityLogger**: Direct database logging to Sulu's activity table
 - **Dual storage support**: Handles both serialized and XML property formats
+- **Proper error handling**: Symfony console provides robust error handling and user feedback
+
+### Migration from Standalone CLI
+
+The old standalone PHP scripts have been replaced with Symfony console commands:
+
+| Old Script | New Command | Notes |
+|------------|-------------|-------|
+| `nca-quick.php` | `ai:content:quick` | Same functionality, better integration |
+| `ai_content_generator_gemini.php` | `ai:content:generate` | Enhanced with proper validation |
+| `nca-ai-assistant.php` | `ai:content:interactive` | Improved user experience |
+
+All functionality remains the same, but with better error handling, dependency injection, and Symfony integration.
 
 
 ### Offical YouTube content creator for Browser Stack
