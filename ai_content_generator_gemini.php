@@ -23,7 +23,7 @@ $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__ . '/.env.local');
 
 if ($argc < 4) {
-    echo "🤖 AI Content Generator für Sulu CMS - Gemini Powered\n";
+    echo " AI Content Generator für Sulu CMS - Gemini Powered\n";
     echo "=====================================================\n\n";
     echo "Usage: php ai_content_generator_gemini.php <page-path> <url> <prompt> [options]\n\n";
     echo "Options:\n";
@@ -77,10 +77,10 @@ for ($i = 4; $i < $argc; $i++) {
 // Validate temperature
 $options['temperature'] = max(0.1, min(1.0, $options['temperature']));
 
-echo "🚀 AI Content Generator für Sulu CMS - Gemini Powered\n";
+echo " AI Content Generator für Sulu CMS - Gemini Powered\n";
 echo "=====================================================\n\n";
 
-echo "📋 Configuration:\n";
+echo " Configuration:\n";
 echo "  Page Path: {$pagePath}\n";
 echo "  Source URL: {$url}\n";
 echo "  AI Prompt: " . substr($prompt, 0, 80) . (strlen($prompt) > 80 ? '...' : '') . "\n";
@@ -89,10 +89,10 @@ echo "  Locale: {$options['locale']}\n";
 echo "  Custom Headline: " . ($options['headline'] ?: 'Auto-generated') . "\n";
 echo "  Temperature: {$options['temperature']} (Creativity Level)\n";
 echo "  Format: {$options['format']}\n";
-echo "  Mode: " . ($options['dry-run'] ? '🔍 Preview Only' : '💾 Live Update') . "\n\n";
+echo "  Mode: " . ($options['dry-run'] ? ' Preview Only' : ' Live Update') . "\n\n";
 
 // Initialize AI Platform
-echo "🧠 Initializing Gemini AI Platform...\n";
+echo " Initializing Gemini AI Platform...\n";
 try {
     $geminiProvider = new GeminiProvider(
         $_ENV['GEMINI_API_KEY'] ?? throw new Exception('GEMINI_API_KEY not found in environment'),
@@ -104,15 +104,15 @@ try {
     $aiPlatform->addProvider('gemini', $geminiProvider);
     $aiPlatform->setDefaultProvider('gemini');
     
-    echo "✅ AI Platform initialized successfully\n\n";
+    echo " AI Platform initialized successfully\n\n";
 } catch (Exception $e) {
-    echo "❌ Failed to initialize AI Platform: " . $e->getMessage() . "\n";
-    echo "💡 Make sure GEMINI_API_KEY is set in your .env.local file\n";
+    echo "ERROR: Failed to initialize AI Platform: " . $e->getMessage() . "\n";
+    echo " Make sure GEMINI_API_KEY is set in your .env.local file\n";
     exit(1);
 }
 
 // Step 1: Analyze URL with AI
-echo "🔍 Analyzing URL with Gemini AI...\n";
+echo " Analyzing URL with Gemini AI...\n";
 try {
     $analysisPrompt = createAnalysisPrompt($prompt, $options['format'], $options['locale']);
     
@@ -120,16 +120,16 @@ try {
     $analysisResponse = $aiPlatform->analyzeUrl($url, $analysisPrompt);
     $analysisTime = round((microtime(true) - $startTime) * 1000);
     
-    echo "✅ AI analysis completed in {$analysisTime}ms\n";
-    echo "📊 Usage: " . ($analysisResponse->getUsage()['totalTokens'] ?? 'N/A') . " tokens\n\n";
+    echo " AI analysis completed in {$analysisTime}ms\n";
+    echo " Usage: " . ($analysisResponse->getUsage()['totalTokens'] ?? 'N/A') . " tokens\n\n";
     
 } catch (Exception $e) {
-    echo "❌ Error during AI analysis: " . $e->getMessage() . "\n";
+    echo "ERROR: Error during AI analysis: " . $e->getMessage() . "\n";
     exit(1);
 }
 
 // Step 2: Generate structured content
-echo "📝 Generating structured Sulu content...\n";
+echo " Generating structured Sulu content...\n";
 try {
     $contentPrompt = createContentPrompt($analysisResponse->getContent(), $prompt, $options);
     
@@ -140,30 +140,30 @@ try {
     );
     $contentTime = round((microtime(true) - $startTime) * 1000);
     
-    echo "✅ Content generation completed in {$contentTime}ms\n";
-    echo "📊 Usage: " . ($contentResponse->getUsage()['totalTokens'] ?? 'N/A') . " tokens\n\n";
+    echo " Content generation completed in {$contentTime}ms\n";
+    echo " Usage: " . ($contentResponse->getUsage()['totalTokens'] ?? 'N/A') . " tokens\n\n";
     
 } catch (Exception $e) {
-    echo "❌ Error during content generation: " . $e->getMessage() . "\n";
+    echo "ERROR: Error during content generation: " . $e->getMessage() . "\n";
     exit(1);
 }
 
 // Step 3: Process and format content
-echo "🛠️  Processing AI-generated content...\n";
+echo "  Processing AI-generated content...\n";
 $suluContent = processAIContent($contentResponse, $options, $url);
 
 // Step 4: Show preview
-echo "👀 Content Preview:\n";
+echo " Content Preview:\n";
 echo "==================\n";
 showContentPreview($suluContent);
 
 if (!$options['dry-run']) {
     // Step 5: Get user confirmation
-    echo "\n🤔 What would you like to do?\n";
-    echo "  [1] ✅ Approve and add to Sulu page\n";
-    echo "  [2] 🔄 Regenerate with adjusted prompt\n";
-    echo "  [3] ⚙️  Adjust AI settings and regenerate\n";
-    echo "  [4] ❌ Cancel operation\n";
+    echo "\n What would you like to do?\n";
+    echo "  [1]  Approve and add to Sulu page\n";
+    echo "  [2]  Regenerate with adjusted prompt\n";
+    echo "  [3]   Adjust AI settings and regenerate\n";
+    echo "  [4] ERROR: Cancel operation\n";
     echo "Choice [1]: ";
     
     $choice = trim(fgets(STDIN));
@@ -174,7 +174,7 @@ if (!$options['dry-run']) {
         $newPrompt = trim(fgets(STDIN));
         if (empty($newPrompt)) $newPrompt = $prompt;
         
-        echo "\n🔄 Regenerating Content...\n";
+        echo "\n Regenerating Content...\n";
         $contentPrompt = createContentPrompt($analysisResponse->getContent(), $newPrompt, $options);
         $contentResponse = $aiPlatform->getProvider('gemini')->generateStructuredContent(
             $contentPrompt,
@@ -182,14 +182,14 @@ if (!$options['dry-run']) {
         );
         $suluContent = processAIContent($contentResponse, $options, $url);
         
-        echo "👀 Updated Content Preview:\n";
+        echo "Updated Content Preview:\n";
         echo "===========================\n";
         showContentPreview($suluContent);
         
-        echo "\n✅ Approve this version? [y/N]: ";
+        echo "\n Approve this version? [y/N]: ";
         $approve = trim(fgets(STDIN));
         if (strtolower($approve) !== 'y') {
-            echo "❌ Operation cancelled\n";
+            echo "ERROR: Operation cancelled\n";
             exit(0);
         }
     } elseif ($choice === '3') {
@@ -208,7 +208,7 @@ if (!$options['dry-run']) {
             $options['format'] = $newFormat;
         }
         
-        echo "\n🔄 Regenerating with new settings...\n";
+        echo "\n Regenerating with new settings...\n";
         $contentPrompt = createContentPrompt($analysisResponse->getContent(), $prompt, $options);
         $contentResponse = $aiPlatform->getProvider('gemini')->generateStructuredContent(
             $contentPrompt,
@@ -216,30 +216,30 @@ if (!$options['dry-run']) {
         );
         $suluContent = processAIContent($contentResponse, $options, $url);
         
-        echo "👀 Updated Content Preview:\n";
+        echo "Updated Content Preview:\n";
         echo "===========================\n";
         showContentPreview($suluContent);
         
-        echo "\n✅ Approve this version? [y/N]: ";
+        echo "\n Approve this version? [y/N]: ";
         $approve = trim(fgets(STDIN));
         if (strtolower($approve) !== 'y') {
-            echo "❌ Operation cancelled\n";
+            echo "ERROR: Operation cancelled\n";
             exit(0);
         }
     } elseif ($choice === '4') {
-        echo "❌ Operation cancelled\n";
+        echo "ERROR: Operation cancelled\n";
         exit(0);
     }
 
     // Step 6: Add content to Sulu page
-    echo "\n💾 Adding Content to Sulu Page...\n";
+    echo "\n Adding Content to Sulu Page...\n";
     $result = addContentToSuluPage($pagePath, $suluContent, $options);
     
     if ($result) {
-        echo "🎉 Successfully added AI-generated content to Sulu page!\n";
+        echo " Successfully added AI-generated content to Sulu page!\n";
         $webPath = str_replace('/cmf/example/contents', '', $pagePath);
-        echo "🌐 Visit: https://sulu-never-code-alone.ddev.site/{$options['locale']}{$webPath}\n";
-        echo "📈 Total tokens used: " . (
+        echo " Visit: https://sulu-never-code-alone.ddev.site/{$options['locale']}{$webPath}\n";
+        echo " Total tokens used: " . (
             ($analysisResponse->getUsage()['totalTokens'] ?? 0) + 
             ($contentResponse->getUsage()['totalTokens'] ?? 0)
         ) . "\n";
@@ -255,19 +255,19 @@ if (!$options['dry-run']) {
                 'gemini',
                 $prompt
             )) {
-                echo "📝 Activity logged to Sulu\n";
+                echo " Activity logged to Sulu\n";
             }
         } catch (Exception $e) {
             // Log error but don't fail the operation
-            echo "⚠️  Activity logging failed: " . $e->getMessage() . "\n";
+            echo "WARNING:  Activity logging failed: " . $e->getMessage() . "\n";
         }
     } else {
-        echo "❌ Failed to add content to Sulu page\n";
+        echo "ERROR: Failed to add content to Sulu page\n";
         exit(1);
     }
 } else {
-    echo "\n🔍 Dry run completed - no changes made to Sulu page\n";
-    echo "📈 Total tokens used: " . (
+    echo "\n Dry run completed - no changes made to Sulu page\n";
+    echo " Total tokens used: " . (
         ($analysisResponse->getUsage()['totalTokens'] ?? 0) + 
         ($contentResponse->getUsage()['totalTokens'] ?? 0)
     ) . "\n";
@@ -461,8 +461,12 @@ function createSuluBlocksFromStructured(array $structured, array $options, strin
         'description' => '<hr><p><small><strong>Quelle:</strong> <a href="' . htmlspecialchars($url) . '" target="_blank" rel="noopener">' . htmlspecialchars($url) . '</a><br><em>Generiert am ' . date('d.m.Y H:i') . ' Uhr mit Gemini AI</em></small></p>'
     ];
     
-    // Generate headline
+    // Generate headline and clean it up
     $headline = $options['headline'] ?? $structured['headline'] ?? "AI-Generierter Content - " . date('d.m.Y');
+    // Remove markdown headers if present
+    $headline = preg_replace('/^#{1,6}\s+/', '', $headline);
+    // Strip any HTML tags
+    $headline = strip_tags($headline);
     
     return [
         'type' => 'headline-paragraphs',
@@ -510,6 +514,10 @@ function createSuluBlocksFromText(string $content, array $options, string $url):
     ];
     
     $headline = $options['headline'] ?? "AI-Generierter Content - " . date('d.m.Y');
+    // Remove markdown headers if present
+    $headline = preg_replace('/^#{1,6}\s+/', '', $headline);
+    // Strip any HTML tags
+    $headline = strip_tags($headline);
     
     return [
         'type' => 'headline-paragraphs',
@@ -521,10 +529,10 @@ function createSuluBlocksFromText(string $content, array $options, string $url):
 
 function showContentPreview(array $content): void
 {
-    echo "📋 Headline: " . $content['headline'] . "\n\n";
+    echo " Headline: " . $content['headline'] . "\n\n";
     
     foreach ($content['items'] as $index => $item) {
-        echo "📄 Block " . ($index + 1) . " ({$item['type']}):\n";
+        echo " Block " . ($index + 1) . " ({$item['type']}):\n";
         
         if ($item['type'] === 'description') {
             $preview = strip_tags($item['description']);
@@ -557,11 +565,11 @@ function addContentToSuluPage(string $pagePath, array $content, array $options):
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$result) {
-            echo "❌ Page not found: $pagePath\n";
+            echo "ERROR: Page not found: $pagePath\n";
             return false;
         }
         
-        echo "✅ Found page: $pagePath\n";
+        echo " Found page: $pagePath\n";
         
         // Parse XML
         $xml = new DOMDocument();
@@ -573,20 +581,20 @@ function addContentToSuluPage(string $pagePath, array $content, array $options):
         // Get current blocks
         $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $options['locale'] . '-blocks"]');
         if ($blocksNodes->length === 0) {
-            echo "❌ No blocks property found for locale {$options['locale']}\n";
+            echo "ERROR: No blocks property found for locale {$options['locale']}\n";
             return false;
         }
         
         $blocksValue = $blocksNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue;
         $currentBlocks = unserialize(base64_decode($blocksValue));
         
-        echo "📊 Current blocks count: " . count($currentBlocks) . "\n";
+        echo " Current blocks count: " . count($currentBlocks) . "\n";
         
         // Check for duplicate headline
         foreach ($currentBlocks as $index => $block) {
             if (isset($block['headline']) && $block['headline'] === $content['headline']) {
-                echo "⚠️  Block with same headline already exists at index $index\n";
-                echo "🤔 Continue anyway? [y/N]: ";
+                echo "WARNING:  Block with same headline already exists at index $index\n";
+                echo " Continue anyway? [y/N]: ";
                 $confirm = trim(fgets(STDIN));
                 if (strtolower($confirm) !== 'y') {
                     return false;
@@ -609,8 +617,8 @@ function addContentToSuluPage(string $pagePath, array $content, array $options):
             $updatedBlocks[] = $content;
         }
         
-        echo "📥 Inserting new block at position {$options['position']}\n";
-        echo "📈 New blocks count: " . count($updatedBlocks) . "\n";
+        echo " Inserting new block at position {$options['position']}\n";
+        echo " New blocks count: " . count($updatedBlocks) . "\n";
         
         // Update XML with new blocks
         $newBlocksValue = base64_encode(serialize($updatedBlocks));
@@ -629,12 +637,12 @@ function addContentToSuluPage(string $pagePath, array $content, array $options):
         $updateStmt->execute([$updatedXml, $pagePath, 'default']);
         $updateStmt->execute([$updatedXml, $pagePath, 'default_live']);
         
-        echo "💾 Updated both default and default_live workspaces\n";
+        echo " Updated both default and default_live workspaces\n";
         
         return true;
         
     } catch (Exception $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo "ERROR: Error: " . $e->getMessage() . "\n";
         return false;
     }
 }
@@ -663,14 +671,14 @@ function convertToPagePath(string $input): string
         // Replace URL segments with proper CMF structure
         $cmfPath = str_replace('/php-glossar/', '/nca-php-glossar/', $cmfPath);
         
-        echo "🔄 Converted URL to CMF path: $cmfPath\n";
+        echo " Converted URL to CMF path: $cmfPath\n";
         return $cmfPath;
     }
     
     // If it's a relative path, assume it's under /cmf/example/contents
     if (strpos($input, '/') === 0 && strpos($input, '/cmf/') !== 0) {
         $cmfPath = '/cmf/example/contents' . $input;
-        echo "🔄 Converted relative path to CMF path: $cmfPath\n";
+        echo " Converted relative path to CMF path: $cmfPath\n";
         return $cmfPath;
     }
     

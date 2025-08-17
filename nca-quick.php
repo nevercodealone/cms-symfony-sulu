@@ -17,7 +17,7 @@ use App\AI\GeminiProvider;
 use App\AI\Logger\AIActivityLogger;
 
 if ($argc < 3) {
-    echo "🚀 NCA Quick - Fast AI Content Generator\n";
+    echo "NCA Quick - Fast AI Content Generator\n";
     echo "=========================================\n\n";
     echo "Usage: php nca-quick.php <url> <prompt> [options]\n\n";
     echo "Options:\n";
@@ -70,8 +70,8 @@ for ($i = 3; $i < $argc; $i++) {
 $dotenv = new Dotenv();
 $dotenv->loadEnv(__DIR__ . '/.env.local');
 
-echo "⚡ NCA Quick - Fast AI Content Generator\n";
-echo "========================================\n\n";
+echo "NCA Quick - Fast AI Content Generator\n";
+echo "======================================\n\n";
 
 // Initialize AI
 try {
@@ -84,20 +84,20 @@ try {
     $aiPlatform->addProvider('gemini', $geminiProvider);
     $aiPlatform->setDefaultProvider('gemini');
     
-    echo "✅ AI Platform ready\n";
+    echo "AI Platform ready\n";
 } catch (Exception $e) {
-    echo "❌ AI Platform error: " . $e->getMessage() . "\n";
+    echo "ERROR: AI Platform error: " . $e->getMessage() . "\n";
     exit(1);
 }
 
-echo "🎯 Target: {$options['page']} (position {$options['position']})\n";
-echo "🔗 Source: $url\n";
-echo "📊 Format: {$options['format']}\n";
-echo "🚀 Mode: " . ($options['dry-run'] ? 'Dry Run' : 'Live') . "\n";
-echo "✍️  Prompt: " . substr($prompt, 0, 60) . (strlen($prompt) > 60 ? '...' : '') . "\n\n";
+echo "Target: {$options['page']} (position {$options['position']})\n";
+echo "Source: $url\n";
+echo "Format: {$options['format']}\n";
+echo "Mode: " . ($options['dry-run'] ? 'Dry Run' : 'Live') . "\n";
+echo "Prompt: " . substr($prompt, 0, 60) . (strlen($prompt) > 60 ? '...' : '') . "\n\n";
 
 // Quick analysis
-echo "🔍 Analyzing...\n";
+echo "Analyzing...\n";
 $startTime = microtime(true);
 
 try {
@@ -112,10 +112,10 @@ try {
     ]);
     
     $processingTime = round((microtime(true) - $startTime) * 1000);
-    echo "✅ Generated in {$processingTime}ms\n\n";
+    echo "Generated in {$processingTime}ms\n\n";
     
 } catch (Exception $e) {
-    echo "❌ Generation failed: " . $e->getMessage() . "\n";
+    echo "ERROR: Generation failed: " . $e->getMessage() . "\n";
     exit(1);
 }
 
@@ -137,34 +137,34 @@ $suluContent = [
 ];
 
 // Show preview
-echo "👀 Preview:\n";
-echo "═══════════\n";
-echo "📰 {$headline}\n\n";
+echo "Preview:\n";
+echo "=========\n";
+echo "Headline: {$headline}\n\n";
 
 $previewText = strip_tags(implode(' ', array_column($suluContent['items'], 'description')));
 $preview = substr($previewText, 0, 300) . (strlen($previewText) > 300 ? '...' : '');
 echo "$preview\n\n";
 
-echo "📊 Blocks: " . count($suluContent['items']) . "\n";
-echo "📏 Length: " . strlen($previewText) . " characters\n\n";
+echo "Blocks: " . count($suluContent['items']) . "\n";
+echo "Length: " . strlen($previewText) . " characters\n\n";
 
 if (!$options['dry-run']) {
     if (!$options['live']) {
         echo "Add to Sulu page? [y/N]: ";
         $confirm = trim(fgets(STDIN));
         if (strtolower($confirm) !== 'y') {
-            echo "❌ Cancelled\n";
+            echo "Cancelled\n";
             exit(0);
         }
     }
     
-    echo "💾 Adding to Sulu...\n";
+    echo "Adding to Sulu...\n";
     $result = addToSuluPage($options['page'], $suluContent, $options['position']);
     
     if ($result) {
-        echo "✅ Content added successfully!\n";
+        echo "Content added successfully!\n";
         $webPath = str_replace('/cmf/example/contents', '', $options['page']);
-        echo "🌐 https://sulu-never-code-alone.ddev.site/de{$webPath}\n";
+        echo "URL: https://sulu-never-code-alone.ddev.site/de{$webPath}\n";
         
         // Log AI content generation activity
         try {
@@ -177,21 +177,21 @@ if (!$options['dry-run']) {
                 'gemini',
                 $prompt
             )) {
-                echo "📝 Activity logged to Sulu\n";
+                echo "Activity logged to Sulu\n";
             }
         } catch (Exception $e) {
             // Log error but don't fail the operation
-            echo "⚠️  Activity logging failed: " . $e->getMessage() . "\n";
+            echo "WARNING: Activity logging failed: " . $e->getMessage() . "\n";
         }
     } else {
-        echo "❌ Failed to add content\n";
+        echo "ERROR: Failed to add content\n";
         exit(1);
     }
 } else {
-    echo "🔍 Dry run completed - no changes made\n";
+    echo "Dry run completed - no changes made\n";
 }
 
-echo "⚡ NCA Quick completed!\n";
+echo "NCA Quick completed!\n";
 
 function generateHeadline($content, $prompt): string 
 {
@@ -200,6 +200,9 @@ function generateHeadline($content, $prompt): string
     foreach ($lines as $line) {
         $line = trim($line);
         if (strlen($line) > 20 && !str_contains($line, '```')) {
+            // Remove markdown headers (##, ###, etc.)
+            $line = preg_replace('/^#{1,6}\s+/', '', $line);
+            // Strip any remaining HTML tags
             return strip_tags($line);
         }
     }
@@ -421,14 +424,14 @@ function convertToPagePath(string $input): string
         // Replace URL segments with proper CMF structure
         $cmfPath = str_replace('/php-glossar/', '/nca-php-glossar/', $cmfPath);
         
-        echo "🔄 Converted URL to CMF path: $cmfPath\n";
+        echo "Converted URL to CMF path: $cmfPath\n";
         return $cmfPath;
     }
     
     // If it's a relative path, assume it's under /cmf/example/contents
     if (strpos($input, '/') === 0 && strpos($input, '/cmf/') !== 0) {
         $cmfPath = '/cmf/example/contents' . $input;
-        echo "🔄 Converted relative path to CMF path: $cmfPath\n";
+        echo "Converted relative path to CMF path: $cmfPath\n";
         return $cmfPath;
     }
     
