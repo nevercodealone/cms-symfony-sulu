@@ -100,4 +100,10 @@ services:
     Sulu\Component\DocumentManager\DocumentManagerInterface:
         alias: sulu_document_manager.document_manager
         public: true
+        
+    # AI Content Logger
+    App\AI\Logger\AIContentLogger:
+        arguments:
+            $eventDispatcher: '@event_dispatcher'
+        public: true
 

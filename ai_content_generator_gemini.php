@@ -16,6 +16,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Symfony\Component\Dotenv\Dotenv;
 use App\AI\Platform\AIPlatform;
 use App\AI\GeminiProvider;
+use App\AI\Logger\AIActivityLogger;
 
 // Load environment variables
 $dotenv = new Dotenv();
@@ -242,6 +243,24 @@ if (!$options['dry-run']) {
             ($analysisResponse->getUsage()['totalTokens'] ?? 0) + 
             ($contentResponse->getUsage()['totalTokens'] ?? 0)
         ) . "\n";
+        
+        // Log AI content generation activity
+        try {
+            $logger = new AIActivityLogger();
+            if ($logger->logAIContentGeneration(
+                $pagePath,
+                $options['locale'],
+                $suluContent,
+                $url,
+                'gemini',
+                $prompt
+            )) {
+                echo "📝 Activity logged to Sulu\n";
+            }
+        } catch (Exception $e) {
+            // Log error but don't fail the operation
+            echo "⚠️  Activity logging failed: " . $e->getMessage() . "\n";
+        }
     } else {
         echo "❌ Failed to add content to Sulu page\n";
         exit(1);

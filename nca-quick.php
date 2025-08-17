@@ -14,6 +14,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Symfony\Component\Dotenv\Dotenv;
 use App\AI\Platform\AIPlatform;
 use App\AI\GeminiProvider;
+use App\AI\Logger\AIActivityLogger;
 
 if ($argc < 3) {
     echo "🚀 NCA Quick - Fast AI Content Generator\n";
@@ -158,6 +159,24 @@ if (!$options['dry-run']) {
         echo "✅ Content added successfully!\n";
         $webPath = str_replace('/cmf/example/contents', '', $options['page']);
         echo "🌐 https://sulu-never-code-alone.ddev.site/de{$webPath}\n";
+        
+        // Log AI content generation activity
+        try {
+            $logger = new AIActivityLogger();
+            if ($logger->logAIContentGeneration(
+                $options['page'],
+                'de',
+                $suluContent,
+                $url,
+                'gemini',
+                $prompt
+            )) {
+                echo "📝 Activity logged to Sulu\n";
+            }
+        } catch (Exception $e) {
+            // Log error but don't fail the operation
+            echo "⚠️  Activity logging failed: " . $e->getMessage() . "\n";
+        }
     } else {
         echo "❌ Failed to add content\n";
         exit(1);
