@@ -13,6 +13,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Symfony\Component\Dotenv\Dotenv;
 use App\AI\Platform\AIPlatform;
 use App\AI\GeminiProvider;
+use App\AI\Logger\AIActivityLogger;
 
 // Load environment variables
 $dotenv = new Dotenv();
@@ -345,6 +346,24 @@ if (!$dryRun) {
         echo colorize("🎉 Content successfully added to Sulu!", 'green') . "\n";
         $webPath = str_replace('/cmf/example/contents', '', $pagePath);
         echo colorize("🌐 Visit: https://sulu-never-code-alone.ddev.site/{$locale}{$webPath}", 'cyan') . "\n";
+        
+        // Log AI content generation activity
+        try {
+            $logger = new AIActivityLogger();
+            if ($logger->logAIContentGeneration(
+                $pagePath,
+                $locale,
+                $suluContent,
+                $url,
+                'gemini',
+                $prompt
+            )) {
+                echo colorize("📝 Activity logged to Sulu", 'green') . "\n";
+            }
+        } catch (Exception $e) {
+            // Log error but don't fail the operation
+            echo colorize("⚠️  Activity logging failed: " . $e->getMessage(), 'yellow') . "\n";
+        }
     } else {
         echo colorize("❌ Failed to add content to Sulu page", 'red') . "\n";
         exit(1);
