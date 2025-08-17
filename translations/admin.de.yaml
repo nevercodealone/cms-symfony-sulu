@@ -1,0 +1,16 @@
+# German translations for AI content activities
+sulu_activity:
+    description:
+        pages:
+            ai_generated: "hat KI-Inhalt zur Seite \"%resource_title%\" hinzugefügt"
+            modified_ai: "hat die Seite \"%resource_title%\" mit KI-Inhalt aktualisiert"
+            
+# Additional AI-specific labels
+ai_content:
+    activity:
+        title: "KI-generierter Inhalt"
+        source: "Quelle"
+        provider: "KI-Anbieter"
+        cli_tool: "CLI-Tool"
+        blocks_count: "Anzahl Blöcke"
+        prompt: "Prompt"

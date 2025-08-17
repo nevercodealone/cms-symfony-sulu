@@ -1,0 +1,16 @@
+# English translations for AI content activities
+sulu_activity:
+    description:
+        pages:
+            ai_generated: "added AI content to page \"%resource_title%\""
+            modified_ai: "updated page \"%resource_title%\" with AI content"
+            
+# Additional AI-specific labels
+ai_content:
+    activity:
+        title: "AI Generated Content"
+        source: "Source"
+        provider: "AI Provider"
+        cli_tool: "CLI Tool"
+        blocks_count: "Block Count"
+        prompt: "Prompt"
