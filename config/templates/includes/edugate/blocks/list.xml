@@ -1,3 +1,4 @@
+
 <properties xmlns="http://schemas.sulu.io/template/template"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -18,15 +19,18 @@
                             <param name="headline" value="true"/>
                         </params>
                     </property>
-                    <block name="items" default-type="items" minOccurs="0">
+
+                    <property name="items" type="block" minOccurs="0">
                         <meta>
                             <title>Items</title>
                         </meta>
+                        
                         <types>
-                            <type name="items">
+                            <type name="single_item">
                                 <meta>
                                     <title>Item</title>
                                 </meta>
+                                
                                 <properties>
                                     <property name="description" type="text_editor">
                                         <meta>
@@ -45,7 +49,7 @@
                                 </properties>
                             </type>
                         </types>
-                    </block>
+                    </property>
                 </properties>
             </type>
         </types>
