@@ -2,7 +2,7 @@
 
 namespace App\AI\Logger;
 
-use PDO;
+use Doctrine\DBAL\Connection;
 use Exception;
 
 /**
@@ -13,17 +13,11 @@ use Exception;
  */
 class AIActivityLogger
 {
-    private PDO $pdo;
+    private ?Connection $connection;
     
-    public function __construct()
+    public function __construct(Connection $connection = null)
     {
-        try {
-            $this->pdo = new PDO("mysql:host=db;dbname=db;charset=utf8mb4", 'db', 'db');
-            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (Exception $e) {
-            // Fail silently if database is not available
-            error_log("AIActivityLogger: Could not connect to database: " . $e->getMessage());
-        }
+        $this->connection = $connection;
     }
 
     /**
@@ -78,7 +72,11 @@ class AIActivityLogger
             $userId = $this->getSystemUserId();
 
             // Insert activity record
-            $stmt = $this->pdo->prepare("
+            if (!$this->connection) {
+                return false;
+            }
+
+            $this->connection->executeStatement("
                 INSERT INTO ac_activities (
                     type,
                     context,
@@ -96,43 +94,27 @@ class AIActivityLogger
                     resourceSecurityObjectId,
                     userId
                 ) VALUES (
-                    :type,
-                    :context,
-                    :timestamp,
-                    :batch,
-                    :payload,
-                    :resourceKey,
-                    :resourceId,
-                    :resourceLocale,
-                    :resourceWebspaceKey,
-                    :resourceTitle,
-                    :resourceTitleLocale,
-                    :resourceSecurityContext,
-                    :resourceSecurityObjectType,
-                    :resourceSecurityObjectId,
-                    :userId
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
-            ");
-
-            $stmt->execute([
-                ':type' => 'modified',  // Use standard Sulu type
-                ':context' => json_encode(array_merge($context, [
+            ", [
+                'modified',  // Use standard Sulu type
+                json_encode(array_merge($context, [
                     'ai_generated' => true,  // Add flag to identify AI content
                     'action' => 'AI Content Generated'
                 ])),
-                ':timestamp' => date('Y-m-d H:i:s'),
-                ':batch' => uniqid('ai_', true),
-                ':payload' => json_encode($payload),
-                ':resourceKey' => 'pages',
-                ':resourceId' => $pageUuid,
-                ':resourceLocale' => $locale,
-                ':resourceWebspaceKey' => 'example',
-                ':resourceTitle' => $pageTitle,  // Already has AI marker
-                ':resourceTitleLocale' => $locale,
-                ':resourceSecurityContext' => 'sulu.webspaces.example',
-                ':resourceSecurityObjectType' => 'Sulu\Bundle\PageBundle\Document\PageDocument',
-                ':resourceSecurityObjectId' => $pageUuid,
-                ':userId' => $userId
+                date('Y-m-d H:i:s'),
+                uniqid('ai_', true),
+                json_encode($payload),
+                'pages',
+                $pageUuid,
+                $locale,
+                'example',
+                $pageTitle,  // Already has AI marker
+                $locale,
+                'sulu.webspaces.example',
+                'Sulu\Bundle\PageBundle\Document\PageDocument',
+                $pageUuid,
+                $userId
             ]);
 
             return true;
@@ -148,15 +130,17 @@ class AIActivityLogger
     private function getPageUuidFromPath(string $pagePath): ?string
     {
         try {
-            $stmt = $this->pdo->prepare("
+            if (!$this->connection) {
+                return null;
+            }
+
+            $result = $this->connection->fetchAssociative("
                 SELECT identifier 
                 FROM phpcr_nodes 
-                WHERE path = :path 
+                WHERE path = ? 
                 AND workspace_name = 'default'
                 LIMIT 1
-            ");
-            $stmt->execute([':path' => $pagePath]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            ", [$pagePath]);
             return $result ? $result['identifier'] : null;
         } catch (Exception $e) {
             return null;
@@ -169,15 +153,17 @@ class AIActivityLogger
     private function getPageTitle(string $pagePath, string $locale): ?string
     {
         try {
-            $stmt = $this->pdo->prepare("
+            if (!$this->connection) {
+                return null;
+            }
+
+            $result = $this->connection->fetchAssociative("
                 SELECT props 
                 FROM phpcr_nodes 
-                WHERE path = :path 
+                WHERE path = ? 
                 AND workspace_name = 'default'
                 LIMIT 1
-            ");
-            $stmt->execute([':path' => $pagePath]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            ", [$pagePath]);
             
             if (!$result) {
                 return null;
@@ -209,8 +195,12 @@ class AIActivityLogger
     private function getSystemUserId(): ?int
     {
         try {
+            if (!$this->connection) {
+                return null;
+            }
+
             // Try to get user "Someone" or first admin user
-            $stmt = $this->pdo->prepare("
+            $result = $this->connection->fetchAssociative("
                 SELECT id 
                 FROM se_users 
                 WHERE username IN ('admin', 'Someone', 'system')
@@ -224,8 +214,6 @@ class AIActivityLogger
                     END
                 LIMIT 1
             ");
-            $stmt->execute();
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result ? (int)$result['id'] : null;
         } catch (Exception $e) {
             return null;
