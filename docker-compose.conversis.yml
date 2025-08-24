@@ -37,6 +37,7 @@ services:
       - TWITTER_ACCESS_SECRET=$TWITTER_ACCESS_SECRET
       - DEEPL_API_KEY=$DEEPL_API_KEY
       - GEMINI_API_KEY=$GEMINI_API_KEY
+      - GEMINI_MODEL=$GEMINI_MODEL
 networks:
   proxy:
     external: true

@@ -94,6 +94,7 @@ deploy_stage:
     SHORTCODE1: stage-$SHORTCODE
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/${PREFIX}_${DB_NAME}
     PREFIX: stage
+    GEMINI_MODEL: $GEMINI_MODEL
 
 deploy_branch:
   stage: deploy_stage
@@ -111,6 +112,7 @@ deploy_branch:
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/${PREFIX}_${DB_NAME}
     URL: $CI_COMMIT_BRANCH.$URL
     PREFIX: $CI_COMMIT_BRANCH
+    GEMINI_MODEL: $GEMINI_MODEL
 
 .deploy_live:
   stage: deploy_live
@@ -134,6 +136,7 @@ deploy_branch:
     IMAGE: $CI_IMAGE
     SHORTCODE1: $SHORTCODE
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/$DB_NAME
+    GEMINI_MODEL: $GEMINI_MODEL
 
 deploy_live:
   extends: .deploy_live
