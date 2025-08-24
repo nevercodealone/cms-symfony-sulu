@@ -12,7 +12,7 @@ parameters:
     
     # AI Parameters
     gemini_api_key: '%env(GEMINI_API_KEY)%'
-    gemini_model: 'gemini-1.5-flash'
+    gemini_model: '%env(GEMINI_MODEL)%'
     gemini_base_url: 'https://generativelanguage.googleapis.com/v1beta'
 
 services:
