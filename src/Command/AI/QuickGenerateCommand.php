@@ -13,7 +13,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use PDO;
+use Doctrine\DBAL\Connection;
 use Exception;
 use DOMDocument;
 use DOMXPath;
@@ -26,6 +26,7 @@ class QuickGenerateCommand extends Command
 {
     public function __construct(
         private AIPlatform $aiPlatform,
+        private Connection $connection,
         #[Autowire(env: 'GEMINI_API_KEY')] private string $geminiApiKey,
         #[Autowire(env: 'GEMINI_MODEL')] private string $geminiModel = 'gemini-1.5-flash'
     ) {
@@ -150,7 +151,7 @@ class QuickGenerateCommand extends Command
                 
                 // Log activity
                 try {
-                    $logger = new AIActivityLogger();
+                    $logger = new AIActivityLogger($this->connection);
                     if ($logger->logAIContentGeneration($pagePath, 'de', $suluContent, $url, 'gemini', $prompt)) {
                         $io->text('Activity logged to Sulu');
                     }
@@ -332,12 +333,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
     private function addToSuluPage(string $pagePath, array $content, int $position): bool
     {
         try {
-            $pdo = new PDO("mysql:host=db;dbname=db", 'db', 'db');
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-            $stmt = $pdo->prepare("SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'");
-            $stmt->execute([$pagePath]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$pagePath]
+            );
             
             if (!$result) return false;
             
@@ -365,22 +364,29 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
                 }
             } else {
                 // Format 2: Individual XML properties (older format)
-                return $this->addContentXMLFormat($xml, $xpath, $content, $position, 'de', $pagePath, $pdo);
+                return $this->addContentXMLFormat($xml, $xpath, $content, $position, 'de', $pagePath);
             }
             
             $updatedXml = $xml->saveXML();
-            $updateStmt = $pdo->prepare("UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?");
-            $updateStmt->execute([$updatedXml, $pagePath, 'default']);
-            $updateStmt->execute([$updatedXml, $pagePath, 'default_live']);
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $pagePath, 'default']
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $pagePath, 'default_live']
+            );
             
             return true;
             
         } catch (Exception $e) {
+            error_log("Sulu content addition failed: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
 
-    private function addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath, $pdo): bool
+    private function addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath): bool
     {
         // Get current blocks length
         $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
@@ -406,9 +412,14 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         // Save to database
         $updatedXml = $xml->saveXML();
         
-        $updateStmt = $pdo->prepare("UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?");
-        $updateStmt->execute([$updatedXml, $pagePath, 'default']);
-        $updateStmt->execute([$updatedXml, $pagePath, 'default_live']);
+        $this->connection->executeStatement(
+            "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+            [$updatedXml, $pagePath, 'default']
+        );
+        $this->connection->executeStatement(
+            "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+            [$updatedXml, $pagePath, 'default_live']
+        );
         
         return true;
     }
