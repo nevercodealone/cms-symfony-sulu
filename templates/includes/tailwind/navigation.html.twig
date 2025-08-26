@@ -19,15 +19,15 @@
       <nav class="flex space-x-6"> <!-- Changed from space-x-10 to space-x-6 -->
         {% for item in sulu_navigation_root_tree('main', 2, true) %}
           {% if item.children|length > 0 %}
-            <div class="relative" x-data="{ dropdown: false }">
-              <button aria-label="Dropdown öffnen für {{ item.title }}" x-on:click="dropdown = ! dropdown" type="button" class="text-gray-700 group inline-flex items-center rounded-md bg-white text-base font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" aria-expanded="false">
+            <div class="relative" x-data="{ dropdown: false }" x-on:click.outside="dropdown = false" x-on:keydown.escape="dropdown = false">
+              <button aria-label="Dropdown öffnen für {{ item.title }}" x-on:click="dropdown = ! dropdown" type="button" class="text-gray-700 group inline-flex items-center rounded-md bg-white text-base font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <span>{{ item.title }}</span>
-                <svg class="text-gray-400 ml-2 h-5 w-5 group-hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <svg class="text-gray-400 ml-2 h-5 w-5 group-hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
               </button>
 
-              <div x-show="dropdown" x-cloak x-transition.duration.1000ms class="absolute z-10 -ml-4 mt-3 w-screen max-w-md transform lg:max-w-3xl">
+              <div x-show="dropdown" x-cloak x-transition.duration.700ms class="absolute z-10 -ml-4 mt-3 w-screen max-w-md transform lg:max-w-3xl">
                 <div class="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
                   <div class="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8 lg:grid-cols-2">
                     {% for child in item.children %}
