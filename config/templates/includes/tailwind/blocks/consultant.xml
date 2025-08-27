@@ -1,0 +1,31 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+  <block name="blocks" default-type="consultant">
+    <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+    <types>
+      <type name="consultant">
+        <meta>
+          <title>Consultant</title>
+        </meta>
+        <properties>
+          <property name="organisation" type="contact_account_selection">
+            <meta>
+                <title>Team</title>
+            </meta>
+            <params>
+              <param name="min" value="1"/>
+              <param name="max" value="1"/>
+          </params>
+          </property>
+          <property name="description" type="text_editor">
+            <meta>
+              <title>Beschreibung</title>
+            </meta>
+          </property>
+        </properties>
+      </type>
+    </types>
+  </block>
+</properties>

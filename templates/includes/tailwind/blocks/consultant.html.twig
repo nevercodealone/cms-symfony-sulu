@@ -1,0 +1,40 @@
+<!-- Start consultant.html.twig -->
+<section class="py-8 bg-white md:py-16 antialiased">
+  {% if content.organisation %}
+    {% for contact in content.organisation %}
+
+      {% if contact.avatar.thumbnails['400x400'] is defined and contact.avatar.thumbnails['400x400'] is not empty %}
+      {% set source = contact.avatar.thumbnails['team'] %}
+      <div class="max-w-screen-xl px-4 mx-auto 2xl:px-0">
+        <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-16">
+
+          <div class="shrink-0 max-w-md lg:max-w-lg mx-auto">
+            <img class="w-full" src="{{ source }}" alt="{{ contact.fullName }}" />
+          </div>
+
+          <div class="mt-6 sm:mt-8 lg:mt-0">
+            <h2 class="text-2xl  text-gray-900 sm:text-3xl mb-4">{{ contact.fullName }}</h1>
+            <div class="text-lg text-green-800 sm:text-xl">{{ contact.positionName }}</div>
+              {% if contact.contactDetails.socialMedia is not empty %}
+                <ul role="list" class="flex space-x-5 p-0 mt-4" aria-label="Social Link Liste">
+                  {% for social in contact.contactDetails.socialMedia %}
+                      <li>
+                        {% include 'includes/tailwind/link-social-media.html.twig' with {'socialLink': social.username, 'fullName': contact.fullName } %}
+                      </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              <hr class="my-6 md:my-8 border-gray-200 dark:border-gray-800" />
+              {% if content.description %}
+                <div class="mb-6 text-gray-500 dark:text-gray-400">{{ content.description|raw }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  </section>
+
+<!-- End consultant.html.twig -->
+
