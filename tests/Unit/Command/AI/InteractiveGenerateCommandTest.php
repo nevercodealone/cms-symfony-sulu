@@ -208,10 +208,13 @@ class InteractiveGenerateCommandTest extends TestCase
         $io->expects($this->once())
            ->method('ask')
            ->willReturn('valid-answer');
+
+        $input = $this->createMock(\Symfony\Component\Console\Input\InputInterface::class);
+        $input->method('isInteractive')->willReturn(true);
         
         $validator = fn($value) => $value === 'valid-answer';
         
-        $result = $method->invoke($this->command, $io, 'Test question', 'default', $validator, 'Error message');
+        $result = $method->invoke($this->command, $io, $input, 'Test question', 'default', $validator, 'Error message');
         
         $this->assertEquals('valid-answer', $result);
     }

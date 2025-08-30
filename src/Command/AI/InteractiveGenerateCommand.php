@@ -75,7 +75,7 @@ class InteractiveGenerateCommand extends Command
             '- CMF Path: /cmf/example/contents/nca-php-glossar/class-leak'
         ]);
 
-        $pagePath = $this->askWithRetry($io, 'Target Sulu Page (URL or CMF Path)', 
+        $pagePath = $this->askWithRetry($io, $input, 'Target Sulu Page (URL or CMF Path)', 
             $input->getOption('page'), 
             function($value) {
                 return !empty($value);
@@ -84,7 +84,7 @@ class InteractiveGenerateCommand extends Command
         );
         $pagePath = $this->convertToPagePath($pagePath);
 
-        $position = $this->askWithRetry($io, 'Insert Position', 
+        $position = $this->askWithRetry($io, $input, 'Insert Position', 
             $input->getOption('position'), 
             function($value) {
                 $pos = (int) $value;
@@ -94,7 +94,7 @@ class InteractiveGenerateCommand extends Command
         );
         $position = (int) $position;
 
-        $locale = $this->askWithRetry($io, 'Locale', 
+        $locale = $this->askWithRetry($io, $input, 'Locale', 
             $input->getOption('locale'), 
             function($value) {
                 return preg_match('/^[a-z]{2}$/', $value);
@@ -106,7 +106,7 @@ class InteractiveGenerateCommand extends Command
         $io->section('Step 2: Source Information');
         $io->text('What URL should be analyzed for content?');
 
-        $url = $this->askWithRetry($io, 'Source URL (GitHub, docs, articles)', 
+        $url = $this->askWithRetry($io, $input, 'Source URL (GitHub, docs, articles)', 
             null, 
             function($value) {
                 return !empty($value) && filter_var($value, FILTER_VALIDATE_URL);
@@ -124,7 +124,7 @@ class InteractiveGenerateCommand extends Command
             'tutorial' => 'Tutorial (Step-by-step, learning oriented)'
         ], $input->getOption('format'));
 
-        $temperature = $this->askWithRetry($io, 'AI Temperature (0.1-1.0, lower=more focused)', 
+        $temperature = $this->askWithRetry($io, $input, 'AI Temperature (0.1-1.0, lower=more focused)', 
             $input->getOption('temperature'), 
             function($value) {
                 $temp = (float) $value;
@@ -139,7 +139,7 @@ class InteractiveGenerateCommand extends Command
         $io->text('Describe what content you want to create:');
         $io->note('Example: "Erstelle einen deutschen Artikel über die neuesten PHP Features"');
 
-        $customPrompt = $this->askWithRetry($io, 'Content Prompt', 
+        $customPrompt = $this->askWithRetry($io, $input, 'Content Prompt', 
             null, 
             function($value) {
                 return !empty($value);
@@ -256,20 +256,33 @@ class InteractiveGenerateCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function askWithRetry(SymfonyStyle $io, string $question, ?string $default, callable $validator, string $errorMessage): string
+    private function askWithRetry(SymfonyStyle $io, InputInterface $input, string $question, ?string $default, callable $validator, string $errorMessage): string
     {
-        while (true) {
+        $maxRetries = 3;
+        $attempts = 0;
+        
+        while ($attempts < $maxRetries) {
             $answer = $io->ask($question, $default);
             
             if ($validator($answer)) {
                 return $answer;
             }
             
+            $attempts++;
             $io->error($errorMessage);
-            if (!$io->confirm('Try again?', true)) {
-                throw new Exception('Operation cancelled by user');
+            
+            // In non-interactive mode, don't loop forever
+            if ($io->isQuiet() || !$input->isInteractive()) {
+                throw new \InvalidArgumentException("$errorMessage (non-interactive mode, attempt $attempts/$maxRetries)");
+            }
+            
+            // In interactive mode, ask if user wants to try again
+            if ($attempts < $maxRetries && !$io->confirm('Try again?', true)) {
+                throw new \RuntimeException('Operation cancelled by user');
             }
         }
+        
+        throw new \RuntimeException("Failed to get valid input after $maxRetries attempts: $errorMessage");
     }
 
     private function createAnalysisPrompt(string $userPrompt, string $format, string $locale): string
