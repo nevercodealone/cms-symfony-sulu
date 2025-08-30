@@ -483,7 +483,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:type', 'Long');
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
             $itemsLengthValue = $xml->createElementNS($svNamespace, 'sv:value', count($content['items']));
-            $itemsLengthValue->setAttribute('length', strlen(count($content['items'])));
+            $itemsLengthValue->setAttribute('length', strlen((string)count($content['items'])));
             $itemsLengthProperty->appendChild($itemsLengthValue);
             $root->appendChild($itemsLengthProperty);
             
