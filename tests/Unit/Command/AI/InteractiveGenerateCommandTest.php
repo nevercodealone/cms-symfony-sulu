@@ -179,6 +179,11 @@ class InteractiveGenerateCommandTest extends TestCase
 
     public function testConvertToPagePathWithUrl(): void
     {
+        // Mock connection to return false for pageExists (page doesn't exist)
+        $this->connection->expects($this->any())
+            ->method('fetchAssociative')
+            ->willReturn(false);
+            
         $method = $this->reflection->getMethod('convertToPagePath');
         $method->setAccessible(true);
         
@@ -225,6 +230,11 @@ class InteractiveGenerateCommandTest extends TestCase
      */
     public function testConvertToPagePath(string $input, string $expected): void
     {
+        // Mock connection to return false for pageExists (page doesn't exist)
+        $this->connection->expects($this->any())
+            ->method('fetchAssociative')
+            ->willReturn(false);
+            
         $method = $this->reflection->getMethod('convertToPagePath');
         $method->setAccessible(true);
         
@@ -262,6 +272,27 @@ class InteractiveGenerateCommandTest extends TestCase
             // Fallback
             'relative_path' => ['blog/post', 'blog/post'],
         ];
+    }
+
+    public function testConvertToPagePathWithSmartFallback(): void
+    {
+        // Mock connection to return true for nca-php-glossar path (it exists)
+        $this->connection->expects($this->once())
+            ->method('fetchAssociative')
+            ->with(
+                $this->stringContains('SELECT 1 FROM phpcr_nodes'),
+                ['/cmf/example/contents/nca-php-glossar/phpstan']
+            )
+            ->willReturn(['id' => 1]); // nca- version exists
+            
+        $method = $this->reflection->getMethod('convertToPagePath');
+        $method->setAccessible(true);
+        
+        $url = 'https://nevercodealone.de/de/php-glossar/phpstan';
+        $result = $method->invoke($this->command, $url);
+        
+        // Should return the nca- version since it exists
+        $this->assertEquals('/cmf/example/contents/nca-php-glossar/phpstan', $result);
     }
 
     /**
