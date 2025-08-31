@@ -553,7 +553,17 @@ Erstelle den vollständigen strukturierten Artikel.";
             $path = $matches[1];
             $path = preg_replace('/^[a-z]{2}\//', '', $path);  // Remove locale prefix
             $path = preg_replace('/#.*$/', '', $path);         // Remove anchors
-            return '/cmf/example/contents/' . trim($path, '/');
+            $cmfPath = '/cmf/example/contents/' . trim($path, '/');
+            
+            // Check if target page exists, if not try with nca- prefix for php-glossar
+            if (strpos($cmfPath, '/php-glossar/') !== false) {
+                $alternativePath = str_replace('/php-glossar/', '/nca-php-glossar/', $cmfPath);
+                if ($this->pageExists($alternativePath)) {
+                    return $alternativePath;
+                }
+            }
+            
+            return $cmfPath;
         }
 
         // Absolute path (starts with /)
@@ -563,6 +573,19 @@ Erstelle den vollständigen strukturierten Artikel.";
 
         // Fallback: return as-is
         return $input;
+    }
+
+    private function pageExists(string $pagePath): bool
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT 1 FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default' LIMIT 1",
+                [$pagePath]
+            );
+            return $result !== false;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     private function addContentToSuluPage(string $pagePath, array $content, int $position, string $locale): bool
