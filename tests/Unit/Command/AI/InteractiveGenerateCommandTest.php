@@ -185,7 +185,8 @@ class InteractiveGenerateCommandTest extends TestCase
         $url = 'https://sulu-never-code-alone.ddev.site/de/php-glossar/phpstan';
         $result = $method->invoke($this->command, $url);
         
-        $this->assertEquals('/cmf/example/contents/nca-php-glossar/phpstan', $result);
+        // Generic conversion - no project-specific path mappings
+        $this->assertEquals('/cmf/example/contents/php-glossar/phpstan', $result);
     }
 
     public function testConvertToPagePathWithCmfPath(): void
@@ -217,6 +218,50 @@ class InteractiveGenerateCommandTest extends TestCase
         $result = $method->invoke($this->command, $io, $input, 'Test question', 'default', $validator, 'Error message');
         
         $this->assertEquals('valid-answer', $result);
+    }
+
+    /**
+     * @dataProvider convertToPagePathProvider
+     */
+    public function testConvertToPagePath(string $input, string $expected): void
+    {
+        $method = $this->reflection->getMethod('convertToPagePath');
+        $method->setAccessible(true);
+        
+        $result = $method->invoke($this->command, $input);
+        
+        $this->assertEquals($expected, $result);
+    }
+
+    public function convertToPagePathProvider(): array
+    {
+        return [
+            // Already CMF path
+            'cmf_path' => ['/cmf/example/contents/blog/post', '/cmf/example/contents/blog/post'],
+            
+            // Production URL
+            'production_url' => ['https://nevercodealone.de/de/php-glossar/phpstan', '/cmf/example/contents/php-glossar/phpstan'],
+            'production_url_en' => ['https://nevercodealone.de/en/blog/post', '/cmf/example/contents/blog/post'],
+            
+            // Dev URL
+            'dev_url' => ['https://sulu-never-code-alone.ddev.site/de/tutorials/symfony', '/cmf/example/contents/tutorials/symfony'],
+            
+            // Any domain
+            'any_domain' => ['https://example.com/fr/docs/api', '/cmf/example/contents/docs/api'],
+            'localhost' => ['http://localhost:8000/en/guide/testing', '/cmf/example/contents/guide/testing'],
+            
+            // URL with anchors
+            'url_with_anchor' => ['https://nevercodealone.de/de/php-glossar/phpstan#features', '/cmf/example/contents/php-glossar/phpstan'],
+            
+            // Absolute path
+            'absolute_path' => ['/blog/my-post', '/cmf/example/contents/blog/my-post'],
+            
+            // No locale prefix
+            'no_locale' => ['https://example.com/blog/post', '/cmf/example/contents/blog/post'],
+            
+            // Fallback
+            'relative_path' => ['blog/post', 'blog/post'],
+        ];
     }
 
     /**

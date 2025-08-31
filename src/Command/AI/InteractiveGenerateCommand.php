@@ -543,23 +543,25 @@ Erstelle den vollständigen strukturierten Artikel.";
 
     private function convertToPagePath(string $input): string
     {
+        // Already CMF path
         if (strpos($input, '/cmf/') === 0) {
             return $input;
         }
 
-        if (strpos($input, 'https://sulu-never-code-alone.ddev.site/') === 0) {
-            $path = str_replace('https://sulu-never-code-alone.ddev.site/', '', $input);
-            $path = preg_replace('/^[a-z]{2}\//', '', $path);
-            $path = preg_replace('/#.*$/', '', $path);
-            $cmfPath = '/cmf/example/contents/' . trim($path, '/');
-            $cmfPath = str_replace('/php-glossar/', '/nca-php-glossar/', $cmfPath);
-            return $cmfPath;
+        // HTTP/HTTPS URL - extract path after domain
+        if (preg_match('#^https?://[^/]+/(.+)$#', $input, $matches)) {
+            $path = $matches[1];
+            $path = preg_replace('/^[a-z]{2}\//', '', $path);  // Remove locale prefix
+            $path = preg_replace('/#.*$/', '', $path);         // Remove anchors
+            return '/cmf/example/contents/' . trim($path, '/');
         }
 
-        if (strpos($input, '/') === 0 && strpos($input, '/cmf/') !== 0) {
+        // Absolute path (starts with /)
+        if (strpos($input, '/') === 0) {
             return '/cmf/example/contents' . $input;
         }
 
+        // Fallback: return as-is
         return $input;
     }
 
