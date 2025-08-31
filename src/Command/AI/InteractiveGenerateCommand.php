@@ -676,6 +676,9 @@ Erstelle den vollständigen strukturierten Artikel.";
             $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = count($updatedBlocks);
         }
 
+        // Update Sulu publishing timestamps and metadata
+        $this->updateSuluPublishingMetadata($xml, $xpath, $locale);
+
         $updatedXml = $xml->saveXML();
 
         $this->connection->executeStatement(
@@ -713,6 +716,9 @@ Erstelle den vollständigen strukturierten Artikel.";
         // Update the blocks length
         $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $currentLength + 1;
 
+        // Update Sulu publishing timestamps and metadata
+        $this->updateSuluPublishingMetadata($xml, $xpath, $locale);
+
         // Save to database
         $updatedXml = $xml->saveXML();
 
@@ -726,6 +732,41 @@ Erstelle den vollständigen strukturierten Artikel.";
         );
 
         return true;
+    }
+
+    private function updateSuluPublishingMetadata($xml, $xpath, $locale): void
+    {
+        $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
+        $currentTime = (new \DateTime())->format('Y-m-d\TH:i:s.v\+00:00');
+        
+        // Update changed timestamp
+        $changedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-changed"]');
+        if ($changedNodes->length > 0) {
+            $changedNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $currentTime;
+        }
+        
+        // Update changer (user ID 1 for system)
+        $changerNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-changer"]');
+        if ($changerNodes->length > 0) {
+            $changerNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = '1';
+        }
+        
+        // Update published timestamp to mark as published
+        $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-published"]');
+        if ($publishedNodes->length > 0) {
+            $publishedNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $currentTime;
+        } else {
+            // Create published property if it doesn't exist
+            $root = $xml->documentElement;
+            $publishedProperty = $xml->createElementNS($svNamespace, 'sv:property');
+            $publishedProperty->setAttributeNS($svNamespace, 'sv:name', "i18n:$locale-published");
+            $publishedProperty->setAttributeNS($svNamespace, 'sv:type', 'Date');
+            $publishedProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
+            $publishedValue = $xml->createElementNS($svNamespace, 'sv:value', $currentTime);
+            $publishedValue->setAttribute('length', strlen($currentTime));
+            $publishedProperty->appendChild($publishedValue);
+            $root->appendChild($publishedProperty);
+        }
     }
 
     private function shiftBlockProperties($xml, $xpath, $locale, $fromIndex, $toIndex): void
