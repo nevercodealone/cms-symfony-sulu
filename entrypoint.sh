@@ -21,5 +21,9 @@
 [ -n "$DEEPL_API_KEY" ] && export DEEPL_API_KEY="$(cat $DEEPL_API_KEY)"
 [ -n "$GEMINI_API_KEY" ] && export GEMINI_API_KEY="$(cat $GEMINI_API_KEY)"
 [ -n "$GEMINI_MODEL" ] && export GEMINI_MODEL="$(cat $GEMINI_MODEL)"
+[ -n "$OPENAI_API_KEY" ] && export OPENAI_API_KEY="$(cat $OPENAI_API_KEY)"
+[ -n "$CHROMADB_HOST" ] && export CHROMADB_HOST="$(cat $CHROMADB_HOST)"
+[ -n "$CHROMADB_PORT" ] && export CHROMADB_PORT="$(cat $CHROMADB_PORT)"
+[ -n "$CHROMADB_DATABASE" ] && export CHROMADB_DATABASE="$(cat $CHROMADB_DATABASE)"
 
 exec "$@"
