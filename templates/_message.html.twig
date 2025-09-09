@@ -6,8 +6,8 @@
 
 {% macro bot(content, loading = false, latest = false) %}
     <div class="d-flex align-items-baseline mb-4">
-        <div class="bot avatar rounded-3 shadow-sm">
-            {{ ux_icon('fluent:bot-24-filled', { height: '45px', width: '45px' }) }}
+        <div class="bot avatar rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; font-size: 24px;">
+            🤖
         </div>
         <div class="ps-2">
             {% if loading %}
@@ -46,8 +46,8 @@
                 </div>
             {% endfor %}
         </div>
-        <div class="user avatar rounded-3 shadow-sm">
-            {{ ux_icon('solar:user-bold', { width: '45px', height: '45px' }) }}
+        <div class="user avatar rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; font-size: 24px;">
+            👤
         </div>
     </div>
 {% endmacro %}
