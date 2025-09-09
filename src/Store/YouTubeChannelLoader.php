@@ -51,6 +51,7 @@ final readonly class YouTubeChannelLoader implements LoaderInterface
                 'title' => $video['title'],
                 'description' => $video['description'],
                 'publishedAt' => $video['publishedAt']->format('Y-m-d H:i:s'),
+                'url' => 'https://www.youtube.com/watch?v=' . $video['id'],
             ]);
 
             // First yield the title as document
