@@ -12,16 +12,18 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand('app:video:query', description: 'Query indexed videos from the vector store')]
-final readonly class VideoQueryCommand
+final class VideoQueryCommand extends Command
 {
     public function __construct(
-        private Client $chromaClient,
-        private PlatformInterface $platform,
+        private readonly Client $chromaClient,
+        private readonly PlatformInterface $platform,
     ) {
+        parent::__construct();
     }
 
-    public function __invoke(SymfonyStyle $io): int
+    protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int
     {
+        $io = new SymfonyStyle($input, $output);
         $io->title('Testing Chroma DB Connection');
 
         $io->comment('Connecting to Chroma DB ...');
