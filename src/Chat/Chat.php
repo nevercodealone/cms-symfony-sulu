@@ -16,7 +16,7 @@ final class Chat
 
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly AgentInterface $agent,
+        private readonly AgentInterface $youtubeBotAgent,
     ) {
     }
 
@@ -30,7 +30,7 @@ final class Chat
         $messages = $this->loadMessages();
 
         $messages->add(Message::ofUser($message));
-        $result = $this->agent->call($messages);
+        $result = $this->youtubeBotAgent->call($messages);
 
         assert($result instanceof TextResult);
 
