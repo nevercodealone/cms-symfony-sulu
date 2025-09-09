@@ -1,0 +1,130 @@
+{% import "_message.html.twig" as message %}
+
+<div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div id="chat-body" class="h-96 p-6 overflow-y-auto bg-gray-50">
+        {% if messages is defined %}
+            {% for message in messages %}
+                {% include '_message.html.twig' with { message, latest: loop.last } %}
+            {% endfor %}
+        {% else %}
+            <div id="welcome" class="text-right mt-12 py-6 px-8 bg-white rounded-xl shadow-sm max-w-3xl mx-auto">
+                <h4 class="text-xl font-bold text-gray-800 mt-4">Hallo Freunde des Software-Entertainments!</h4>
+                <span class="text-gray-600 block mt-4 leading-relaxed">
+                    Ihr könnt diesen Chatbot benutzen um mehr über alle YouTube Videos von <strong class="text-gray-800">Never Code Alone</strong>
+                    zu erfahren und Inhalte zu finden, die euch interessieren.
+                    <br /><br />
+                    Stellt einfach eine Frage indem ihr sie in das Eingabefeld unten eingebt und auf <strong class="text-gray-800">Abschicken</strong>
+                    klickt.
+                    <br /><br />
+                    Viel Spaß, <br />
+                    <em class="text-blue-600">Euer Robot Golla</em>
+                </span>
+            </div>
+        {% endif %}
+        <div id="loading-message" class="hidden">
+            {{ message.user([{text:''}]) }}
+            {{ message.bot('Robot Golla sucht nach einer Antwort ...', true) }}
+        </div>
+    </div>
+    <div class="border-t bg-white p-4">
+        <div class="flex gap-2">
+            <input id="chat-message" type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nachricht schreiben ...">
+            <button id="chat-submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" type="button">
+                ✉️ Abschicken
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatInput = document.getElementById('chat-message');
+    const chatSubmit = document.getElementById('chat-submit');
+    const chatBody = document.getElementById('chat-body');
+    const loadingMessage = document.getElementById('loading-message');
+
+    function formatMarkdown(text) {
+        // Convert markdown to HTML
+        return text
+            // Headers
+            .replace(/### (.*?)$/gm, '<h3 class="font-bold text-lg mt-3 mb-2 text-gray-800">$1</h3>')
+            .replace(/## (.*?)$/gm, '<h2 class="font-bold text-xl mt-4 mb-2 text-gray-800">$1</h2>')
+            .replace(/# (.*?)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-3 text-gray-800">$1</h1>')
+            // Bold
+            .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+            // Links
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
+            // Lists
+            .replace(/^- (.*?)$/gm, '<li class="ml-4">• $1</li>')
+            .replace(/^\* (.*?)$/gm, '<li class="ml-4">• $1</li>')
+            // Line breaks
+            .replace(/\n/g, '<br>');
+    }
+
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        // Add user message
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'flex justify-end mb-4';
+        userMessageDiv.innerHTML = `
+            <div class="bg-blue-600 text-white px-4 py-2 rounded-lg max-w-xs lg:max-w-md">
+                ${message}
+            </div>
+        `;
+        chatBody.appendChild(userMessageDiv);
+
+        // Show loading
+        loadingMessage.classList.remove('hidden');
+        chatInput.value = '';
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        // Call real AI endpoint
+        fetch('/api/chat/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingMessage.classList.add('hidden');
+            
+            if (data.success) {
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'flex mb-4';
+                botMessageDiv.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="bg-gray-200 rounded-full w-8 h-8 flex items-center justify-content-center text-lg mr-3">
+                            🤖
+                        </div>
+                        <div class="bg-gray-100 px-4 py-3 rounded-lg max-w-2xl">
+                            <div class="text-gray-700 space-y-2">
+                                ${formatMarkdown(data.response)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatBody.appendChild(botMessageDiv);
+            } else {
+                alert('Fehler beim Senden der Nachricht');
+            }
+            chatBody.scrollTop = chatBody.scrollHeight;
+        })
+        .catch(error => {
+            loadingMessage.classList.add('hidden');
+            console.error('Error:', error);
+            alert('Ein Fehler ist aufgetreten');
+        });
+    }
+
+    chatSubmit.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+});
+</script>
