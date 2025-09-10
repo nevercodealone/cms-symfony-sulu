@@ -8,7 +8,7 @@ use App\Entity\ChatMessage;
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItem;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
-use Sulu\Bundle\AdminBundle\Admin\View\ListViewBuilderInterface;
+use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactoryInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
 use Sulu\Component\Security\Authorization\PermissionTypes;
@@ -43,33 +43,41 @@ class ChatMessageAdmin extends Admin
             return;
         }
 
-        $listView = $this->viewBuilderFactory
-            ->createListViewBuilder(static::LIST_VIEW, '/chat-messages')
-            ->setResourceKey(ChatMessage::RESOURCE_KEY)
-            ->setListKey(ChatMessage::LIST_KEY)
-            ->setTitle('app.chat_messages')
-            ->addListAdapters(['table'])
-            ->setEditView(static::FORM_VIEW);
+        $listToolbarActions = [];
+        $formToolbarActions = [];
 
-        $viewCollection->add($listView);
+        if ($this->securityChecker->hasPermission(ChatMessage::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
+            $listToolbarActions[] = new ToolbarAction('sulu_admin.delete');
+            $formToolbarActions[] = new ToolbarAction('sulu_admin.delete');
+        }
 
-        $formView = $this->viewBuilderFactory
-            ->createResourceTabViewBuilder(static::FORM_VIEW, '/chat-messages/:id')
-            ->setResourceKey(ChatMessage::RESOURCE_KEY)
-            ->setBackView(static::LIST_VIEW)
-            ->setTitleProperty('id');
+        $viewCollection->add(
+            $this->viewBuilderFactory->createListViewBuilder(static::LIST_VIEW, '/chat-messages')
+                ->setResourceKey(ChatMessage::RESOURCE_KEY)
+                ->setListKey(ChatMessage::LIST_KEY)
+                ->setTitle('app.chat_messages')
+                ->addListAdapters(['table'])
+                ->setEditView(static::FORM_VIEW)
+                ->addToolbarActions($listToolbarActions)
+        );
 
-        $viewCollection->add($formView);
+        $viewCollection->add(
+            $this->viewBuilderFactory
+                ->createResourceTabViewBuilder(static::FORM_VIEW, '/chat-messages/:id')
+                ->setResourceKey(ChatMessage::RESOURCE_KEY)
+                ->setBackView(static::LIST_VIEW)
+                ->setTitleProperty('id')
+        );
 
-        $detailsFormView = $this->viewBuilderFactory
-            ->createFormViewBuilder(static::FORM_VIEW . '.details', '/details')
-            ->setResourceKey(ChatMessage::RESOURCE_KEY)
-            ->setFormKey(ChatMessage::FORM_KEY)
-            ->setTabTitle('app.chat_message.details')
-            ->setEditView(static::FORM_VIEW)
-            ->setParent(static::FORM_VIEW);
-
-        $viewCollection->add($detailsFormView);
+        $viewCollection->add(
+            $this->viewBuilderFactory
+                ->createFormViewBuilder(static::FORM_VIEW . '.details', '/details')
+                ->setResourceKey(ChatMessage::RESOURCE_KEY)
+                ->setFormKey(ChatMessage::FORM_KEY)
+                ->setTabTitle('app.chat_message.details')
+                ->addToolbarActions($formToolbarActions)
+                ->setParent(static::FORM_VIEW)
+        );
     }
 
     /**

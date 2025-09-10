@@ -122,3 +122,8 @@ services:
             $eventDispatcher: '@event_dispatcher'
         public: true
 
+    # Relevance Checker with YouTube Bot Agent
+    App\Chat\RelevanceChecker:
+        arguments:
+            $youtubeBotAgent: '@ai.agent.youtube_bot'
+

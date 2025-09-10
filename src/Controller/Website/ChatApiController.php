@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Website;
 
 use App\Chat\Chat;
+use App\Chat\RelevanceChecker;
 use App\Entity\ChatMessage;
 use App\Repository\ChatMessageRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,7 +19,8 @@ class ChatApiController extends AbstractController
     public function submitMessage(
         Request $request, 
         Chat $chat,
-        ChatMessageRepository $chatMessageRepository
+        ChatMessageRepository $chatMessageRepository,
+        RelevanceChecker $relevanceChecker
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $message = $data['message'] ?? '';
@@ -38,6 +40,24 @@ class ChatApiController extends AbstractController
             return new JsonResponse([
                 'success' => true,
                 'response' => 'Ich muß jetzt leider etwas schlafen komm morgen wieder. Danke.'
+            ]);
+        }
+        
+        // Check if message is relevant to YouTube channel content
+        if (!$relevanceChecker->isRelevantToYouTubeChannel($message)) {
+            // Save the irrelevant message to database
+            $chatMessage = new ChatMessage();
+            $chatMessage->setUserIp($userIp);
+            $chatMessage->setSessionId($sessionId);
+            $chatMessage->setQuestion($message);
+            $chatMessage->setAnswer('Das weiß ich leider nicht.');
+            $chatMessage->setResponseTime(50); // Quick response time for filtered messages
+            $chatMessage->setLocale($locale);
+            $chatMessageRepository->save($chatMessage, true);
+            
+            return new JsonResponse([
+                'success' => true,
+                'response' => 'Das weiß ich leider nicht.'
             ]);
         }
         
