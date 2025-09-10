@@ -32,6 +32,15 @@ class ChatApiController extends AbstractController
         $sessionId = $request->getSession()->getId();
         $locale = $request->getLocale();
         
+        // Check rate limiting (5 messages per 24 hours)
+        $messageCount = $chatMessageRepository->countMessagesFromIpInLast24Hours($userIp);
+        if ($messageCount >= 5) {
+            return new JsonResponse([
+                'success' => true,
+                'response' => 'Ich muß jetzt leider etwas schlafen komm morgen wieder. Danke.'
+            ]);
+        }
+        
         // Track response time
         $startTime = microtime(true);
         

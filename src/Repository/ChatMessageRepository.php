@@ -87,4 +87,21 @@ class ChatMessageRepository extends ServiceEntityRepository
                 ->getSingleScalarResult(),
         ];
     }
+
+    /**
+     * Count messages from IP in the last 24 hours
+     */
+    public function countMessagesFromIpInLast24Hours(string $userIp): int
+    {
+        $since = new \DateTimeImmutable('-24 hours');
+        
+        return (int) $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->where('m.userIp = :userIp')
+            ->andWhere('m.createdAt >= :since')
+            ->setParameter('userIp', $userIp)
+            ->setParameter('since', $since)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

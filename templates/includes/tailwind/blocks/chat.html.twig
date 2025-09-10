@@ -108,6 +108,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 chatBody.appendChild(botMessageDiv);
+                
+                // Check if response is the sleep message (rate limited)
+                if (data.response.includes('schlafen komm morgen wieder')) {
+                    // Hide the input form
+                    const chatForm = document.querySelector('.flex.space-x-3');
+                    if (chatForm) {
+                        chatForm.style.display = 'none';
+                    }
+                }
             } else {
                 alert('Fehler beim Senden der Nachricht');
             }
