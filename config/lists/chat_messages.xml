@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<list xmlns="http://schemas.sulu.io/list-builder/list">
+    <key>chat_messages</key>
+
+    <properties>
+        <property name="id" visibility="no" translation="sulu_admin.id">
+            <field-name>id</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
+        <property name="userIp" visibility="always" searchability="yes" translation="app.chat_message.user_ip">
+            <field-name>userIp</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
+        <property name="question" visibility="always" searchability="yes" translation="app.chat_message.question">
+            <field-name>question</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
+        <property name="answer" visibility="yes" searchability="yes" translation="app.chat_message.answer">
+            <field-name>answer</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
+        <property name="responseTime" visibility="yes" translation="app.chat_message.response_time">
+            <field-name>responseTime</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
+        <property name="totalTokens" visibility="yes" translation="app.chat_message.total_tokens">
+            <field-name>totalTokens</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
+        <property name="locale" visibility="yes" translation="app.chat_message.locale">
+            <field-name>locale</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
+        <property name="createdAt" visibility="always" translation="app.chat_message.created_at">
+            <field-name>createdAt</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+            <transformer type="datetime" />
+        </property>
+    </properties>
+</list>
