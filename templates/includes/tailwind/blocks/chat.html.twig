@@ -1,37 +1,50 @@
 {% import "_message.html.twig" as message %}
 
-<div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-    <div id="chat-body" class="h-96 p-6 overflow-y-auto bg-gray-50">
-        {% if messages is defined %}
-            {% for message in messages %}
-                {% include '_message.html.twig' with { message, latest: loop.last } %}
-            {% endfor %}
-        {% else %}
-            <div id="welcome" class="text-right mt-12 py-6 px-8 bg-white rounded-xl shadow-sm max-w-3xl mx-auto">
-                <h4 class="text-xl font-bold text-gray-800 mt-4">Hallo Freunde des Software-Entertainments!</h4>
-                <span class="text-gray-600 block mt-4 leading-relaxed">
-                    Ihr könnt diesen Chatbot benutzen um mehr über alle YouTube Videos von <strong class="text-gray-800">Never Code Alone</strong>
-                    zu erfahren und Inhalte zu finden, die euch interessieren.
-                    <br /><br />
-                    Stellt einfach eine Frage indem ihr sie in das Eingabefeld unten eingebt und auf <strong class="text-gray-800">Abschicken</strong>
-                    klickt.
-                    <br /><br />
-                    Viel Spaß, <br />
-                    <em class="text-blue-600">Euer Robot Golla</em>
-                </span>
-            </div>
-        {% endif %}
-        <div id="loading-message" class="hidden">
-            {{ message.user([{text:''}]) }}
-            {{ message.bot('Robot Golla sucht nach einer Antwort ...', true) }}
+<div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="flex flex-col md:flex-row h-[500px]">
+        <!-- Robot Image - Fixed on left, top on mobile -->
+        <div class="flex-shrink-0 p-6 bg-gray-100 flex items-center justify-center md:w-48">
+            <img id="robot-image" src="/robot.png" alt="Robot Golla" class="w-32 h-32 md:w-40 md:h-40 object-contain rounded-lg">
         </div>
-    </div>
-    <div class="border-t bg-white p-4">
-        <div class="flex gap-2">
-            <input id="chat-message" type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nachricht schreiben ...">
-            <button id="chat-submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" type="button">
-                ✉️ Abschicken
-            </button>
+        
+        <!-- Chat content area - Scrollable -->
+        <div class="flex-1 flex flex-col">
+            <div id="chat-body" class="flex-1 p-6 overflow-y-auto bg-gray-50">
+                {% if messages is defined %}
+                    {% for message in messages %}
+                        {% include '_message.html.twig' with { message, latest: loop.last } %}
+                    {% endfor %}
+                {% else %}
+                    <div id="welcome" class="py-6 px-8 bg-white rounded-xl shadow-sm">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Chat</h2>
+                        <h4 class="text-xl font-bold text-gray-800 mt-4">Hallo Freunde des Software-Entertainments!</h4>
+                        <span class="text-gray-600 block mt-4 leading-relaxed">
+                            Ihr könnt diesen Chatbot benutzen um mehr über alle YouTube Videos von <strong class="text-gray-800">Never Code Alone</strong>
+                            zu erfahren und Inhalte zu finden, die euch interessieren.
+                            <br /><br />
+                            Stellt einfach eine Frage indem ihr sie in das Eingabefeld unten eingebt und auf <strong class="text-gray-800">Abschicken</strong>
+                            klickt.
+                            <br /><br />
+                            Viel Spaß, <br />
+                            <em class="text-blue-600">Euer Robot Golla</em>
+                        </span>
+                    </div>
+                {% endif %}
+                <div id="loading-message" class="hidden">
+                    {{ message.user([{text:''}]) }}
+                    {{ message.bot('Robot Golla sucht nach einer Antwort ...', true) }}
+                </div>
+            </div>
+            
+            <!-- Input area - Fixed at bottom -->
+            <div class="border-t bg-white p-4">
+                <div class="flex gap-2">
+                    <input id="chat-message" type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nachricht schreiben ...">
+                    <button id="chat-submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" type="button">
+                        ✉️ Abschicken
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -111,10 +124,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Check if response is the sleep message (rate limited)
                 if (data.response.includes('schlafen komm morgen wieder')) {
+                    // Change robot image to sleeping
+                    const robotImage = document.getElementById('robot-image');
+                    if (robotImage) {
+                        robotImage.src = '/robot-sleeping.png';
+                    }
                     // Hide the input form
-                    const chatForm = document.querySelector('.flex.space-x-3');
-                    if (chatForm) {
-                        chatForm.style.display = 'none';
+                    const inputContainer = document.querySelector('.border-t.bg-white.p-4');
+                    if (inputContainer) {
+                        inputContainer.style.display = 'none';
                     }
                 }
             } else {
