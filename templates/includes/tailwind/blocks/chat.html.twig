@@ -1,15 +1,15 @@
 {% import "_message.html.twig" as message %}
 
-<div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-    <div class="flex flex-col md:flex-row h-[500px]">
+<div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden h-[80vh] md:h-[500px]">
+    <div class="flex flex-col md:flex-row h-full">
         <!-- Robot Image - Fixed on left, top on mobile -->
-        <div class="flex-shrink-0 p-6 bg-gray-100 flex items-center justify-center md:w-48">
-            <img id="robot-image" src="/robot.png" alt="Robot Golla" class="w-32 h-32 md:w-40 md:h-40 object-contain rounded-lg">
+        <div class="flex-shrink-0 p-4 md:p-6 bg-gray-100 flex items-center justify-center md:w-48">
+            <img id="robot-image" src="/robot.png" alt="Robot Golla" class="w-24 h-24 md:w-40 md:h-40 object-contain rounded-lg">
         </div>
         
         <!-- Chat content area - Scrollable -->
-        <div class="flex-1 flex flex-col">
-            <div id="chat-body" class="flex-1 p-6 overflow-y-auto bg-gray-50">
+        <div class="flex-1 flex flex-col min-h-0">
+            <div id="chat-body" class="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50">
                 {% if messages is defined %}
                     {% for message in messages %}
                         {% include '_message.html.twig' with { message, latest: loop.last } %}
