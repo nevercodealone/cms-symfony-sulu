@@ -1,49 +1,62 @@
 {% import "_message.html.twig" as message %}
 
-<div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden h-[80vh] md:h-[500px]">
-    <div class="flex flex-col md:flex-row h-full">
-        <!-- Robot Image - Fixed on left, top on mobile -->
-        <div class="flex-shrink-0 p-4 md:p-6 bg-gray-100 flex items-center justify-center md:w-48">
-            <img id="robot-image" src="/robot.png" alt="Robot Golla" class="w-24 h-24 md:w-40 md:h-40 object-contain rounded-lg">
+<div class="max-w-4xl mx-auto">
+    <!-- Header with Robot and Title - Always visible -->
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg shadow-sm p-4 md:p-6">
+        <div class="flex items-center gap-4">
+            <img id="robot-image" src="/robot.png" alt="Robot Golla" class="w-16 h-16 md:w-20 md:h-20 object-contain rounded-full bg-white p-2 shadow-sm">
+            <div>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Never Code Alone Chat</h2>
+                <p class="text-sm md:text-base text-gray-600">Dein AI-Assistent für YouTube-Inhalte</p>
+            </div>
         </div>
-        
-        <!-- Chat content area - Scrollable -->
-        <div class="flex-1 flex flex-col min-h-0">
-            <div id="chat-body" class="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50">
+    </div>
+    
+    <!-- Chat Messages Area -->
+    <div class="bg-white shadow-lg">
+        <div id="chat-body" class="h-[60vh] md:h-[400px] overflow-y-auto p-4 md:p-6 scroll-smooth">
                 {% if messages is defined %}
                     {% for message in messages %}
                         {% include '_message.html.twig' with { message, latest: loop.last } %}
                     {% endfor %}
                 {% else %}
-                    <div id="welcome" class="py-6 px-8 bg-white rounded-xl shadow-sm">
-                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Chat</h2>
-                        <h4 class="text-xl font-bold text-gray-800 mt-4">Hallo Freunde des Software-Entertainments!</h4>
-                        <span class="text-gray-600 block mt-4 leading-relaxed">
-                            Ihr könnt diesen Chatbot benutzen um mehr über alle YouTube Videos von <strong class="text-gray-800">Never Code Alone</strong>
-                            zu erfahren und Inhalte zu finden, die euch interessieren.
-                            <br /><br />
-                            Stellt einfach eine Frage indem ihr sie in das Eingabefeld unten eingebt und auf <strong class="text-gray-800">Abschicken</strong>
-                            klickt.
-                            <br /><br />
-                            Viel Spaß, <br />
-                            <em class="text-blue-600">Euer Robot Golla</em>
-                        </span>
+                    <!-- Welcome Message -->
+                    <div id="welcome" class="flex items-start gap-3 mb-4">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            🤖
+                        </div>
+                        <div class="flex-1 bg-gray-50 rounded-lg p-4 max-w-2xl">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">Hallo Freunde des Software-Entertainments!</h4>
+                            <p class="text-gray-600 leading-relaxed">
+                                Ich bin Robot Golla, euer AI-Assistent für alle Fragen rund um die YouTube-Videos von <strong>Never Code Alone</strong>.
+                            </p>
+                            <div class="mt-3 space-y-2 text-sm text-gray-600">
+                                <p>💡 <strong>Was ich kann:</strong></p>
+                                <ul class="ml-6 space-y-1">
+                                    <li>• Fragen zu PHP, Symfony, Laravel beantworten</li>
+                                    <li>• Coding-Tutorials und Best Practices erklären</li>
+                                    <li>• Inhalte aus den YouTube-Videos finden</li>
+                                </ul>
+                            </div>
+                            <p class="mt-3 text-sm text-gray-500">
+                                Stelle einfach deine Frage im Eingabefeld unten! 👇
+                            </p>
+                        </div>
                     </div>
                 {% endif %}
                 <div id="loading-message" class="hidden">
-                    {{ message.user([{text:''}]) }}
-                    {{ message.bot('Robot Golla sucht nach einer Antwort ...', true) }}
+                    <!-- Loading indicator will be inserted here -->
                 </div>
             </div>
-            
-            <!-- Input area - Fixed at bottom -->
-            <div class="border-t bg-white p-4">
-                <div class="flex gap-2">
-                    <input id="chat-message" type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nachricht schreiben ...">
-                    <button id="chat-submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" type="button">
-                        ✉️ Abschicken
-                    </button>
-                </div>
+        </div>
+        
+        <!-- Input area - Always at bottom -->
+        <div class="border-t border-gray-200 bg-gray-50 p-4 rounded-b-lg">
+            <div class="flex gap-2">
+                <input id="chat-message" type="text" class="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Stelle deine Frage hier...">
+                <button id="chat-submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium" type="button">
+                    Senden
+                </button>
             </div>
         </div>
     </div>
@@ -78,20 +91,53 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = chatInput.value.trim();
         if (!message) return;
 
+        // Remove welcome message if it exists
+        const welcome = document.getElementById('welcome');
+        if (welcome) {
+            welcome.remove();
+        }
+
         // Add user message
         const userMessageDiv = document.createElement('div');
-        userMessageDiv.className = 'flex justify-end mb-4';
+        userMessageDiv.className = 'flex justify-end gap-3 mb-4';
         userMessageDiv.innerHTML = `
-            <div class="bg-blue-600 text-white px-4 py-2 rounded-lg max-w-xs lg:max-w-md">
-                ${message}
+            <div class="max-w-xs md:max-w-md">
+                <div class="bg-blue-600 text-white px-4 py-3 rounded-lg">
+                    ${message}
+                </div>
+            </div>
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                👤
             </div>
         `;
         chatBody.appendChild(userMessageDiv);
 
-        // Show loading
-        loadingMessage.classList.remove('hidden');
+        // Create loading message and append to chat body
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'flex items-start gap-3 mb-4';
+        loadingDiv.id = 'current-loading';
+        loadingDiv.innerHTML = `
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                🤖
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center gap-2">
+                    <div class="animate-pulse flex gap-1">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animation-delay-200"></div>
+                        <div class="w-2 h-2 bg-gray-400 rounded-full animation-delay-400"></div>
+                    </div>
+                    <span class="text-gray-500 text-sm">Robot Golla denkt nach...</span>
+                </div>
+            </div>
+        `;
+        chatBody.appendChild(loadingDiv);
         chatInput.value = '';
-        chatBody.scrollTop = chatBody.scrollHeight;
+        
+        // Smooth scroll only if needed
+        if (chatBody.scrollHeight > chatBody.clientHeight) {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
 
         // Call real AI endpoint
         fetch('/api/chat/submit', {
@@ -103,24 +149,20 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            loadingMessage.classList.add('hidden');
-            
-            if (data.success) {
-                const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'flex mb-4';
-                botMessageDiv.innerHTML = `
-                    <div class="flex items-start">
-                        <div class="bg-gray-200 rounded-full w-8 h-8 flex items-center justify-content-center text-lg mr-3">
-                            🤖
-                        </div>
-                        <div class="bg-gray-100 px-4 py-3 rounded-lg max-w-2xl">
-                            <div class="text-gray-700 space-y-2">
-                                ${formatMarkdown(data.response)}
-                            </div>
+            // Find and replace the current loading message
+            const currentLoading = document.getElementById('current-loading');
+            if (currentLoading && data.success) {
+                currentLoading.innerHTML = `
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        🤖
+                    </div>
+                    <div class="flex-1 bg-gray-50 rounded-lg p-4 max-w-2xl">
+                        <div class="text-gray-700 leading-relaxed">
+                            ${formatMarkdown(data.response)}
                         </div>
                     </div>
                 `;
-                chatBody.appendChild(botMessageDiv);
+                currentLoading.removeAttribute('id'); // Remove id so next loading gets a fresh one
                 
                 // Check if response is the sleep message (rate limited)
                 if (data.response.includes('schlafen komm morgen wieder')) {
@@ -130,20 +172,49 @@ document.addEventListener('DOMContentLoaded', function() {
                         robotImage.src = '/robot-sleeping.png';
                     }
                     // Hide the input form
-                    const inputContainer = document.querySelector('.border-t.bg-white.p-4');
+                    const inputContainer = document.querySelector('.border-t.border-gray-200.bg-gray-50');
                     if (inputContainer) {
                         inputContainer.style.display = 'none';
                     }
                 }
-            } else {
-                alert('Fehler beim Senden der Nachricht');
+            } else if (currentLoading) {
+                // Replace loading with error message
+                currentLoading.innerHTML = `
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        ❌
+                    </div>
+                    <div class="flex-1 bg-red-50 border border-red-200 rounded-lg p-4 max-w-2xl">
+                        <div class="text-red-700">
+                            Entschuldigung, es ist ein Fehler aufgetreten. Bitte versuche es später erneut.
+                        </div>
+                    </div>
+                `;
+                currentLoading.removeAttribute('id');
             }
-            chatBody.scrollTop = chatBody.scrollHeight;
+            
+            // Smooth scroll to bottom
+            if (chatBody.scrollHeight > chatBody.clientHeight) {
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
         })
         .catch(error => {
-            loadingMessage.classList.add('hidden');
             console.error('Error:', error);
-            alert('Ein Fehler ist aufgetreten');
+            
+            // Replace loading with network error
+            const currentLoading = document.getElementById('current-loading');
+            if (currentLoading) {
+                currentLoading.innerHTML = `
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                        ⚠️
+                    </div>
+                    <div class="flex-1 bg-red-50 border border-red-200 rounded-lg p-4 max-w-2xl">
+                        <div class="text-red-700">
+                            Netzwerkfehler: Bitte überprüfe deine Internetverbindung und versuche es erneut.
+                        </div>
+                    </div>
+                `;
+                currentLoading.removeAttribute('id');
+            }
         });
     }
 
