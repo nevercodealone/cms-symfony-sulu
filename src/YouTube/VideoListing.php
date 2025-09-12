@@ -24,11 +24,16 @@ final readonly class VideoListing
      */
     public function getVideos(string $channelHandle, int $maxResults): \Generator
     {
-        $playlistId = $this->getUploadsPlaylistId($channelHandle);
-
-        $this->logger->info(
-            sprintf('Uploads playlist ID for channel %s: %s', $channelHandle, $playlistId)
-        );
+        // Check if it's a playlist ID (starts with PL) or channel handle
+        if (str_starts_with($channelHandle, 'PL')) {
+            $playlistId = $channelHandle;
+            $this->logger->info(sprintf('Using playlist ID directly: %s', $playlistId));
+        } else {
+            $playlistId = $this->getUploadsPlaylistId($channelHandle);
+            $this->logger->info(
+                sprintf('Uploads playlist ID for channel %s: %s', $channelHandle, $playlistId)
+            );
+        }
 
         yield from $this->loadVideos($playlistId, $maxResults);
     }

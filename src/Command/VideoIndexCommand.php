@@ -24,19 +24,24 @@ final class VideoIndexCommand extends Command
 
     protected function configure(): void
     {
-        $this->addArgument('channelHandle', InputArgument::OPTIONAL, 'Handle of the YouTube channel', '@NeverCodeAlone');
+        $this->addArgument('source', InputArgument::OPTIONAL, 'YouTube channel handle or playlist ID', 'PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g');
         $this->addOption('limit', 'l', InputOption::VALUE_REQUIRED, 'Maximum number of videos', 100);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $channelHandle = $input->getArgument('channelHandle');
+        $source = $input->getArgument('source');
         $limit = (int) $input->getOption('limit');
         $io->title('Index Videos');
-        $io->comment('Indexing videos from the Never Code Alone YouTube channel');
+        
+        if (str_starts_with($source, 'PL')) {
+            $io->comment(sprintf('Indexing videos from playlist: %s', $source));
+        } else {
+            $io->comment(sprintf('Indexing videos from channel: %s', $source));
+        }
 
-        $this->indexer->index($channelHandle, $limit);
+        $this->indexer->index($source, $limit);
 
         $io->success('Done.');
 
