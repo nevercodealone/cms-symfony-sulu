@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller\Website;
 
 use App\Chat\Chat;
-use App\Chat\RelevanceChecker;
 use App\Entity\ChatMessage;
 use App\Repository\ChatMessageRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,8 +18,7 @@ class ChatApiController extends AbstractController
     public function submitMessage(
         Request $request, 
         Chat $chat,
-        ChatMessageRepository $chatMessageRepository,
-        RelevanceChecker $relevanceChecker
+        ChatMessageRepository $chatMessageRepository
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $message = $data['message'] ?? '';
@@ -43,24 +41,6 @@ class ChatApiController extends AbstractController
             ]);
         }
         
-        // Check if message is relevant to YouTube channel content
-        if (!$relevanceChecker->isRelevantToYouTubeChannel($message)) {
-            // Save the irrelevant message to database
-            $chatMessage = new ChatMessage();
-            $chatMessage->setUserIp($userIp);
-            $chatMessage->setSessionId($sessionId);
-            $chatMessage->setQuestion($message);
-            $chatMessage->setAnswer('Das weiß ich leider nicht.');
-            $chatMessage->setResponseTime(50); // Quick response time for filtered messages
-            $chatMessage->setLocale($locale);
-            $chatMessageRepository->save($chatMessage, true);
-            
-            return new JsonResponse([
-                'success' => true,
-                'response' => 'Das weiß ich leider nicht.'
-            ]);
-        }
-        
         // Track response time
         $startTime = microtime(true);
         
@@ -71,6 +51,17 @@ class ChatApiController extends AbstractController
             // Get the last assistant message
             $lastMessage = end($messages);
             $responseContent = $lastMessage->content;
+            
+            // Check if response contains a video link
+            $hasVideoLink = str_contains($responseContent, 'youtube.com') || 
+                           str_contains($responseContent, 'youtu.be') ||
+                           str_contains($responseContent, 'Video:') ||
+                           str_contains($responseContent, 'video');
+            
+            // If no video found in response, append message
+            if (!$hasVideoLink && !str_contains($responseContent, 'kein Video')) {
+                $responseContent .= "\n\nDazu habe ich leider kein Video gefunden.";
+            }
             
             // Calculate response time in milliseconds
             $responseTime = (int)((microtime(true) - $startTime) * 1000);
