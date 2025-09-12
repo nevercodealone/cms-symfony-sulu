@@ -73,13 +73,13 @@ dumpfinder:
     - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/
     - docker cp $SHORTCODE-web:/var/www/html/public/uploads /tmp/public-uploads
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
-    - docker cp /tmp/public-uploads/. $SHORTCODE-web:/var/www/html/public/uploads
+    - docker cp /tmp/public-uploads/. $SHORTCODE1-web:/var/www/html/public/uploads
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
+    - docker exec --user www-data $SHORTCODE1-web php bin/console app:video:clear-index
+    - docker exec --user www-data $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 10
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
-    - docker exec $SHORTCODE1-web php bin/console app:video:clear-index
-    - docker exec $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 10
 
 deploy_stage:
   stage: deploy_stage
@@ -133,10 +133,10 @@ deploy_branch:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
+    - docker exec --user www-data $SHORTCODE1-web php bin/console app:video:clear-index
+    - docker exec --user www-data $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 150
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
-    - docker exec $SHORTCODE1-web php bin/console app:video:clear-index
-    - docker exec $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 150
   environment:
     name: live
     url: https://$URL
