@@ -121,4 +121,23 @@ services:
         arguments:
             $eventDispatcher: '@event_dispatcher'
         public: true
+    
+    # AI Commands with explicit database connection
+    App\Command\AI\QuickGenerateCommand:
+        arguments:
+            $aiPlatform: '@App\AI\Platform\AIPlatform'
+            $connection: '@doctrine.dbal.default_connection'
+        tags: ['console.command']
+    
+    App\Command\AI\GenerateCommand:
+        arguments:
+            $aiPlatform: '@App\AI\Platform\AIPlatform'
+            $connection: '@doctrine.dbal.default_connection'
+        tags: ['console.command']
+    
+    App\Command\AI\InteractiveGenerateCommand:
+        arguments:
+            $aiPlatform: '@App\AI\Platform\AIPlatform'
+            $connection: '@doctrine.dbal.default_connection'
+        tags: ['console.command']
 
