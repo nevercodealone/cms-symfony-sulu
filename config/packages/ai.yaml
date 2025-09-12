@@ -38,13 +38,16 @@ ai:
             platform: 'ai.platform.openai'
             model:
                 class: 'Symfony\AI\Platform\Bridge\OpenAi\Embeddings'
-                name: 'text-embedding-ada-002'
+                name: 'text-embedding-3-small'
 
     agent:
         youtube_bot:
             model:
                 class: 'Symfony\AI\Platform\Bridge\OpenAi\Gpt'
                 name: 'gpt-4o-mini'
+                options:
+                    temperature: 0.3
+                    max_tokens: 200
             system_prompt: |
                 Du bist Robot Golla, ein Chatbot für "Never Code Alone" YouTube-Videos.
                 Verwende IMMER "du"-Ansprache. Suche mit "video_search" nach relevanten Videos.
