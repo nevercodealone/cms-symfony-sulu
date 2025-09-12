@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- PHPUnit configuration for unit tests only -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+         bootstrap="tests/bootstrap.php">
+    
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./src/Command/AI</directory>
+        </include>
+    </coverage>
+    
+    <testsuites>
+        <testsuite name="Unit Tests">
+            <directory>./tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <ini name="error_reporting" value="-1" />
+        <server name="APP_ENV" value="test" />
+        <server name="SHELL_VERBOSITY" value="-1" />
+        <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
+        <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" />
+        <env name="GEMINI_API_KEY" value="test-key" />
+        <env name="GEMINI_MODEL" value="gemini-1.5-flash" />
+    </php>
+</phpunit>

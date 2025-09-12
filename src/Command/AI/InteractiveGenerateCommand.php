@@ -75,7 +75,7 @@ class InteractiveGenerateCommand extends Command
             '- CMF Path: /cmf/example/contents/nca-php-glossar/class-leak'
         ]);
 
-        $pagePath = $this->askWithRetry($io, 'Target Sulu Page (URL or CMF Path)', 
+        $pagePath = $this->askWithRetry($io, $input, 'Target Sulu Page (URL or CMF Path)', 
             $input->getOption('page'), 
             function($value) {
                 return !empty($value);
@@ -84,7 +84,7 @@ class InteractiveGenerateCommand extends Command
         );
         $pagePath = $this->convertToPagePath($pagePath);
 
-        $position = $this->askWithRetry($io, 'Insert Position', 
+        $position = $this->askWithRetry($io, $input, 'Insert Position', 
             $input->getOption('position'), 
             function($value) {
                 $pos = (int) $value;
@@ -94,7 +94,7 @@ class InteractiveGenerateCommand extends Command
         );
         $position = (int) $position;
 
-        $locale = $this->askWithRetry($io, 'Locale', 
+        $locale = $this->askWithRetry($io, $input, 'Locale', 
             $input->getOption('locale'), 
             function($value) {
                 return preg_match('/^[a-z]{2}$/', $value);
@@ -106,7 +106,7 @@ class InteractiveGenerateCommand extends Command
         $io->section('Step 2: Source Information');
         $io->text('What URL should be analyzed for content?');
 
-        $url = $this->askWithRetry($io, 'Source URL (GitHub, docs, articles)', 
+        $url = $this->askWithRetry($io, $input, 'Source URL (GitHub, docs, articles)', 
             null, 
             function($value) {
                 return !empty($value) && filter_var($value, FILTER_VALIDATE_URL);
@@ -124,7 +124,7 @@ class InteractiveGenerateCommand extends Command
             'tutorial' => 'Tutorial (Step-by-step, learning oriented)'
         ], $input->getOption('format'));
 
-        $temperature = $this->askWithRetry($io, 'AI Temperature (0.1-1.0, lower=more focused)', 
+        $temperature = $this->askWithRetry($io, $input, 'AI Temperature (0.1-1.0, lower=more focused)', 
             $input->getOption('temperature'), 
             function($value) {
                 $temp = (float) $value;
@@ -139,7 +139,7 @@ class InteractiveGenerateCommand extends Command
         $io->text('Describe what content you want to create:');
         $io->note('Example: "Erstelle einen deutschen Artikel über die neuesten PHP Features"');
 
-        $customPrompt = $this->askWithRetry($io, 'Content Prompt', 
+        $customPrompt = $this->askWithRetry($io, $input, 'Content Prompt', 
             null, 
             function($value) {
                 return !empty($value);
@@ -256,20 +256,33 @@ class InteractiveGenerateCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function askWithRetry(SymfonyStyle $io, string $question, ?string $default, callable $validator, string $errorMessage): string
+    private function askWithRetry(SymfonyStyle $io, InputInterface $input, string $question, ?string $default, callable $validator, string $errorMessage): string
     {
-        while (true) {
+        $maxRetries = 3;
+        $attempts = 0;
+        
+        while ($attempts < $maxRetries) {
             $answer = $io->ask($question, $default);
             
             if ($validator($answer)) {
                 return $answer;
             }
             
+            $attempts++;
             $io->error($errorMessage);
-            if (!$io->confirm('Try again?', true)) {
-                throw new Exception('Operation cancelled by user');
+            
+            // In non-interactive mode, don't loop forever
+            if ($io->isQuiet() || !$input->isInteractive()) {
+                throw new \InvalidArgumentException("$errorMessage (non-interactive mode, attempt $attempts/$maxRetries)");
+            }
+            
+            // In interactive mode, ask if user wants to try again
+            if ($attempts < $maxRetries && !$io->confirm('Try again?', true)) {
+                throw new \RuntimeException('Operation cancelled by user');
             }
         }
+        
+        throw new \RuntimeException("Failed to get valid input after $maxRetries attempts: $errorMessage");
     }
 
     private function createAnalysisPrompt(string $userPrompt, string $format, string $locale): string
@@ -530,40 +543,82 @@ Erstelle den vollständigen strukturierten Artikel.";
 
     private function convertToPagePath(string $input): string
     {
+        // Already CMF path
         if (strpos($input, '/cmf/') === 0) {
             return $input;
         }
 
-        if (strpos($input, 'https://sulu-never-code-alone.ddev.site/') === 0) {
-            $path = str_replace('https://sulu-never-code-alone.ddev.site/', '', $input);
-            $path = preg_replace('/^[a-z]{2}\//', '', $path);
-            $path = preg_replace('/#.*$/', '', $path);
+        // HTTP/HTTPS URL - extract path after domain
+        if (preg_match('#^https?://[^/]+/(.+)$#', $input, $matches)) {
+            $path = $matches[1];
+            $path = preg_replace('/^[a-z]{2}\//', '', $path);  // Remove locale prefix
+            $path = preg_replace('/#.*$/', '', $path);         // Remove anchors
             $cmfPath = '/cmf/example/contents/' . trim($path, '/');
-            $cmfPath = str_replace('/php-glossar/', '/nca-php-glossar/', $cmfPath);
+            
+            // Check if target page exists, if not try with nca- prefix for php-glossar
+            if (strpos($cmfPath, '/php-glossar/') !== false) {
+                $alternativePath = str_replace('/php-glossar/', '/nca-php-glossar/', $cmfPath);
+                if ($this->pageExists($alternativePath)) {
+                    return $alternativePath;
+                }
+            }
+            
             return $cmfPath;
         }
 
-        if (strpos($input, '/') === 0 && strpos($input, '/cmf/') !== 0) {
+        // Absolute path (starts with /)
+        if (strpos($input, '/') === 0) {
             return '/cmf/example/contents' . $input;
         }
 
+        // Fallback: return as-is
         return $input;
+    }
+
+    private function pageExists(string $pagePath): bool
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT 1 FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default' LIMIT 1",
+                [$pagePath]
+            );
+            return $result !== false;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     private function addContentToSuluPage(string $pagePath, array $content, int $position, string $locale): bool
     {
+        // Validate input parameters (let these bubble up as InvalidArgumentException)
+        if (empty($pagePath)) {
+            throw new \InvalidArgumentException("Page path cannot be empty");
+        }
+        if (!isset($content['type']) || !isset($content['headline']) || !isset($content['items'])) {
+            throw new \InvalidArgumentException("Content must have 'type', 'headline', and 'items' keys");
+        }
+        if ($position < 0) {
+            throw new \InvalidArgumentException("Position must be non-negative, got: $position");
+        }
+        if (empty($locale)) {
+            throw new \InvalidArgumentException("Locale cannot be empty");
+        }
+        
         try {
+
             $result = $this->connection->fetchAssociative(
                 "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
                 [$pagePath]
             );
 
             if (!$result) {
-                return false;
+                throw new \RuntimeException("Page not found at path '$pagePath' in default workspace");
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            if (!$xml->loadXML($result['props'])) {
+                throw new \RuntimeException("Failed to parse XML content for page '$pagePath'");
+            }
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -575,12 +630,21 @@ Erstelle den vollständigen strukturierten Artikel.";
                 // Format 1: Serialized blocks (newer format)
                 return $this->addContentSerializedFormat($xml, $xpath, $content, $position, $locale, $pagePath);
             } else {
+                // Check if the page has any locale-specific content at all
+                $anyLocaleBlocks = $xpath->query('//sv:property[starts-with(@sv:name, "i18n:' . $locale . '-")]');
+                if ($anyLocaleBlocks->length === 0) {
+                    throw new \RuntimeException("No content found for locale '$locale' on page '$pagePath'. Available locales might be different.");
+                }
                 // Format 2: Individual XML properties (older format)
                 return $this->addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath);
             }
 
         } catch (Exception $e) {
-            return false;
+            throw new \RuntimeException(
+                "Failed to add content to Sulu page at path '$pagePath' (locale: $locale, position: $position): " . $e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 
@@ -611,6 +675,9 @@ Erstelle den vollständigen strukturierten Artikel.";
         if ($lengthNodes->length > 0) {
             $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = count($updatedBlocks);
         }
+
+        // Update Sulu publishing timestamps and metadata
+        $this->updateSuluPublishingMetadata($xml, $xpath, $locale);
 
         $updatedXml = $xml->saveXML();
 
@@ -649,6 +716,9 @@ Erstelle den vollständigen strukturierten Artikel.";
         // Update the blocks length
         $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $currentLength + 1;
 
+        // Update Sulu publishing timestamps and metadata
+        $this->updateSuluPublishingMetadata($xml, $xpath, $locale);
+
         // Save to database
         $updatedXml = $xml->saveXML();
 
@@ -662,6 +732,41 @@ Erstelle den vollständigen strukturierten Artikel.";
         );
 
         return true;
+    }
+
+    private function updateSuluPublishingMetadata($xml, $xpath, $locale): void
+    {
+        $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
+        $currentTime = (new \DateTime())->format('Y-m-d\TH:i:s.v\+00:00');
+        
+        // Update changed timestamp
+        $changedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-changed"]');
+        if ($changedNodes->length > 0) {
+            $changedNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $currentTime;
+        }
+        
+        // Update changer (user ID 1 for system)
+        $changerNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-changer"]');
+        if ($changerNodes->length > 0) {
+            $changerNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = '1';
+        }
+        
+        // Update published timestamp to mark as published
+        $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-published"]');
+        if ($publishedNodes->length > 0) {
+            $publishedNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $currentTime;
+        } else {
+            // Create published property if it doesn't exist
+            $root = $xml->documentElement;
+            $publishedProperty = $xml->createElementNS($svNamespace, 'sv:property');
+            $publishedProperty->setAttributeNS($svNamespace, 'sv:name', "i18n:$locale-published");
+            $publishedProperty->setAttributeNS($svNamespace, 'sv:type', 'Date');
+            $publishedProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
+            $publishedValue = $xml->createElementNS($svNamespace, 'sv:value', $currentTime);
+            $publishedValue->setAttribute('length', strlen($currentTime));
+            $publishedProperty->appendChild($publishedValue);
+            $root->appendChild($publishedProperty);
+        }
     }
 
     private function shiftBlockProperties($xml, $xpath, $locale, $fromIndex, $toIndex): void
@@ -723,7 +828,7 @@ Erstelle den vollständigen strukturierten Artikel.";
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:type', 'Long');
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
             $itemsLengthValue = $xml->createElementNS($svNamespace, 'sv:value', count($content['items']));
-            $itemsLengthValue->setAttribute('length', strlen(count($content['items'])));
+            $itemsLengthValue->setAttribute('length', strlen((string)count($content['items'])));
             $itemsLengthProperty->appendChild($itemsLengthValue);
             $root->appendChild($itemsLengthProperty);
 

@@ -1,47 +1,57 @@
-# Sulu CMS Project
+# Never Code Alone (NCA) Backend
+A fully functional Sulu skeleton CMS with extended features for running Never Code Alone platform.
 
-This is the GitHub repository for the [nevercodealone.de](https://nevercodealone.de) project.
+## DDEV local Docker setup
 
-The project utilizes the Sulu CMS, a flexible Symfony content management system. Sulu provides a model-view-controller framework and a wide range of features including multilingual support and room for extension.
+```shell
+# Setup
+ddev start && ddev exec composer install
+ddev create-db && ddev php bin/console sulu:build dev --no-interaction
 
-The project follows the best practices for web accessibility. Web accessibility ensures that the content is accessible on a wide range of devices and requires thoughtful and deliberate action to ensure no visitor is excluded.
+# Admin access
+open https://sulu-never-code-alone.ddev.site/admin
 
-## Development Environment
-We use DDEV for our local development. DDEV is an open-source tool that uses Docker to build local development environments.
+# Create new admin
+ddev php bin/console sulu:security:user:create --no-interaction
 
-```bash
-mkdir my-sulu-site && cd my-sulu-site
-ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
-ddev start
-ddev composer create sulu/skeleton
-```
-[DDEV docs quickstart Sulu section](https://github.com/ddev/ddev/blob/master/docs/content/users/quickstart.md#sulu)
+# Frontend
+ddev launch
 
-## Building the Project
-
-We employ Webpack for handling all front-end resources. JavaScript, Stylesheets, Images and other files are all managed by Webpack.
-
-## Running The Project
-
-After setting up DDEV and Webpack, follow below steps:
-
-* Clone the project
-* Run `ddev start`
-* Navigate to the project url provided by DDEV in your web browser
-
-## Running Webpack
-Builds the project and watches for changes. This is the recommended way to develop.
-```
-npm run watch
+# Remove Setup
+ddev delete --omit-snapshot
 ```
 
-Build the project assets for production.
+## DB export and Import
+
+```shell
+# Export
+ddev export-db >backup.sql.gz
+
+# Import 
+ddev import-db --file=backup.sql.gz
 ```
+
+## Prod deploy and requirements
+PHP >= 8.2
+Mysql >= 8.0
+Composer
+NPM
+
+```shell
+composer install --no-dev --optimize-autoloader --no-scripts
+bin/console cache:clear
+npm install
 npm run build
 ```
 
-## Cypress.io website for End-To-End testing
-We use custom and base tests made my [TESTIFy.TEAM](https://www.testify.team/). Visit [Cypress.io](https://www.cypress.io/) for more info.
+## Local deployment for testing
+
+```shell
+bin/console server:run
+
+## or php builtin server
+php -S localhost:8000 -t public
+```
 
 ## YouTube playlist with over 50 german tutorial videos.
 Here is a great read on Symfony CMS Sulu:
@@ -242,9 +252,7 @@ ddev exec bin/console ai:content:quick \
 - **Dual storage support**: Handles both serialized and XML property formats
 - **Proper error handling**: Symfony console provides robust error handling and user feedback
 
-### Migration from Standalone CLI
-
-The old standalone PHP scripts have been replaced with Symfony console commands:
+### Migration Notes
 
 | Old Script | New Command | Notes |
 |------------|-------------|-------|
@@ -254,12 +262,27 @@ The old standalone PHP scripts have been replaced with Symfony console commands:
 
 All functionality remains the same, but with better error handling, dependency injection, and Symfony integration.
 
+## Running Tests
 
-### Offical YouTube content creator for Browser Stack
-For End-To-End testing, BrowserStack is utilized. Visit [BrowserStack](https://www.browserstack.com/) for more info.
+Execute PHP unit tests:
+```bash
+ddev exec vendor/bin/phpunit
+```
 
-### Feedback/Contribution
-Feel free to give your feedback or to contribute!
+## Cache and Performance
 
-### Who is behind this project?
-This project is maintained by [nevercodealone.de](https://nevercodealone.de) and [TESTIFy.TEAM](https://www.testify.team/) and [Roland Golla](https://rolandgolla.de/).
+Clear Symfony cache:
+```bash
+ddev exec bin/console cache:clear
+```
+
+Warm up cache:
+```bash
+ddev exec bin/console cache:warmup
+```
+
+## Documentation
+
+- [Sulu Documentation](https://docs.sulu.io/)
+- [Symfony Documentation](https://symfony.com/doc/current/index.html)
+- [DDEV Documentation](https://ddev.readthedocs.io/)

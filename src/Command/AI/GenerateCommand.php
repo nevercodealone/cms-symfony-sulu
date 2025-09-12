@@ -511,18 +511,35 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
 
     private function addContentToSuluPage(string $pagePath, array $content, int $position, string $locale): bool
     {
+        // Validate input parameters (let these bubble up as InvalidArgumentException)
+        if (empty($pagePath)) {
+            throw new \InvalidArgumentException("Page path cannot be empty");
+        }
+        if (!isset($content['type']) || !isset($content['headline']) || !isset($content['items'])) {
+            throw new \InvalidArgumentException("Content must have 'type', 'headline', and 'items' keys");
+        }
+        if ($position < 0) {
+            throw new \InvalidArgumentException("Position must be non-negative, got: $position");
+        }
+        if (empty($locale)) {
+            throw new \InvalidArgumentException("Locale cannot be empty");
+        }
+        
         try {
+
             $result = $this->connection->fetchAssociative(
                 "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
                 [$pagePath]
             );
             
             if (!$result) {
-                return false;
+                throw new \RuntimeException("Page not found at path '$pagePath' in default workspace");
             }
             
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            if (!$xml->loadXML($result['props'])) {
+                throw new \RuntimeException("Failed to parse XML content for page '$pagePath'");
+            }
             
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -534,12 +551,21 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
                 // Format 1: Serialized blocks (newer format)
                 return $this->addContentSerializedFormat($xml, $xpath, $content, $position, $locale, $pagePath);
             } else {
+                // Check if the page has any locale-specific content at all
+                $anyLocaleBlocks = $xpath->query('//sv:property[starts-with(@sv:name, "i18n:' . $locale . '-")]');
+                if ($anyLocaleBlocks->length === 0) {
+                    throw new \RuntimeException("No content found for locale '$locale' on page '$pagePath'. Available locales might be different.");
+                }
                 // Format 2: Individual XML properties (older format)
                 return $this->addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath);
             }
             
         } catch (Exception $e) {
-            return false;
+            throw new \RuntimeException(
+                "Failed to add content to Sulu page at path '$pagePath' (locale: $locale, position: $position): " . $e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 
@@ -682,7 +708,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:type', 'Long');
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
             $itemsLengthValue = $xml->createElementNS($svNamespace, 'sv:value', count($content['items']));
-            $itemsLengthValue->setAttribute('length', strlen(count($content['items'])));
+            $itemsLengthValue->setAttribute('length', strlen((string)count($content['items'])));
             $itemsLengthProperty->appendChild($itemsLengthValue);
             $root->appendChild($itemsLengthProperty);
             
