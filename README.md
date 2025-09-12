@@ -47,6 +47,32 @@ We use custom and base tests made my [TESTIFy.TEAM](https://www.testify.team/). 
 Here is a great read on Symfony CMS Sulu:
 [Roland Golla - YouTube Playlist](https://www.youtube.com/playlist?list=PLKrKzhBjw2Y_bsIrig7rNLCXgZyYGMRgH)
 
+## AI Chat System
+
+Interactive AI chatbot for YouTube video content queries.
+
+### Commands
+
+```bash
+# Clear video index
+ddev exec php bin/console app:video:clear-index
+
+# Index videos from playlist
+ddev exec php bin/console app:video:index [PLAYLIST_ID] --limit 100
+
+# Test video search
+ddev exec php bin/console app:video:query
+```
+
+### Environment Variables
+
+```env
+OPENAI_API_KEY=your-api-key-here
+CHROMADB_HOST=chromadb
+CHROMADB_PORT=8000
+CHROMADB_DATABASE=default_database
+```
+
 ## AI Content Generation System
 
 This project includes an AI-powered content generation system that integrates with Sulu CMS to automatically create and manage content using Google's Gemini AI. The system is built as Symfony console commands for proper integration with the framework.
