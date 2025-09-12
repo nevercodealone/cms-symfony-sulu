@@ -78,6 +78,8 @@ dumpfinder:
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
+    - docker exec $SHORTCODE1-web php bin/console app:video:clear-index
+    - docker exec $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 10
 
 deploy_stage:
   stage: deploy_stage
@@ -133,6 +135,8 @@ deploy_branch:
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
+    - docker exec $SHORTCODE1-web php bin/console app:video:clear-index
+    - docker exec $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 150
   environment:
     name: live
     url: https://$URL
