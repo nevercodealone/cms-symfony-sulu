@@ -1,0 +1,75 @@
+# config/packages/ai.yaml
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Codewithkyrian\ChromaDB\Client:
+        factory: ['@chroma.factory', 'connect']
+
+    chroma.factory:
+        class: Codewithkyrian\ChromaDB\Factory
+        calls:
+            - method: withHost
+              arguments:
+                - 'http://%env(CHROMADB_HOST)%'
+            - method: withPort
+              arguments:
+                - '%env(int:CHROMADB_PORT)%'
+            - method: withDatabase
+              arguments:
+                - '%env(CHROMADB_DATABASE)%'
+            - method: withTenant
+              arguments:
+                - 'default_tenant'
+
+    Symfony\AI\Agent\Toolbox\Tool\SimilaritySearch:
+        $store: '@ai.store.chroma_db.video'
+        $vectorizer: '@ai.vectorizer.openai_embeddings'
+    Symfony\AI\Store\Document\Transformer\TextSplitTransformer: ~
+
+ai:
+    platform:
+        openai:
+            api_key: '%env(OPENAI_API_KEY)%'
+
+    vectorizer:
+        openai_embeddings:
+            platform: 'ai.platform.openai'
+            model:
+                class: 'Symfony\AI\Platform\Bridge\OpenAi\Embeddings'
+                name: 'text-embedding-3-small'
+
+    agent:
+        youtube_bot:
+            model:
+                class: 'Symfony\AI\Platform\Bridge\OpenAi\Gpt'
+                name: 'gpt-4o-mini'
+                options:
+                    temperature: 0.3
+                    max_tokens: 200
+            system_prompt: |
+                Du bist Robot Golla, ein Chatbot für "Never Code Alone" YouTube-Videos.
+                WICHTIG: Du darfst NUR auf Basis der gefundenen Videos antworten!
+                1. Verwende IMMER das Tool "video_search" um relevante Videos zu finden
+                2. Basiere deine Antwort NUR auf den Inhalten der gefundenen Videos
+                3. Wenn keine passenden Videos gefunden werden, sage "Dazu habe ich leider kein Video gefunden"
+                4. Verwende IMMER "du"-Ansprache
+                5. Bei gefundenen Videos: Gib Titel + Link an
+                Antworte kurz und präzise basierend auf den Video-Inhalten.
+            include_tools: true
+            tools:
+                - service: 'Symfony\AI\Agent\Toolbox\Tool\SimilaritySearch'
+                  name: 'video_search'
+                  description: 'Searches for relevant YouTube videos based on a search query.'
+                  method: '__invoke'
+
+    store:
+        chroma_db:
+            video:
+                collection: 'youtube_videos'
+
+    indexer:
+        default:
+            store: 'ai.store.chroma_db.video'
+            vectorizer: 'ai.vectorizer.openai_embeddings'

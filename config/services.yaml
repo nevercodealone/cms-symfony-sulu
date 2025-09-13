@@ -61,6 +61,21 @@ services:
         arguments:
             - '@Google_Client'
     
+    Google\Client:
+        class: Google\Client
+        calls:
+            - method: setApplicationName
+              arguments:
+                  - 'API Samples'
+            - method: setDeveloperKey
+              arguments:
+                  - '%google_api_key%'
+
+    Google\Service\YouTube:
+        class: Google\Service\YouTube
+        arguments:
+            - '@Google\Client'
+    
     # AI Platform Services
     App\AI\GeminiProvider:
         arguments:
@@ -106,4 +121,23 @@ services:
         arguments:
             $eventDispatcher: '@event_dispatcher'
         public: true
+    
+    # AI Commands with explicit database connection
+    App\Command\AI\QuickGenerateCommand:
+        arguments:
+            $aiPlatform: '@App\AI\Platform\AIPlatform'
+            $connection: '@doctrine.dbal.default_connection'
+        tags: ['console.command']
+    
+    App\Command\AI\GenerateCommand:
+        arguments:
+            $aiPlatform: '@App\AI\Platform\AIPlatform'
+            $connection: '@doctrine.dbal.default_connection'
+        tags: ['console.command']
+    
+    App\Command\AI\InteractiveGenerateCommand:
+        arguments:
+            $aiPlatform: '@App\AI\Platform\AIPlatform'
+            $connection: '@doctrine.dbal.default_connection'
+        tags: ['console.command']
 

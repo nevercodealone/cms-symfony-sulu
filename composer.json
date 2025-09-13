@@ -21,20 +21,24 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-zip": "*",
+        "codewithkyrian/chromadb-php": "^0.4.0",
         "doctrine/dbal": "^2.10",
         "doctrine/doctrine-bundle": "^2.3",
         "doctrine/doctrine-fixtures-bundle": "^3.4",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "friendsofsymfony/http-cache-bundle": "^2.10",
         "friendsofsymfony/rest-bundle": "^3.4",
-        "google/apiclient": "^2.9",
+        "google/apiclient": "*",
         "handcraftedinthealps/zendsearch": "^2.1",
         "jackalope/jackalope-doctrine-dbal": "^1.6|^2.0",
+        "mrmysql/youtube-transcript": "*",
+        "openai-php/client": "dev-main",
         "phpcr/phpcr-migrations-bundle": "^1.2",
         "robole/sulu-ai-translator-bundle": "^1.1",
         "stof/doctrine-extensions-bundle": "^1.7",
         "sulu/headless-bundle": "^0.10.0",
         "sulu/sulu": "2.6.3",
+        "symfony/ai-bundle": "@dev",
         "symfony/config": "^6.0",
         "symfony/dotenv": "^6.0",
         "symfony/flex": "^1.12",
@@ -43,9 +47,11 @@
         "symfony/monolog-bundle": "^3.7",
         "symfony/security-bundle": "^6.0",
         "symfony/twig-bundle": "^6.0",
+        "symfony/ux-live-component": "^2.30",
         "symfony/webpack-encore-bundle": "^1.16",
         "twig/extra-bundle": "^3.3",
-        "twig/intl-extra": "^3.3"
+        "twig/intl-extra": "^3.3",
+        "twig/markdown-extra": "4.x-dev"
     },
     "require-dev": {
         "captainhook/captainhook": "^5.9",
@@ -166,9 +172,10 @@
     },
     "extra": {
         "symfony": {
-            "require": "6.3.*",
+            "require": "6.4.*",
             "allow-contrib": true
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "dev",
+    "prefer-stable": false
 }

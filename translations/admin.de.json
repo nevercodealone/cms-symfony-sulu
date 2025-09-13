@@ -10,5 +10,22 @@
     "app.album_selection_label": "{count} {count, plural, =1 {Album} other {Alben}} ausgewählt",
     "app.select_albums": "Alben auswählen",
     "app.no_album_selected": "Kein Album ausgewählt",
-    "app.select_album": "Album auswählen"
+    "app.select_album": "Album auswählen",
+    "app.chat_messages": "Chat-Nachrichten",
+    "app.chat_message": "Chat-Nachricht",
+    "app.chat_message.details": "Details",
+    "app.chat_message.user_ip": "Benutzer-IP",
+    "app.chat_message.session_id": "Sitzungs-ID",
+    "app.chat_message.question": "Frage",
+    "app.chat_message.answer": "Antwort",
+    "app.chat_message.created_at": "Erstellt am",
+    "app.chat_message.response_time": "Antwortzeit",
+    "app.chat_message.response_time_ms": "Antwortzeit (ms)",
+    "app.chat_message.locale": "Sprache",
+    "app.chat_message.input_tokens": "Eingabe-Token",
+    "app.chat_message.output_tokens": "Ausgabe-Token",
+    "app.chat_message.total_tokens": "Gesamt-Token",
+    "app.chat_message.basic_information": "Grundinformationen",
+    "app.chat_message.conversation": "Konversation",
+    "app.chat_message.metrics": "Metriken"
 }

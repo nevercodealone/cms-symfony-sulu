@@ -15,6 +15,10 @@ sulu_admin:
         routes:
           list: 'app.get_client_request_refactoring_list'
           detail: 'app.get_client_request_refactoring'
+      chat_messages:
+        routes:
+          list: 'app.get_chat_message_list'
+          detail: 'app.get_chat_message'
     field_type_options:
       selection:
         album_selection:
