@@ -41,7 +41,7 @@ final class VideoIndexCommand extends Command
             $io->comment(sprintf('Indexing videos from channel: %s', $source));
         }
 
-        $this->indexer->index($source, $limit);
+        $this->indexer->index($source, $limit, $output);
 
         $io->success('Done.');
 
