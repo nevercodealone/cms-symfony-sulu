@@ -30,7 +30,7 @@ final readonly class Indexer
         }
 
         // Process in batches to avoid API rate limits
-        $batchSize = 5; // Small batch size to avoid OpenAI rate limits
+        $batchSize = 20; // Increased batch size for faster processing
         $batches = array_chunk($documents, $batchSize);
         $totalBatches = count($batches);
         $successCount = 0;
@@ -58,9 +58,9 @@ final readonly class Indexer
                 }
                 
                 // Add delay between batches to respect rate limits
-                // Longer delay for larger batches
-                if ($batchIndex < $totalBatches - 1) {
-                    $delay = 2; // 2 seconds between batches
+                // Only add delay every 5th batch to speed up processing
+                if ($batchIndex < $totalBatches - 1 && ($batchIndex + 1) % 5 === 0) {
+                    $delay = 3; // 3 seconds pause every 5 batches
                     if ($output) {
                         $output->writeln(sprintf('  Waiting %d seconds before next batch...', $delay));
                     }
