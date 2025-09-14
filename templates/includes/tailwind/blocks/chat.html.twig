@@ -14,9 +14,9 @@
     </div>
 
     <!-- Chat container -->
-    <div class="bg-white rounded-b-lg shadow-lg flex flex-col" style="height: calc(100vh - 200px); max-height: 600px;">
+    <div class="bg-white rounded-b-lg shadow-lg">
         <!-- Chat messages area -->
-        <div id="chat-body" class="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth bg-white">
+        <div id="chat-body" class="p-4 md:p-6 bg-white">
                 {% if messages is defined %}
                     {% for message in messages %}
                         {% include '_message.html.twig' with { message, latest: loop.last } %}
@@ -64,21 +64,164 @@ document.addEventListener('DOMContentLoaded', function() {
     const robotImage = document.getElementById('robot-image');
 
     function formatMarkdown(text) {
-        // Convert markdown to HTML
-        return text
-            // Headers
-            .replace(/### (.*?)$/gm, '<h3 class="font-bold text-lg mt-3 mb-2 text-gray-800">$1</h3>')
-            .replace(/## (.*?)$/gm, '<h2 class="font-bold text-xl mt-4 mb-2 text-gray-800">$1</h2>')
-            .replace(/# (.*?)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-3 text-gray-800">$1</h1>')
-            // Bold
-            .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
-            // Links
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
-            // Lists
-            .replace(/^- (.*?)$/gm, '<li class="ml-4">• $1</li>')
-            .replace(/^\* (.*?)$/gm, '<li class="ml-4">• $1</li>')
-            // Line breaks
-            .replace(/\n/g, '<br>');
+        // Convert markdown to HTML with proper list handling
+        let html = text;
+
+        // Store processed lists to avoid double-wrapping
+        const processedLists = [];
+
+        // First pass: Process headers
+        html = html.replace(/^### (.*?)$/gm, '<h3 class="font-bold text-lg mt-3 mb-2 text-gray-800">$1</h3>');
+        html = html.replace(/^## (.*?)$/gm, '<h2 class="font-bold text-xl mt-4 mb-2 text-gray-800">$1</h2>');
+        html = html.replace(/^# (.*?)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-3 text-gray-800">$1</h1>');
+
+        // Handle incomplete markdown links FIRST (before processing complete ones)
+        // Match [text](incomplete-url) patterns
+        html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]*$)/gm, '$1');
+        html = html.replace(/\[([^\]]+)\]\((https?:\/\/$)/gm, '$1');
+        html = html.replace(/\[([^\]]+)\]\(([^)]*$)/gm, '$1');
+
+        // Process complete links with special handling for YouTube videos
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, text, url) {
+            // Skip incomplete URLs
+            if (!url || url === 'https://' || url === 'http://' || url.endsWith('://')) {
+                return text; // Return just the text without link
+            }
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                return '<a href="' + url + '" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline font-medium">📺 ' + text + '</a>';
+            }
+            return '<a href="' + url + '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">' + text + '</a>';
+        });
+
+        // Bold text (must come before italic to avoid conflicts)
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
+
+        // Italic text - only match if it has content and proper closing
+        html = html.replace(/\*([^*\n]+)\*/g, '<em class="italic">$1</em>');
+
+        // Code blocks
+        html = html.replace(/```(.*?)```/gs, '<pre class="bg-gray-100 rounded p-3 my-2 overflow-x-auto"><code>$1</code></pre>');
+        html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>');
+
+        // Split into lines for better list processing
+        const lines = html.split('\n');
+        const processedLines = [];
+        let currentListItems = [];
+        let listType = null; // 'ordered' or 'unordered'
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const orderedMatch = line.match(/^(\d+)\.\s+(.*)$/);
+            const unorderedMatch = line.match(/^[-*]\s+(.*)$/);
+            const indentedLine = line.match(/^\s{2,}[-*]\s+(.*)$/); // Indented sub-items
+
+            if (orderedMatch) {
+                // Start or continue ordered list
+                // Only close if switching from unordered to ordered
+                if (currentListItems.length > 0 && listType === 'unordered') {
+                    processedLines.push(`<ul class="list-disc list-inside space-y-3 my-4">${currentListItems.join('')}</ul>`);
+                    currentListItems = [];
+                }
+
+                // Continue or start collecting list item content
+                listType = 'ordered';
+                let itemContent = orderedMatch[2];
+
+                // Look ahead for indented description lines
+                let j = i + 1;
+                const descriptionLines = [];
+                while (j < lines.length) {
+                    const nextLine = lines[j];
+                    // Check if it's an indented line (description)
+                    if (nextLine.match(/^\s{2,}/) && !nextLine.match(/^\s*\d+\./)) {
+                        descriptionLines.push(nextLine.trim());
+                        j++;
+                    } else if (nextLine.trim() === '') {
+                        // Empty line might be part of the item
+                        j++;
+                        if (j < lines.length && lines[j].match(/^\s{2,}/)) {
+                            continue; // Continue if next line is indented
+                        } else {
+                            break; // Stop if not followed by indented content
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                // Add description lines to item content
+                if (descriptionLines.length > 0) {
+                    itemContent += '<div class="mt-2 ml-4 text-sm text-gray-600">' + descriptionLines.join('<br>') + '</div>';
+                    i = j - 1; // Skip processed lines
+                }
+
+                currentListItems.push('<li class="mb-2">' + itemContent + '</li>');
+            } else if (unorderedMatch && !indentedLine) {
+                // Start or continue unordered list
+                // Only close if switching from ordered to unordered
+                if (currentListItems.length > 0 && listType === 'ordered') {
+                    processedLines.push(`<ol class="list-decimal list-inside space-y-3 my-4">${currentListItems.join('')}</ol>`);
+                    currentListItems = [];
+                }
+
+                listType = 'unordered';
+                currentListItems.push('<li>' + unorderedMatch[1] + '</li>');
+            } else if (indentedLine) {
+                // Handle indented sub-items as part of current list item
+                if (currentListItems.length > 0) {
+                    // Add to the last list item as a sub-point
+                    const lastIndex = currentListItems.length - 1;
+                    currentListItems[lastIndex] = currentListItems[lastIndex].replace('</li>', '<br><span class="ml-4 text-sm">• ' + indentedLine[1] + '</span></li>');
+                }
+            } else {
+                // Not a list item - output any pending list first
+                if (currentListItems.length > 0 && listType) {
+                    const tag = listType === 'ordered' ? 'ol' : 'ul';
+                    const listClass = listType === 'ordered' ? 'list-decimal' : 'list-disc';
+                    processedLines.push(`<${tag} class="${listClass} list-inside space-y-3 my-4">${currentListItems.join('')}</${tag}>`);
+                    currentListItems = [];
+                    listType = null;
+                }
+
+                // Add non-list content
+                if (line.trim()) {
+                    processedLines.push(line);
+                } else if (i > 0 && i < lines.length - 1) {
+                    processedLines.push('');
+                }
+            }
+        }
+
+        // Close any remaining list
+        if (currentListItems.length > 0 && listType) {
+            const tag = listType === 'ordered' ? 'ol' : 'ul';
+            const listClass = listType === 'ordered' ? 'list-decimal' : 'list-disc';
+            processedLines.push(`<${tag} class="${listClass} list-inside space-y-3 my-4">${currentListItems.join('')}</${tag}>`);
+        }
+
+        // Join processed lines
+        html = processedLines.join('\n');
+
+        // Convert remaining line breaks to <br> for paragraphs
+        html = html.replace(/\n\n+/g, '</p><p class="mb-3">');
+        html = html.replace(/\n/g, '<br>');
+
+        // Wrap in paragraph tags if not already wrapped
+        if (!html.startsWith('<') || html.startsWith('<br>')) {
+            html = '<p class="mb-3">' + html + '</p>';
+        }
+
+        // Clean up empty paragraphs and fix incomplete tags
+        html = html.replace(/<p class="mb-3"><\/p>/g, '');
+        html = html.replace(/<p class="mb-3"><br><\/p>/g, '');
+        html = html.replace(/<p><\/p>/g, '');
+
+        // Remove any unclosed paragraph tags at the end
+        if (html.endsWith('<p>') || html.endsWith('<p class="mb-3">')) {
+            html = html.substring(0, html.lastIndexOf('<p'));
+        }
+
+        return html;
     }
 
     function sendMessage() {
@@ -126,9 +269,11 @@ document.addEventListener('DOMContentLoaded', function() {
         chatBody.appendChild(loadingDiv);
         chatInput.value = '';
         
-        // Smooth scroll only if needed
-        if (chatBody.scrollHeight > chatBody.clientHeight) {
-            chatBody.scrollTop = chatBody.scrollHeight;
+        // Scroll to the new message
+        const messages = chatBody.querySelectorAll('.flex');
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage) {
+            lastMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
 
         // Call real AI endpoint
@@ -186,9 +331,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentLoading.removeAttribute('id');
             }
             
-            // Smooth scroll to bottom
-            if (chatBody.scrollHeight > chatBody.clientHeight) {
-                chatBody.scrollTop = chatBody.scrollHeight;
+            // Scroll to show the response
+            if (currentLoading) {
+                currentLoading.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }
         })
         .catch(error => {
