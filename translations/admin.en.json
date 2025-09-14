@@ -10,5 +10,22 @@
     "app.album_selection_label": "{count} {count, plural, =1 {album} other {albums}} selected",
     "app.select_albums": "Select albums",
     "app.no_album_selected": "No album selected",
-    "app.select_album": "Select album"
+    "app.select_album": "Select album",
+    "app.chat_messages": "Chat Messages",
+    "app.chat_message": "Chat Message",
+    "app.chat_message.details": "Details",
+    "app.chat_message.user_ip": "User IP",
+    "app.chat_message.session_id": "Session ID",
+    "app.chat_message.question": "Question",
+    "app.chat_message.answer": "Answer",
+    "app.chat_message.created_at": "Created At",
+    "app.chat_message.response_time": "Response Time",
+    "app.chat_message.response_time_ms": "Response Time (ms)",
+    "app.chat_message.locale": "Locale",
+    "app.chat_message.input_tokens": "Input Tokens",
+    "app.chat_message.output_tokens": "Output Tokens",
+    "app.chat_message.total_tokens": "Total Tokens",
+    "app.chat_message.basic_information": "Basic Information",
+    "app.chat_message.conversation": "Conversation",
+    "app.chat_message.metrics": "Metrics"
 }

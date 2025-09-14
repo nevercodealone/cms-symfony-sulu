@@ -38,6 +38,22 @@ services:
       - DEEPL_API_KEY=$DEEPL_API_KEY
       - GEMINI_API_KEY=$GEMINI_API_KEY
       - GEMINI_MODEL=$GEMINI_MODEL
+      - OPENAI_API_KEY=$OPENAI_API_KEY
+      - CHROMADB_HOST=$SHORTCODE1-chromadb
+      - CHROMADB_PORT=8000
+      - CHROMADB_DATABASE=$CHROMADB_DATABASE
+  chromadb:
+    container_name: $SHORTCODE1-chromadb
+    image: chromadb/chroma:0.5.23
+    restart: unless-stopped
+    networks:
+      - db
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
 networks:
   proxy:
     external: true
@@ -45,3 +61,4 @@ networks:
     external: true
 volumes:
   var:
+  chromadb_data:

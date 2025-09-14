@@ -65,6 +65,9 @@ dumpfinder:
   image: docker:latest
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    # Backup ChromaDB data before removing containers
+    - docker exec $SHORTCODE1-chromadb tar czf /tmp/chromadb-backup.tar.gz -C /chroma/chroma . 2>/dev/null || true
+    - docker cp $SHORTCODE1-chromadb:/tmp/chromadb-backup.tar.gz /tmp/chromadb-backup.tar.gz 2>/dev/null || true
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv ||true
     - docker volume rm $SHORTCODE1"_var" ||true
   script:
@@ -73,9 +76,20 @@ dumpfinder:
     - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/
     - docker cp $SHORTCODE-web:/var/www/html/public/uploads /tmp/public-uploads
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
-    - docker cp /tmp/public-uploads/. $SHORTCODE-web:/var/www/html/public/uploads
+    - docker cp /tmp/public-uploads/. $SHORTCODE1-web:/var/www/html/public/uploads
+    # Restore ChromaDB data from backup
+    - docker cp /tmp/chromadb-backup.tar.gz $SHORTCODE1-chromadb:/tmp/chromadb-backup.tar.gz 2>/dev/null || true
+    - docker exec $SHORTCODE1-chromadb tar xzf /tmp/chromadb-backup.tar.gz -C /chroma/chroma 2>/dev/null || true
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
+    # Only index if ChromaDB is empty (first deployment)
+    - |
+      if [ ! -f /tmp/chromadb-backup.tar.gz ]; then
+        echo "No ChromaDB backup found, performing initial indexing..."
+        docker exec --user www-data $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 10
+      else
+        echo "ChromaDB restored from backup, skipping automatic indexing"
+      fi
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
 
@@ -95,6 +109,8 @@ deploy_stage:
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/${PREFIX}_${DB_NAME}
     PREFIX: stage
     GEMINI_MODEL: $GEMINI_MODEL
+    OPENAI_API_KEY: $OPENAI_API_KEY
+    CHROMADB_DATABASE: $CHROMADB_DATABASE
 
 deploy_branch:
   stage: deploy_stage
@@ -113,6 +129,8 @@ deploy_branch:
     URL: $CI_COMMIT_BRANCH.$URL
     PREFIX: $CI_COMMIT_BRANCH
     GEMINI_MODEL: $GEMINI_MODEL
+    OPENAI_API_KEY: $OPENAI_API_KEY
+    CHROMADB_DATABASE: $CHROMADB_DATABASE
 
 .deploy_live:
   stage: deploy_live
@@ -127,6 +145,7 @@ deploy_branch:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
     - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
+    # Production doesn't auto-index - use manual jobs instead
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
   environment:
@@ -137,6 +156,8 @@ deploy_branch:
     SHORTCODE1: $SHORTCODE
     DATABASE_URL: mysql://$DB_USER:$DB_PWD@$DB_HOST:3306/$DB_NAME
     GEMINI_MODEL: $GEMINI_MODEL
+    OPENAI_API_KEY: $OPENAI_API_KEY
+    CHROMADB_DATABASE: $CHROMADB_DATABASE
 
 deploy_live:
   extends: .deploy_live
@@ -165,3 +186,51 @@ cypress_internal_links_test_live:
       when: on_success
   needs:
     - job: deploy_live
+
+# Manual job to index new videos (incremental)
+index_new_videos:
+  stage: deploy_live
+  when: manual
+  tags:
+    - docker2
+  script:
+    - echo "Indexing new videos to ChromaDB..."
+    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit ${INDEX_LIMIT:-20}
+    - echo "Indexing complete"
+  variables:
+    ENVIRONMENT: "stage-"  # Change to "" for production
+    INDEX_LIMIT: "20"      # Number of recent videos to check
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Manual job for full re-index (clear and rebuild)
+reindex_all_videos:
+  stage: deploy_live
+  when: manual
+  tags:
+    - docker2
+  script:
+    - echo "WARNING - This will clear and rebuild the entire video index!"
+    - echo "Clearing existing index..."
+    - docker exec --user www-data ${ENVIRONMENT}ncade-web bash -c "echo yes | php bin/console app:video:clear-index"
+    - echo "Re-indexing all videos..."
+    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit ${INDEX_LIMIT}
+    - echo "Full re-index complete"
+  variables:
+    ENVIRONMENT: "stage-"  # Change to "" for production
+    INDEX_LIMIT: "100"     # Total videos to index
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Scheduled job to check for new videos daily
+index_new_videos_scheduled:
+  stage: deploy_live
+  tags:
+    - docker2
+  script:
+    - echo "Checking for new videos..."
+    - docker exec --user www-data ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 5
+    - docker exec --user www-data stage-ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 5
+    - echo "Daily video check complete"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == "main"'

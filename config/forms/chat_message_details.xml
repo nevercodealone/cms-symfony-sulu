@@ -1,0 +1,122 @@
+<?xml version="1.0" ?>
+<form xmlns="http://schemas.sulu.io/template/template"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
+    <key>chat_message_details</key>
+
+    <properties>
+        <section name="basic">
+            <meta>
+                <title>app.chat_message.basic_information</title>
+            </meta>
+            
+            <properties>
+                <property name="userIp" type="text_line" mandatory="true">
+                    <meta>
+                        <title>app.chat_message.user_ip</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+
+                <property name="sessionId" type="text_line">
+                    <meta>
+                        <title>app.chat_message.session_id</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+
+                <property name="locale" type="text_line">
+                    <meta>
+                        <title>app.chat_message.locale</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+
+                <property name="createdAt" type="text_line">
+                    <meta>
+                        <title>app.chat_message.created_at</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
+
+        <section name="conversation">
+            <meta>
+                <title>app.chat_message.conversation</title>
+            </meta>
+            
+            <properties>
+                <property name="question" type="text_area" mandatory="true">
+                    <meta>
+                        <title>app.chat_message.question</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+
+                <property name="answer" type="text_area" mandatory="true">
+                    <meta>
+                        <title>app.chat_message.answer</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
+
+        <section name="metrics">
+            <meta>
+                <title>app.chat_message.metrics</title>
+            </meta>
+            
+            <properties>
+                <property name="responseTime" type="number">
+                    <meta>
+                        <title>app.chat_message.response_time_ms</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+
+                <property name="inputTokens" type="number">
+                    <meta>
+                        <title>app.chat_message.input_tokens</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+
+                <property name="outputTokens" type="number">
+                    <meta>
+                        <title>app.chat_message.output_tokens</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+
+                <property name="totalTokens" type="number">
+                    <meta>
+                        <title>app.chat_message.total_tokens</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
+            </properties>
+        </section>
+    </properties>
+</form>

@@ -1,0 +1,62 @@
+{% if message.role.value == 'assistant' %}
+    {{ _self.bot(message.content, latest: latest) }}
+{% else %}
+    {{ _self.user(message.content) }}
+{% endif %}
+
+{% macro bot(content, loading = false, latest = false) %}
+    <div class="flex items-start gap-3 mb-4">
+        <img src="/robot.png" alt="Robot Golla" class="w-10 h-10 object-contain rounded-full bg-blue-100 p-1 flex-shrink-0">
+        <div class="flex-1">
+            {% if loading %}
+                <div class="bg-gray-50 rounded-lg p-4 inline-block">
+                    <div class="flex items-center gap-2">
+                        <div class="animate-pulse flex gap-1">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animation-delay-200"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animation-delay-400"></div>
+                        </div>
+                        <span class="text-gray-500 text-sm italic">{{ content }}</span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-gray-50 rounded-lg p-4 max-w-2xl">
+                    <div class="text-gray-700 leading-relaxed">
+                        {% if latest and app.request.xmlHttpRequest %}
+                            <span
+                                    data-controller="symfony--ux-typed"
+                                    data-symfony--ux-typed-show-cursor-value="false"
+                                    data-symfony--ux-typed-type-speed-value="0"
+                                    data-symfony--ux-typed-strings-value="{{ [content|markdown_to_html]|json_encode|e('html_attr') }}"
+                            ></span>
+                        {% else %}
+                            {{ content|markdown_to_html }}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro user(content, loading = false) %}
+    <div class="flex justify-end gap-3 mb-4">
+        <div class="max-w-xs md:max-w-md">
+            {% for item in content %}
+                <div class="bg-blue-600 text-white px-4 py-3 rounded-lg mb-1">
+                    {% if loading %}
+                        <div class="flex items-center gap-2">
+                            <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                            <span class="italic">{{ item.text }}</span>
+                        </div>
+                    {% else %}
+                        {{ item.text }}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+            👤
+        </div>
+    </div>
+{% endmacro %}
