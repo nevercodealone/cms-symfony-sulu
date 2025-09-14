@@ -63,6 +63,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingMessage = document.getElementById('loading-message');
     const robotImage = document.getElementById('robot-image');
 
+    // Load chat history on page load
+    loadChatHistory();
+
     function formatMarkdown(text) {
         // Convert markdown to HTML with proper list handling
         let html = text;
@@ -224,6 +227,76 @@ document.addEventListener('DOMContentLoaded', function() {
         return html;
     }
 
+    function loadChatHistory() {
+        fetch('/api/chat/history')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.messages && data.messages.length > 0) {
+                    // Remove welcome message if exists
+                    const welcome = document.getElementById('welcome');
+                    if (welcome) {
+                        welcome.remove();
+                    }
+
+                    // Display chat history
+                    data.messages.forEach(msg => {
+                        // Add user message
+                        const userMessageDiv = document.createElement('div');
+                        userMessageDiv.className = 'flex justify-end gap-3 mb-4';
+                        userMessageDiv.innerHTML = `
+                            <div class="max-w-xs md:max-w-md">
+                                <div class="bg-blue-600 text-white px-4 py-3 rounded-lg">
+                                    ${msg.question}
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                👤
+                            </div>
+                        `;
+                        chatBody.appendChild(userMessageDiv);
+
+                        // Add bot response
+                        const botMessageDiv = document.createElement('div');
+                        botMessageDiv.className = 'flex items-start gap-3 mb-4';
+                        botMessageDiv.innerHTML = `
+                            <img src="/robot.png" alt="Robot Golla" class="w-10 h-10 object-contain rounded-full bg-blue-100 p-1 flex-shrink-0">
+                            <div class="flex-1 bg-gray-50 rounded-lg p-4 max-w-2xl">
+                                <div class="text-gray-700 leading-relaxed">
+                                    ${formatMarkdown(msg.answer)}
+                                </div>
+                            </div>
+                        `;
+                        chatBody.appendChild(botMessageDiv);
+
+                        // Check if the last message indicates rate limiting
+                        if (msg.answer.includes('schlafen komm morgen wieder')) {
+                            // Change robot image to sleeping
+                            if (robotImage) {
+                                robotImage.src = '/robot-sleeping.png';
+                            }
+                            // Hide input form
+                            const inputContainer = document.querySelector('.border-t.border-gray-200.bg-gray-50');
+                            if (inputContainer) {
+                                inputContainer.style.display = 'none';
+                            }
+                        }
+                    });
+
+                    // Add separator to indicate history vs new messages
+                    const separator = document.createElement('div');
+                    separator.className = 'chat-history-separator text-center text-xs text-gray-400 my-3';
+                    separator.innerHTML = '<hr class="border-gray-200 mb-2"><span class="bg-white px-2">Chat-Verlauf geladen</span>';
+                    chatBody.appendChild(separator);
+
+                    // Scroll to bottom
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading chat history:', error);
+            });
+    }
+
     function sendMessage() {
         const message = chatInput.value.trim();
         if (!message) return;
@@ -232,6 +305,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const welcome = document.getElementById('welcome');
         if (welcome) {
             welcome.remove();
+        }
+
+        // Remove history separator if it exists
+        const separator = document.querySelector('.chat-history-separator');
+        if (separator) {
+            separator.remove();
         }
 
         // Add user message

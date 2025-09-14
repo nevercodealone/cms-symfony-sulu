@@ -95,6 +95,34 @@ class ChatApiController extends AbstractController
         $chat->reset();
         return new JsonResponse(['success' => true]);
     }
+
+    #[Route('/api/chat/history', name: 'app_chat_history', methods: ['GET'])]
+    public function getChatHistory(
+        Request $request,
+        ChatMessageRepository $chatMessageRepository
+    ): JsonResponse {
+        // Get user IP address
+        $userIp = $this->getUserIp($request);
+
+        // Get recent chat history for this IP
+        $messages = $chatMessageRepository->getRecentHistoryForIp($userIp);
+
+        // Format messages for frontend
+        $formattedMessages = [];
+        foreach ($messages as $message) {
+            $formattedMessages[] = [
+                'question' => $message->getQuestion(),
+                'answer' => $message->getAnswer(),
+                'timestamp' => $message->getCreatedAt()->format('Y-m-d H:i:s')
+            ];
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'messages' => $formattedMessages,
+            'count' => count($formattedMessages)
+        ]);
+    }
     
     /**
      * Get the user's IP address, considering proxy headers
