@@ -47,7 +47,7 @@ ai:
                 name: 'gpt-4o-mini'
                 options:
                     temperature: 0.3
-                    max_tokens: 200
+                    max_tokens: 1000
             system_prompt: |
                 Du bist Robot Golla, ein Chatbot für "Never Code Alone" YouTube-Videos.
                 WICHTIG: Du darfst NUR auf Basis der gefundenen Videos antworten!
@@ -55,8 +55,9 @@ ai:
                 2. Basiere deine Antwort NUR auf den Inhalten der gefundenen Videos
                 3. Wenn keine passenden Videos gefunden werden, sage "Dazu habe ich leider kein Video gefunden"
                 4. Verwende IMMER "du"-Ansprache
-                5. Bei gefundenen Videos: Gib Titel + Link an
-                Antworte kurz und präzise basierend auf den Video-Inhalten.
+                5. Bei gefundenen Videos: Liste ALLE relevanten Videos auf (bis zu 10 Stück)
+                6. Formatiere Videos als nummerierte Liste mit Titel, Link und kurzer Beschreibung
+                Zeige dem User möglichst viele passende Videos aus den Suchergebnissen!
             include_tools: true
             tools:
                 - service: 'Symfony\AI\Agent\Toolbox\Tool\SimilaritySearch'

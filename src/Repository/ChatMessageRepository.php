@@ -94,7 +94,7 @@ class ChatMessageRepository extends ServiceEntityRepository
     public function countMessagesFromIpInLast24Hours(string $userIp): int
     {
         $since = new \DateTimeImmutable('-24 hours');
-        
+
         return (int) $this->createQueryBuilder('m')
             ->select('COUNT(m.id)')
             ->where('m.userIp = :userIp')
@@ -103,5 +103,27 @@ class ChatMessageRepository extends ServiceEntityRepository
             ->setParameter('since', $since)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * Get recent chat history for an IP address (last 10 messages from last 24 hours)
+     */
+    public function getRecentHistoryForIp(string $userIp, int $limit = 10): array
+    {
+        $since = new \DateTimeImmutable('-24 hours');
+
+        // First get the messages in DESC order to get the most recent ones
+        $messages = $this->createQueryBuilder('m')
+            ->where('m.userIp = :userIp')
+            ->andWhere('m.createdAt >= :since')
+            ->setParameter('userIp', $userIp)
+            ->setParameter('since', $since)
+            ->orderBy('m.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        // Then reverse to get correct chronological order
+        return array_reverse($messages);
     }
 }
