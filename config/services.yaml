@@ -128,6 +128,21 @@ services:
             $aiPlatform: '@App\AI\Platform\AIPlatform'
             $connection: '@doctrine.dbal.default_connection'
         tags: ['console.command']
+
+    # Override the default ChromaDB store with our upsert version
+    App\Store\ChromaDBUpsertStore:
+        arguments:
+            $client: '@Codewithkyrian\ChromaDB\Client'
+            $collectionName: 'youtube_videos'
+
+    # Replace the default store service
+    ai.store.chroma_db.video:
+        class: App\Store\ChromaDBUpsertStore
+        arguments:
+            $client: '@Codewithkyrian\ChromaDB\Client'
+            $collectionName: 'youtube_videos'
+        tags:
+            - { name: 'ai.store' }
     
     App\Command\AI\GenerateCommand:
         arguments:
