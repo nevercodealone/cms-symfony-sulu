@@ -85,7 +85,7 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
         $collection = $this->client->getOrCreateCollection($this->collectionName);
         $queryResponse = $collection->query(
             queryEmbeddings: [$vector->getData()],
-            nResults: 4,
+            nResults: $options['limit'] ?? 10,
             where: $options['where'] ?? null,
             whereDocument: $options['whereDocument'] ?? null,
         );
