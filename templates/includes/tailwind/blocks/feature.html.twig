@@ -1,7 +1,9 @@
 <div class="mx-auto px-4 sm:px-6 md:px-4 lg:px-8 text-lg tracking-tight text-slate-700">
-    <h3 class="sm:text-center text-lg font-semibold leading-8 text-green-800">
-        {{ content.subline }}
-    </h3>
+    {% if content.subline %}
+      <h3 class="sm:text-center text-lg font-semibold leading-8 text-green-800">
+          {{ content.subline }}
+      </h3>
+    {% endif %}
     <h2 class="sm:text-center mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
         {{ content.headline }}
     </h2>

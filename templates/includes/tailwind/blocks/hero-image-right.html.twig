@@ -16,10 +16,12 @@
         {% if content.items is defined and content.items is not empty %}
           {% for item in content.items %}
             <div class="mb-8 text-gray-800 sm:mb-0 w-full sm:w-auto">
-              {% if loop.first %}
-                <h2 class="mb-3 text-xl font-semibold text-gray-900 text-center sm:text-center md:text-left" style="text-wrap: nowrap">{{ item.headline }}</h2>
-              {% else %}
-                <h3 class="mb-3 text-xl font-semibold text-gray-900 text-center sm:text-center md:text-left" style="text-wrap: nowrap">{{ item.headline }}</h3>
+              {% if item.headline %}
+                {% if loop.first %}
+                  <h2 class="mb-3 text-xl font-semibold text-gray-900 text-center sm:text-center md:text-left" style="text-wrap: nowrap">{{ item.headline }}</h2>
+                {% else %}
+                  <h3 class="mb-3 text-xl font-semibold text-gray-900 text-center sm:text-center md:text-left" style="text-wrap: nowrap">{{ item.headline }}</h3>
+                {% endif %}
               {% endif %}
               <p class="mb-4 font-light text-center sm:text-center md:text-left">{{ item.text }}</p>
               <div class="flex justify-center sm:justify-center md:justify-start">
@@ -34,7 +36,7 @@
                 {% endif %}
                 {% if item.url is defined and item.url is not empty %}
 
-                  href="{{ item.url }}"
+                  <a href="{{ item.url }}"
                   target="_blank"
                   class="{{ buttonBaseClasses }} {{ buttonHoverClasses }} {{ buttonFocusClasses }}"
                   >

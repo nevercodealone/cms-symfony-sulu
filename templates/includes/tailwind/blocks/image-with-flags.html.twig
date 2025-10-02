@@ -76,8 +76,7 @@
                             'no': 'Norwegian version'
                         }
                     } %}
-                    <a href="{{ flag.url }}" class="group flex flex-col items-center" target="_blank" 
-                       aria-label="{% if current_locale == 'de' %}{{ language_translations.de[flag.language] }}{% else %}{{ language_translations.en[flag.language] }}{% endif %}">
+                    <a href="{{ flag.url }}" class="group flex flex-col items-center" target="_blank">
                         <div class="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 group-hover:bg-gray-200">
                             <svg class="h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-hidden="true">
                                 {{ language_data[flag.language].svg|raw }}
