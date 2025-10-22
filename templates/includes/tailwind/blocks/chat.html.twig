@@ -1,13 +1,13 @@
 {% import "_message.html.twig" as message %}
 
 <!-- Responsive chat container -->
-<div class="w-full max-w-4xl mx-auto">
+<section class="w-full max-w-4xl mx-auto">
     <!-- Unified Header for all screen sizes -->
     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg p-6 border-b border-gray-100">
         <div class="flex items-center gap-4">
             <img id="robot-image" src="/robot.png" alt="Robot Golla" class="w-16 h-16 md:w-20 md:h-20 object-contain rounded-full bg-white p-2 shadow-sm">
             <div class="flex-1">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-900">Never Code Alone AI Assistant</h2>
+                <div class="text-xl md:text-2xl font-bold text-gray-900">Never Code Alone AI Assistant</h2>
                 <p class="text-sm md:text-base text-gray-600">Dein YouTube-Wissensbegleiter für PHP, Symfony & mehr</p>
             </div>
         </div>
@@ -25,7 +25,7 @@
                     <div id="welcome" class="flex items-start gap-3 mb-4">
                         <img src="/robot.png" alt="Robot Golla" class="w-10 h-10 object-contain rounded-full bg-blue-100 p-1 flex-shrink-0">
                         <div class="flex-1 bg-gray-50 rounded-lg p-4 max-w-2xl">
-                            <h4 class="text-lg font-semibold text-gray-800 mb-2">Hallo Freunde des Software-Entertainments!</h4>
+                            <div class="text-lg font-semibold text-gray-800 mb-2">Hallo Freunde des Software-Entertainments!</div>
                             <p class="text-gray-600 leading-relaxed">
                                 Ich bin Robot Golla, euer AI-Assistent für alle Fragen rund um die YouTube-Videos von <strong>Never Code Alone</strong>.
                             </p>
@@ -52,7 +52,7 @@
             </div>
         </div>
     </div>
-</div>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         chatBody.appendChild(loadingDiv);
         chatInput.value = '';
-        
+
         // Scroll to the new message
         const messages = chatBody.querySelectorAll('.flex');
         const lastMessage = messages[messages.length - 1];
@@ -377,20 +377,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 currentLoading.removeAttribute('id'); // Remove id so next loading gets a fresh one
-                
+
                 // Check if response is the sleep message (rate limited)
                 if (data.response.includes('schlafen komm morgen wieder')) {
                     // Change robot images to sleeping version
                     if (robotImage) {
                         robotImage.src = '/robot-sleeping.png';
                     }
-                    
+
                     // Also update the robot image in the just-posted response message
                     const responseRobotImage = currentLoading.querySelector('img');
                     if (responseRobotImage) {
                         responseRobotImage.src = '/robot-sleeping.png';
                     }
-                    
+
                     // Hide the input form
                     const inputContainer = document.querySelector('.border-t.border-gray-200.bg-gray-50');
                     if (inputContainer) {
@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 currentLoading.removeAttribute('id');
             }
-            
+
             // Scroll to show the response
             if (currentLoading) {
                 currentLoading.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error:', error);
-            
+
             // Replace loading with network error
             const currentLoading = document.getElementById('current-loading');
             if (currentLoading) {
