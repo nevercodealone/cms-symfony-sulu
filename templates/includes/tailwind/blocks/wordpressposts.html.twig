@@ -4,10 +4,9 @@
   <aside aria-label="Blog Posts" class="py-8 bg-white lg:py-16 antialiased">
   <div class="px-4 mx-auto max-w-screen-xl">
     {% if content.headline is defined and content.headline is not empty %}
-      {% include "includes/tailwind/includes/headline.html.twig" with {
-        'content': content,
-        'loopIndex': loopIndex
-      } %}
+      <h2 class="mb-4 text-4xl tracking-tight font-bold text-gray-900">
+        {{ content.headline }}
+      </h2>
     {% endif %}
     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {% for wordpressPost in wordpressPosts %}
