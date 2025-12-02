@@ -129,6 +129,15 @@ services:
             $connection: '@doctrine.dbal.default_connection'
         tags: ['console.command']
 
+    # YouTube Video Indexer (existing)
+    App\Store\Indexer:
+        arguments:
+            $loader: '@App\Store\YouTubeChannelLoader'
+            $transformer: '@Symfony\AI\Store\Document\Transformer\TextSplitTransformer'
+            $indexer: '@ai.indexer.default'
+            $chromaStore: '@App\Store\ChromaDBUpsertStore'
+        public: true
+
     # Override the default ChromaDB store with our upsert version
     App\Store\ChromaDBUpsertStore:
         arguments:
@@ -155,4 +164,34 @@ services:
             $aiPlatform: '@App\AI\Platform\AIPlatform'
             $connection: '@doctrine.dbal.default_connection'
         tags: ['console.command']
+
+    # Sulu Content Indexing Services
+    App\Store\SuluContentLoader:
+        arguments:
+            $contentMapper: '@sulu.content.mapper'
+            $webspaceManager: '@sulu_core.webspace.webspace_manager'
+        public: true
+
+    App\Store\SuluContentIndexer:
+        arguments:
+            $loader: '@App\Store\SuluContentLoader'
+            $transformer: '@Symfony\AI\Store\Document\Transformer\TextSplitTransformer'
+            $indexer: '@ai.indexer.sulu'
+        public: true
+
+    # ChromaDB store for Sulu content
+    ai.store.chroma_db.sulu_content:
+        class: App\Store\ChromaDBUpsertStore
+        arguments:
+            $client: '@Codewithkyrian\ChromaDB\Client'
+            $collectionName: 'sulu_content'
+        tags:
+            - { name: 'ai.store' }
+
+    # Sulu Content Search Tool for AI Agent
+    App\Store\SuluContentSearch:
+        arguments:
+            $store: '@ai.store.chroma_db.sulu_content'
+            $vectorizer: '@ai.vectorizer.openai_embeddings'
+        public: true
 

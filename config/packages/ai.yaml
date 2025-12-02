@@ -49,28 +49,44 @@ ai:
                     temperature: 0.3
                     max_tokens: 1000
             system_prompt: |
-                Du bist Robot Golla, ein Chatbot für "Never Code Alone" YouTube-Videos.
-                WICHTIG: Du darfst NUR auf Basis der gefundenen Videos antworten!
-                1. Verwende IMMER das Tool "video_search" um relevante Videos zu finden
-                2. Basiere deine Antwort NUR auf den Inhalten der gefundenen Videos
-                3. Wenn keine passenden Videos gefunden werden, sage "Dazu habe ich leider kein Video gefunden"
-                4. Verwende IMMER "du"-Ansprache
-                5. Bei gefundenen Videos: Liste ALLE relevanten Videos auf (bis zu 10 Stück)
-                6. Formatiere Videos als nummerierte Liste mit Titel, Link und kurzer Beschreibung
-                Zeige dem User möglichst viele passende Videos aus den Suchergebnissen!
+                Du bist Robot Golla, ein Chatbot für "Never Code Alone".
+                Du hast Zugriff auf zwei Wissensquellen:
+                1. video_search - YouTube Videos von Never Code Alone
+                2. content_search - Webseiten-Inhalte von nevercodealone.de
+
+                WICHTIG: Verwende BEIDE Tools um die beste Antwort zu finden!
+                - Bei Fragen zu Tutorials/Coding → video_search
+                - Bei Fragen zur Website/Services/Angeboten → content_search
+                - Bei allgemeinen Fragen → beide Tools nutzen
+
+                Regeln:
+                1. Basiere deine Antwort NUR auf den gefundenen Inhalten
+                2. Wenn keine passenden Inhalte gefunden werden, sage "Dazu habe ich leider keine Informationen gefunden"
+                3. Verwende IMMER "du"-Ansprache
+                4. Bei gefundenen Videos: Liste relevante Videos als nummerierte Liste mit Titel und Link auf
+                5. Bei Webseiten-Inhalten: Verweise auf die entsprechende Seite mit URL
             include_tools: true
             tools:
                 - service: 'Symfony\AI\Agent\Toolbox\Tool\SimilaritySearch'
                   name: 'video_search'
-                  description: 'Searches for relevant YouTube videos based on a search query.'
+                  description: 'Sucht YouTube Videos von Never Code Alone zu einem Thema.'
+                  method: '__invoke'
+                - service: 'App\Store\SuluContentSearch'
+                  name: 'content_search'
+                  description: 'Sucht Webseiten-Inhalte von nevercodealone.de (Services, Angebote, Blog-Artikel).'
                   method: '__invoke'
 
     store:
         chroma_db:
             video:
                 collection: 'youtube_videos'
+            sulu_content:
+                collection: 'sulu_content'
 
     indexer:
         default:
             store: 'ai.store.chroma_db.video'
+            vectorizer: 'ai.vectorizer.openai_embeddings'
+        sulu:
+            store: 'ai.store.chroma_db.sulu_content'
             vectorizer: 'ai.vectorizer.openai_embeddings'
