@@ -59,20 +59,34 @@ Here is a great read on Symfony CMS Sulu:
 
 ## AI Chat System
 
-Interactive AI chatbot for YouTube video content queries.
+Interactive AI chatbot with two knowledge sources: YouTube videos and Sulu CMS website content.
 
 ### Commands
 
 ```bash
+# Index YouTube videos from playlist
+ddev exec php bin/console app:video:index [PLAYLIST_ID] --limit 100
+
+# Index Sulu CMS content into ChromaDB
+ddev exec php bin/console app:index:sulu-content
+
+# Index with options
+ddev exec php bin/console app:index:sulu-content --locale=en
+ddev exec php bin/console app:index:sulu-content --all-locales
+ddev exec php bin/console app:index:sulu-content --webspace=example --limit=500
+
 # Clear video index
 ddev exec php bin/console app:video:clear-index
-
-# Index videos from playlist
-ddev exec php bin/console app:video:index [PLAYLIST_ID] --limit 100
 
 # Test video search
 ddev exec php bin/console app:video:query
 ```
+
+### Chatbot Search Tools
+
+The AI chatbot uses two search tools:
+- `video_search` - Searches YouTube videos from Never Code Alone
+- `content_search` - Searches website content from nevercodealone.de
 
 ### Environment Variables
 

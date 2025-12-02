@@ -15,7 +15,24 @@
     </meta>
 
     <properties>
-        <xi:include href="../includes/highlight.xml"/>
+        <property name="title" type="text_line" mandatory="true">
+            <meta>
+                <title lang="en">Title</title>
+                <title lang="de">Titel</title>
+            </meta>
+            <params>
+                <param name="headline" value="true"/>
+            </params>
+            <tag name="sulu.rlp.part"/>
+        </property>
+
+        <property name="url" type="resource_locator" mandatory="true">
+            <meta>
+                <title lang="en">Resourcelocator</title>
+                <title lang="de">Adresse</title>
+            </meta>
+            <tag name="sulu.rlp"/>
+        </property>
 
         <block name="blocks" default-type="hero" minOccurs="0">
             <meta>
