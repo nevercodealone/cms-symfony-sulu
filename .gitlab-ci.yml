@@ -87,6 +87,7 @@ dumpfinder:
       if [ ! -f /tmp/chromadb-backup.tar.gz ]; then
         echo "No ChromaDB backup found, performing initial indexing..."
         docker exec --user www-data $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 10
+        docker exec --user www-data $SHORTCODE1-web php bin/console app:index:sulu-content --all-locales
       else
         echo "ChromaDB restored from backup, skipping automatic indexing"
       fi
@@ -222,15 +223,33 @@ reindex_all_videos:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-# Scheduled job to check for new videos daily
-index_new_videos_scheduled:
+# Manual job to index Sulu CMS content
+index_sulu_content:
   stage: deploy_live
+  when: manual
   tags:
     - docker2
   script:
-    - echo "Checking for new videos..."
-    - docker exec --user www-data ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 5
-    - docker exec --user www-data stage-ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 5
-    - echo "Daily video check complete"
+    - echo "Indexing Sulu CMS content to ChromaDB..."
+    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:index:sulu-content --locale=${LOCALE}
+    - echo "Sulu content indexing complete"
+  variables:
+    ENVIRONMENT: "stage-"  # Change to "" for production
+    LOCALE: "de"           # Locale to index (de or en)
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Manual job to reindex all Sulu content (all locales)
+reindex_all_sulu_content:
+  stage: deploy_live
+  when: manual
+  tags:
+    - docker2
+  script:
+    - echo "Re-indexing all Sulu CMS content for all locales..."
+    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:index:sulu-content --all-locales
+    - echo "Full Sulu content re-index complete"
+  variables:
+    ENVIRONMENT: "stage-"  # Change to "" for production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
