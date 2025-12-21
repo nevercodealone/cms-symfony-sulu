@@ -6,6 +6,7 @@ services:
 
     Codewithkyrian\ChromaDB\Client:
         factory: ['@chroma.factory', 'connect']
+        public: true
 
     chroma.factory:
         class: Codewithkyrian\ChromaDB\Factory
