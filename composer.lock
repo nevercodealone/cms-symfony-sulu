@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a144430ffa8915d440272202402557e5",
+    "content-hash": "c1b82a59b82d2464a02b1a877383ab4c",
     "packages": [
         {
             "name": "behat/transliterator",
@@ -4618,16 +4618,16 @@
         },
         {
             "name": "nyholm/psr7",
-            "version": "1.8.2",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Nyholm/psr7.git",
-                "reference": "a71f2b11690f4b24d099d6b16690a90ae14fc6f3"
+                "reference": "889d890ba25e4264ad92ce56b18ef8218611ca51"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Nyholm/psr7/zipball/a71f2b11690f4b24d099d6b16690a90ae14fc6f3",
-                "reference": "a71f2b11690f4b24d099d6b16690a90ae14fc6f3",
+                "url": "https://api.github.com/repos/Nyholm/psr7/zipball/889d890ba25e4264ad92ce56b18ef8218611ca51",
+                "reference": "889d890ba25e4264ad92ce56b18ef8218611ca51",
                 "shasum": ""
             },
             "require": {
@@ -4647,6 +4647,7 @@
                 "phpunit/phpunit": "^7.5 || ^8.5 || ^9.4",
                 "symfony/error-handler": "^4.4"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -4680,7 +4681,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Nyholm/psr7/issues",
-                "source": "https://github.com/Nyholm/psr7/tree/1.8.2"
+                "source": "https://github.com/Nyholm/psr7/tree/master"
             },
             "funding": [
                 {
@@ -4692,7 +4693,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-09-09T07:06:30+00:00"
+            "time": "2025-11-28T13:47:41+00:00"
         },
         {
             "name": "openai-php/client",
@@ -11635,6 +11636,89 @@
                 }
             ],
             "time": "2025-07-14T16:38:25+00:00"
+        },
+        {
+            "name": "symfony/psr-http-message-bridge",
+            "version": "6.4.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/psr-http-message-bridge.git",
+                "reference": "6954b4e8aef0e5d46f8558c90edcf27bb01b4724"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/psr-http-message-bridge/zipball/6954b4e8aef0e5d46f8558c90edcf27bb01b4724",
+                "reference": "6954b4e8aef0e5d46f8558c90edcf27bb01b4724",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "psr/http-message": "^1.0|^2.0",
+                "symfony/http-foundation": "^5.4|^6.0|^7.0"
+            },
+            "conflict": {
+                "php-http/discovery": "<1.15",
+                "symfony/http-kernel": "<6.2"
+            },
+            "require-dev": {
+                "nyholm/psr7": "^1.1",
+                "php-http/discovery": "^1.15",
+                "psr/log": "^1.1.4|^2|^3",
+                "symfony/browser-kit": "^5.4|^6.0|^7.0",
+                "symfony/config": "^5.4|^6.0|^7.0",
+                "symfony/event-dispatcher": "^5.4|^6.0|^7.0",
+                "symfony/framework-bundle": "^6.2|^7.0",
+                "symfony/http-kernel": "^6.2|^7.0"
+            },
+            "type": "symfony-bridge",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Bridge\\PsrHttpMessage\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "PSR HTTP message bridge",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "http",
+                "http-message",
+                "psr-17",
+                "psr-7"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/psr-http-message-bridge/tree/6.4"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2025-07-10T08:14:14+00:00"
         },
         {
             "name": "symfony/routing",
