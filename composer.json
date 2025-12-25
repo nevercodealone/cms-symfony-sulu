@@ -31,6 +31,7 @@
         "google/apiclient": "*",
         "handcraftedinthealps/zendsearch": "^2.1",
         "jackalope/jackalope-doctrine-dbal": "^1.6|^2.0",
+        "league/oauth2-server-bundle": "^0.8.0",
         "mcp/sdk": "^0.2.0",
         "mrmysql/youtube-transcript": "*",
         "nyholm/psr7": "*",
