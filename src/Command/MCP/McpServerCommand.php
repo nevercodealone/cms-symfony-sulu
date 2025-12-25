@@ -26,6 +26,12 @@ class McpServerCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * STDIO transport provides inherent security - only local MCP client can connect.
+     * Per MCP spec: "MCP servers running locally SHOULD use stdio transport to limit access"
+     *
+     * @see https://modelcontextprotocol.io/specification/draft/basic/security_best_practices
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $server = Server::builder()
