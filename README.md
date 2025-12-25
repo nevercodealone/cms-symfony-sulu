@@ -276,6 +276,31 @@ ddev exec bin/console ai:content:quick \
 
 All functionality remains the same, but with better error handling, dependency injection, and Symfony integration.
 
+## MCP Server (Model Context Protocol)
+
+MCP server for AI-powered Sulu content management via Claude.
+
+### Local (Claude Code)
+
+Add `.mcp.json` to project root:
+
+```json
+{
+  "mcpServers": {
+    "sulu-ddev": {
+      "command": "ddev",
+      "args": ["exec", "php", "bin/console", "mcp:server"]
+    }
+  }
+}
+```
+
+### Remote (Claude Chat)
+
+1. Start tunnel: `ddev share`
+2. Add token to `.env.local`: `MCP_SECRET_TOKEN=your-token`
+3. Connect Claude Chat to `https://your-url.ngrok-free.app/mcp` with Bearer token
+
 ## Running Tests
 
 Execute PHP unit tests:
