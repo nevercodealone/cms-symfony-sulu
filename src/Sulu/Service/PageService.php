@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
@@ -15,6 +16,7 @@ class PageService
 {
     public function __construct(
         private Connection $connection,
+        private McpActivityLogger $activityLogger,
     ) {
     }
 
@@ -163,6 +165,17 @@ class PageService
                 [$updatedXml, $path, 'default_live']
             );
 
+            $this->activityLogger->logMcpAction(
+                'mcp_block_added',
+                $path,
+                $locale,
+                [
+                    'blockType' => $block['type'],
+                    'headline' => $block['headline'] ?? null,
+                    'position' => $newIndex,
+                ]
+            );
+
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $newIndex];
 
         } catch (\Exception $e) {
@@ -257,6 +270,13 @@ class PageService
                 [$updatedXml, $path, 'default_live']
             );
 
+            $this->activityLogger->logMcpAction(
+                'mcp_block_removed',
+                $path,
+                $locale,
+                ['position' => $position]
+            );
+
             return ['success' => true, 'message' => 'Block removed successfully'];
 
         } catch (\Exception $e) {
@@ -284,6 +304,12 @@ class PageService
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
                 [$result['props'], $path, 'default_live']
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_published',
+                $path,
+                $locale
             );
 
             return ['success' => true, 'message' => 'Page published successfully'];
