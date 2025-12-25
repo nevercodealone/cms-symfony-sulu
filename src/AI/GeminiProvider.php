@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI;
 
 use App\AI\Platform\AIProviderInterface;
@@ -27,6 +29,9 @@ class GeminiProvider implements AIProviderInterface
         $this->httpClient = $httpClient ?? HttpClient::create();
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function generateContent(string $prompt, array $options = []): AIResponse
     {
         $url = sprintf('%s/models/%s:generateContent?key=%s', 
@@ -77,6 +82,9 @@ class GeminiProvider implements AIProviderInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $schema
+     */
     public function generateStructuredContent(string $prompt, array $schema = []): AIResponse
     {
         $structuredPrompt = $prompt;
