@@ -28,6 +28,10 @@ security:
     dev:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
+    api:
+      pattern: ^/mcp
+      stateless: true
+      oauth2: true
     admin:
       pattern: ^/admin(\/|$)
       lazy: true

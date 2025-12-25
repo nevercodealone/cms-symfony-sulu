@@ -13,7 +13,6 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -21,9 +20,10 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * MCP HTTP Endpoint for Claude Chat integration.
  *
+ * Authentication handled by OAuth2 firewall (config/packages/security.yaml).
+ *
  * @see https://modelcontextprotocol.io/specification/draft/basic/transports
  * @see https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers
- * @see https://symfony.com/doc/current/components/psr7.html
  */
 #[Route('/mcp', name: 'mcp_')]
 class McpController extends AbstractController
@@ -31,26 +31,12 @@ class McpController extends AbstractController
     public function __construct(
         private readonly PageService $pageService,
         private readonly LoggerInterface $logger,
-        #[Autowire(env: 'default::MCP_SECRET_TOKEN')]
-        private readonly ?string $mcpSecretToken = null,
     ) {
     }
 
     #[Route('', name: 'endpoint', methods: ['GET', 'POST', 'DELETE', 'OPTIONS'])]
     public function endpoint(Request $request): Response
     {
-        // Token-based authentication for remote access (optional)
-        if ($this->mcpSecretToken !== null && $this->mcpSecretToken !== '') {
-            $authHeader = $request->headers->get('Authorization', '');
-            $providedToken = str_replace('Bearer ', '', $authHeader);
-
-            if (!hash_equals($this->mcpSecretToken, $providedToken)) {
-                return new Response('Unauthorized', Response::HTTP_UNAUTHORIZED, [
-                    'WWW-Authenticate' => 'Bearer realm="MCP Server"',
-                ]);
-            }
-        }
-
         // PSR-7 factories (Symfony best practice)
         $psr17Factory = new Psr17Factory();
         $psrHttpFactory = new PsrHttpFactory(
