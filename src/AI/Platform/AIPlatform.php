@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Platform;
 
 class AIPlatform
 {
+    /** @var array<string, AIProviderInterface> */
     private array $providers = [];
     private ?string $defaultProvider = null;
 
@@ -36,11 +39,17 @@ class AIPlatform
         $this->defaultProvider = $name;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getAvailableProviders(): array
     {
         return array_keys($this->providers);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function generateContent(string $prompt, array $options = [], ?string $provider = null): AIResponse
     {
         return $this->getProvider($provider)->generateContent($prompt, $options);
