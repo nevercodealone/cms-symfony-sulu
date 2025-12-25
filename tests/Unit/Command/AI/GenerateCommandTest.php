@@ -155,7 +155,7 @@ class GenerateCommandTest extends TestCase
         $method = $this->reflection->getMethod('processAIContent');
         $method->setAccessible(true);
         
-        $mockResponse = $this->createMock(\App\AI\Response\AIResponse::class);
+        $mockResponse = $this->createMock(\App\AI\Platform\AIResponse::class);
         $structuredContent = [
             'headline' => 'Generated Headline',
             'introduction' => 'Test introduction',
@@ -182,7 +182,7 @@ class GenerateCommandTest extends TestCase
         $method = $this->reflection->getMethod('processAIContent');
         $method->setAccessible(true);
         
-        $mockResponse = $this->createMock(\App\AI\Response\AIResponse::class);
+        $mockResponse = $this->createMock(\App\AI\Platform\AIResponse::class);
         $mockResponse->method('getContent')->willReturn("# Main Title\n\nFirst paragraph content.\n\nSecond paragraph content.");
         $mockResponse->method('getMetadataValue')->with('structured_content')->willReturn(null);
         
