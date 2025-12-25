@@ -3,7 +3,7 @@
 namespace App\Tests\Unit\Command\AI;
 
 use App\AI\Platform\AIPlatform;
-use App\AI\Response\AIResponse;
+use App\AI\Platform\AIResponse;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 

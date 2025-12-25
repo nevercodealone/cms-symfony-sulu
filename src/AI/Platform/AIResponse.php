@@ -1,14 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Platform;
 
 class AIResponse
 {
     private string $content;
+    /** @var array<string, mixed>|null */
     private ?array $usage;
     private ?string $finishReason;
+    /** @var array<string, mixed> */
     private array $metadata;
 
+    /**
+     * @param array<string, mixed>|null $usage
+     * @param array<string, mixed> $metadata
+     */
     public function __construct(
         string $content,
         ?array $usage = null,
@@ -26,6 +34,9 @@ class AIResponse
         return $this->content;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getUsage(): ?array
     {
         return $this->usage;
@@ -36,16 +47,22 @@ class AIResponse
         return $this->finishReason;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getMetadata(): array
     {
         return $this->metadata;
     }
 
-    public function getMetadataValue(string $key, $default = null)
+    public function getMetadataValue(string $key, mixed $default = null): mixed
     {
         return $this->metadata[$key] ?? $default;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

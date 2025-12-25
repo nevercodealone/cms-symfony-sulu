@@ -1,149 +1,132 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
-use App\Repository\ClientRequestRefactoringRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="client_request_refactoring")
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'client_request_refactoring')]
 class ClientRequestRefactoring
 {
-  final public const RESOURCE_KEY = 'client_request_refactorings';
-  final public const FORM_KEY = 'client_request_refactoring_details';
-  final public const LIST_KEY = 'client_request_refactorings';
-  final public const SECURITY_CONTEXT = 'sulu.client_request_refactoring.client_request_refactorings';
+    final public const RESOURCE_KEY = 'client_request_refactorings';
+    final public const FORM_KEY = 'client_request_refactoring_details';
+    final public const LIST_KEY = 'client_request_refactorings';
+    final public const SECURITY_CONTEXT = 'sulu.client_request_refactoring.client_request_refactorings';
 
-  /**
-   * @ORM\Id
-   * @ORM\GeneratedValue
-   * @ORM\Column(type="integer")
-   */
-  private ?int $id = null;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER)]
+    private ?int $id = null;
 
-  /**
-   * @ORM\Column(type="string", length=255)
-   * @Assert\NotBlank()
-   * @Assert\Email()
-   */
-  private $email;
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Email]
+    private ?string $email = null;
 
-  /**
-   * @ORM\Column(type="string", length=255)
-   * @Assert\NotBlank()
-   */
-  private string $name;
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    #[Assert\NotBlank]
+    private string $name;
 
-  /**
-   * @ORM\Column(type="string", length=255, nullable=true)
-   */
-  private $projectUrl;
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    private ?string $projectUrl = null;
 
-  /**
-   * @ORM\Column(type="text")
-   * @Assert\NotBlank()
-   */
-  private $projectDescription;
+    #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank]
+    private ?string $projectDescription = null;
 
-  /**
-   * @ORM\Column(type="string", length=20)
-   * @Assert\Choice({"frontendDevs", "backendDevs"})
-   */
-  private $team;
+    #[ORM\Column(type: Types::STRING, length: 20)]
+    #[Assert\Choice(choices: ['frontendDevs', 'backendDevs'])]
+    private ?string $team = null;
 
-  /**
-   * @ORM\Column(type="string", length=20, nullable=true)
-   */
-  private $contactType;
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true)]
+    private ?string $contactType = null;
 
-  /**
-   * @ORM\Column(type="text", nullable=true)
-   */
-  private $additionalInformation;
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $additionalInformation = null;
 
-  // Getters and Setters
-  public function getId(): ?int
-  {
-    return $this->id;
-  }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
-  public function getEmail(): ?string
-  {
-    return $this->email;
-  }
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
 
-  public function setEmail(string $email): self
-  {
-    $this->email = $email;
-    return $this;
-  }
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+        return $this;
+    }
 
-  public function getName(): ?string
-  {
-    return $this->name;
-  }
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
 
-  public function setName(string $name): self
-  {
-    $this->name = $name;
-    return $this;
-  }
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
 
-  public function getProjectUrl(): ?string
-  {
-    return $this->projectUrl;
-  }
+    public function getProjectUrl(): ?string
+    {
+        return $this->projectUrl;
+    }
 
-  public function setProjectUrl(?string $projectUrl): self
-  {
-    $this->projectUrl = $projectUrl;
-    return $this;
-  }
+    public function setProjectUrl(?string $projectUrl): self
+    {
+        $this->projectUrl = $projectUrl;
+        return $this;
+    }
 
-  public function getProjectDescription(): ?string
-  {
-    return $this->projectDescription;
-  }
+    public function getProjectDescription(): ?string
+    {
+        return $this->projectDescription;
+    }
 
-  public function setProjectDescription(string $projectDescription): self
-  {
-    $this->projectDescription = $projectDescription;
-    return $this;
-  }
+    public function setProjectDescription(string $projectDescription): self
+    {
+        $this->projectDescription = $projectDescription;
+        return $this;
+    }
 
-  public function getTeam(): ?string
-  {
-    return $this->team;
-  }
+    public function getTeam(): ?string
+    {
+        return $this->team;
+    }
 
-  public function setTeam(string $team): self
-  {
-    $this->team = $team;
-    return $this;
-  }
+    public function setTeam(string $team): self
+    {
+        $this->team = $team;
+        return $this;
+    }
 
-  public function getContactType(): ?string
-  {
-    return $this->contactType;
-  }
+    public function getContactType(): ?string
+    {
+        return $this->contactType;
+    }
 
-  public function setContactType(string $contactType): self
-  {
-    $this->contactType = $contactType;
-    return $this;
-  }
+    public function setContactType(string $contactType): self
+    {
+        $this->contactType = $contactType;
+        return $this;
+    }
 
-  public function getAdditionalInformation(): ?string
-  {
-    return $this->additionalInformation;
-  }
+    public function getAdditionalInformation(): ?string
+    {
+        return $this->additionalInformation;
+    }
 
-  public function setAdditionalInformation(?string $additionalInformation): self
-  {
-    $this->additionalInformation = $additionalInformation;
-    return $this;
-  }
+    public function setAdditionalInformation(?string $additionalInformation): self
+    {
+        $this->additionalInformation = $additionalInformation;
+        return $this;
+    }
 }

@@ -7,6 +7,7 @@ namespace App\Controller\Website;
 use App\Chat\Chat;
 use App\Entity\ChatMessage;
 use App\Repository\ChatMessageRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +15,11 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ChatApiController extends AbstractController
 {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+    ) {
+    }
+
     #[Route('/api/chat/submit', name: 'app_chat_submit', methods: ['POST'])]
     public function submitMessage(
         Request $request, 
@@ -82,9 +88,17 @@ class ChatApiController extends AbstractController
                 'response' => $responseContent,
             ]);
         } catch (\Exception $e) {
+            $errorRef = uniqid('chat_err_');
+            $this->logger->error('Chat API error', [
+                'reference' => $errorRef,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_ip' => $userIp,
+            ]);
+
             return new JsonResponse([
                 'error' => 'Failed to process message',
-                'details' => $e->getMessage()
+                'reference' => $errorRef,
             ], 500);
         }
     }
@@ -125,25 +139,22 @@ class ChatApiController extends AbstractController
     }
     
     /**
-     * Get the user's IP address, considering proxy headers
+     * Get the user's IP address using Symfony's trusted proxy handling.
+     *
+     * Note: Configure trusted proxies in config/packages/framework.yaml:
+     * framework:
+     *     trusted_proxies: '%env(TRUSTED_PROXIES)%'
+     *     trusted_headers: ['x-forwarded-for', 'x-forwarded-proto']
      */
     private function getUserIp(Request $request): string
     {
-        // Check for forwarded IP addresses (when behind a proxy/load balancer)
-        $forwardedFor = $request->headers->get('X-Forwarded-For');
-        if ($forwardedFor) {
-            // X-Forwarded-For can contain multiple IPs, get the first one
-            $ips = explode(',', $forwardedFor);
-            return trim($ips[0]);
+        $ip = $request->getClientIp() ?? '0.0.0.0';
+
+        // Validate IP format to prevent spoofing
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            return '0.0.0.0';
         }
-        
-        // Check for real IP header (common with nginx)
-        $realIp = $request->headers->get('X-Real-Ip');
-        if ($realIp) {
-            return $realIp;
-        }
-        
-        // Fall back to client IP
-        return $request->getClientIp() ?? '0.0.0.0';
+
+        return $ip;
     }
 }

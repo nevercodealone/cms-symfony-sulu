@@ -32,7 +32,9 @@ final class Chat
         $messages->add(Message::ofUser($message));
         $result = $this->youtubeBotAgent->call($messages);
 
-        assert($result instanceof TextResult);
+        if (!$result instanceof TextResult) {
+            throw new \RuntimeException('Expected TextResult from agent, got ' . get_class($result));
+        }
 
         $messages->add(Message::ofAssistant($result->getContent()));
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI;
 
 use App\AI\Platform\AIPlatform;
@@ -18,6 +20,10 @@ class AIContentService
         $this->enabled = $enabled;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
     public function generateSuluContentBlock(string $url, string $prompt, array $options = []): array
     {
         if (!$this->enabled) {
@@ -59,6 +65,11 @@ class AIContentService
         return $this->createFallbackSuluBlock($content, $url, $prompt);
     }
 
+    /**
+     * @param array<string, mixed> $structured
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
     private function convertToSuluFormat(array $structured, array $options): array
     {
         $headline = $structured['headline'] ?? '🤖 AI-Generated Content';
@@ -89,6 +100,9 @@ class AIContentService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function createFallbackSuluBlock(string $content, string $url, string $prompt): array
     {
         // Simple fallback when structured parsing fails

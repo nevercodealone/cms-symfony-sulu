@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\ChatMessageRepository;
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=ChatMessageRepository::class)
- * @ORM\Table(name="app_chat_messages")
- * @ORM\HasLifecycleCallbacks
- */
+#[ORM\Entity(repositoryClass: ChatMessageRepository::class)]
+#[ORM\Table(name: 'app_chat_messages')]
+#[ORM\HasLifecycleCallbacks]
 class ChatMessage
 {
     final public const RESOURCE_KEY = 'chat_messages';
@@ -20,66 +18,42 @@ class ChatMessage
     final public const LIST_KEY = 'chat_messages';
     final public const SECURITY_CONTEXT = 'sulu.chat.messages';
 
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    /**
-     * @ORM\Column(type="string", length=45)
-     */
+    #[ORM\Column(type: Types::STRING, length: 45)]
     private ?string $userIp = null;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $sessionId = null;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: Types::TEXT)]
     private string $question;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: Types::TEXT)]
     private string $answer;
 
-    /**
-     * @ORM\Column(type="datetime_immutable")
-     */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $createdAt = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $responseTime = null;
 
-    /**
-     * @ORM\Column(type="string", length=50, nullable=true)
-     */
+    #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
     private ?string $locale = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $inputTokens = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $outputTokens = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $totalTokens = null;
 
-    /**
-     * @ORM\PrePersist
-     */
+    #[ORM\PrePersist]
     public function onPrePersist(): void
     {
         $this->createdAt = new \DateTimeImmutable();

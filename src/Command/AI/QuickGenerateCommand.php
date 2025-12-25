@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command\AI;
 
 use App\AI\Platform\AIPlatform;
@@ -407,7 +409,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         $this->addBlockProperties($xml, $xpath, $locale, $position, $content);
         
         // Update the blocks length
-        $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $currentLength + 1;
+        $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = (string) ($currentLength + 1);
         
         // Save to database
         $updatedXml = $xml->saveXML();
@@ -449,7 +451,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         $typeProperty->setAttributeNS($svNamespace, 'sv:type', 'String');
         $typeProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
         $typeValue = $xml->createElementNS($svNamespace, 'sv:value', $content['type']);
-        $typeValue->setAttribute('length', strlen($content['type']));
+        $typeValue->setAttribute('length', (string) strlen($content['type']));
         $typeProperty->appendChild($typeValue);
         $root->appendChild($typeProperty);
         
@@ -470,7 +472,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
             $headlineProperty->setAttributeNS($svNamespace, 'sv:type', 'String');
             $headlineProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
             $headlineValue = $xml->createElementNS($svNamespace, 'sv:value', htmlspecialchars($content['headline']));
-            $headlineValue->setAttribute('length', strlen($content['headline']));
+            $headlineValue->setAttribute('length', (string) strlen($content['headline']));
             $headlineProperty->appendChild($headlineValue);
             $root->appendChild($headlineProperty);
         }
@@ -482,8 +484,8 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:name', "i18n:$locale-blocks-items#$position-length");
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:type', 'Long');
             $itemsLengthProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
-            $itemsLengthValue = $xml->createElementNS($svNamespace, 'sv:value', count($content['items']));
-            $itemsLengthValue->setAttribute('length', strlen((string)count($content['items'])));
+            $itemsLengthValue = $xml->createElementNS($svNamespace, 'sv:value', (string) count($content['items']));
+            $itemsLengthValue->setAttribute('length', (string) strlen((string)count($content['items'])));
             $itemsLengthProperty->appendChild($itemsLengthValue);
             $root->appendChild($itemsLengthProperty);
             
@@ -495,7 +497,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
                 $itemTypeProperty->setAttributeNS($svNamespace, 'sv:type', 'String');
                 $itemTypeProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
                 $itemTypeValue = $xml->createElementNS($svNamespace, 'sv:value', $item['type']);
-                $itemTypeValue->setAttribute('length', strlen($item['type']));
+                $itemTypeValue->setAttribute('length', (string) strlen($item['type']));
                 $itemTypeProperty->appendChild($itemTypeValue);
                 $root->appendChild($itemTypeProperty);
                 
@@ -516,7 +518,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
                     $itemDescProperty->setAttributeNS($svNamespace, 'sv:type', 'String');
                     $itemDescProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
                     $itemDescValue = $xml->createElementNS($svNamespace, 'sv:value', htmlspecialchars($item['description']));
-                    $itemDescValue->setAttribute('length', strlen($item['description']));
+                    $itemDescValue->setAttribute('length', (string) strlen($item['description']));
                     $itemDescProperty->appendChild($itemDescValue);
                     $root->appendChild($itemDescProperty);
                 } elseif ($item['type'] === 'code' && isset($item['code'])) {
@@ -525,7 +527,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
                     $itemCodeProperty->setAttributeNS($svNamespace, 'sv:type', 'String');
                     $itemCodeProperty->setAttributeNS($svNamespace, 'sv:multi-valued', '0');
                     $itemCodeValue = $xml->createElementNS($svNamespace, 'sv:value', htmlspecialchars($item['code']));
-                    $itemCodeValue->setAttribute('length', strlen($item['code']));
+                    $itemCodeValue->setAttribute('length', (string) strlen($item['code']));
                     $itemCodeProperty->appendChild($itemCodeValue);
                     $root->appendChild($itemCodeProperty);
                 }

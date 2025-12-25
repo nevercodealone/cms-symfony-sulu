@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "sulu-ddev": {
+      "command": "ddev",
+      "args": ["exec", "bin/console", "mcp:server"],
+      "env": {}
+    },
+    "sulu-docker": {
+      "command": "docker",
+      "args": ["exec", "-i", "sulu-app", "bin/console", "mcp:server"],
+      "env": {}
+    }
+  }
+}

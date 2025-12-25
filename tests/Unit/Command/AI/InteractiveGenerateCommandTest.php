@@ -100,7 +100,7 @@ class InteractiveGenerateCommandTest extends TestCase
         $method = $this->reflection->getMethod('processAIContent');
         $method->setAccessible(true);
         
-        $mockResponse = $this->createMock(\App\AI\Response\AIResponse::class);
+        $mockResponse = $this->createMock(\App\AI\Platform\AIResponse::class);
         $mockResponse->method('getContent')->willReturn(json_encode([
             'type' => 'headline-paragraphs',
             'headline' => 'Test Headline',
@@ -122,7 +122,7 @@ class InteractiveGenerateCommandTest extends TestCase
         $method = $this->reflection->getMethod('processAIContent');
         $method->setAccessible(true);
         
-        $mockResponse = $this->createMock(\App\AI\Response\AIResponse::class);
+        $mockResponse = $this->createMock(\App\AI\Platform\AIResponse::class);
         $mockResponse->method('getContent')->willReturn('# Plain Text Headline\n\nSome content here.');
         $mockResponse->method('getMetadataValue')->with('structured_content')->willReturn(null);
         

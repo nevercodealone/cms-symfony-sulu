@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Logger;
 
 use Doctrine\DBAL\Connection;

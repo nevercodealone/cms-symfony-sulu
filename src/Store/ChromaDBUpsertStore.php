@@ -40,17 +40,15 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
             $videoId = $metadataArray['id'] ?? $metadataArray['video_id'] ?? '';
             $content = $document->metadata->getText() ?? '';
 
-            // Use YouTube video ID + sequence for multiple docs per video
-            if ($videoId) {
-                // Track document count per video for this batch
-                static $videoDocCounts = [];
-                if (!isset($videoDocCounts[$videoId])) {
-                    $videoDocCounts[$videoId] = 0;
-                }
-                $docIndex = $videoDocCounts[$videoId]++;
-
-                // YouTube ID + index (e.g., "dQw4w9WgXcQ_0", "dQw4w9WgXcQ_1")
-                $deterministicId = $videoId . '_' . $docIndex;
+            // Use YouTube video ID + content hash for deterministic IDs
+            if ($videoId && $content !== '') {
+                // Create deterministic ID from video ID + content hash
+                // This ensures same content always gets same ID, regardless of batch order
+                $contentHash = substr(md5($content), 0, 8);
+                $deterministicId = $videoId . '_' . $contentHash;
+            } elseif ($videoId) {
+                // Video ID but no content - use video ID with document UUID suffix
+                $deterministicId = $videoId . '_' . substr((string) $document->id, 0, 8);
             } else {
                 // Fallback to original UUID if no video ID
                 $deterministicId = (string) $document->id;

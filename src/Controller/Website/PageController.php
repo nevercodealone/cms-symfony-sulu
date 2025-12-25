@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace App\Controller\Website;
 
 use App\Service\WordpressService;
