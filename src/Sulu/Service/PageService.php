@@ -125,7 +125,7 @@ class PageService
                 if (isset($block['headline'])) {
                     $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-headline#{$newIndex}", $block['headline']);
                 }
-                if (isset($block['items']) && is_array($block['items'])) {
+                if (isset($block['items'])) {
                     $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-length", (string) count($block['items']), 'Long');
                     foreach ($block['items'] as $itemIndex => $item) {
                         $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-type#{$itemIndex}", $item['type'] ?? 'description');
@@ -214,7 +214,8 @@ class PageService
             $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks"]');
 
             if ($blocksNodes !== false && $blocksNodes->length > 0) {
-                $blocksValue = $blocksNodes->item(0)?->getElementsByTagName('value')->item(0)?->nodeValue;
+                $blocksNode = $blocksNodes->item(0);
+                $blocksValue = $blocksNode instanceof \DOMElement ? $blocksNode->getElementsByTagName('value')->item(0)?->nodeValue : null;
                 if ($blocksValue) {
                     $currentBlocks = unserialize(base64_decode($blocksValue));
                     if (!is_array($currentBlocks)) {
@@ -228,16 +229,17 @@ class PageService
                     array_splice($currentBlocks, $position, 1);
 
                     $newBlocksValue = base64_encode(serialize($currentBlocks));
-                    $valueNode = $blocksNodes->item(0)?->getElementsByTagName('value')->item(0);
-                    if ($valueNode) {
+                    $valueNode = $blocksNode instanceof \DOMElement ? $blocksNode->getElementsByTagName('value')->item(0) : null;
+                    if ($valueNode instanceof \DOMElement) {
                         $valueNode->nodeValue = $newBlocksValue;
                     }
 
                     // Update length
                     $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
                     if ($lengthNodes !== false && $lengthNodes->length > 0) {
-                        $lengthValueNode = $lengthNodes->item(0)?->getElementsByTagName('value')->item(0);
-                        if ($lengthValueNode) {
+                        $lengthNode = $lengthNodes->item(0);
+                        $lengthValueNode = $lengthNode instanceof \DOMElement ? $lengthNode->getElementsByTagName('value')->item(0) : null;
+                        if ($lengthValueNode instanceof \DOMElement) {
                             $lengthValueNode->nodeValue = (string) count($currentBlocks);
                         }
                     }
