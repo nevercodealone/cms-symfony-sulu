@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\AI\Domain\Event;
 
 use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
