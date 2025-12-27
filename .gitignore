@@ -165,7 +165,3 @@ phpstan.neon
 /phpunit.xml
 .phpunit.result.cache
 ###< phpunit/phpunit ###
-
-###> league/oauth2-server-bundle ###
-/config/jwt/*.pem
-###< league/oauth2-server-bundle ###
