@@ -1,7 +1,6 @@
 league_oauth2_server:
     authorization_server:
         private_key: '%env(resolve:OAUTH_PRIVATE_KEY)%'
-        private_key_passphrase: '%env(resolve:OAUTH_PASSPHRASE)%'
         encryption_key: '%env(resolve:OAUTH_ENCRYPTION_KEY)%'
         access_token_ttl: PT1H
         refresh_token_ttl: P1M
