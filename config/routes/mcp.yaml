@@ -1,3 +1,0 @@
-mcp_controller:
-    resource: App\Controller\McpController
-    type: attribute
