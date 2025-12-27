@@ -1,0 +1,25 @@
+nelmio_cors:
+    defaults:
+        origin_regex: true
+        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+        allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
+        allow_headers: ['Content-Type', 'Authorization']
+        expose_headers: ['Link']
+        max_age: 3600
+
+    paths:
+        '^/\.well-known/':
+            allow_origin: ['*']
+            allow_methods: ['GET', 'OPTIONS']
+            allow_headers: ['Content-Type']
+            max_age: 3600
+
+        '^/mcp':
+            allow_origin:
+                - 'https://claude.ai'
+                - 'https://claude.com'
+            allow_methods: ['GET', 'POST', 'OPTIONS']
+            allow_headers: ['Content-Type', 'Authorization', 'Accept']
+            max_age: 3600
+
+        '^/': null
