@@ -234,21 +234,11 @@
             "config/packages/prod/jms_serializer.yaml"
         ]
     },
+    "klapaudius/symfony-mcp-server": {
+        "version": "1.x-dev"
+    },
     "laminas/laminas-code": {
         "version": "4.4.2"
-    },
-    "league/oauth2-server-bundle": {
-        "version": "0.8",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "0.4",
-            "ref": "7f26963037fce3b69c1b3f6a75a3265edb1e1caa"
-        },
-        "files": [
-            "config/packages/league_oauth2_server.yaml",
-            "config/routes/league_oauth2_server.yaml"
-        ]
     },
     "massive/build-bundle": {
         "version": "0.5.3"
@@ -264,6 +254,18 @@
     },
     "mustangostang/spyc": {
         "version": "0.6.3"
+    },
+    "nelmio/cors-bundle": {
+        "version": "2.9999999",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "1.5",
+            "ref": "6bea22e6c564fba3a1391615cada1437d0bde39c"
+        },
+        "files": [
+            "config/packages/nelmio_cors.yaml"
+        ]
     },
     "nyholm/psr7": {
         "version": "1.0",
@@ -663,9 +665,6 @@
     },
     "symfony/polyfill-php80": {
         "version": "v1.23.1"
-    },
-    "symfony/polyfill-php81": {
-        "version": "v1.23.0"
     },
     "symfony/process": {
         "version": "v5.3.4"
