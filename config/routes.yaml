@@ -1,3 +1,11 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+
+klp_mcp_server:
+    resource: '@KlpMcpServerBundle/Resources/config/routes.php'
+    type: php
+
+oauth_discovery:
+    resource: App\Controller\OAuthDiscoveryController
+    type: attribute
