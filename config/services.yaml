@@ -195,3 +195,17 @@ services:
             $vectorizer: '@ai.vectorizer.openai_embeddings'
         public: true
 
+    # MCP Tools
+    App\MCP\Tools\SuluPagesTool:
+        arguments:
+            $pageService: '@App\Sulu\Service\PageService'
+        tags: ['klp_mcp_server.tool']
+        public: true
+
+    # Auth0 Security
+    App\Security\Auth0JwtAuthenticator:
+        autoconfigure: true
+
+    App\Security\Auth0UserProvider:
+        autoconfigure: true
+
