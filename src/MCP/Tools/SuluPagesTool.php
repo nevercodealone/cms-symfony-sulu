@@ -89,6 +89,9 @@ class SuluPagesTool implements ToolInterface
         return new ToolAnnotation();
     }
 
+    /**
+     * @param array<string, mixed> $arguments
+     */
     public function execute(array $arguments): ToolResultInterface
     {
         $action = $arguments['action'] ?? 'list';
