@@ -93,12 +93,6 @@ dumpfinder:
       fi
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
-    # OAuth2 keys for MCP endpoint
-    - docker exec $SHORTCODE1-web mkdir -p /var/www/html/var/keys
-    - docker cp $OAUTH_PRIVATE_KEY_FILE $SHORTCODE1-web:/var/www/html/var/keys/private.key
-    - docker cp $OAUTH_PUBLIC_KEY_FILE $SHORTCODE1-web:/var/www/html/var/keys/public.key
-    - docker exec $SHORTCODE1-web chmod 600 /var/www/html/var/keys/private.key
-    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/keys/
 
 deploy_stage:
   stage: deploy_stage
@@ -155,12 +149,6 @@ deploy_branch:
     # Production doesn't auto-index - use manual jobs instead
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
     - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
-    # OAuth2 keys for MCP endpoint
-    - docker exec $SHORTCODE1-web mkdir -p /var/www/html/var/keys
-    - docker cp $OAUTH_PRIVATE_KEY_FILE $SHORTCODE1-web:/var/www/html/var/keys/private.key
-    - docker cp $OAUTH_PUBLIC_KEY_FILE $SHORTCODE1-web:/var/www/html/var/keys/public.key
-    - docker exec $SHORTCODE1-web chmod 600 /var/www/html/var/keys/private.key
-    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/keys/
   environment:
     name: live
     url: https://$URL
