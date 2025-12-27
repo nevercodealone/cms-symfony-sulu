@@ -42,9 +42,9 @@ services:
       - CHROMADB_HOST=$SHORTCODE1-chromadb
       - CHROMADB_PORT=8000
       - CHROMADB_DATABASE=$CHROMADB_DATABASE
-      - OAUTH_PRIVATE_KEY=/var/www/html/var/keys/private.key
-      - OAUTH_PUBLIC_KEY=/var/www/html/var/keys/public.key
-      - OAUTH_ENCRYPTION_KEY=$OAUTH_ENCRYPTION_KEY
+      - AUTH0_DOMAIN=$AUTH0_DOMAIN
+      - AUTH0_AUDIENCE=$AUTH0_AUDIENCE
+      - MCP_ALLOWED_EMAILS=$MCP_ALLOWED_EMAILS
   chromadb:
     container_name: $SHORTCODE1-chromadb
     image: chromadb/chroma:0.5.23
