@@ -1,0 +1,20 @@
+klp_mcp_server:
+    enabled: true
+    server:
+        name: 'NCA Sulu MCP'
+        version: '1.0.0'
+    default_path: 'mcp'
+    ping:
+        enabled: true
+        interval: 30
+    server_providers: ['streamable_http', 'sse']
+    sse_adapter: 'cache'
+    adapters:
+        cache:
+            prefix: 'mcp_sse_'
+            ttl: 100
+    tools:
+        - App\MCP\Tools\SuluPagesTool
+    prompts: []
+    resources: []
+    resources_templates: []
