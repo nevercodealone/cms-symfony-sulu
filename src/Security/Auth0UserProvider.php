@@ -7,10 +7,17 @@ namespace App\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
+/**
+ * @implements UserProviderInterface<Auth0User>
+ */
 class Auth0UserProvider implements UserProviderInterface
 {
-    public function refreshUser(UserInterface $user): UserInterface
+    public function refreshUser(UserInterface $user): Auth0User
     {
+        if (!$user instanceof Auth0User) {
+            throw new \InvalidArgumentException('Invalid user type');
+        }
+
         return $user;
     }
 
