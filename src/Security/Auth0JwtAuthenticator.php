@@ -35,6 +35,11 @@ class Auth0JwtAuthenticator extends AbstractAuthenticator
 
     public function supports(Request $request): ?bool
     {
+        // OPTIONS requests are for CORS preflight - skip auth
+        if ($request->isMethod('OPTIONS')) {
+            return false;
+        }
+
         $path = $request->getPathInfo();
 
         if (str_starts_with($path, '/.well-known/')) {
