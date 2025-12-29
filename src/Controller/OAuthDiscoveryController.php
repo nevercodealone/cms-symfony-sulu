@@ -14,9 +14,10 @@ class OAuthDiscoveryController extends AbstractController
     public function protectedResource(): JsonResponse
     {
         $auth0Domain = $_ENV['AUTH0_DOMAIN'] ?? '';
+        $baseUrl = $_ENV['APP_URL'] ?? 'https://nevercodealone.projects.nevercodealone.de';
 
         return new JsonResponse([
-            'resource' => 'https://nevercodealone.de/mcp',
+            'resource' => rtrim($baseUrl, '/') . '/mcp',
             'authorization_servers' => [
                 "https://{$auth0Domain}/",
             ],
