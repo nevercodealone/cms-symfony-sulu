@@ -46,6 +46,7 @@ services:
       - AUTH0_AUDIENCE=$AUTH0_AUDIENCE
       - MCP_ALLOWED_EMAILS=$MCP_ALLOWED_EMAILS
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
+      - APP_URL=https://$URL
   chromadb:
     container_name: $SHORTCODE1-chromadb
     image: chromadb/chroma:0.5.23
