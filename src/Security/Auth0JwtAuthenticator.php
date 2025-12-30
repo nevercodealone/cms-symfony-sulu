@@ -63,11 +63,17 @@ class Auth0JwtAuthenticator extends AbstractAuthenticator
         try {
             $decoded = $this->validateToken($token);
 
-            $email = $decoded['email'] ?? null;
+            // Check for email in standard claim or namespaced claim (Auth0 requires namespace for custom claims)
+            $emailValue = $decoded['email']
+                ?? $decoded['https://nevercodealone.de/email']
+                ?? null;
 
-            if (!$email) {
+            if (!is_string($emailValue) || $emailValue === '') {
+                error_log('MCP Token claims: ' . json_encode(array_keys($decoded)));
                 throw new AuthenticationException('Token enthält keine Email');
             }
+
+            $email = $emailValue;
 
             if (!in_array(strtolower($email), array_map('strtolower', $this->allowedEmails))) {
                 error_log("MCP Zugriff verweigert für: {$email}");
