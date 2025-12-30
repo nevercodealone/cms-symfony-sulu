@@ -7,6 +7,7 @@ namespace App\Security;
 use Auth0\SDK\Auth0;
 use Auth0\SDK\Configuration\SdkConfiguration;
 use Auth0\SDK\Exception\InvalidTokenException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,18 +20,18 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 class Auth0JwtAuthenticator extends AbstractAuthenticator
 {
-    private string $auth0Domain;
-    private string $audience;
     /** @var array<string> */
     private array $allowedEmails;
 
-    public function __construct()
-    {
-        $this->auth0Domain = $_ENV['AUTH0_DOMAIN'] ?? '';
-        $this->audience = $_ENV['AUTH0_AUDIENCE'] ?? '';
-
-        $emailsEnv = $_ENV['MCP_ALLOWED_EMAILS'] ?? '';
-        $this->allowedEmails = array_filter(array_map('trim', explode(',', $emailsEnv)));
+    public function __construct(
+        #[Autowire('%env(AUTH0_DOMAIN)%')]
+        private readonly string $auth0Domain,
+        #[Autowire('%env(AUTH0_AUDIENCE)%')]
+        private readonly string $audience,
+        #[Autowire('%env(MCP_ALLOWED_EMAILS)%')]
+        string $allowedEmailsEnv,
+    ) {
+        $this->allowedEmails = array_filter(array_map('trim', explode(',', $allowedEmailsEnv)));
     }
 
     public function supports(Request $request): ?bool
