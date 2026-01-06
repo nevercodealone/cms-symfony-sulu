@@ -20,18 +20,12 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 class Auth0JwtAuthenticator extends AbstractAuthenticator
 {
-    /** @var array<string> */
-    private array $allowedEmails;
-
     public function __construct(
         #[Autowire('%env(AUTH0_DOMAIN)%')]
         private readonly string $auth0Domain,
         #[Autowire('%env(AUTH0_AUDIENCE)%')]
         private readonly string $audience,
-        #[Autowire('%env(MCP_ALLOWED_EMAILS)%')]
-        string $allowedEmailsEnv,
     ) {
-        $this->allowedEmails = array_filter(array_map('trim', explode(',', $allowedEmailsEnv)));
     }
 
     public function supports(Request $request): ?bool
@@ -63,25 +57,22 @@ class Auth0JwtAuthenticator extends AbstractAuthenticator
         try {
             $decoded = $this->validateToken($token);
 
-            // Check for email in standard claim or namespaced claim (Auth0 requires namespace for custom claims)
-            $emailValue = $decoded['email']
+            // Use email if available, otherwise use sub (subject) claim as user identifier
+            $email = $decoded['email']
                 ?? $decoded['https://nevercodealone.de/email']
                 ?? null;
 
-            if (!is_string($emailValue) || $emailValue === '') {
-                error_log('MCP Token claims: ' . json_encode(array_keys($decoded)));
-                throw new AuthenticationException('Token enthält keine Email');
-            }
+            // Use sub claim as fallback identifier (always present in valid JWT)
+            $sub = $decoded['sub'] ?? 'unknown';
+            $userIdentifier = is_string($email) && $email !== ''
+                ? $email
+                : (is_string($sub) ? $sub : 'unknown');
 
-            $email = $emailValue;
-
-            if (!in_array(strtolower($email), array_map('strtolower', $this->allowedEmails))) {
-                error_log("MCP Zugriff verweigert für: {$email}");
-                throw new AuthenticationException('Zugriff verweigert: User nicht autorisiert');
-            }
+            // Log for debugging
+            error_log('MCP Auth - User: ' . $userIdentifier . ', Claims: ' . json_encode(array_keys($decoded)));
 
             return new SelfValidatingPassport(
-                new UserBadge($email, fn () => new Auth0User($email, (object) $decoded))
+                new UserBadge($userIdentifier, fn () => new Auth0User($userIdentifier, (object) $decoded))
             );
         } catch (AuthenticationException $e) {
             throw $e;
