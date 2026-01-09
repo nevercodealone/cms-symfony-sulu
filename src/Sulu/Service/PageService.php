@@ -208,7 +208,7 @@ class PageService
     }
 
     /**
-     * Remove a block from a page.
+     * Remove a block from a page using expanded PHPCR property format.
      *
      * @return array{success: bool, message: string}
      */
@@ -230,40 +230,80 @@ class PageService
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
-            $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks"]');
+            // Get blocks length
+            $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]/sv:value');
+            if ($lengthNodes === false || $lengthNodes->length === 0 || !$lengthNodes->item(0)) {
+                return ['success' => false, 'message' => 'No blocks found'];
+            }
 
-            if ($blocksNodes !== false && $blocksNodes->length > 0) {
-                $blocksNode = $blocksNodes->item(0);
-                $blocksValue = $blocksNode instanceof \DOMElement ? $blocksNode->getElementsByTagName('value')->item(0)?->nodeValue : null;
-                if ($blocksValue) {
-                    $currentBlocks = unserialize(base64_decode($blocksValue));
-                    if (!is_array($currentBlocks)) {
-                        return ['success' => false, 'message' => 'No blocks found'];
-                    }
+            $blocksLength = (int) $lengthNodes->item(0)->nodeValue;
+            if ($position < 0 || $position >= $blocksLength) {
+                return ['success' => false, 'message' => "Block position {$position} out of range (0-" . ($blocksLength - 1) . ")"];
+            }
 
-                    if (!isset($currentBlocks[$position])) {
-                        return ['success' => false, 'message' => 'Block position not found'];
-                    }
+            // Collect all block properties grouped by position
+            $blockProperties = [];
+            $allProperties = $xpath->query('//sv:property[starts-with(@sv:name, "i18n:' . $locale . '-blocks-")]');
 
-                    array_splice($currentBlocks, $position, 1);
-
-                    $newBlocksValue = base64_encode(serialize($currentBlocks));
-                    $valueNode = $blocksNode instanceof \DOMElement ? $blocksNode->getElementsByTagName('value')->item(0) : null;
-                    if ($valueNode instanceof \DOMElement) {
-                        $valueNode->nodeValue = $newBlocksValue;
-                    }
-
-                    // Update length
-                    $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
-                    if ($lengthNodes !== false && $lengthNodes->length > 0) {
-                        $lengthNode = $lengthNodes->item(0);
-                        $lengthValueNode = $lengthNode instanceof \DOMElement ? $lengthNode->getElementsByTagName('value')->item(0) : null;
-                        if ($lengthValueNode instanceof \DOMElement) {
-                            $lengthValueNode->nodeValue = (string) count($currentBlocks);
+            if ($allProperties !== false) {
+                foreach ($allProperties as $prop) {
+                    if ($prop instanceof \DOMElement) {
+                        $name = $prop->getAttribute('sv:name');
+                        // Skip the length property
+                        if ($name === "i18n:{$locale}-blocks-length") {
+                            continue;
+                        }
+                        // Extract position from property name (first # number)
+                        if (preg_match('/#(\d+)/', $name, $matches)) {
+                            $pos = (int) $matches[1];
+                            if (!isset($blockProperties[$pos])) {
+                                $blockProperties[$pos] = [];
+                            }
+                            $blockProperties[$pos][] = $prop;
                         }
                     }
                 }
             }
+
+            // Remove all properties for the target block position
+            if (isset($blockProperties[$position])) {
+                foreach ($blockProperties[$position] as $prop) {
+                    if ($prop->parentNode) {
+                        $prop->parentNode->removeChild($prop);
+                    }
+                }
+            }
+
+            // Renumber all blocks after the removed position
+            for ($i = $position + 1; $i < $blocksLength; $i++) {
+                if (isset($blockProperties[$i])) {
+                    foreach ($blockProperties[$i] as $prop) {
+                        if ($prop instanceof \DOMElement) {
+                            $name = $prop->getAttribute('sv:name');
+                            // Replace #oldPos with #newPos (and handle nested items like #0-type#1)
+                            $newName = preg_replace_callback(
+                                '/#(\d+)/',
+                                function ($m) use ($i, $position) {
+                                    $oldNum = (int) $m[1];
+                                    // Only decrement the first position (block index), not nested item indices
+                                    if ($oldNum === $i) {
+                                        return '#' . ($oldNum - 1);
+                                    }
+                                    return $m[0];
+                                },
+                                $name,
+                                1 // Only replace first occurrence
+                            );
+                            if ($newName !== null) {
+                                $prop->setAttribute('sv:name', $newName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update blocks length
+            $lengthNodes->item(0)->nodeValue = (string) ($blocksLength - 1);
 
             $updatedXml = $xml->saveXML();
 
