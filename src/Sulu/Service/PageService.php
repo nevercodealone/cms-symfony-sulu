@@ -8,6 +8,7 @@ use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
+use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
@@ -17,7 +18,55 @@ class PageService
     public function __construct(
         private Connection $connection,
         private McpActivityLogger $activityLogger,
+        private ?CacheManagerInterface $cacheManager = null,
     ) {
+    }
+
+    /**
+     * Invalidate HTTP cache for a page by its path.
+     */
+    private function invalidatePageCache(string $path, string $locale): void
+    {
+        if (!$this->cacheManager) {
+            return;
+        }
+
+        // Get page UUID for cache invalidation
+        $uuid = $this->getPageUuid($path);
+        if ($uuid) {
+            $this->cacheManager->invalidateTag($uuid);
+        }
+
+        // Also try to invalidate by URL path
+        $urlPath = $this->convertPhpcrPathToUrl($path, $locale);
+        if ($urlPath) {
+            $this->cacheManager->invalidatePath($urlPath);
+        }
+    }
+
+    /**
+     * Get page UUID from database.
+     */
+    private function getPageUuid(string $path): ?string
+    {
+        $result = $this->connection->fetchAssociative(
+            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+            [$path]
+        );
+
+        return $result ? $result['identifier'] : null;
+    }
+
+    /**
+     * Convert PHPCR path to frontend URL.
+     */
+    private function convertPhpcrPathToUrl(string $path, string $locale): ?string
+    {
+        // /cmf/example/contents/glossare/phpunit -> /de/glossare/phpunit
+        if (preg_match('#^/cmf/[^/]+/contents(.*)$#', $path, $matches)) {
+            return '/' . $locale . $matches[1];
+        }
+        return null;
     }
 
     /**
@@ -182,6 +231,9 @@ class PageService
                 ]
             );
 
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $newIndex];
 
         } catch (\Exception $e) {
@@ -323,6 +375,9 @@ class PageService
                 ['position' => $position]
             );
 
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
             // Re-read page to return current state (helps with caching issues)
             $updatedPage = $this->getPage($path, $locale);
             $blockCount = $updatedPage ? count($updatedPage['blocks']) : 0;
@@ -366,6 +421,9 @@ class PageService
                 $path,
                 $locale
             );
+
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
@@ -621,6 +679,9 @@ class PageService
                 ['position' => $position, 'fields' => array_keys($blockData)]
             );
 
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
 
@@ -733,6 +794,9 @@ class PageService
                 ['from_position' => $fromPosition, 'to_position' => $toPosition]
             );
 
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
 
@@ -797,6 +861,9 @@ class PageService
                 $path,
                 $locale
             );
+
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
 
             return ['success' => true, 'message' => 'Page unpublished successfully'];
 
