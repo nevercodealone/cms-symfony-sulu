@@ -9,11 +9,12 @@ security:
     providers:
         sulu:
             id: sulu_security.user_provider
-        auth0:
-            id: App\Security\Auth0UserProvider
+        mcp:
+            id: App\Security\McpUserProvider
 
     access_control:
         - { path: ^/\.well-known/, roles: PUBLIC_ACCESS }
+        - { path: ^/oauth/, roles: PUBLIC_ACCESS }
         - { path: ^/admin/reset, roles: PUBLIC_ACCESS }
         - { path: ^/admin/security/reset, roles: PUBLIC_ACCESS }
         - { path: ^/admin/login$, roles: PUBLIC_ACCESS }
@@ -36,12 +37,16 @@ security:
             pattern: ^/\.well-known/
             security: false
 
+        oauth:
+            pattern: ^/oauth/
+            security: false
+
         mcp:
             pattern: ^/mcp
             stateless: true
-            provider: auth0
+            provider: mcp
             custom_authenticators:
-                - App\Security\Auth0JwtAuthenticator
+                - App\Security\McpTokenAuthenticator
 
         admin:
             pattern: ^/admin(\/|$)

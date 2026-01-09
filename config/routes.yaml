@@ -6,6 +6,6 @@ klp_mcp_server:
     resource: '@KlpMcpServerBundle/Resources/config/routes.php'
     type: php
 
-oauth_discovery:
-    resource: App\Controller\OAuthDiscoveryController
+mcp_oauth:
+    resource: App\Controller\McpOAuthController
     type: attribute

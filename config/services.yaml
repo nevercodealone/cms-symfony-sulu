@@ -202,10 +202,13 @@ services:
         tags: ['klp_mcp_server.tool']
         public: true
 
-    # Auth0 Security
-    App\Security\Auth0JwtAuthenticator:
+    # MCP OAuth Security
+    App\Security\McpTokenAuthenticator:
         autoconfigure: true
 
-    App\Security\Auth0UserProvider:
+    App\Security\McpUserProvider:
+        autoconfigure: true
+
+    App\Service\McpOAuthService:
         autoconfigure: true
 
