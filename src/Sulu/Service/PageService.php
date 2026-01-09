@@ -283,7 +283,7 @@ class PageService
                             // Replace #oldPos with #newPos (and handle nested items like #0-type#1)
                             $newName = preg_replace_callback(
                                 '/#(\d+)/',
-                                function ($m) use ($i, $position) {
+                                function ($m) use ($i) {
                                     $oldNum = (int) $m[1];
                                     // Only decrement the first position (block index), not nested item indices
                                     if ($oldNum === $i) {
