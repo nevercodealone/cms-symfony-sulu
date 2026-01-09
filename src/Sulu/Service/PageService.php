@@ -323,7 +323,16 @@ class PageService
                 ['position' => $position]
             );
 
-            return ['success' => true, 'message' => 'Block removed successfully'];
+            // Re-read page to return current state (helps with caching issues)
+            $updatedPage = $this->getPage($path, $locale);
+            $blockCount = $updatedPage ? count($updatedPage['blocks']) : 0;
+
+            return [
+                'success' => true,
+                'message' => 'Block removed successfully',
+                'blocks_remaining' => $blockCount,
+                'blocks' => $updatedPage['blocks'] ?? [],
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -612,7 +621,14 @@ class PageService
                 ['position' => $position, 'fields' => array_keys($blockData)]
             );
 
-            return ['success' => true, 'message' => 'Block updated successfully'];
+            // Re-read page to return current state
+            $updatedPage = $this->getPage($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => 'Block updated successfully',
+                'blocks' => $updatedPage['blocks'] ?? [],
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -717,7 +733,14 @@ class PageService
                 ['from_position' => $fromPosition, 'to_position' => $toPosition]
             );
 
-            return ['success' => true, 'message' => "Block moved from position {$fromPosition} to {$toPosition}"];
+            // Re-read page to return current state
+            $updatedPage = $this->getPage($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => "Block moved from position {$fromPosition} to {$toPosition}",
+                'blocks' => $updatedPage['blocks'] ?? [],
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
