@@ -27,7 +27,7 @@ class SuluPagesTool implements ToolInterface
 
     public function getDescription(): string
     {
-        return 'Manage Sulu CMS pages: list, get, add blocks, remove blocks, publish';
+        return 'Manage Sulu CMS pages: list, get, add/update/move/remove blocks, publish/unpublish, list block types';
     }
 
     public function getInputSchema(): StructuredSchema
@@ -36,7 +36,7 @@ class SuluPagesTool implements ToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action: list, get, add_block, remove_block, publish',
+                description: 'Action: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
                 required: true
             ),
             new SchemaProperty(
@@ -60,7 +60,7 @@ class SuluPagesTool implements ToolInterface
             new SchemaProperty(
                 name: 'blockType',
                 type: PropertyType::STRING,
-                description: 'Block type: headline-paragraphs, hl-des',
+                description: 'Block type: headline-paragraphs, hl-des, text, image, code, quote, video',
                 required: false
             ),
             new SchemaProperty(
@@ -79,6 +79,18 @@ class SuluPagesTool implements ToolInterface
                 name: 'position',
                 type: PropertyType::INTEGER,
                 description: 'Block position (0-based)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'from_position',
+                type: PropertyType::INTEGER,
+                description: 'Source position for move_block action',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'to_position',
+                type: PropertyType::INTEGER,
+                description: 'Target position for move_block action',
                 required: false
             ),
         );
@@ -101,8 +113,12 @@ class SuluPagesTool implements ToolInterface
             'list' => $this->listPages($arguments['pathPrefix'] ?? '/cmf/example/contents', $locale),
             'get' => $this->getPage($arguments['path'] ?? '', $locale),
             'add_block' => $this->addBlock($arguments, $locale),
+            'update_block' => $this->updateBlock($arguments, $locale),
+            'move_block' => $this->moveBlock($arguments, $locale),
             'remove_block' => $this->removeBlock($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
+            'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
+            'list_block_types' => $this->listBlockTypes(),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -176,6 +192,77 @@ class SuluPagesTool implements ToolInterface
         $result = $this->pageService->publishPage($path, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    private function unpublishPage(string $path, string $locale): ToolResultInterface
+    {
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $result = $this->pageService->unpublishPage($path, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateBlock(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        $position = (int) ($arguments['position'] ?? 0);
+
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $blockData = [];
+        if (isset($arguments['headline'])) {
+            $blockData['headline'] = $arguments['headline'];
+        }
+        if (isset($arguments['content'])) {
+            $blockData['content'] = $arguments['content'];
+        }
+
+        if (empty($blockData)) {
+            return new TextToolResult('Error: at least one of headline or content is required');
+        }
+
+        $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function moveBlock(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        $fromPosition = (int) ($arguments['from_position'] ?? -1);
+        $toPosition = (int) ($arguments['to_position'] ?? -1);
+
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+        if ($fromPosition < 0) {
+            return new TextToolResult('Error: from_position is required');
+        }
+        if ($toPosition < 0) {
+            return new TextToolResult('Error: to_position is required');
+        }
+
+        $result = $this->pageService->moveBlock($path, $fromPosition, $toPosition, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    private function listBlockTypes(): ToolResultInterface
+    {
+        $types = $this->pageService->listBlockTypes();
+
+        return new TextToolResult(json_encode(['types' => $types], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
