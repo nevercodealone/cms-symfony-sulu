@@ -278,12 +278,43 @@ All functionality remains the same, but with better error handling, dependency i
 
 ## MCP Server (Model Context Protocol)
 
-MCP server for AI-powered Sulu content management via Claude.
+AI-powered Sulu CMS content management via Claude. MCP allows Claude to read, create, update, and publish content blocks directly in Sulu.
 
-### Local (Claude Code)
+### How It Works
 
-Add `.mcp.json` to project root:
+1. **Bundle**: Uses `klapaudius/symfony-mcp-server` for MCP protocol handling
+2. **Tool**: `SuluPagesTool` exposes page/block operations to Claude
+3. **Service**: `PageService` handles PHPCR database operations
+4. **OAuth**: Self-hosted OAuth 2.1 with PKCE for remote access (Claude Chat)
 
+### Project Structure
+
+```
+src/
+├── MCP/Tools/SuluPagesTool.php      # MCP tool interface
+├── Sulu/Service/PageService.php      # PHPCR operations
+├── Controller/McpOAuthController.php # OAuth endpoints
+├── Service/McpOAuthService.php       # Token management
+└── Entity/
+    ├── McpAuthCode.php               # Auth code storage
+    └── McpAccessToken.php            # Access token storage
+```
+
+### Available Actions
+
+| Action | Description |
+|--------|-------------|
+| `list` | List pages under path prefix |
+| `get` | Get page with blocks |
+| `add_block` | Add content block |
+| `update_block` | Update block content |
+| `move_block` | Reorder blocks |
+| `remove_block` | Delete block |
+| `publish` / `unpublish` | Control page visibility |
+
+### Local Development (Claude Code)
+
+`.mcp.json` in project root:
 ```json
 {
   "mcpServers": {
@@ -295,11 +326,26 @@ Add `.mcp.json` to project root:
 }
 ```
 
-### Remote (Claude Chat)
+### Remote Access (Claude Chat)
 
-1. Start tunnel: `ddev share`
-2. Add token to `.env.local`: `MCP_SECRET_TOKEN=your-token`
-3. Connect Claude Chat to `https://your-url.ngrok-free.app/mcp` with Bearer token
+Connect to `https://your-domain.com/mcp` - OAuth discovery is automatic.
+
+Required env vars:
+```env
+MCP_PROJECT_PASSWORD=your-secure-password
+MCP_PROJECT_NAME="Project Name"
+```
+
+### Testing
+
+Tests use mocked `Doctrine\DBAL\Connection` with sample PHPCR XML:
+
+```bash
+# Run MCP-related tests
+ddev exec vendor/bin/phpunit tests/Unit/Sulu/Service/PageServiceTest.php
+```
+
+See `tests/Unit/Sulu/Service/PageServiceTest.php` for examples of testing block operations.
 
 ## Running Tests
 

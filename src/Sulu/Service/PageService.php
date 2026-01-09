@@ -8,6 +8,7 @@ use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
+use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
@@ -17,7 +18,55 @@ class PageService
     public function __construct(
         private Connection $connection,
         private McpActivityLogger $activityLogger,
+        private ?CacheManagerInterface $cacheManager = null,
     ) {
+    }
+
+    /**
+     * Invalidate HTTP cache for a page by its path.
+     */
+    private function invalidatePageCache(string $path, string $locale): void
+    {
+        if (!$this->cacheManager) {
+            return;
+        }
+
+        // Get page UUID for cache invalidation
+        $uuid = $this->getPageUuid($path);
+        if ($uuid) {
+            $this->cacheManager->invalidateTag($uuid);
+        }
+
+        // Also try to invalidate by URL path
+        $urlPath = $this->convertPhpcrPathToUrl($path, $locale);
+        if ($urlPath) {
+            $this->cacheManager->invalidatePath($urlPath);
+        }
+    }
+
+    /**
+     * Get page UUID from database.
+     */
+    private function getPageUuid(string $path): ?string
+    {
+        $result = $this->connection->fetchAssociative(
+            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+            [$path]
+        );
+
+        return $result ? $result['identifier'] : null;
+    }
+
+    /**
+     * Convert PHPCR path to frontend URL.
+     */
+    private function convertPhpcrPathToUrl(string $path, string $locale): ?string
+    {
+        // /cmf/example/contents/glossare/phpunit -> /de/glossare/phpunit
+        if (preg_match('#^/cmf/[^/]+/contents(.*)$#', $path, $matches)) {
+            return '/' . $locale . $matches[1];
+        }
+        return null;
     }
 
     /**
@@ -135,6 +184,12 @@ class PageService
                         if (isset($item['description'])) {
                             $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-description#{$itemIndex}", $item['description']);
                         }
+                        if (isset($item['code'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-code#{$itemIndex}", $item['code']);
+                        }
+                        if (isset($item['language'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-language#{$itemIndex}", $item['language']);
+                        }
                     }
                 }
             } elseif ($block['type'] === 'hl-des') {
@@ -176,6 +231,9 @@ class PageService
                 ]
             );
 
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $newIndex];
 
         } catch (\Exception $e) {
@@ -202,7 +260,7 @@ class PageService
     }
 
     /**
-     * Remove a block from a page.
+     * Remove a block from a page using expanded PHPCR property format.
      *
      * @return array{success: bool, message: string}
      */
@@ -224,40 +282,80 @@ class PageService
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
-            $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks"]');
+            // Get blocks length
+            $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]/sv:value');
+            if ($lengthNodes === false || $lengthNodes->length === 0 || !$lengthNodes->item(0)) {
+                return ['success' => false, 'message' => 'No blocks found'];
+            }
 
-            if ($blocksNodes !== false && $blocksNodes->length > 0) {
-                $blocksNode = $blocksNodes->item(0);
-                $blocksValue = $blocksNode instanceof \DOMElement ? $blocksNode->getElementsByTagName('value')->item(0)?->nodeValue : null;
-                if ($blocksValue) {
-                    $currentBlocks = unserialize(base64_decode($blocksValue));
-                    if (!is_array($currentBlocks)) {
-                        return ['success' => false, 'message' => 'No blocks found'];
-                    }
+            $blocksLength = (int) $lengthNodes->item(0)->nodeValue;
+            if ($position < 0 || $position >= $blocksLength) {
+                return ['success' => false, 'message' => "Block position {$position} out of range (0-" . ($blocksLength - 1) . ")"];
+            }
 
-                    if (!isset($currentBlocks[$position])) {
-                        return ['success' => false, 'message' => 'Block position not found'];
-                    }
+            // Collect all block properties grouped by position
+            $blockProperties = [];
+            $allProperties = $xpath->query('//sv:property[starts-with(@sv:name, "i18n:' . $locale . '-blocks-")]');
 
-                    array_splice($currentBlocks, $position, 1);
-
-                    $newBlocksValue = base64_encode(serialize($currentBlocks));
-                    $valueNode = $blocksNode instanceof \DOMElement ? $blocksNode->getElementsByTagName('value')->item(0) : null;
-                    if ($valueNode instanceof \DOMElement) {
-                        $valueNode->nodeValue = $newBlocksValue;
-                    }
-
-                    // Update length
-                    $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
-                    if ($lengthNodes !== false && $lengthNodes->length > 0) {
-                        $lengthNode = $lengthNodes->item(0);
-                        $lengthValueNode = $lengthNode instanceof \DOMElement ? $lengthNode->getElementsByTagName('value')->item(0) : null;
-                        if ($lengthValueNode instanceof \DOMElement) {
-                            $lengthValueNode->nodeValue = (string) count($currentBlocks);
+            if ($allProperties !== false) {
+                foreach ($allProperties as $prop) {
+                    if ($prop instanceof \DOMElement) {
+                        $name = $prop->getAttribute('sv:name');
+                        // Skip the length property
+                        if ($name === "i18n:{$locale}-blocks-length") {
+                            continue;
+                        }
+                        // Extract position from property name (first # number)
+                        if (preg_match('/#(\d+)/', $name, $matches)) {
+                            $pos = (int) $matches[1];
+                            if (!isset($blockProperties[$pos])) {
+                                $blockProperties[$pos] = [];
+                            }
+                            $blockProperties[$pos][] = $prop;
                         }
                     }
                 }
             }
+
+            // Remove all properties for the target block position
+            if (isset($blockProperties[$position])) {
+                foreach ($blockProperties[$position] as $prop) {
+                    if ($prop->parentNode) {
+                        $prop->parentNode->removeChild($prop);
+                    }
+                }
+            }
+
+            // Renumber all blocks after the removed position
+            for ($i = $position + 1; $i < $blocksLength; $i++) {
+                if (isset($blockProperties[$i])) {
+                    foreach ($blockProperties[$i] as $prop) {
+                        if ($prop instanceof \DOMElement) {
+                            $name = $prop->getAttribute('sv:name');
+                            // Replace #oldPos with #newPos (and handle nested items like #0-type#1)
+                            $newName = preg_replace_callback(
+                                '/#(\d+)/',
+                                function ($m) use ($i) {
+                                    $oldNum = (int) $m[1];
+                                    // Only decrement the first position (block index), not nested item indices
+                                    if ($oldNum === $i) {
+                                        return '#' . ($oldNum - 1);
+                                    }
+                                    return $m[0];
+                                },
+                                $name,
+                                1 // Only replace first occurrence
+                            );
+                            if ($newName !== null) {
+                                $prop->setAttribute('sv:name', $newName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update blocks length
+            $lengthNodes->item(0)->nodeValue = (string) ($blocksLength - 1);
 
             $updatedXml = $xml->saveXML();
 
@@ -277,7 +375,19 @@ class PageService
                 ['position' => $position]
             );
 
-            return ['success' => true, 'message' => 'Block removed successfully'];
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
+            // Re-read page to return current state (helps with caching issues)
+            $updatedPage = $this->getPage($path, $locale);
+            $blockCount = $updatedPage ? count($updatedPage['blocks']) : 0;
+
+            return [
+                'success' => true,
+                'message' => 'Block removed successfully',
+                'blocks_remaining' => $blockCount,
+                'blocks' => $updatedPage['blocks'] ?? [],
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -311,6 +421,9 @@ class PageService
                 $path,
                 $locale
             );
+
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
@@ -404,6 +517,16 @@ class PageService
                         $itemDescNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-description#' . $j . '"]/sv:value');
                         if ($itemDescNodes !== false && $itemDescNodes->length > 0 && $itemDescNodes->item(0)) {
                             $item['content'] = $itemDescNodes->item(0)->nodeValue;
+                        }
+
+                        $itemCodeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-code#' . $j . '"]/sv:value');
+                        if ($itemCodeNodes !== false && $itemCodeNodes->length > 0 && $itemCodeNodes->item(0)) {
+                            $item['code'] = $itemCodeNodes->item(0)->nodeValue;
+                        }
+
+                        $itemLangNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-language#' . $j . '"]/sv:value');
+                        if ($itemLangNodes !== false && $itemLangNodes->length > 0 && $itemLangNodes->item(0)) {
+                            $item['language'] = $itemLangNodes->item(0)->nodeValue;
                         }
 
                         if (!empty($item)) {
@@ -509,14 +632,34 @@ class PageService
                 }
             }
 
-            // Handle nested items update for headline-paragraphs
+            // Handle complete items replacement for headline-paragraphs
             if (isset($blockData['items']) && is_array($blockData['items'])) {
-                foreach ($blockData['items'] as $itemIndex => $item) {
-                    if (isset($item['content'])) {
-                        $itemPropName = "i18n:{$locale}-blocks-items#{$position}-description#{$itemIndex}";
-                        $itemNodes = $xpath->query('//sv:property[@sv:name="' . $itemPropName . '"]/sv:value');
-                        if ($itemNodes !== false && $itemNodes->length > 0 && $itemNodes->item(0)) {
-                            $itemNodes->item(0)->nodeValue = $item['content'];
+                // Remove all old item properties for this block
+                $oldItemProps = $xpath->query('//sv:property[contains(@sv:name, "i18n:' . $locale . '-blocks-items#' . $position . '-")]');
+                if ($oldItemProps !== false) {
+                    foreach ($oldItemProps as $prop) {
+                        if ($prop->parentNode) {
+                            $prop->parentNode->removeChild($prop);
+                        }
+                    }
+                }
+
+                // Add new items
+                $rootNode = $xpath->query('/sv:node')->item(0);
+                if ($rootNode) {
+                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-length", (string) count($blockData['items']), 'Long');
+
+                    foreach ($blockData['items'] as $itemIndex => $item) {
+                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-type#{$itemIndex}", $item['type'] ?? 'description');
+                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-settings#{$itemIndex}", '[]');
+                        if (isset($item['description'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-description#{$itemIndex}", $item['description']);
+                        }
+                        if (isset($item['code'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-code#{$itemIndex}", $item['code']);
+                        }
+                        if (isset($item['language'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-language#{$itemIndex}", $item['language']);
                         }
                     }
                 }
@@ -536,7 +679,17 @@ class PageService
                 ['position' => $position, 'fields' => array_keys($blockData)]
             );
 
-            return ['success' => true, 'message' => 'Block updated successfully'];
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
+            // Re-read page to return current state
+            $updatedPage = $this->getPage($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => 'Block updated successfully',
+                'blocks' => $updatedPage['blocks'] ?? [],
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -641,7 +794,17 @@ class PageService
                 ['from_position' => $fromPosition, 'to_position' => $toPosition]
             );
 
-            return ['success' => true, 'message' => "Block moved from position {$fromPosition} to {$toPosition}"];
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
+
+            // Re-read page to return current state
+            $updatedPage = $this->getPage($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => "Block moved from position {$fromPosition} to {$toPosition}",
+                'blocks' => $updatedPage['blocks'] ?? [],
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -698,6 +861,9 @@ class PageService
                 $path,
                 $locale
             );
+
+            // Invalidate HTTP cache for this page
+            $this->invalidatePageCache($path, $locale);
 
             return ['success' => true, 'message' => 'Page unpublished successfully'];
 

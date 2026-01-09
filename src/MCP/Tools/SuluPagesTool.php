@@ -27,7 +27,10 @@ class SuluPagesTool implements ToolInterface
 
     public function getDescription(): string
     {
-        return 'Manage Sulu CMS pages: list, get, add/update/move/remove blocks, publish/unpublish, list block types';
+        return 'Manage Sulu CMS pages. Actions: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
+            'Block type "headline-paragraphs" uses items array: ' .
+            '[{"type":"description","content":"<p>HTML</p>"}, {"type":"code","code":"echo 1;","language":"php"}]. ' .
+            'Languages: php, bash, xml, yaml, json, javascript, html, css.';
     }
 
     public function getInputSchema(): StructuredSchema
@@ -36,61 +39,67 @@ class SuluPagesTool implements ToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
+                description: 'Action to perform. Values: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
                 required: true
             ),
             new SchemaProperty(
                 name: 'path',
                 type: PropertyType::STRING,
-                description: 'Page path (e.g., /cmf/example/contents/page-name)',
+                description: 'Page path, e.g. /cmf/example/contents/glossare/nca-php-glossar/phpunit',
                 required: false
             ),
             new SchemaProperty(
                 name: 'pathPrefix',
                 type: PropertyType::STRING,
-                description: 'Path prefix for listing pages',
+                description: 'For "list" action: filter pages by path prefix, e.g. /cmf/example/contents/glossare',
                 required: false
             ),
             new SchemaProperty(
                 name: 'locale',
                 type: PropertyType::STRING,
-                description: 'Language code (de, en)',
+                description: 'Language code: de or en (default: de)',
                 required: false
             ),
             new SchemaProperty(
                 name: 'blockType',
                 type: PropertyType::STRING,
-                description: 'Block type: headline-paragraphs, hl-des, text, image, code, quote, video',
+                description: 'Block type for add_block. Values: headline-paragraphs (with items), hl-des, text, image, code, quote, video',
                 required: false
             ),
             new SchemaProperty(
                 name: 'headline',
                 type: PropertyType::STRING,
-                description: 'Block headline',
+                description: 'Block headline text',
                 required: false
             ),
             new SchemaProperty(
                 name: 'content',
                 type: PropertyType::STRING,
-                description: 'Block content (HTML)',
+                description: 'Simple block content (HTML). Use "items" instead for blocks with mixed text and code',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'items',
+                type: PropertyType::STRING,
+                description: 'JSON array for headline-paragraphs blocks. Item types: {"type":"description","content":"<p>HTML</p>"} or {"type":"code","code":"code here","language":"php|bash|xml|yaml|json"}. Example: [{"type":"description","content":"<p>Install:</p>"},{"type":"code","code":"composer require x","language":"bash"}]',
                 required: false
             ),
             new SchemaProperty(
                 name: 'position',
                 type: PropertyType::INTEGER,
-                description: 'Block position (0-based)',
+                description: 'Block position (0-based index). For add_block: where to insert. For update_block/remove_block: which block to modify',
                 required: false
             ),
             new SchemaProperty(
                 name: 'from_position',
                 type: PropertyType::INTEGER,
-                description: 'Source position for move_block action',
+                description: 'For move_block: source position (0-based)',
                 required: false
             ),
             new SchemaProperty(
                 name: 'to_position',
                 type: PropertyType::INTEGER,
-                description: 'Target position for move_block action',
+                description: 'For move_block: target position (0-based)',
                 required: false
             ),
         );
@@ -153,14 +162,38 @@ class SuluPagesTool implements ToolInterface
         $path = $arguments['path'] ?? '';
         $blockType = $arguments['blockType'] ?? 'headline-paragraphs';
         $headline = $arguments['headline'] ?? '';
-        $content = $arguments['content'] ?? '';
         $position = (int) ($arguments['position'] ?? 0);
 
         if (empty($path)) {
             return new TextToolResult('Error: path is required');
         }
 
-        $block = $this->buildBlock($blockType, $headline, $content);
+        // Check if items parameter is provided (for structured blocks)
+        if (isset($arguments['items'])) {
+            $items = json_decode($arguments['items'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new TextToolResult('Error: items must be valid JSON array');
+            }
+            // Normalize items: content -> description for Sulu storage
+            $normalizedItems = array_map(function ($item) {
+                if (isset($item['content']) && !isset($item['description'])) {
+                    $item['description'] = $item['content'];
+                    unset($item['content']);
+                }
+                return $item;
+            }, $items);
+
+            $block = [
+                'type' => $blockType,
+                'headline' => $headline,
+                'items' => $normalizedItems,
+            ];
+        } else {
+            // Fallback: use simple content parameter
+            $content = $arguments['content'] ?? '';
+            $block = $this->buildBlock($blockType, $headline, $content);
+        }
+
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
@@ -225,8 +258,25 @@ class SuluPagesTool implements ToolInterface
             $blockData['content'] = $arguments['content'];
         }
 
+        // Handle items parameter for complete items replacement
+        if (isset($arguments['items'])) {
+            $items = json_decode($arguments['items'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new TextToolResult('Error: items must be valid JSON array');
+            }
+            // Normalize items: content -> description for Sulu storage
+            $normalizedItems = array_map(function ($item) {
+                if (isset($item['content']) && !isset($item['description'])) {
+                    $item['description'] = $item['content'];
+                    unset($item['content']);
+                }
+                return $item;
+            }, $items);
+            $blockData['items'] = $normalizedItems;
+        }
+
         if (empty($blockData)) {
-            return new TextToolResult('Error: at least one of headline or content is required');
+            return new TextToolResult('Error: at least one of headline, content or items is required');
         }
 
         $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
