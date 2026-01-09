@@ -344,7 +344,7 @@ class PageService
     }
 
     /**
-     * Extract blocks from PHPCR XML.
+     * Extract blocks from PHPCR XML using expanded property format.
      *
      * @return array<mixed>
      */
@@ -357,19 +357,399 @@ class PageService
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
-            $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks"]/sv:value');
-
-            if ($blocksNodes !== false && $blocksNodes->length > 0 && $blocksNodes->item(0)) {
-                $blocksValue = $blocksNodes->item(0)->nodeValue;
-                if ($blocksValue) {
-                    $blocks = unserialize(base64_decode($blocksValue));
-                    return is_array($blocks) ? $blocks : [];
-                }
+            // Get blocks length
+            $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]/sv:value');
+            if ($lengthNodes === false || $lengthNodes->length === 0 || !$lengthNodes->item(0)) {
+                return [];
             }
+
+            $blocksLength = (int) $lengthNodes->item(0)->nodeValue;
+            $blocks = [];
+
+            for ($i = 0; $i < $blocksLength; $i++) {
+                $block = ['position' => $i];
+
+                // Get block type
+                $typeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-type#' . $i . '"]/sv:value');
+                if ($typeNodes !== false && $typeNodes->length > 0 && $typeNodes->item(0)) {
+                    $block['type'] = $typeNodes->item(0)->nodeValue;
+                }
+
+                // Get headline
+                $headlineNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-headline#' . $i . '"]/sv:value');
+                if ($headlineNodes !== false && $headlineNodes->length > 0 && $headlineNodes->item(0)) {
+                    $block['headline'] = $headlineNodes->item(0)->nodeValue;
+                }
+
+                // Get description (for hl-des blocks)
+                $descNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-description#' . $i . '"]/sv:value');
+                if ($descNodes !== false && $descNodes->length > 0 && $descNodes->item(0)) {
+                    $block['description'] = $descNodes->item(0)->nodeValue;
+                }
+
+                // Get nested items (for headline-paragraphs blocks)
+                $itemsLengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-length"]/sv:value');
+                if ($itemsLengthNodes !== false && $itemsLengthNodes->length > 0 && $itemsLengthNodes->item(0)) {
+                    $itemsLength = (int) $itemsLengthNodes->item(0)->nodeValue;
+                    $items = [];
+
+                    for ($j = 0; $j < $itemsLength; $j++) {
+                        $item = [];
+
+                        $itemTypeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-type#' . $j . '"]/sv:value');
+                        if ($itemTypeNodes !== false && $itemTypeNodes->length > 0 && $itemTypeNodes->item(0)) {
+                            $item['type'] = $itemTypeNodes->item(0)->nodeValue;
+                        }
+
+                        $itemDescNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-description#' . $j . '"]/sv:value');
+                        if ($itemDescNodes !== false && $itemDescNodes->length > 0 && $itemDescNodes->item(0)) {
+                            $item['content'] = $itemDescNodes->item(0)->nodeValue;
+                        }
+
+                        if (!empty($item)) {
+                            $items[] = $item;
+                        }
+                    }
+
+                    if (!empty($items)) {
+                        $block['items'] = $items;
+                    }
+                }
+
+                // Get image/media properties
+                $imageNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-image#' . $i . '"]/sv:value');
+                if ($imageNodes !== false && $imageNodes->length > 0 && $imageNodes->item(0)) {
+                    $imageData = $imageNodes->item(0)->nodeValue;
+                    if ($imageData) {
+                        $block['image'] = json_decode($imageData, true) ?: $imageData;
+                    }
+                }
+
+                // Get code block properties
+                $codeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-code#' . $i . '"]/sv:value');
+                if ($codeNodes !== false && $codeNodes->length > 0 && $codeNodes->item(0)) {
+                    $block['code'] = $codeNodes->item(0)->nodeValue;
+                }
+
+                $languageNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-language#' . $i . '"]/sv:value');
+                if ($languageNodes !== false && $languageNodes->length > 0 && $languageNodes->item(0)) {
+                    $block['language'] = $languageNodes->item(0)->nodeValue;
+                }
+
+                $blocks[] = $block;
+            }
+
+            return $blocks;
         } catch (\Exception) {
             // Ignore parsing errors
         }
 
         return [];
+    }
+
+    /**
+     * Update an existing block.
+     *
+     * @param array<string, mixed> $blockData
+     * @return array{success: bool, message: string}
+     */
+    public function updateBlock(string $path, int $position, array $blockData, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $xml = new DOMDocument();
+            $xml->loadXML($result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            // Check if block exists
+            $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]/sv:value');
+            if ($lengthNodes === false || $lengthNodes->length === 0 || !$lengthNodes->item(0)) {
+                return ['success' => false, 'message' => 'No blocks found'];
+            }
+
+            $blocksLength = (int) $lengthNodes->item(0)->nodeValue;
+            if ($position < 0 || $position >= $blocksLength) {
+                return ['success' => false, 'message' => "Block position {$position} out of range (0-" . ($blocksLength - 1) . ")"];
+            }
+
+            // Update block properties
+            foreach ($blockData as $key => $value) {
+                $propName = match ($key) {
+                    'headline' => "i18n:{$locale}-blocks-headline#{$position}",
+                    'description' => "i18n:{$locale}-blocks-description#{$position}",
+                    'content' => "i18n:{$locale}-blocks-description#{$position}",
+                    'code' => "i18n:{$locale}-blocks-code#{$position}",
+                    'language' => "i18n:{$locale}-blocks-language#{$position}",
+                    default => null,
+                };
+
+                if ($propName === null) {
+                    continue;
+                }
+
+                $propNodes = $xpath->query('//sv:property[@sv:name="' . $propName . '"]/sv:value');
+                if ($propNodes !== false && $propNodes->length > 0 && $propNodes->item(0)) {
+                    $propNodes->item(0)->nodeValue = (string) $value;
+                } else {
+                    // Add new property if it doesn't exist
+                    $rootNode = $xpath->query('/sv:node')->item(0);
+                    if ($rootNode) {
+                        $this->addPhpcrProperty($xml, $rootNode, $propName, (string) $value);
+                    }
+                }
+            }
+
+            // Handle nested items update for headline-paragraphs
+            if (isset($blockData['items']) && is_array($blockData['items'])) {
+                foreach ($blockData['items'] as $itemIndex => $item) {
+                    if (isset($item['content'])) {
+                        $itemPropName = "i18n:{$locale}-blocks-items#{$position}-description#{$itemIndex}";
+                        $itemNodes = $xpath->query('//sv:property[@sv:name="' . $itemPropName . '"]/sv:value');
+                        if ($itemNodes !== false && $itemNodes->length > 0 && $itemNodes->item(0)) {
+                            $itemNodes->item(0)->nodeValue = $item['content'];
+                        }
+                    }
+                }
+            }
+
+            $updatedXml = $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, 'default']
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_block_updated',
+                $path,
+                $locale,
+                ['position' => $position, 'fields' => array_keys($blockData)]
+            );
+
+            return ['success' => true, 'message' => 'Block updated successfully'];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Move a block to a new position.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function moveBlock(string $path, int $fromPosition, int $toPosition, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $xml = new DOMDocument();
+            $xml->loadXML($result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            // Get blocks length
+            $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]/sv:value');
+            if ($lengthNodes === false || $lengthNodes->length === 0 || !$lengthNodes->item(0)) {
+                return ['success' => false, 'message' => 'No blocks found'];
+            }
+
+            $blocksLength = (int) $lengthNodes->item(0)->nodeValue;
+            if ($fromPosition < 0 || $fromPosition >= $blocksLength) {
+                return ['success' => false, 'message' => "From position {$fromPosition} out of range"];
+            }
+            if ($toPosition < 0 || $toPosition >= $blocksLength) {
+                return ['success' => false, 'message' => "To position {$toPosition} out of range"];
+            }
+            if ($fromPosition === $toPosition) {
+                return ['success' => true, 'message' => 'Block already at target position'];
+            }
+
+            // Extract all block properties
+            $blockProperties = [];
+            $allProperties = $xpath->query('//sv:property[starts-with(@sv:name, "i18n:' . $locale . '-blocks-")]');
+
+            if ($allProperties !== false) {
+                foreach ($allProperties as $prop) {
+                    if ($prop instanceof \DOMElement) {
+                        $name = $prop->getAttribute('sv:name');
+                        // Skip the length property
+                        if (str_contains($name, '-length') && !str_contains($name, '-items#')) {
+                            continue;
+                        }
+                        // Extract position from property name
+                        if (preg_match('/#(\d+)/', $name, $matches)) {
+                            $pos = (int) $matches[1];
+                            if (!isset($blockProperties[$pos])) {
+                                $blockProperties[$pos] = [];
+                            }
+                            $blockProperties[$pos][] = $prop;
+                        }
+                    }
+                }
+            }
+
+            // Reorder block properties
+            $newOrder = range(0, $blocksLength - 1);
+            $movedBlock = array_splice($newOrder, $fromPosition, 1)[0];
+            array_splice($newOrder, $toPosition, 0, [$movedBlock]);
+
+            // Rename properties according to new order
+            foreach ($newOrder as $newPos => $oldPos) {
+                if (isset($blockProperties[$oldPos])) {
+                    foreach ($blockProperties[$oldPos] as $prop) {
+                        if ($prop instanceof \DOMElement) {
+                            $name = $prop->getAttribute('sv:name');
+                            $newName = preg_replace('/#' . $oldPos . '(?!\d)/', '#' . $newPos, $name);
+                            if ($newName !== null) {
+                                $prop->setAttribute('sv:name', $newName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            $updatedXml = $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, 'default']
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_block_moved',
+                $path,
+                $locale,
+                ['from_position' => $fromPosition, 'to_position' => $toPosition]
+            );
+
+            return ['success' => true, 'message' => "Block moved from position {$fromPosition} to {$toPosition}"];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Unpublish page (remove from live workspace).
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function unpublishPage(string $path, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not published or not found'];
+            }
+
+            $xml = new DOMDocument();
+            $xml->loadXML($result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            // Set workflow state to unpublished
+            $stateNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-state"]/sv:value');
+            if ($stateNodes !== false && $stateNodes->length > 0 && $stateNodes->item(0)) {
+                $stateNodes->item(0)->nodeValue = '1'; // 1 = unpublished, 2 = published
+            }
+
+            // Set published date to null
+            $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-published"]');
+            if ($publishedNodes !== false && $publishedNodes->length > 0 && $publishedNodes->item(0)) {
+                $parent = $publishedNodes->item(0)->parentNode;
+                if ($parent) {
+                    $parent->removeChild($publishedNodes->item(0));
+                }
+            }
+
+            $updatedXml = $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, 'default_live']
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_unpublished',
+                $path,
+                $locale
+            );
+
+            return ['success' => true, 'message' => 'Page unpublished successfully'];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * List available block types from template configuration.
+     *
+     * @return array<int, array{name: string, fields: array<string>}>
+     */
+    public function listBlockTypes(): array
+    {
+        // These are the common block types used in Sulu templates
+        return [
+            [
+                'name' => 'headline-paragraphs',
+                'fields' => ['headline', 'items'],
+                'description' => 'Headline with multiple paragraph items',
+            ],
+            [
+                'name' => 'hl-des',
+                'fields' => ['headline', 'description'],
+                'description' => 'Simple headline and description block',
+            ],
+            [
+                'name' => 'text',
+                'fields' => ['text'],
+                'description' => 'Rich text content block',
+            ],
+            [
+                'name' => 'image',
+                'fields' => ['image', 'alt', 'caption'],
+                'description' => 'Image with optional caption',
+            ],
+            [
+                'name' => 'code',
+                'fields' => ['code', 'language'],
+                'description' => 'Code snippet with syntax highlighting',
+            ],
+            [
+                'name' => 'quote',
+                'fields' => ['quote', 'author'],
+                'description' => 'Blockquote with attribution',
+            ],
+            [
+                'name' => 'video',
+                'fields' => ['url', 'title'],
+                'description' => 'Embedded video',
+            ],
+        ];
     }
 }

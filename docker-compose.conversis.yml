@@ -42,6 +42,12 @@ services:
       - CHROMADB_HOST=$SHORTCODE1-chromadb
       - CHROMADB_PORT=8000
       - CHROMADB_DATABASE=$CHROMADB_DATABASE
+      - MCP_PROJECT_PASSWORD=$MCP_PROJECT_PASSWORD
+      - MCP_PROJECT_NAME=$MCP_PROJECT_NAME
+      - MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME
+      - MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME
+      - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
+      - APP_URL=https://$URL
   chromadb:
     container_name: $SHORTCODE1-chromadb
     image: chromadb/chroma:0.5.23
