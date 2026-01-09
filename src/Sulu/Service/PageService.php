@@ -135,6 +135,12 @@ class PageService
                         if (isset($item['description'])) {
                             $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-description#{$itemIndex}", $item['description']);
                         }
+                        if (isset($item['code'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-code#{$itemIndex}", $item['code']);
+                        }
+                        if (isset($item['language'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-language#{$itemIndex}", $item['language']);
+                        }
                     }
                 }
             } elseif ($block['type'] === 'hl-des') {
@@ -406,6 +412,16 @@ class PageService
                             $item['content'] = $itemDescNodes->item(0)->nodeValue;
                         }
 
+                        $itemCodeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-code#' . $j . '"]/sv:value');
+                        if ($itemCodeNodes !== false && $itemCodeNodes->length > 0 && $itemCodeNodes->item(0)) {
+                            $item['code'] = $itemCodeNodes->item(0)->nodeValue;
+                        }
+
+                        $itemLangNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-language#' . $j . '"]/sv:value');
+                        if ($itemLangNodes !== false && $itemLangNodes->length > 0 && $itemLangNodes->item(0)) {
+                            $item['language'] = $itemLangNodes->item(0)->nodeValue;
+                        }
+
                         if (!empty($item)) {
                             $items[] = $item;
                         }
@@ -509,14 +525,34 @@ class PageService
                 }
             }
 
-            // Handle nested items update for headline-paragraphs
+            // Handle complete items replacement for headline-paragraphs
             if (isset($blockData['items']) && is_array($blockData['items'])) {
-                foreach ($blockData['items'] as $itemIndex => $item) {
-                    if (isset($item['content'])) {
-                        $itemPropName = "i18n:{$locale}-blocks-items#{$position}-description#{$itemIndex}";
-                        $itemNodes = $xpath->query('//sv:property[@sv:name="' . $itemPropName . '"]/sv:value');
-                        if ($itemNodes !== false && $itemNodes->length > 0 && $itemNodes->item(0)) {
-                            $itemNodes->item(0)->nodeValue = $item['content'];
+                // Remove all old item properties for this block
+                $oldItemProps = $xpath->query('//sv:property[contains(@sv:name, "i18n:' . $locale . '-blocks-items#' . $position . '-")]');
+                if ($oldItemProps !== false) {
+                    foreach ($oldItemProps as $prop) {
+                        if ($prop->parentNode) {
+                            $prop->parentNode->removeChild($prop);
+                        }
+                    }
+                }
+
+                // Add new items
+                $rootNode = $xpath->query('/sv:node')->item(0);
+                if ($rootNode) {
+                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-length", (string) count($blockData['items']), 'Long');
+
+                    foreach ($blockData['items'] as $itemIndex => $item) {
+                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-type#{$itemIndex}", $item['type'] ?? 'description');
+                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-settings#{$itemIndex}", '[]');
+                        if (isset($item['description'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-description#{$itemIndex}", $item['description']);
+                        }
+                        if (isset($item['code'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-code#{$itemIndex}", $item['code']);
+                        }
+                        if (isset($item['language'])) {
+                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-language#{$itemIndex}", $item['language']);
                         }
                     }
                 }

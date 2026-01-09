@@ -76,6 +76,12 @@ class SuluPagesTool implements ToolInterface
                 required: false
             ),
             new SchemaProperty(
+                name: 'items',
+                type: PropertyType::STRING,
+                description: 'JSON array of items for headline-paragraphs blocks: [{"type":"description","content":"<p>...</p>"}, {"type":"code","code":"...","language":"php"}]',
+                required: false
+            ),
+            new SchemaProperty(
                 name: 'position',
                 type: PropertyType::INTEGER,
                 description: 'Block position (0-based)',
@@ -153,14 +159,38 @@ class SuluPagesTool implements ToolInterface
         $path = $arguments['path'] ?? '';
         $blockType = $arguments['blockType'] ?? 'headline-paragraphs';
         $headline = $arguments['headline'] ?? '';
-        $content = $arguments['content'] ?? '';
         $position = (int) ($arguments['position'] ?? 0);
 
         if (empty($path)) {
             return new TextToolResult('Error: path is required');
         }
 
-        $block = $this->buildBlock($blockType, $headline, $content);
+        // Check if items parameter is provided (for structured blocks)
+        if (isset($arguments['items'])) {
+            $items = json_decode($arguments['items'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new TextToolResult('Error: items must be valid JSON array');
+            }
+            // Normalize items: content -> description for Sulu storage
+            $normalizedItems = array_map(function ($item) {
+                if (isset($item['content']) && !isset($item['description'])) {
+                    $item['description'] = $item['content'];
+                    unset($item['content']);
+                }
+                return $item;
+            }, $items);
+
+            $block = [
+                'type' => $blockType,
+                'headline' => $headline,
+                'items' => $normalizedItems,
+            ];
+        } else {
+            // Fallback: use simple content parameter
+            $content = $arguments['content'] ?? '';
+            $block = $this->buildBlock($blockType, $headline, $content);
+        }
+
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
@@ -225,8 +255,25 @@ class SuluPagesTool implements ToolInterface
             $blockData['content'] = $arguments['content'];
         }
 
+        // Handle items parameter for complete items replacement
+        if (isset($arguments['items'])) {
+            $items = json_decode($arguments['items'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new TextToolResult('Error: items must be valid JSON array');
+            }
+            // Normalize items: content -> description for Sulu storage
+            $normalizedItems = array_map(function ($item) {
+                if (isset($item['content']) && !isset($item['description'])) {
+                    $item['description'] = $item['content'];
+                    unset($item['content']);
+                }
+                return $item;
+            }, $items);
+            $blockData['items'] = $normalizedItems;
+        }
+
         if (empty($blockData)) {
-            return new TextToolResult('Error: at least one of headline or content is required');
+            return new TextToolResult('Error: at least one of headline, content or items is required');
         }
 
         $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
