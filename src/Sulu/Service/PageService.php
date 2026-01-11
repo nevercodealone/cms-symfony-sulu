@@ -72,7 +72,7 @@ class PageService
     /**
      * List pages under a path prefix.
      *
-     * @return array<int, array{path: string, title: string, template: string}>
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}>
      */
     public function listPages(string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
     {
@@ -87,10 +87,13 @@ class PageService
         foreach ($results as $row) {
             $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
             $template = $this->extractPropertyFromXml($row['props'], 'template');
+            $url = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-url");
 
             if ($title !== null) {
                 $pages[] = [
                     'path' => $row['path'],
+                    'url' => $url,
+                    'fullUrl' => $url !== null ? '/' . $locale . $url : null,
                     'title' => $title,
                     'template' => $template ?? 'default',
                 ];
@@ -103,7 +106,7 @@ class PageService
     /**
      * Get page content including blocks.
      *
-     * @return array{path: string, title: string, template: string, blocks: array<mixed>}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>}|null
      */
     public function getPage(string $path, string $locale = 'de'): ?array
     {
@@ -118,10 +121,13 @@ class PageService
 
         $title = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-title") ?? '';
         $template = $this->extractPropertyFromXml($result['props'], 'template') ?? 'default';
+        $url = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-url");
         $blocks = $this->extractBlocks($result['props'], $locale);
 
         return [
             'path' => $result['path'],
+            'url' => $url,
+            'fullUrl' => $url !== null ? '/' . $locale . $url : null,
             'title' => $title,
             'template' => $template,
             'blocks' => $blocks,
