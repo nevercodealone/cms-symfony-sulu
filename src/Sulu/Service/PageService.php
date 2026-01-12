@@ -673,9 +673,14 @@ class PageService
 
             $updatedXml = $xml->saveXML();
 
+            // Update both workspaces for immediate visibility
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
                 [$updatedXml, $path, 'default']
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, 'default_live']
             );
 
             $this->activityLogger->logMcpAction(
@@ -788,9 +793,14 @@ class PageService
 
             $updatedXml = $xml->saveXML();
 
+            // Update both workspaces for immediate visibility
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
                 [$updatedXml, $path, 'default']
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, 'default_live']
             );
 
             $this->activityLogger->logMcpAction(
