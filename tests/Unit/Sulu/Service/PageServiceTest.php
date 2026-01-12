@@ -307,7 +307,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->once())
+        $this->connection->expects($this->exactly(2))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -341,7 +341,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->once())
+        $this->connection->expects($this->exactly(2))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
