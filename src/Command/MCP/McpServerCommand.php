@@ -163,11 +163,30 @@ CONTENT GUIDELINES:
 - Use SEO-friendly structure with clear headings
 
 BLOCK TYPES:
-- hl-des: Headline + description (default, for edugate template)
+- headline-paragraphs: PREFERRED for tutorials/docs with mixed text and code. Uses items array.
+- hl-des: Headline + description (simple content)
 - html: Raw HTML content
-- headline-paragraphs: Main content with headline + text paragraphs (tailwind template)
-- code: Code snippets
+- code: Standalone code snippets
 - hero: Page headers
+
+CRITICAL - headline-paragraphs STRUCTURE:
+The "items" parameter must be a JSON STRING containing an array of items.
+Each item has "type": "description" (for HTML text) or "type": "code" (for code blocks).
+
+CORRECT items format (JSON string):
+"[{\"type\":\"description\",\"content\":\"<p>First step:</p>\"},{\"type\":\"code\",\"code\":\"composer require x\",\"language\":\"bash\"},{\"type\":\"description\",\"content\":\"<p>Next step:</p>\"}]"
+
+Item types:
+- description: {"type":"description","content":"<p>HTML here</p>"}
+- code: {"type":"code","code":"echo 1;","language":"php"}
+
+Code languages: php, bash, javascript, html, css, xml, yaml, json
+
+COMMON MISTAKES TO AVOID:
+1. Do NOT embed <pre><code> in HTML content - use separate code items
+2. Do NOT forget "language" field for code items
+3. Do NOT include <?php tags in PHP code - block is already marked as PHP
+4. Do NOT forget to call sulu-page-publish after changes
 
 URL RESEARCH:
 - Use sulu-url-fetch to get URL content
