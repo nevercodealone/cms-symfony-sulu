@@ -1,0 +1,261 @@
+# Sulu CMS MCP Server - LLM Documentation
+
+> This file helps LLMs correctly use the Sulu CMS API.
+
+## Overview
+
+The Sulu MCP Server enables managing CMS pages via these actions:
+- `list` - List pages
+- `get` - Get page with all blocks
+- `add_block` - Add a block
+- `update_block` - Update a block
+- `move_block` - Move a block
+- `remove_block` - Remove a block
+- `publish` - Publish page
+- `unpublish` - Unpublish page
+- `list_block_types` - List available block types
+
+## Block Types and Their Structures
+
+### 1. headline-paragraphs (Most Important Block Type!)
+
+For tutorials, guides, documentation with **alternating text and code**.
+
+#### CORRECT Structure:
+
+```json
+{
+  "action": "add_block",
+  "blockType": "headline-paragraphs",
+  "headline": "Installation Guide",
+  "items": "[{\"type\":\"description\",\"content\":\"<p>First, install the dependencies:</p>\"},{\"type\":\"code\",\"code\":\"composer require vendor/package\",\"language\":\"bash\"},{\"type\":\"description\",\"content\":\"<p>Then configure the class:</p>\"},{\"type\":\"code\",\"code\":\"$config = new Config();\\n$config->set('key', 'value');\",\"language\":\"php\"},{\"type\":\"description\",\"content\":\"<p>Done! Installation is complete.</p>\"}]",
+  "path": "/cmf/example/contents/page",
+  "locale": "de"
+}
+```
+
+#### WRONG Structure (Code inline in HTML):
+
+```json
+{
+  "items": "[{\"type\":\"description\",\"content\":\"<p>Text<pre><code>composer require x</code></pre>more text</p>\"}]"
+}
+```
+
+**Why wrong?** Code won't render as a code block, no syntax highlighting, poor readability.
+
+#### Item Types for headline-paragraphs:
+
+| type | fields | description |
+|------|--------|-------------|
+| `description` | `content` (HTML) | Prose text, can contain `<p>`, `<ul>`, `<h3>`, `<strong>` etc. |
+| `code` | `code`, `language` | Code block with syntax highlighting |
+
+#### Available Languages for Code Blocks:
+
+- `php` - PHP Code
+- `bash` - Shell/Terminal Commands
+- `javascript` - JavaScript/Node.js
+- `html` - HTML Markup
+- `css` - CSS Styles
+- `xml` - XML/SVG
+- `yaml` - YAML Config
+- `json` - JSON Data
+
+### 2. hl-des (Headline + Description)
+
+Simple block for headline with description.
+
+```json
+{
+  "action": "add_block",
+  "blockType": "hl-des",
+  "headline": "About Us",
+  "content": "<p>We are a team of developers...</p>",
+  "path": "/cmf/example/contents/page",
+  "locale": "de"
+}
+```
+
+### 3. text
+
+Pure text block without headline.
+
+```json
+{
+  "action": "add_block",
+  "blockType": "text",
+  "content": "<p>Lorem ipsum dolor sit amet...</p>",
+  "path": "/cmf/example/contents/page",
+  "locale": "de"
+}
+```
+
+### 4. code
+
+Standalone code block (without surrounding text).
+
+```json
+{
+  "action": "add_block",
+  "blockType": "code",
+  "content": "echo 'Hello World';",
+  "path": "/cmf/example/contents/page",
+  "locale": "de"
+}
+```
+
+### 5. image
+
+Image block with optional caption.
+
+```json
+{
+  "action": "add_block",
+  "blockType": "image",
+  "headline": "Screenshot",
+  "content": "<p>Image description</p>",
+  "path": "/cmf/example/contents/page",
+  "locale": "de"
+}
+```
+
+**Note:** Images must be uploaded via Sulu Media Library. The image.ids are set separately.
+
+### 6. quote
+
+Quote block.
+
+```json
+{
+  "action": "add_block",
+  "blockType": "quote",
+  "content": "The best code is the code you don't have to write.",
+  "path": "/cmf/example/contents/page",
+  "locale": "de"
+}
+```
+
+### 7. video
+
+Video embed block.
+
+```json
+{
+  "action": "add_block",
+  "blockType": "video",
+  "headline": "Tutorial Video",
+  "content": "https://youtube.com/watch?v=xxx",
+  "path": "/cmf/example/contents/page",
+  "locale": "de"
+}
+```
+
+## Important Parameters
+
+### Path Format
+
+Sulu uses PHPCR paths:
+```
+/cmf/example/contents/[section]/[subsection]/[page-slug]
+```
+
+Examples:
+- `/cmf/example/contents/glossare/nca-php-glossar/phpunit`
+- `/cmf/example/contents/blog/2025/my-article`
+
+### Locale
+
+- `de` - German
+- `en` - English
+
+### Position (0-based)
+
+- `position: 0` = First block
+- `position: 5` = Sixth block
+- For `add_block`: Position where to insert
+- For `update_block`/`remove_block`: Which block is affected
+
+## Workflow Examples
+
+### Create Tutorial Page
+
+```
+1. get -> Check current blocks
+2. add_block (headline-paragraphs) with items array
+3. publish -> Make live
+```
+
+### Update Block
+
+```
+1. get -> Find position and current content
+2. update_block with new items
+3. publish
+```
+
+### Delete Block
+
+```
+1. get -> Identify position
+2. remove_block with position
+3. publish
+```
+
+## Common Mistakes to Avoid
+
+### Mistake 1: Embedding code in HTML
+```json
+{"content": "<p>Install:<pre><code>npm install</code></pre></p>"}
+```
+**Fix:** Use a separate code item.
+
+### Mistake 2: items as object instead of JSON string
+```json
+{"items": [{"type":"description"...}]}
+```
+**Fix:** items must be a JSON string, not an array object:
+```json
+{"items": "[{\"type\":\"description\"...}]"}
+```
+
+### Mistake 3: Forgetting language for code items
+```json
+{"type": "code", "code": "echo 1;"}
+```
+**Fix:** Always specify `"language": "php"` (or other).
+
+### Mistake 4: Forgetting to publish
+Changes are only visible in draft until `publish` is called.
+
+### Mistake 5: <?php in code blocks
+```json
+{"type": "code", "code": "<?php\necho 'test';", "language": "php"}
+```
+**Fix:** No `<?php` tag! The block is already marked as PHP:
+```json
+{"type": "code", "code": "echo 'test';", "language": "php"}
+```
+
+## Response Interpretation
+
+### Successful Response
+```json
+{
+  "success": true,
+  "message": "Block added successfully",
+  "blocks": [...]
+}
+```
+
+### Error
+```json
+{
+  "success": false,
+  "error": "Block not found at position 99"
+}
+```
+
+## Contact
+
+Questions about the MCP Server: https://nevercodealone.de
