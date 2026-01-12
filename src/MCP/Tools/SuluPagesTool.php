@@ -28,9 +28,11 @@ class SuluPagesTool implements ToolInterface
     public function getDescription(): string
     {
         return 'Manage Sulu CMS pages. Actions: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
-            'Block type "headline-paragraphs" uses items array: ' .
-            '[{"type":"description","content":"<p>HTML</p>"}, {"type":"code","code":"echo 1;","language":"php"}]. ' .
-            'Languages: php, bash, xml, yaml, json, javascript, html, css.';
+            'IMPORTANT: Block type "headline-paragraphs" requires items as JSON STRING (not array): ' .
+            '"[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
+            'Item types: description (content field, HTML) or code (code + language fields). ' .
+            'Languages: php, bash, javascript, html, css, xml, yaml, json. ' .
+            'AVOID: embedding <pre><code> in HTML, missing language field, <?php tags in code.';
     }
 
     public function getInputSchema(): StructuredSchema
