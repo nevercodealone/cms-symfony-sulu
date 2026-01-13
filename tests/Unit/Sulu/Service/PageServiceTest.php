@@ -7,14 +7,18 @@ namespace App\Tests\Unit\Sulu\Service;
 use App\Sulu\Logger\McpActivityLogger;
 use App\Sulu\Service\PageService;
 use Doctrine\DBAL\Connection;
+use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 
 class PageServiceTest extends TestCase
 {
     private Connection&MockObject $connection;
     private McpActivityLogger&MockObject $activityLogger;
     private PageService $pageService;
+    private CacheManagerInterface&MockObject $cacheManager;
+    private FOSCacheManager&MockObject $fosCacheManager;
 
     private const SAMPLE_PHPCR_XML = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -497,5 +501,188 @@ XML;
         $this->assertEquals('code', $result['blocks'][0]['items'][1]['type']);
         $this->assertEquals('echo "hi";', $result['blocks'][0]['items'][1]['code']);
         $this->assertEquals('php', $result['blocks'][0]['items'][1]['language']);
+    }
+
+    /**
+     * Create PageService with cache managers for cache invalidation tests.
+     */
+    private function createPageServiceWithCache(): PageService
+    {
+        $this->cacheManager = $this->createMock(CacheManagerInterface::class);
+        $this->fosCacheManager = $this->createMock(FOSCacheManager::class);
+
+        return new PageService(
+            $this->connection,
+            $this->activityLogger,
+            $this->cacheManager,
+            $this->fosCacheManager
+        );
+    }
+
+    public function testAddBlockFlushesCache(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid-123',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // Expect cache invalidation calls
+        $this->cacheManager->expects($this->once())
+            ->method('invalidateTag')
+            ->with('test-uuid-123');
+
+        $this->cacheManager->expects($this->once())
+            ->method('invalidatePath')
+            ->with('/de/test');
+
+        // CRITICAL: Verify flush() is called for long-running processes
+        $this->fosCacheManager->expects($this->once())
+            ->method('flush');
+
+        $pageService->addBlock(
+            '/cmf/example/contents/test',
+            ['type' => 'headline-paragraphs', 'headline' => 'New Block'],
+            0,
+            'de'
+        );
+    }
+
+    public function testUpdateBlockFlushesCache(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid-456',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // Expect cache invalidation and flush
+        $this->cacheManager->expects($this->once())
+            ->method('invalidateTag');
+
+        $this->cacheManager->expects($this->once())
+            ->method('invalidatePath');
+
+        $this->fosCacheManager->expects($this->once())
+            ->method('flush');
+
+        $pageService->updateBlock(
+            '/cmf/example/contents/test',
+            0,
+            ['headline' => 'Updated Headline'],
+            'de'
+        );
+    }
+
+    public function testRemoveBlockFlushesCache(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid-789',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // Expect flush to be called
+        $this->fosCacheManager->expects($this->once())
+            ->method('flush');
+
+        $pageService->removeBlock('/cmf/example/contents/test', 0, 'de');
+    }
+
+    public function testPublishPageFlushesCache(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid-publish',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // Expect flush to be called
+        $this->fosCacheManager->expects($this->once())
+            ->method('flush');
+
+        $pageService->publishPage('/cmf/example/contents/test', 'de');
+    }
+
+    public function testFlushExceptionDoesNotBreakOperation(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid-exception',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // Simulate flush() throwing an exception
+        $this->fosCacheManager->expects($this->once())
+            ->method('flush')
+            ->willThrowException(new \Exception('Cache flush failed'));
+
+        // Operation should still succeed despite flush exception
+        $result = $pageService->addBlock(
+            '/cmf/example/contents/test',
+            ['type' => 'headline-paragraphs', 'headline' => 'Test'],
+            0,
+            'de'
+        );
+
+        $this->assertTrue($result['success']);
+    }
+
+    public function testMoveBlockFlushesCache(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid-move',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // Expect flush to be called
+        $this->fosCacheManager->expects($this->once())
+            ->method('flush');
+
+        $pageService->moveBlock('/cmf/example/contents/test', 0, 1, 'de');
+    }
+
+    public function testUnpublishPageFlushesCache(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid-unpublish',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // Expect flush to be called
+        $this->fosCacheManager->expects($this->once())
+            ->method('flush');
+
+        $pageService->unpublishPage('/cmf/example/contents/test', 'de');
     }
 }

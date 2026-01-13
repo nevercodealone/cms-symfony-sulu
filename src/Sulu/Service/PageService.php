@@ -8,6 +8,7 @@ use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
+use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 
 /**
@@ -19,6 +20,7 @@ class PageService
         private Connection $connection,
         private McpActivityLogger $activityLogger,
         private ?CacheManagerInterface $cacheManager = null,
+        private ?FOSCacheManager $fosCacheManager = null,
     ) {
     }
 
@@ -41,6 +43,16 @@ class PageService
         $urlPath = $this->convertPhpcrPathToUrl($path, $locale);
         if ($urlPath) {
             $this->cacheManager->invalidatePath($urlPath);
+        }
+
+        // Flush immediately for long-running processes like MCP server
+        // ConsoleEvents::TERMINATE only fires when command exits, not during execution
+        if ($this->fosCacheManager) {
+            try {
+                $this->fosCacheManager->flush();
+            } catch (\Exception $e) {
+                // Log but don't fail the operation
+            }
         }
     }
 
