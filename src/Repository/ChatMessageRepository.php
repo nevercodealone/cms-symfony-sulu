@@ -43,6 +43,8 @@ class ChatMessageRepository extends ServiceEntityRepository
 
     /**
      * Find messages by session ID
+     *
+     * @return array<int, ChatMessage>
      */
     public function findBySessionId(string $sessionId): array
     {
@@ -56,6 +58,8 @@ class ChatMessageRepository extends ServiceEntityRepository
 
     /**
      * Find messages by IP address
+     *
+     * @return array<int, ChatMessage>
      */
     public function findByUserIp(string $userIp): array
     {
@@ -69,6 +73,8 @@ class ChatMessageRepository extends ServiceEntityRepository
 
     /**
      * Get statistics for admin dashboard
+     *
+     * @return array<string, mixed>
      */
     public function getStatistics(): array
     {
@@ -107,6 +113,8 @@ class ChatMessageRepository extends ServiceEntityRepository
 
     /**
      * Get recent chat history for an IP address (last 10 messages from last 24 hours)
+     *
+     * @return array<int, ChatMessage>
      */
     public function getRecentHistoryForIp(string $userIp, int $limit = 10): array
     {
