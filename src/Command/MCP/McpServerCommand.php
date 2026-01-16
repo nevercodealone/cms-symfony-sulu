@@ -123,6 +123,51 @@ class McpServerCommand extends Command
                 ],
             )
             ->addTool(
+                handler: fn (string $query, string $locale = 'de', string $pathPrefix = '/cmf/example/contents') =>
+                    $this->pageService->searchPages($query, $locale, $pathPrefix),
+                name: 'sulu-page-search',
+                description: 'Search pages by title (case-insensitive). Use to find pages without knowing exact path.',
+                inputSchema: [
+                    'type' => 'object',
+                    'properties' => [
+                        'query' => ['type' => 'string', 'description' => 'Search term to match in page titles'],
+                        'locale' => ['type' => 'string', 'description' => 'Language code', 'default' => 'de'],
+                        'pathPrefix' => ['type' => 'string', 'description' => 'Path prefix to search within', 'default' => '/cmf/example/contents'],
+                    ],
+                    'required' => ['query'],
+                ],
+            )
+            ->addTool(
+                handler: fn (string $rootPath, string $locale = 'de', int $depth = 2) =>
+                    $this->pageService->getPageTree($rootPath, $locale, $depth),
+                name: 'sulu-page-tree',
+                description: 'Get hierarchical page tree structure. Use to understand page hierarchy and find parent paths for new pages.',
+                inputSchema: [
+                    'type' => 'object',
+                    'properties' => [
+                        'rootPath' => ['type' => 'string', 'description' => 'Root path to build tree from'],
+                        'locale' => ['type' => 'string', 'description' => 'Language code', 'default' => 'de'],
+                        'depth' => ['type' => 'integer', 'description' => 'Maximum depth of children to include', 'default' => 2],
+                    ],
+                    'required' => ['rootPath'],
+                ],
+            )
+            ->addTool(
+                handler: fn (string $url, string $locale = 'de', string $pathPrefix = '/cmf/example/contents') =>
+                    $this->pageService->findPageByUrl($url, $locale, $pathPrefix),
+                name: 'sulu-page-find-by-url',
+                description: 'Find page by frontend URL. Converts URL like /de/glossar/php to PHPCR path.',
+                inputSchema: [
+                    'type' => 'object',
+                    'properties' => [
+                        'url' => ['type' => 'string', 'description' => 'Frontend URL (e.g., /php-glossar or /de/php-glossar)'],
+                        'locale' => ['type' => 'string', 'description' => 'Language code', 'default' => 'de'],
+                        'pathPrefix' => ['type' => 'string', 'description' => 'Path prefix to search within', 'default' => '/cmf/example/contents'],
+                    ],
+                    'required' => ['url'],
+                ],
+            )
+            ->addTool(
                 handler: fn (string $url) => $this->fetchUrl($url),
                 name: 'sulu-url-fetch',
                 description: 'Fetch URL content for Claude to process and generate content from',
@@ -150,10 +195,18 @@ Sulu CMS Content Management for Never Code Alone (nevercodealone.de).
 YOU ARE THE AI - Generate content yourself, don't call external AI APIs.
 
 WORKFLOW FOR CONTENT CREATION:
-1. Use sulu-page-list to see existing pages
-2. Generate content in German for PHP/Symfony developers
-3. Use sulu-block-add to add content blocks
-4. Use sulu-page-publish to make live
+1. Use sulu-page-search to find existing pages by title
+2. Use sulu-page-tree to understand page hierarchy
+3. Use sulu-page-find-by-url to convert URLs to paths
+4. Use sulu-page-list for full page listing
+5. Generate content in German for PHP/Symfony developers
+6. Use sulu-block-add to add content blocks
+7. Use sulu-page-publish to make live
+
+PAGE DISCOVERY TOOLS:
+- sulu-page-search: Find pages by title (e.g., search for "PHP" to find PHP-related pages)
+- sulu-page-tree: Get hierarchical structure (useful for finding parent paths)
+- sulu-page-find-by-url: Convert frontend URL to PHPCR path
 
 CONTENT GUIDELINES:
 - Target: German PHP/Symfony developers

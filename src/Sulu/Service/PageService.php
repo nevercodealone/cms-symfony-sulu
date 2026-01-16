@@ -1083,4 +1083,128 @@ class PageService
             ],
         ];
     }
+
+    // ==========================================================================
+    // Page Discovery Methods
+    // ==========================================================================
+
+    /**
+     * Search pages by title (case-insensitive).
+     *
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}>
+     */
+    public function searchPages(string $query, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
+    {
+        $allPages = $this->listPages($locale, $pathPrefix);
+        $queryLower = mb_strtolower($query);
+
+        return array_values(array_filter($allPages, function (array $page) use ($queryLower): bool {
+            return str_contains(mb_strtolower($page['title']), $queryLower);
+        }));
+    }
+
+    /**
+     * Get page tree with hierarchical structure.
+     *
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, children: array<mixed>}|null
+     */
+    public function getPageTree(string $rootPath, string $locale = 'de', int $depth = 2): ?array
+    {
+        $allPages = $this->listPages($locale, $rootPath);
+
+        if (empty($allPages)) {
+            return null;
+        }
+
+        // Find root node
+        $rootNode = null;
+        $childPages = [];
+
+        foreach ($allPages as $page) {
+            if ($page['path'] === $rootPath) {
+                $rootNode = $page;
+            } else {
+                $childPages[] = $page;
+            }
+        }
+
+        if ($rootNode === null) {
+            return null;
+        }
+
+        // Build tree structure
+        $rootNode['children'] = $this->buildChildTree($rootPath, $childPages, $depth, 0);
+
+        return $rootNode;
+    }
+
+    /**
+     * Build child tree recursively.
+     *
+     * @param array<int, array<string, mixed>> $pages
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildChildTree(string $parentPath, array $pages, int $maxDepth, int $currentDepth): array
+    {
+        if ($currentDepth >= $maxDepth) {
+            return [];
+        }
+
+        $children = [];
+        $parentPathLength = strlen($parentPath);
+
+        foreach ($pages as $page) {
+            $pagePath = $page['path'];
+
+            // Check if this page is a direct child of the parent
+            if (!str_starts_with($pagePath, $parentPath . '/')) {
+                continue;
+            }
+
+            $relativePath = substr($pagePath, $parentPathLength + 1);
+
+            // Direct child has no additional slashes in relative path
+            if (!str_contains($relativePath, '/')) {
+                $page['children'] = $this->buildChildTree($pagePath, $pages, $maxDepth, $currentDepth + 1);
+                $children[] = $page;
+            }
+        }
+
+        return $children;
+    }
+
+    /**
+     * Find page by frontend URL.
+     *
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}|null
+     */
+    public function findPageByUrl(string $url, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): ?array
+    {
+        // Strip locale prefix if present (e.g., /de/php-glossar -> /php-glossar)
+        $normalizedUrl = $this->normalizeUrl($url, $locale);
+
+        $allPages = $this->listPages($locale, $pathPrefix);
+
+        foreach ($allPages as $page) {
+            if (isset($page['url']) && $page['url'] === $normalizedUrl) {
+                return $page;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalize URL by stripping locale prefix.
+     */
+    private function normalizeUrl(string $url, string $locale): string
+    {
+        $localePrefix = '/' . $locale . '/';
+
+        if (str_starts_with($url, $localePrefix)) {
+            return '/' . substr($url, strlen($localePrefix));
+        }
+
+        return $url;
+    }
 }
