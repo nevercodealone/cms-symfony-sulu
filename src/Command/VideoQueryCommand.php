@@ -52,10 +52,8 @@ final class VideoQueryCommand extends Command
         }
 
         foreach ($queryResponse->ids[0] as $i => $id) {
-            /* @phpstan-ignore-next-line */
-            $io->section($queryResponse->metadatas[0][$i]['id']);
-            /* @phpstan-ignore-next-line */
-            $io->block($queryResponse->metadatas[0][$i]['title']);
+            $io->section((string) ($queryResponse->metadatas[0][$i]['id'] ?? ''));
+            $io->block((string) ($queryResponse->metadatas[0][$i]['title'] ?? ''));
         }
 
         $io->success('Chroma DB Connection & Similarity Search Test Successful!');
