@@ -28,6 +28,9 @@ class WordpressService
    * @throws DecodingExceptionInterface
    * @throws ClientExceptionInterface
    */
+  /**
+   * @return array<int, mixed>
+   */
   public function getItemsFromBlog(): array
   {
     $response = $this->httpClient->request('GET', 'https://blog.nevercodealone.de/wp-json/wp/v2/posts', [
