@@ -551,6 +551,40 @@ class PageService
             $path = $document->getPath();
             $url = '/' . $locale . $document->getResourceSegment();
 
+            // CRITICAL: Verify the page was actually persisted to the database
+            // This catches cases where PHPCR session doesn't commit properly in HTTP context
+            // (e.g., when using MCP via KLP MCP Server)
+            $verifyResult = $this->connection->fetchAssociative(
+                "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$path]
+            );
+
+            if (!$verifyResult) {
+                // Page not found in database after flush - try explicit PHPCR session save
+                try {
+                    $session = $this->documentManager->getPhpcrSession();
+                    $session->save();
+                } catch (\Exception $e) {
+                    return [
+                        'success' => false,
+                        'message' => 'PHPCR session save failed: ' . $e->getMessage(),
+                    ];
+                }
+
+                // Verify again after explicit save
+                $verifyResult = $this->connection->fetchAssociative(
+                    "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                    [$path]
+                );
+
+                if (!$verifyResult) {
+                    return [
+                        'success' => false,
+                        'message' => 'Page created in memory but not persisted to database. Path: ' . $path,
+                    ];
+                }
+            }
+
             // If publishing, publish the document
             if ($publish) {
                 $this->documentManager->publish($document, $locale);
