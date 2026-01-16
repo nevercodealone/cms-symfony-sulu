@@ -500,8 +500,22 @@ class PageService
         }
 
         try {
+            // Load the parent document - this is required for proper PHPCR node creation
+            // Sulu's DocumentManager needs a Document object, not just a path string
+            $parentDocument = $this->documentManager->find($parentPath, $locale, [
+                'load_ghost_content' => false,
+                'load_shadow_content' => false,
+            ]);
+
+            if (!$parentDocument) {
+                return ['success' => false, 'message' => "Could not load parent document at: {$parentPath}"];
+            }
+
             /** @var PageDocument $document */
             $document = $this->documentManager->create('page');
+
+            // Set the parent document (CRITICAL: must be a Document object, not a path)
+            $document->setParent($parentDocument);
 
             // Set required properties
             $document->setTitle($title);
@@ -518,15 +532,13 @@ class PageService
                 ],
             ]);
 
-            // Persist the document under the parent path
+            // Persist the document
             // IMPORTANT: The 'user' option is required by BlameSubscriber to set creator/changer
             // Using admin user ID (1) for MCP-created pages
             $this->documentManager->persist(
                 $document,
                 $locale,
                 [
-                    'parent_path' => $parentPath,
-                    'auto_name' => true,
                     'user' => 1, // Admin user ID - required for BlameSubscriber
                 ]
             );
@@ -534,38 +546,22 @@ class PageService
             // Flush to save changes to PHPCR
             $this->documentManager->flush();
 
-            // Get the created path and UUID from the document before clearing
+            // Get the created path and UUID
             $uuid = $document->getUuid();
             $path = $document->getPath();
             $url = '/' . $locale . $document->getResourceSegment();
 
+            // If publishing, publish the document
+            if ($publish) {
+                $this->documentManager->publish($document, $locale);
+                $this->documentManager->flush();
+
+                // Invalidate cache for the new page
+                $this->invalidatePageCache($path, $locale);
+            }
+
             // Clear document registry to ensure fresh data on subsequent queries
             $this->documentManager->clear();
-
-            // Verify the node was created in PHPCR
-            $nodeCreated = $this->connection->fetchAssociative(
-                "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
-                [$path]
-            );
-
-            if (!$nodeCreated) {
-                return [
-                    'success' => false,
-                    'message' => 'Document was persisted but node not found in database. Path: ' . $path,
-                ];
-            }
-
-            // If publishing, reload the document and publish it
-            if ($publish) {
-                $publishDocument = $this->documentManager->find($uuid, $locale);
-                if ($publishDocument) {
-                    $this->documentManager->publish($publishDocument, $locale);
-                    $this->documentManager->flush();
-
-                    // Invalidate cache for the new page
-                    $this->invalidatePageCache($path, $locale);
-                }
-            }
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_created',

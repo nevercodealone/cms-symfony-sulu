@@ -825,20 +825,34 @@ XML;
             'documentManager' => $documentManager,
         ] = $this->createPageServiceWithDocumentManager();
 
-        // Parent path exists (first call) and node created verification (second call)
+        // Parent path exists in database
         $this->connection->method('fetchAssociative')
             ->willReturn(['identifier' => 'parent-uuid']);
 
-        // Create mock document
+        // Create mock parent document
+        $parentDocument = $this->createMock(PageDocument::class);
+
+        // Create mock page document
         $document = $this->createMock(PageDocument::class);
         $document->method('getUuid')->willReturn('new-page-uuid');
         $document->method('getPath')->willReturn('/cmf/example/contents/test-page');
         $document->method('getResourceSegment')->willReturn('/test-page');
 
+        // Find parent document first
+        $documentManager->expects($this->once())
+            ->method('find')
+            ->with('/cmf/example/contents', 'de', $this->anything())
+            ->willReturn($parentDocument);
+
         $documentManager->expects($this->once())
             ->method('create')
             ->with('page')
             ->willReturn($document);
+
+        // Verify setParent is called with the parent document
+        $document->expects($this->once())
+            ->method('setParent')
+            ->with($parentDocument);
 
         $documentManager->expects($this->once())
             ->method('persist')
@@ -846,9 +860,7 @@ XML;
                 $document,
                 'de',
                 $this->callback(function ($options) {
-                    return $options['parent_path'] === '/cmf/example/contents'
-                        && $options['auto_name'] === true
-                        && $options['user'] === 1; // User option is now required
+                    return $options['user'] === 1;
                 })
             );
 
@@ -883,28 +895,28 @@ XML;
             'fosCacheManager' => $fosCacheManager,
         ] = $this->createPageServiceWithDocumentManager();
 
-        // Parent path exists (first call) and node created verification (second call)
+        // Parent path exists in database
         $this->connection->method('fetchAssociative')
             ->willReturn(['identifier' => 'parent-uuid']);
 
-        // Create mock document
+        // Create mock parent document
+        $parentDocument = $this->createMock(PageDocument::class);
+
+        // Create mock page document
         $document = $this->createMock(PageDocument::class);
         $document->method('getUuid')->willReturn('new-page-uuid');
         $document->method('getPath')->willReturn('/cmf/example/contents/test-page');
         $document->method('getResourceSegment')->willReturn('/test-page');
 
+        // Find parent document
+        $documentManager->expects($this->once())
+            ->method('find')
+            ->with('/cmf/example/contents', 'de', $this->anything())
+            ->willReturn($parentDocument);
+
         $documentManager->method('create')->willReturn($document);
 
-        // Clear is called after initial flush
-        $documentManager->expects($this->once())
-            ->method('clear');
-
-        // The document is reloaded via find() before publishing
-        $documentManager->method('find')
-            ->with('new-page-uuid', 'de')
-            ->willReturn($document);
-
-        // Expect publish to be called with the reloaded document
+        // Expect publish to be called with the document (same instance, no reload)
         $documentManager->expects($this->once())
             ->method('publish')
             ->with($document, 'de');
@@ -912,6 +924,10 @@ XML;
         // Expect flush to be called twice (once after persist, once after publish)
         $documentManager->expects($this->exactly(2))
             ->method('flush');
+
+        // Clear is called after publish
+        $documentManager->expects($this->once())
+            ->method('clear');
 
         // Expect cache flush for MCP long-running process
         $fosCacheManager->expects($this->once())
@@ -934,15 +950,22 @@ XML;
             'documentManager' => $documentManager,
         ] = $this->createPageServiceWithDocumentManager();
 
-        // Parent path exists
+        // Parent path exists in database
         $this->connection->method('fetchAssociative')
             ->willReturn(['identifier' => 'parent-uuid']);
 
-        // Create mock document
+        // Create mock parent document
+        $parentDocument = $this->createMock(PageDocument::class);
+
+        // Create mock page document
         $document = $this->createMock(PageDocument::class);
         $document->method('getUuid')->willReturn('new-page-uuid');
         $document->method('getPath')->willReturn('/cmf/example/contents/test-page');
         $document->method('getResourceSegment')->willReturn('/test-page');
+
+        // Find parent document
+        $documentManager->method('find')
+            ->willReturn($parentDocument);
 
         $documentManager->method('create')->willReturn($document);
 
