@@ -9,6 +9,7 @@ use App\Sulu\Service\PageService;
 use KLP\KlpMcpServer\Services\ToolService\Schema\PropertyType;
 use KLP\KlpMcpServer\Services\ToolService\Schema\SchemaProperty;
 use KLP\KlpMcpServer\Services\ToolService\Schema\StructuredSchema;
+use KLP\KlpMcpServer\Services\ToolService\StreamableToolInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -21,6 +22,16 @@ class SuluPagesToolTest extends TestCase
     {
         $this->pageService = $this->createMock(PageService::class);
         $this->tool = new SuluPagesTool($this->pageService);
+    }
+
+    public function testImplementsStreamableToolInterface(): void
+    {
+        $this->assertInstanceOf(StreamableToolInterface::class, $this->tool);
+    }
+
+    public function testIsStreamingReturnsFalse(): void
+    {
+        $this->assertFalse($this->tool->isStreaming());
     }
 
     public function testGetNameReturnsCorrectName(): void

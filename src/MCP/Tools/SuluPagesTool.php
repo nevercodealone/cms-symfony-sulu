@@ -5,19 +5,30 @@ declare(strict_types=1);
 namespace App\MCP\Tools;
 
 use App\Sulu\Service\PageService;
+use KLP\KlpMcpServer\Services\ProgressService\ProgressNotifierInterface;
 use KLP\KlpMcpServer\Services\ToolService\Annotation\ToolAnnotation;
-use KLP\KlpMcpServer\Services\ToolService\ToolInterface;
+use KLP\KlpMcpServer\Services\ToolService\StreamableToolInterface;
 use KLP\KlpMcpServer\Services\ToolService\Result\TextToolResult;
 use KLP\KlpMcpServer\Services\ToolService\Result\ToolResultInterface;
 use KLP\KlpMcpServer\Services\ToolService\Schema\PropertyType;
 use KLP\KlpMcpServer\Services\ToolService\Schema\SchemaProperty;
 use KLP\KlpMcpServer\Services\ToolService\Schema\StructuredSchema;
 
-class SuluPagesTool implements ToolInterface
+class SuluPagesTool implements StreamableToolInterface
 {
     public function __construct(
         private readonly PageService $pageService
     ) {
+    }
+
+    public function isStreaming(): bool
+    {
+        return false;
+    }
+
+    public function setProgressNotifier(ProgressNotifierInterface $progressNotifier): void
+    {
+        // Not used for non-streaming tool
     }
 
     public function getName(): string
