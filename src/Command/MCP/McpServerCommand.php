@@ -114,6 +114,32 @@ class McpServerCommand extends Command
                 ],
             )
             ->addTool(
+                handler: fn (string $parentPath, string $title, string $resourceSegment, string $locale = 'de', ?string $seoTitle = null, ?string $seoDescription = null, bool $publish = false) =>
+                    $this->pageService->createPage([
+                        'parentPath' => $parentPath,
+                        'title' => $title,
+                        'resourceSegment' => $resourceSegment,
+                        'seoTitle' => $seoTitle,
+                        'seoDescription' => $seoDescription,
+                        'publish' => $publish,
+                    ], $locale),
+                name: 'sulu-page-create',
+                description: 'Create a new Sulu page. Use sulu-page-tree first to find valid parent paths.',
+                inputSchema: [
+                    'type' => 'object',
+                    'properties' => [
+                        'parentPath' => ['type' => 'string', 'description' => 'Parent page PHPCR path (use sulu-page-tree to find valid paths)'],
+                        'title' => ['type' => 'string', 'description' => 'Page title'],
+                        'resourceSegment' => ['type' => 'string', 'description' => 'URL slug starting with /, lowercase letters/numbers/hyphens only (e.g., /my-page)'],
+                        'locale' => ['type' => 'string', 'description' => 'Language code', 'default' => 'de'],
+                        'seoTitle' => ['type' => 'string', 'description' => 'SEO meta title (optional, defaults to title)'],
+                        'seoDescription' => ['type' => 'string', 'description' => 'SEO meta description (optional)'],
+                        'publish' => ['type' => 'boolean', 'description' => 'Publish immediately after creation', 'default' => false],
+                    ],
+                    'required' => ['parentPath', 'title', 'resourceSegment'],
+                ],
+            )
+            ->addTool(
                 handler: fn () => $this->getBlockTypes(),
                 name: 'sulu-block-types',
                 description: 'List available Sulu block types',
