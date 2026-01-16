@@ -489,7 +489,7 @@ class PageService
             return ['success' => false, 'message' => 'resourceSegment must start with / and contain only lowercase letters, numbers, and hyphens'];
         }
 
-        // Verify parent path exists
+        // Verify parent path exists and get parent UUID
         $parentExists = $this->connection->fetchAssociative(
             "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
             [$parentPath]
@@ -519,30 +519,52 @@ class PageService
             ]);
 
             // Persist the document under the parent path
+            // IMPORTANT: The 'user' option is required by BlameSubscriber to set creator/changer
+            // Using admin user ID (1) for MCP-created pages
             $this->documentManager->persist(
                 $document,
                 $locale,
                 [
                     'parent_path' => $parentPath,
                     'auto_name' => true,
+                    'user' => 1, // Admin user ID - required for BlameSubscriber
                 ]
             );
 
-            // Flush to save changes
+            // Flush to save changes to PHPCR
             $this->documentManager->flush();
 
-            // Get the created path and UUID
+            // Get the created path and UUID from the document before clearing
             $uuid = $document->getUuid();
             $path = $document->getPath();
             $url = '/' . $locale . $document->getResourceSegment();
 
-            // If publishing, also publish the document
-            if ($publish) {
-                $this->documentManager->publish($document, $locale);
-                $this->documentManager->flush();
+            // Clear document registry to ensure fresh data on subsequent queries
+            $this->documentManager->clear();
 
-                // Invalidate cache for the new page
-                $this->invalidatePageCache($path, $locale);
+            // Verify the node was created in PHPCR
+            $nodeCreated = $this->connection->fetchAssociative(
+                "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$path]
+            );
+
+            if (!$nodeCreated) {
+                return [
+                    'success' => false,
+                    'message' => 'Document was persisted but node not found in database. Path: ' . $path,
+                ];
+            }
+
+            // If publishing, reload the document and publish it
+            if ($publish) {
+                $publishDocument = $this->documentManager->find($uuid, $locale);
+                if ($publishDocument) {
+                    $this->documentManager->publish($publishDocument, $locale);
+                    $this->documentManager->flush();
+
+                    // Invalidate cache for the new page
+                    $this->invalidatePageCache($path, $locale);
+                }
             }
 
             $this->activityLogger->logMcpAction(

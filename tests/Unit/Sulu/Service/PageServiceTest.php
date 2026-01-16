@@ -825,7 +825,7 @@ XML;
             'documentManager' => $documentManager,
         ] = $this->createPageServiceWithDocumentManager();
 
-        // Parent path exists
+        // Parent path exists (first call) and node created verification (second call)
         $this->connection->method('fetchAssociative')
             ->willReturn(['identifier' => 'parent-uuid']);
 
@@ -847,12 +847,16 @@ XML;
                 'de',
                 $this->callback(function ($options) {
                     return $options['parent_path'] === '/cmf/example/contents'
-                        && $options['auto_name'] === true;
+                        && $options['auto_name'] === true
+                        && $options['user'] === 1; // User option is now required
                 })
             );
 
         $documentManager->expects($this->once())
             ->method('flush');
+
+        $documentManager->expects($this->once())
+            ->method('clear');
 
         $this->activityLogger->expects($this->once())
             ->method('logMcpAction')
@@ -879,7 +883,7 @@ XML;
             'fosCacheManager' => $fosCacheManager,
         ] = $this->createPageServiceWithDocumentManager();
 
-        // Parent path exists
+        // Parent path exists (first call) and node created verification (second call)
         $this->connection->method('fetchAssociative')
             ->willReturn(['identifier' => 'parent-uuid']);
 
@@ -891,7 +895,16 @@ XML;
 
         $documentManager->method('create')->willReturn($document);
 
-        // Expect publish to be called when publish=true
+        // Clear is called after initial flush
+        $documentManager->expects($this->once())
+            ->method('clear');
+
+        // The document is reloaded via find() before publishing
+        $documentManager->method('find')
+            ->with('new-page-uuid', 'de')
+            ->willReturn($document);
+
+        // Expect publish to be called with the reloaded document
         $documentManager->expects($this->once())
             ->method('publish')
             ->with($document, 'de');
