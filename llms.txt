@@ -7,23 +7,23 @@
 The Sulu MCP Server enables managing CMS pages via these actions:
 
 ### Page Discovery
-- `search` - Search pages by title (case-insensitive)
-- `tree` - Get hierarchical page tree structure
-- `find_by_url` - Find page by frontend URL
-- `list` - List all pages under a path
+- `sulu-page-search` - Search pages by title (case-insensitive)
+- `sulu-page-tree` - Get hierarchical page tree structure
+- `sulu-page-find-by-url` - Find page by frontend URL
+- `sulu-page-list` - List all pages under a path
 
 ### Page Management
-- `get` - Get page with all blocks
-- `create_page` - Create a new page
-- `publish` - Publish page
-- `unpublish` - Unpublish page
+- `sulu-page-get` - Get page with all blocks
+- `sulu-page-create` - Create a new page
+- `sulu-page-publish` - Publish page
+- `sulu-page-unpublish` - Unpublish page
 
 ### Block Management
-- `add_block` - Add a block
-- `update_block` - Update a block
-- `move_block` - Move a block
-- `remove_block` - Remove a block
-- `list_block_types` - List available block types
+- `sulu-block-add` - Add a block
+- `sulu-block-update` - Update a block
+- `sulu-block-move` - Move a block
+- `sulu-block-remove` - Remove a block
+- `sulu-block-types` - List available block types
 
 ## Page Discovery
 
@@ -109,28 +109,34 @@ Response:
 
 ## Creating Pages
 
-### create_page Action
+### sulu-page-create
 
 Create new pages under an existing parent path.
+
+**IMPORTANT:** Always use `sulu-page-tree` first to find valid parent paths!
 
 #### Parameters:
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `parentPath` | Yes | PHPCR path of parent page, e.g. `/cmf/example/contents/glossare` |
+| `parentPath` | Yes | PHPCR path of parent page (use `sulu-page-tree` to find valid paths) |
 | `title` | Yes | Page title |
 | `resourceSegment` | Yes | URL slug starting with `/`, e.g. `/my-page` (lowercase, numbers, hyphens only) |
+| `locale` | No | Language code: `de` or `en` (default: `de`) |
 | `seoTitle` | No | SEO meta title (defaults to page title) |
 | `seoDescription` | No | SEO meta description |
-| `locale` | No | Language code: `de` or `en` (default: `de`) |
-| `publish` | No | Publish immediately: `"true"` or `"false"` (default: `"false"`) |
+| `publish` | No | Publish immediately: `true` or `false` (default: `false`) |
 
 #### Example: Create a New Page
 
 ```json
+// Step 1: Find valid parent path
+{"tool": "sulu-page-tree", "rootPath": "/cmf/example/contents", "depth": 1}
+
+// Step 2: Create the page
 {
-  "action": "create_page",
-  "parentPath": "/cmf/example/contents/glossare",
+  "tool": "sulu-page-create",
+  "parentPath": "/cmf/example/contents/nca-php-glossar",
   "title": "Docker Grundlagen",
   "resourceSegment": "/docker-grundlagen",
   "seoTitle": "Docker Grundlagen - Container Tutorial",
@@ -146,19 +152,29 @@ Create new pages under an existing parent path.
 {
   "success": true,
   "message": "Page created successfully",
-  "path": "/cmf/example/contents/glossare/docker-grundlagen",
+  "path": "/cmf/example/contents/nca-php-glossar/docker-grundlagen",
   "uuid": "abc123-def456-...",
   "url": "/de/docker-grundlagen"
 }
 ```
 
+#### Error Response (Invalid Parent):
+
+```json
+{
+  "success": false,
+  "message": "Parent path does not exist: /cmf/example/contents/nonexistent"
+}
+```
+
 #### Important Notes:
 
-1. **Template**: All pages use the `tailwind` template (hardcoded)
-2. **resourceSegment format**: Must start with `/` and contain only `[a-z0-9-]`
-3. **Parent must exist**: The parentPath must point to an existing page
-4. **Empty page**: Created pages have no blocks - use `add_block` after creation
-5. **Publish behavior**: If `publish: true`, page is immediately live and cache is invalidated
+1. **Use sulu-page-tree first**: Always verify the parent path exists before creating
+2. **Template**: All pages use the `tailwind` template (hardcoded)
+3. **resourceSegment format**: Must start with `/` and contain only `[a-z0-9-]`
+4. **Parent must exist**: The parentPath must point to an existing page
+5. **Empty page**: Created pages have no blocks - use `sulu-block-add` after creation
+6. **Publish behavior**: If `publish: true`, page is immediately live and cache is invalidated
 
 ## Block Types and Their Structures
 
