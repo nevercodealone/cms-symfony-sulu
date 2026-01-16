@@ -5,16 +5,107 @@
 ## Overview
 
 The Sulu MCP Server enables managing CMS pages via these actions:
-- `list` - List pages
+
+### Page Discovery
+- `search` - Search pages by title (case-insensitive)
+- `tree` - Get hierarchical page tree structure
+- `find_by_url` - Find page by frontend URL
+- `list` - List all pages under a path
+
+### Page Management
 - `get` - Get page with all blocks
 - `create_page` - Create a new page
+- `publish` - Publish page
+- `unpublish` - Unpublish page
+
+### Block Management
 - `add_block` - Add a block
 - `update_block` - Update a block
 - `move_block` - Move a block
 - `remove_block` - Remove a block
-- `publish` - Publish page
-- `unpublish` - Unpublish page
 - `list_block_types` - List available block types
+
+## Page Discovery
+
+Use these tools to find pages before creating or modifying content.
+
+### search Action
+
+Search pages by title (case-insensitive).
+
+```json
+{
+  "action": "search",
+  "query": "PHP",
+  "locale": "de"
+}
+```
+
+Response:
+```json
+[
+  {"path": "/cmf/example/contents/php-glossar", "title": "PHP Glossar", "url": "/php-glossar"},
+  {"path": "/cmf/example/contents/php-training", "title": "PHP Training", "url": "/php-training"}
+]
+```
+
+### tree Action
+
+Get hierarchical page structure. Use to find parent paths for new pages.
+
+```json
+{
+  "action": "tree",
+  "rootPath": "/cmf/example/contents/glossare",
+  "locale": "de",
+  "depth": 2
+}
+```
+
+Response:
+```json
+{
+  "path": "/cmf/example/contents/glossare",
+  "title": "Glossare",
+  "children": [
+    {
+      "path": "/cmf/example/contents/glossare/php-glossar",
+      "title": "PHP Glossar",
+      "children": [...]
+    }
+  ]
+}
+```
+
+### find_by_url Action
+
+Convert frontend URL to PHPCR path.
+
+```json
+{
+  "action": "find_by_url",
+  "url": "/de/php-glossar",
+  "locale": "de"
+}
+```
+
+or without locale prefix:
+```json
+{
+  "action": "find_by_url",
+  "url": "/php-glossar",
+  "locale": "de"
+}
+```
+
+Response:
+```json
+{
+  "path": "/cmf/example/contents/php-glossar",
+  "title": "PHP Glossar",
+  "url": "/php-glossar"
+}
+```
 
 ## Creating Pages
 
@@ -235,22 +326,29 @@ Examples:
 ### Create New Page with Content
 
 ```
-1. list -> Find parent path (e.g. /cmf/example/contents/glossare)
-2. create_page -> Create page under parent
-3. add_block (headline-paragraphs) -> Add content blocks
-4. add_block -> Add more blocks as needed
-5. publish -> Make live
+1. search -> Find existing similar pages by title
+2. tree -> Understand page hierarchy, find parent path
+3. create_page -> Create page under parent
+4. add_block (headline-paragraphs) -> Add content blocks
+5. add_block -> Add more blocks as needed
+6. publish -> Make live
 ```
 
 Example workflow:
 ```json
-// Step 1: Create the page
+// Step 1: Search for existing Docker pages
+{"action": "search", "query": "Docker", "locale": "de"}
+
+// Step 2: Get tree to find parent path
+{"action": "tree", "rootPath": "/cmf/example/contents/glossare", "depth": 1}
+
+// Step 3: Create the page
 {"action": "create_page", "parentPath": "/cmf/example/contents/glossare", "title": "Docker Tutorial", "resourceSegment": "/docker-tutorial", "seoTitle": "Docker Tutorial", "seoDescription": "Learn Docker basics"}
 
-// Step 2: Add content block
+// Step 4: Add content block
 {"action": "add_block", "path": "/cmf/example/contents/glossare/docker-tutorial", "blockType": "headline-paragraphs", "headline": "Getting Started", "items": "[{\"type\":\"description\",\"content\":\"<p>Docker is a containerization platform.</p>\"}]"}
 
-// Step 3: Publish
+// Step 5: Publish
 {"action": "publish", "path": "/cmf/example/contents/glossare/docker-tutorial"}
 ```
 
@@ -328,7 +426,7 @@ Changes are only visible in draft until `publish` is called.
 ```json
 {"action": "create_page", "parentPath": "/cmf/example/contents/nonexistent/path", ...}
 ```
-**Fix:** Use `list` first to find valid parent paths.
+**Fix:** Use `search` or `tree` first to find valid parent paths.
 
 ## Response Interpretation
 
