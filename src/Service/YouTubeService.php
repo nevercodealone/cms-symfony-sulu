@@ -27,7 +27,23 @@ class YouTubeService
         ];
 
         $videoList = $this->playlistItemsListByPlaylistId('snippet', $params);
-        $videos = $videoList['items'];
+        $items = $videoList->getItems();
+
+        // Convert to arrays for template compatibility
+        $videos = array_map(function ($item) {
+            return [
+                'snippet' => [
+                    'publishedAt' => $item->getSnippet()->getPublishedAt(),
+                    'title' => $item->getSnippet()->getTitle(),
+                    'description' => $item->getSnippet()->getDescription(),
+                    'thumbnails' => $item->getSnippet()->getThumbnails(),
+                    'resourceId' => [
+                        'videoId' => $item->getSnippet()->getResourceId()->getVideoId(),
+                    ],
+                ],
+            ];
+        }, $items);
+
         usort($videos, static function ($a, $b) {
             $actual = strtotime((string) $a['snippet']['publishedAt']);
             $next = strtotime((string) $b['snippet']['publishedAt']);
@@ -40,16 +56,15 @@ class YouTubeService
 
     /**
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return \Google\Service\YouTube\PlaylistItemListResponse
      */
-    private function playlistItemsListByPlaylistId(string $part, array $params): array
+    private function playlistItemsListByPlaylistId(string $part, array $params): \Google\Service\YouTube\PlaylistItemListResponse
     {
         $params = array_filter($params);
-        $response = $this->youtubeService->playlistItems->listPlaylistItems(
+
+        return $this->youtubeService->playlistItems->listPlaylistItems(
             $part,
             $params
         );
-
-        return $response;
     }
 }
