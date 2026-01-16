@@ -10,6 +10,9 @@ use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Sulu\Bundle\PageBundle\Document\PageDocument;
+use Sulu\Component\Content\Document\WorkflowStage;
+use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
@@ -21,6 +24,7 @@ class PageService
         private McpActivityLogger $activityLogger,
         private ?CacheManagerInterface $cacheManager = null,
         private ?FOSCacheManager $fosCacheManager = null,
+        private ?DocumentManagerInterface $documentManager = null,
     ) {
     }
 
@@ -444,6 +448,121 @@ class PageService
             $this->invalidatePageCache($path, $locale);
 
             return ['success' => true, 'message' => 'Page published successfully'];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Create a new page using DocumentManager.
+     *
+     * @param array{parentPath: string, title: string, resourceSegment: string, seoTitle?: string, seoDescription?: string, publish?: bool} $data
+     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string}
+     */
+    public function createPage(array $data, string $locale = 'de'): array
+    {
+        if (!$this->documentManager) {
+            return ['success' => false, 'message' => 'DocumentManager not available'];
+        }
+
+        $parentPath = $data['parentPath'] ?? '';
+        $title = $data['title'] ?? '';
+        $resourceSegment = $data['resourceSegment'] ?? '';
+        $seoTitle = $data['seoTitle'] ?? null;
+        $seoDescription = $data['seoDescription'] ?? null;
+        $publish = $data['publish'] ?? false;
+
+        // Validate required fields
+        if (empty($parentPath)) {
+            return ['success' => false, 'message' => 'parentPath is required'];
+        }
+        if (empty($title)) {
+            return ['success' => false, 'message' => 'title is required'];
+        }
+        if (empty($resourceSegment)) {
+            return ['success' => false, 'message' => 'resourceSegment is required'];
+        }
+
+        // Validate resourceSegment format
+        if (!preg_match('#^/[a-z0-9-]+$#', $resourceSegment)) {
+            return ['success' => false, 'message' => 'resourceSegment must start with / and contain only lowercase letters, numbers, and hyphens'];
+        }
+
+        // Verify parent path exists
+        $parentExists = $this->connection->fetchAssociative(
+            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+            [$parentPath]
+        );
+
+        if (!$parentExists) {
+            return ['success' => false, 'message' => "Parent path does not exist: {$parentPath}"];
+        }
+
+        try {
+            /** @var PageDocument $document */
+            $document = $this->documentManager->create('page');
+
+            // Set required properties
+            $document->setTitle($title);
+            $document->setStructureType('tailwind');
+            $document->setResourceSegment($resourceSegment);
+            $document->setLocale($locale);
+            $document->setWorkflowStage($publish ? WorkflowStage::PUBLISHED : WorkflowStage::TEST);
+
+            // Set SEO extension data
+            $document->setExtensionsData([
+                'seo' => [
+                    'title' => $seoTitle ?? $title,
+                    'description' => $seoDescription ?? '',
+                ],
+            ]);
+
+            // Persist the document under the parent path
+            $this->documentManager->persist(
+                $document,
+                $locale,
+                [
+                    'parent_path' => $parentPath,
+                    'auto_name' => true,
+                ]
+            );
+
+            // Flush to save changes
+            $this->documentManager->flush();
+
+            // Get the created path and UUID
+            $uuid = $document->getUuid();
+            $path = $document->getPath();
+            $url = '/' . $locale . $document->getResourceSegment();
+
+            // If publishing, also publish the document
+            if ($publish) {
+                $this->documentManager->publish($document, $locale);
+                $this->documentManager->flush();
+
+                // Invalidate cache for the new page
+                $this->invalidatePageCache($path, $locale);
+            }
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_created',
+                $path,
+                $locale,
+                [
+                    'title' => $title,
+                    'resourceSegment' => $resourceSegment,
+                    'published' => $publish,
+                ]
+            );
+
+            return [
+                'success' => true,
+                'message' => 'Page created successfully',
+                'path' => $path,
+                'uuid' => $uuid,
+                'url' => $url,
+            ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];

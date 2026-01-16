@@ -11,6 +11,8 @@ use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Sulu\Bundle\PageBundle\Document\PageDocument;
+use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 class PageServiceTest extends TestCase
 {
@@ -684,5 +686,270 @@ XML;
             ->method('flush');
 
         $pageService->unpublishPage('/cmf/example/contents/test', 'de');
+    }
+
+    /**
+     * Create PageService with DocumentManager for create page tests.
+     */
+    private function createPageServiceWithDocumentManager(): array
+    {
+        $documentManager = $this->createMock(DocumentManagerInterface::class);
+        $cacheManager = $this->createMock(CacheManagerInterface::class);
+        $fosCacheManager = $this->createMock(FOSCacheManager::class);
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            $cacheManager,
+            $fosCacheManager,
+            $documentManager
+        );
+
+        return [
+            'pageService' => $pageService,
+            'documentManager' => $documentManager,
+            'cacheManager' => $cacheManager,
+            'fosCacheManager' => $fosCacheManager,
+        ];
+    }
+
+    public function testCreatePageFailsWithoutDocumentManager(): void
+    {
+        // PageService without DocumentManager
+        $pageService = new PageService($this->connection, $this->activityLogger);
+
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+            'resourceSegment' => '/test-page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('DocumentManager not available', $result['message']);
+    }
+
+    public function testCreatePageFailsWithoutParentPath(): void
+    {
+        ['pageService' => $pageService] = $this->createPageServiceWithDocumentManager();
+
+        $result = $pageService->createPage([
+            'title' => 'Test Page',
+            'resourceSegment' => '/test-page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('parentPath is required', $result['message']);
+    }
+
+    public function testCreatePageFailsWithoutTitle(): void
+    {
+        ['pageService' => $pageService] = $this->createPageServiceWithDocumentManager();
+
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'resourceSegment' => '/test-page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('title is required', $result['message']);
+    }
+
+    public function testCreatePageFailsWithoutResourceSegment(): void
+    {
+        ['pageService' => $pageService] = $this->createPageServiceWithDocumentManager();
+
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('resourceSegment is required', $result['message']);
+    }
+
+    public function testCreatePageFailsWithInvalidResourceSegment(): void
+    {
+        ['pageService' => $pageService] = $this->createPageServiceWithDocumentManager();
+
+        // Missing leading slash
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+            'resourceSegment' => 'test-page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('must start with /', $result['message']);
+
+        // Contains uppercase
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+            'resourceSegment' => '/Test-Page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('lowercase letters', $result['message']);
+
+        // Contains invalid characters
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+            'resourceSegment' => '/test_page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+    }
+
+    public function testCreatePageFailsWhenParentPathDoesNotExist(): void
+    {
+        ['pageService' => $pageService] = $this->createPageServiceWithDocumentManager();
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(false);
+
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents/nonexistent',
+            'title' => 'Test Page',
+            'resourceSegment' => '/test-page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('Parent path does not exist', $result['message']);
+    }
+
+    public function testCreatePageSuccess(): void
+    {
+        [
+            'pageService' => $pageService,
+            'documentManager' => $documentManager,
+        ] = $this->createPageServiceWithDocumentManager();
+
+        // Parent path exists
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['identifier' => 'parent-uuid']);
+
+        // Create mock document
+        $document = $this->createMock(PageDocument::class);
+        $document->method('getUuid')->willReturn('new-page-uuid');
+        $document->method('getPath')->willReturn('/cmf/example/contents/test-page');
+        $document->method('getResourceSegment')->willReturn('/test-page');
+
+        $documentManager->expects($this->once())
+            ->method('create')
+            ->with('page')
+            ->willReturn($document);
+
+        $documentManager->expects($this->once())
+            ->method('persist')
+            ->with(
+                $document,
+                'de',
+                $this->callback(function ($options) {
+                    return $options['parent_path'] === '/cmf/example/contents'
+                        && $options['auto_name'] === true;
+                })
+            );
+
+        $documentManager->expects($this->once())
+            ->method('flush');
+
+        $this->activityLogger->expects($this->once())
+            ->method('logMcpAction')
+            ->with('mcp_page_created', '/cmf/example/contents/test-page', 'de', $this->anything());
+
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+            'resourceSegment' => '/test-page',
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('Page created successfully', $result['message']);
+        $this->assertEquals('/cmf/example/contents/test-page', $result['path']);
+        $this->assertEquals('new-page-uuid', $result['uuid']);
+        $this->assertEquals('/de/test-page', $result['url']);
+    }
+
+    public function testCreatePageWithPublishFlushesCache(): void
+    {
+        [
+            'pageService' => $pageService,
+            'documentManager' => $documentManager,
+            'fosCacheManager' => $fosCacheManager,
+        ] = $this->createPageServiceWithDocumentManager();
+
+        // Parent path exists
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['identifier' => 'parent-uuid']);
+
+        // Create mock document
+        $document = $this->createMock(PageDocument::class);
+        $document->method('getUuid')->willReturn('new-page-uuid');
+        $document->method('getPath')->willReturn('/cmf/example/contents/test-page');
+        $document->method('getResourceSegment')->willReturn('/test-page');
+
+        $documentManager->method('create')->willReturn($document);
+
+        // Expect publish to be called when publish=true
+        $documentManager->expects($this->once())
+            ->method('publish')
+            ->with($document, 'de');
+
+        // Expect flush to be called twice (once after persist, once after publish)
+        $documentManager->expects($this->exactly(2))
+            ->method('flush');
+
+        // Expect cache flush for MCP long-running process
+        $fosCacheManager->expects($this->once())
+            ->method('flush');
+
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+            'resourceSegment' => '/test-page',
+            'publish' => true,
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+    }
+
+    public function testCreatePageWithSeoData(): void
+    {
+        [
+            'pageService' => $pageService,
+            'documentManager' => $documentManager,
+        ] = $this->createPageServiceWithDocumentManager();
+
+        // Parent path exists
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['identifier' => 'parent-uuid']);
+
+        // Create mock document
+        $document = $this->createMock(PageDocument::class);
+        $document->method('getUuid')->willReturn('new-page-uuid');
+        $document->method('getPath')->willReturn('/cmf/example/contents/test-page');
+        $document->method('getResourceSegment')->willReturn('/test-page');
+
+        $documentManager->method('create')->willReturn($document);
+
+        // Verify SEO data is set
+        $document->expects($this->once())
+            ->method('setExtensionsData')
+            ->with($this->callback(function ($data) {
+                return isset($data['seo']['title'])
+                    && $data['seo']['title'] === 'Custom SEO Title'
+                    && $data['seo']['description'] === 'Custom SEO Description';
+            }));
+
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test Page',
+            'resourceSegment' => '/test-page',
+            'seoTitle' => 'Custom SEO Title',
+            'seoDescription' => 'Custom SEO Description',
+        ], 'de');
+
+        $this->assertTrue($result['success']);
     }
 }

@@ -195,6 +195,11 @@ services:
             $vectorizer: '@ai.vectorizer.openai_embeddings'
         public: true
 
+    # Sulu Page Service with DocumentManager
+    App\Sulu\Service\PageService:
+        arguments:
+            $documentManager: '@sulu_document_manager.document_manager'
+
     # MCP Tools
     App\MCP\Tools\SuluPagesTool:
         arguments:

@@ -7,6 +7,7 @@
 The Sulu MCP Server enables managing CMS pages via these actions:
 - `list` - List pages
 - `get` - Get page with all blocks
+- `create_page` - Create a new page
 - `add_block` - Add a block
 - `update_block` - Update a block
 - `move_block` - Move a block
@@ -14,6 +15,59 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 - `publish` - Publish page
 - `unpublish` - Unpublish page
 - `list_block_types` - List available block types
+
+## Creating Pages
+
+### create_page Action
+
+Create new pages under an existing parent path.
+
+#### Parameters:
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `parentPath` | Yes | PHPCR path of parent page, e.g. `/cmf/example/contents/glossare` |
+| `title` | Yes | Page title |
+| `resourceSegment` | Yes | URL slug starting with `/`, e.g. `/my-page` (lowercase, numbers, hyphens only) |
+| `seoTitle` | No | SEO meta title (defaults to page title) |
+| `seoDescription` | No | SEO meta description |
+| `locale` | No | Language code: `de` or `en` (default: `de`) |
+| `publish` | No | Publish immediately: `true` or `false` (default: `false`) |
+
+#### Example: Create a New Page
+
+```json
+{
+  "action": "create_page",
+  "parentPath": "/cmf/example/contents/glossare",
+  "title": "Docker Grundlagen",
+  "resourceSegment": "/docker-grundlagen",
+  "seoTitle": "Docker Grundlagen - Container Tutorial",
+  "seoDescription": "Lerne die Grundlagen von Docker und Container-Technologie.",
+  "locale": "de",
+  "publish": false
+}
+```
+
+#### Response:
+
+```json
+{
+  "success": true,
+  "message": "Page created successfully",
+  "path": "/cmf/example/contents/glossare/docker-grundlagen",
+  "uuid": "abc123-def456-...",
+  "url": "/de/docker-grundlagen"
+}
+```
+
+#### Important Notes:
+
+1. **Template**: All pages use the `tailwind` template (hardcoded)
+2. **resourceSegment format**: Must start with `/` and contain only `[a-z0-9-]`
+3. **Parent must exist**: The parentPath must point to an existing page
+4. **Empty page**: Created pages have no blocks - use `add_block` after creation
+5. **Publish behavior**: If `publish: true`, page is immediately live and cache is invalidated
 
 ## Block Types and Their Structures
 
@@ -178,7 +232,29 @@ Examples:
 
 ## Workflow Examples
 
-### Create Tutorial Page
+### Create New Page with Content
+
+```
+1. list -> Find parent path (e.g. /cmf/example/contents/glossare)
+2. create_page -> Create page under parent
+3. add_block (headline-paragraphs) -> Add content blocks
+4. add_block -> Add more blocks as needed
+5. publish -> Make live
+```
+
+Example workflow:
+```json
+// Step 1: Create the page
+{"action": "create_page", "parentPath": "/cmf/example/contents/glossare", "title": "Docker Tutorial", "resourceSegment": "/docker-tutorial", "seoTitle": "Docker Tutorial", "seoDescription": "Learn Docker basics"}
+
+// Step 2: Add content block
+{"action": "add_block", "path": "/cmf/example/contents/glossare/docker-tutorial", "blockType": "headline-paragraphs", "headline": "Getting Started", "items": "[{\"type\":\"description\",\"content\":\"<p>Docker is a containerization platform.</p>\"}]"}
+
+// Step 3: Publish
+{"action": "publish", "path": "/cmf/example/contents/glossare/docker-tutorial"}
+```
+
+### Add Content to Existing Page
 
 ```
 1. get -> Check current blocks
@@ -236,6 +312,23 @@ Changes are only visible in draft until `publish` is called.
 ```json
 {"type": "code", "code": "echo 'test';", "language": "php"}
 ```
+
+### Mistake 6: Invalid resourceSegment for create_page
+```json
+{"resourceSegment": "my-page"}
+{"resourceSegment": "/My-Page"}
+{"resourceSegment": "/my_page"}
+```
+**Fix:** Must start with `/` and contain only lowercase letters, numbers, hyphens:
+```json
+{"resourceSegment": "/my-page"}
+```
+
+### Mistake 7: Creating page under non-existent parent
+```json
+{"action": "create_page", "parentPath": "/cmf/example/contents/nonexistent/path", ...}
+```
+**Fix:** Use `list` first to find valid parent paths.
 
 ## Response Interpretation
 

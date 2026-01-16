@@ -27,7 +27,9 @@ class SuluPagesTool implements ToolInterface
 
     public function getDescription(): string
     {
-        return 'Manage Sulu CMS pages. Actions: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
+        return 'Manage Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
+            'CREATE_PAGE: Use parentPath (PHPCR path like /cmf/example/contents/glossare), title, resourceSegment (URL slug like /my-page), ' .
+            'optional seoTitle, seoDescription, publish (boolean). Template is always "tailwind". ' .
             'IMPORTANT: Block type "headline-paragraphs" requires items as JSON STRING (not array): ' .
             '"[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
             'Item types: description (content field, HTML) or code (code + language fields). ' .
@@ -41,7 +43,7 @@ class SuluPagesTool implements ToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
+                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
                 required: true
             ),
             new SchemaProperty(
@@ -104,6 +106,42 @@ class SuluPagesTool implements ToolInterface
                 description: 'For move_block: target position (0-based)',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'parentPath',
+                type: PropertyType::STRING,
+                description: 'For create_page: Parent page PHPCR path, e.g. /cmf/example/contents/glossare',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'title',
+                type: PropertyType::STRING,
+                description: 'For create_page: Page title',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'resourceSegment',
+                type: PropertyType::STRING,
+                description: 'For create_page: URL slug starting with /, e.g. /my-page (only lowercase letters, numbers, hyphens)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'seoTitle',
+                type: PropertyType::STRING,
+                description: 'For create_page: SEO meta title (defaults to page title if not set)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'seoDescription',
+                type: PropertyType::STRING,
+                description: 'For create_page: SEO meta description',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'publish',
+                type: PropertyType::BOOLEAN,
+                description: 'For create_page: Publish immediately after creation (default: false)',
+                required: false
+            ),
         );
     }
 
@@ -123,6 +161,7 @@ class SuluPagesTool implements ToolInterface
         return match ($action) {
             'list' => $this->listPages($arguments['pathPrefix'] ?? '/cmf/example/contents', $locale),
             'get' => $this->getPage($arguments['path'] ?? '', $locale),
+            'create_page' => $this->createPage($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
             'move_block' => $this->moveBlock($arguments, $locale),
@@ -154,6 +193,25 @@ class SuluPagesTool implements ToolInterface
         }
 
         return new TextToolResult(json_encode($page, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function createPage(array $arguments, string $locale): ToolResultInterface
+    {
+        $data = [
+            'parentPath' => $arguments['parentPath'] ?? '',
+            'title' => $arguments['title'] ?? '',
+            'resourceSegment' => $arguments['resourceSegment'] ?? '',
+            'seoTitle' => $arguments['seoTitle'] ?? null,
+            'seoDescription' => $arguments['seoDescription'] ?? null,
+            'publish' => (bool) ($arguments['publish'] ?? false),
+        ];
+
+        $result = $this->pageService->createPage($data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
