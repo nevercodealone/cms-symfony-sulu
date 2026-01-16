@@ -16,7 +16,10 @@ class YouTubeService
         $this->youtubeService = $youtubeService;
     }
 
-    public function getItemsFromChannel($playlistId = 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF')
+    /**
+     * @return array<int, mixed>
+     */
+    public function getItemsFromChannel(string $playlistId = 'PLKrKzhBjw2Y8XpxPMbaTvc8hHLqDTcDNF'): array
     {
         $params = [
             'maxResults' => 100,
@@ -35,7 +38,11 @@ class YouTubeService
         return array_slice($videos, 0, 10);
     }
 
-    private function playlistItemsListByPlaylistId($part, $params)
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    private function playlistItemsListByPlaylistId(string $part, array $params): array
     {
         $params = array_filter($params);
         $response = $this->youtubeService->playlistItems->listPlaylistItems(
