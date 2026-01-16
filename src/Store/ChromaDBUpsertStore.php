@@ -76,7 +76,7 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
     }
 
     /**
-     * @param array{where?: array<string, string>, whereDocument?: array<string, mixed>} $options
+     * @param array{limit?: int, where?: array<string, string>, whereDocument?: array<string, mixed>} $options
      */
     public function query(Vector $vector, array $options = []): array
     {
@@ -126,6 +126,8 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
 
     /**
      * Get all indexed video IDs.
+     *
+     * @return array<int, string>
      */
     public function getIndexedVideoIds(): array
     {
