@@ -19,6 +19,8 @@ class AIContentLogger
 
     /**
      * Log AI content generation activity to Sulu's activity system
+     *
+     * @param array<string, mixed> $content
      */
     public function logAIContentGeneration(
         string $pagePath,
