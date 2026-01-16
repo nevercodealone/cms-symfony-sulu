@@ -35,11 +35,17 @@ class NcaTwigExtension extends AbstractExtension
     ];
   }
 
+  /**
+   * @return array<int, mixed>
+   */
   public function playlistItemsListByPlaylistId(string $playlistId): array
   {
     return $this->youTubeService->getItemsFromChannel($playlistId);
   }
 
+  /**
+   * @return array<int, mixed>
+   */
   public function getWordpressPosts(): array
   {
     return $this->wordpressService->getItemsFromBlog();
