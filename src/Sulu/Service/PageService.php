@@ -459,7 +459,7 @@ class PageService
     /**
      * Create a new page using DocumentManager.
      *
-     * @param array{parentPath: string, title: string, resourceSegment: string, seoTitle?: string, seoDescription?: string, publish?: bool} $data
+     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string}
      */
     public function createPage(array $data, string $locale = 'de'): array
