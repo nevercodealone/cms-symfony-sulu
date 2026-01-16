@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
+use PHPCR\SessionInterface;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 use Sulu\Bundle\PageBundle\Document\PageDocument;
 use Sulu\Component\Content\Document\WorkflowStage;
@@ -25,6 +26,7 @@ class PageService
         private ?CacheManagerInterface $cacheManager = null,
         private ?FOSCacheManager $fosCacheManager = null,
         private ?DocumentManagerInterface $documentManager = null,
+        private ?SessionInterface $phpcrSession = null,
     ) {
     }
 
@@ -561,14 +563,15 @@ class PageService
 
             if (!$verifyResult) {
                 // Page not found in database after flush - try explicit PHPCR session save
-                try {
-                    $session = $this->documentManager->getPhpcrSession();
-                    $session->save();
-                } catch (\Exception $e) {
-                    return [
-                        'success' => false,
-                        'message' => 'PHPCR session save failed: ' . $e->getMessage(),
-                    ];
+                if ($this->phpcrSession) {
+                    try {
+                        $this->phpcrSession->save();
+                    } catch (\Exception $e) {
+                        return [
+                            'success' => false,
+                            'message' => 'PHPCR session save failed: ' . $e->getMessage(),
+                        ];
+                    }
                 }
 
                 // Verify again after explicit save

@@ -199,6 +199,7 @@ services:
     App\Sulu\Service\PageService:
         arguments:
             $documentManager: '@sulu_document_manager.document_manager'
+            $phpcrSession: '@sulu_document_manager.decorated_default_session'
 
     # MCP Tools
     App\MCP\Tools\SuluPagesTool:
