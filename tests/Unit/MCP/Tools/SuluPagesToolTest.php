@@ -49,23 +49,23 @@ class SuluPagesToolTest extends TestCase
 
     /**
      * Verify all PropertyTypes used are from the valid enum values.
-     * PropertyType only supports STRING and INTEGER.
+     * This test dynamically checks against the actual PropertyType enum.
      */
     public function testSchemaUsesOnlyValidPropertyTypes(): void
     {
-        $schema = $this->tool->getInputSchema();
+        // Get all valid PropertyType cases from the enum
+        $validTypes = PropertyType::cases();
+        $this->assertNotEmpty($validTypes, 'PropertyType enum should have at least one case');
 
-        // Use reflection to access the properties
-        $reflection = new \ReflectionClass($schema);
-        $constructor = $reflection->getConstructor();
-
-        // Get the schema properties by re-calling getInputSchema and checking each property
         // The schema should be instantiable without errors - this is the key test
+        // If any SchemaProperty uses an invalid PropertyType, this will throw an error
+        $schema = $this->tool->getInputSchema();
         $this->assertInstanceOf(StructuredSchema::class, $schema);
 
-        // Verify the valid PropertyType enum values exist
-        $validTypes = [PropertyType::STRING, PropertyType::INTEGER];
-        $this->assertCount(2, $validTypes, 'PropertyType enum should have exactly 2 values (STRING, INTEGER)');
+        // Log available types for documentation purposes
+        $typeNames = array_map(fn($case) => $case->name, $validTypes);
+        $this->assertContains('STRING', $typeNames, 'PropertyType should support STRING');
+        $this->assertContains('INTEGER', $typeNames, 'PropertyType should support INTEGER');
     }
 
     /**
