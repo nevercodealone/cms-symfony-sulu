@@ -138,8 +138,8 @@ class SuluPagesTool implements ToolInterface
             ),
             new SchemaProperty(
                 name: 'publish',
-                type: PropertyType::BOOLEAN,
-                description: 'For create_page: Publish immediately after creation (default: false)',
+                type: PropertyType::STRING,
+                description: 'For create_page: Publish immediately after creation - "true" or "false" (default: "false")',
                 required: false
             ),
         );
@@ -206,7 +206,7 @@ class SuluPagesTool implements ToolInterface
             'resourceSegment' => $arguments['resourceSegment'] ?? '',
             'seoTitle' => $arguments['seoTitle'] ?? null,
             'seoDescription' => $arguments['seoDescription'] ?? null,
-            'publish' => (bool) ($arguments['publish'] ?? false),
+            'publish' => ($arguments['publish'] ?? 'false') === 'true' || ($arguments['publish'] ?? false) === true,
         ];
 
         $result = $this->pageService->createPage($data, $locale);

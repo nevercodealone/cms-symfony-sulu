@@ -32,7 +32,7 @@ Create new pages under an existing parent path.
 | `seoTitle` | No | SEO meta title (defaults to page title) |
 | `seoDescription` | No | SEO meta description |
 | `locale` | No | Language code: `de` or `en` (default: `de`) |
-| `publish` | No | Publish immediately: `true` or `false` (default: `false`) |
+| `publish` | No | Publish immediately: `"true"` or `"false"` (default: `"false"`) |
 
 #### Example: Create a New Page
 
