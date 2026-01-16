@@ -545,55 +545,17 @@ class PageService
                 ]
             );
 
-            // Flush to save changes to PHPCR
             $this->documentManager->flush();
+            $this->phpcrSession?->save();
 
-            // Get the created path and UUID
             $uuid = $document->getUuid();
             $path = $document->getPath();
             $url = '/' . $locale . $document->getResourceSegment();
 
-            // CRITICAL: Verify the page was actually persisted to the database
-            // This catches cases where PHPCR session doesn't commit properly in HTTP context
-            // (e.g., when using MCP via KLP MCP Server)
-            $verifyResult = $this->connection->fetchAssociative(
-                "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
-                [$path]
-            );
-
-            if (!$verifyResult) {
-                // Page not found in database after flush - try explicit PHPCR session save
-                if ($this->phpcrSession) {
-                    try {
-                        $this->phpcrSession->save();
-                    } catch (\Exception $e) {
-                        return [
-                            'success' => false,
-                            'message' => 'PHPCR session save failed: ' . $e->getMessage(),
-                        ];
-                    }
-                }
-
-                // Verify again after explicit save
-                $verifyResult = $this->connection->fetchAssociative(
-                    "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
-                    [$path]
-                );
-
-                if (!$verifyResult) {
-                    return [
-                        'success' => false,
-                        'message' => 'Page created in memory but not persisted to database. Path: ' . $path,
-                    ];
-                }
-            }
-
-            // If publishing, publish the document
             if ($publish) {
                 $this->documentManager->publish($document, $locale);
                 $this->documentManager->flush();
-
-                // Invalidate cache for the new page
+                $this->phpcrSession?->save();
                 $this->invalidatePageCache($path, $locale);
             }
 
