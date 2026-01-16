@@ -24,6 +24,8 @@ class AIActivityLogger
 
     /**
      * Log AI content generation activity directly to Sulu's activity table
+     *
+     * @param array<string, mixed> $content
      */
     public function logAIContentGeneration(
         string $pagePath,
@@ -178,10 +180,13 @@ class AIActivityLogger
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
             
             $titleNodes = $xpath->query("//sv:property[@sv:name='i18n:$locale-title']");
-            if ($titleNodes->length > 0) {
-                $valueNode = $titleNodes->item(0)->getElementsByTagName('value')->item(0);
-                if ($valueNode) {
-                    return $valueNode->nodeValue;
+            if ($titleNodes !== false && $titleNodes->length > 0) {
+                $titleNode = $titleNodes->item(0);
+                if ($titleNode instanceof \DOMElement) {
+                    $valueNode = $titleNode->getElementsByTagName('value')->item(0);
+                    if ($valueNode) {
+                        return $valueNode->nodeValue;
+                    }
                 }
             }
             
