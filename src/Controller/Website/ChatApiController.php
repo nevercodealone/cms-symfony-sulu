@@ -56,7 +56,8 @@ class ChatApiController extends AbstractController
             
             // Get the last assistant message
             $lastMessage = end($messages);
-            $responseContent = $lastMessage->content;
+            /** @phpstan-ignore-next-line Runtime message objects have content property */
+            $responseContent = $lastMessage !== false ? (string) $lastMessage->content : '';
             
             // Check if response contains a video link
             $hasVideoLink = str_contains($responseContent, 'youtube.com') || 
