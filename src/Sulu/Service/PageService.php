@@ -12,6 +12,7 @@ use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 use Sulu\Bundle\PageBundle\Document\PageDocument;
 use Sulu\Component\Content\Document\WorkflowStage;
+use PHPCR\SessionInterface;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
@@ -25,6 +26,7 @@ class PageService
         private ?CacheManagerInterface $cacheManager = null,
         private ?FOSCacheManager $fosCacheManager = null,
         private ?DocumentManagerInterface $documentManager = null,
+        private ?SessionInterface $phpcrSession = null,
     ) {
     }
 
@@ -691,6 +693,7 @@ class PageService
             );
 
             $this->documentManager->flush();
+            $this->phpcrSession?->save();
 
             $uuid = $document->getUuid();
             $path = $document->getPath();
