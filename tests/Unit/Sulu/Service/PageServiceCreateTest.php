@@ -7,69 +7,110 @@ namespace App\Tests\Unit\Sulu\Service;
 use App\Sulu\Logger\McpActivityLogger;
 use App\Sulu\Service\PageService;
 use Doctrine\DBAL\Connection;
-use PHPCR\SessionInterface;
 use PHPUnit\Framework\TestCase;
-use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 class PageServiceCreateTest extends TestCase
 {
-    public function testCreatePagePersistsViaDocumentManager(): void
+    public function testCreatePageViaDirectSql(): void
     {
-        // Mock Connection - parent path check
+        // Mock Connection
         $connection = $this->createMock(Connection::class);
+
+        // Parent lookup returns valid parent with props
+        $parentProps = '<?xml version="1.0"?><sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0"><sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0"><sv:value length="9">/glossare</sv:value></sv:property></sv:node>';
+
         $connection->method('fetchAssociative')
-            ->willReturn(['identifier' => 'parent-uuid']);
+            ->willReturnCallback(function ($sql, $params) use ($parentProps) {
+                if (str_contains($sql, 'SELECT id, path, props')) {
+                    // Parent lookup
+                    return ['id' => 123, 'path' => '/cmf/example/contents/glossare', 'props' => $parentProps];
+                }
+                if (str_contains($sql, 'SELECT id FROM phpcr_nodes WHERE path = ?') && str_contains($sql, 'workspace_name')) {
+                    // Check if page exists - return null (doesn't exist)
+                    if (str_contains($params[0] ?? '', 'test-page')) {
+                        return null;
+                    }
+                    // Parent in workspace lookup
+                    return ['id' => 123];
+                }
+                return null;
+            });
+
+        $connection->method('fetchOne')
+            ->willReturn(10); // Max sort order
+
+        // Expect INSERT statements for both workspaces
+        $connection->expects($this->exactly(2))
+            ->method('executeStatement')
+            ->with(
+                $this->stringContains('INSERT INTO phpcr_nodes'),
+                $this->anything()
+            );
 
         $activityLogger = $this->createMock(McpActivityLogger::class);
-        $activityLogger->method('logMcpAction');
-
-        // Mock parent document
-        $parentDocument = new \stdClass();
-
-        // Mock page document with all required methods
-        $document = $this->getMockBuilder(\stdClass::class)
-            ->addMethods([
-                'setParent', 'setTitle', 'setStructureType', 'setResourceSegment',
-                'setLocale', 'setWorkflowStage', 'setExtensionsData',
-                'getUuid', 'getPath', 'getResourceSegment'
-            ])
-            ->getMock();
-
-        $document->method('getUuid')->willReturn('test-uuid-123');
-        $document->method('getPath')->willReturn('/cmf/example/contents/test-page');
-        $document->method('getResourceSegment')->willReturn('/test-page');
-
-        // Mock DocumentManager
-        $documentManager = $this->createMock(DocumentManagerInterface::class);
-        $documentManager->method('find')->willReturn($parentDocument);
-        $documentManager->method('create')->with('page')->willReturn($document);
-
-        $documentManager->expects($this->once())->method('persist');
-        $documentManager->expects($this->once())->method('flush');
-        $documentManager->expects($this->once())->method('clear');
-
-        // Mock PHPCR Session for explicit save after flush
-        $phpcrSession = $this->createMock(SessionInterface::class);
-        $phpcrSession->expects($this->once())->method('save');
+        $activityLogger->expects($this->once())->method('logMcpAction');
 
         $pageService = new PageService(
             $connection,
             $activityLogger,
             null,
-            null,
-            $documentManager,
-            $phpcrSession
+            null
         );
 
         $result = $pageService->createPage([
-            'parentPath' => '/cmf/example/contents',
+            'parentPath' => '/cmf/example/contents/glossare',
             'title' => 'Test Page',
             'resourceSegment' => '/test-page',
             'publish' => false,
         ], 'de');
 
         $this->assertTrue($result['success']);
-        $this->assertEquals('test-uuid-123', $result['uuid']);
-        $this->assertEquals('/cmf/example/contents/test-page', $result['path']);
+        $this->assertNotEmpty($result['uuid']);
+        $this->assertEquals('/cmf/example/contents/glossare/test-page', $result['path']);
+        $this->assertEquals('/de/glossare/test-page', $result['url']);
+    }
+
+    public function testCreatePageValidatesResourceSegment(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $activityLogger = $this->createMock(McpActivityLogger::class);
+
+        $pageService = new PageService(
+            $connection,
+            $activityLogger,
+            null,
+            null
+        );
+
+        // Invalid: missing leading slash
+        $result = $pageService->createPage([
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test',
+            'resourceSegment' => 'test-page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('resourceSegment must start with /', $result['message']);
+    }
+
+    public function testCreatePageRequiresParentPath(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $activityLogger = $this->createMock(McpActivityLogger::class);
+
+        $pageService = new PageService(
+            $connection,
+            $activityLogger,
+            null,
+            null
+        );
+
+        $result = $pageService->createPage([
+            'title' => 'Test',
+            'resourceSegment' => '/test-page',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('parentPath is required', $result['message']);
     }
 }

@@ -10,10 +10,6 @@ use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
-use Sulu\Bundle\PageBundle\Document\PageDocument;
-use Sulu\Component\Content\Document\WorkflowStage;
-use PHPCR\SessionInterface;
-use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
@@ -25,8 +21,6 @@ class PageService
         private McpActivityLogger $activityLogger,
         private ?CacheManagerInterface $cacheManager = null,
         private ?FOSCacheManager $fosCacheManager = null,
-        private ?DocumentManagerInterface $documentManager = null,
-        private ?SessionInterface $phpcrSession = null,
     ) {
     }
 
@@ -611,10 +605,6 @@ class PageService
      */
     public function createPage(array $data, string $locale = 'de'): array
     {
-        if (!$this->documentManager) {
-            return ['success' => false, 'message' => 'DocumentManager not available'];
-        }
-
         $parentPath = $data['parentPath'] ?? '';
         $title = $data['title'] ?? '';
         $resourceSegment = $data['resourceSegment'] ?? '';
@@ -638,74 +628,71 @@ class PageService
             return ['success' => false, 'message' => 'resourceSegment must start with / and contain only lowercase letters, numbers, and hyphens'];
         }
 
-        // Verify parent path exists and get parent UUID
-        $parentExists = $this->connection->fetchAssociative(
-            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
-            [$parentPath]
-        );
-
-        if (!$parentExists) {
-            return ['success' => false, 'message' => "Parent path does not exist: {$parentPath}"];
-        }
-
         try {
-            // Load the parent document - this is required for proper PHPCR node creation
-            // Sulu's DocumentManager needs a Document object, not just a path string
-            $parentDocument = $this->documentManager->find($parentPath, $locale, [
-                'load_ghost_content' => false,
-                'load_shadow_content' => false,
-            ]);
-
-            if (!$parentDocument) {
-                return ['success' => false, 'message' => "Could not load parent document at: {$parentPath}"];
-            }
-
-            /** @var PageDocument $document */
-            $document = $this->documentManager->create('page');
-
-            // Set the parent document (CRITICAL: must be a Document object, not a path)
-            $document->setParent($parentDocument);
-
-            // Set required properties
-            $document->setTitle($title);
-            $document->setStructureType('tailwind');
-            $document->setResourceSegment($resourceSegment);
-            $document->setLocale($locale);
-            $document->setWorkflowStage($publish ? WorkflowStage::PUBLISHED : WorkflowStage::TEST);
-
-            // Set SEO extension data
-            $document->setExtensionsData([
-                'seo' => [
-                    'title' => $seoTitle ?? $title,
-                    'description' => $seoDescription ?? '',
-                ],
-            ]);
-
-            // Persist the document
-            // IMPORTANT: The 'user' option is required by BlameSubscriber to set creator/changer
-            // Using admin user ID (1) for MCP-created pages
-            $this->documentManager->persist(
-                $document,
-                $locale,
-                [
-                    'user' => 1, // Admin user ID - required for BlameSubscriber
-                ]
+            // Get parent info from default workspace
+            $parent = $this->connection->fetchAssociative(
+                "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$parentPath]
             );
 
-            $this->documentManager->flush();
-            $this->phpcrSession?->save();
-
-            $uuid = $document->getUuid();
-            $path = $document->getPath();
-            $url = '/' . $locale . $document->getResourceSegment();
-
-            if ($publish) {
-                // Use direct SQL publish (documentManager->publish doesn't work in MCP context)
-                $this->publishPage($path, $locale);
+            if (!$parent) {
+                return ['success' => false, 'message' => "Parent path does not exist: {$parentPath}"];
             }
 
-            // Clear document registry to ensure fresh data on subsequent queries
-            $this->documentManager->clear();
+            // Extract parent URL to build full URL
+            $parentUrl = $parent['props'] ? ($this->extractPropertyFromXml($parent['props'], "i18n:{$locale}-url") ?? '') : '';
+            $fullUrl = rtrim($parentUrl, '/') . $resourceSegment;
+
+            // Generate UUID and build path
+            $uuid = $this->generateUuid();
+            $nodeName = ltrim($resourceSegment, '/');
+            $path = $parentPath . '/' . $nodeName;
+            $depth = substr_count($path, '/');
+
+            // Check if page already exists
+            $existing = $this->connection->fetchAssociative(
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$path]
+            );
+
+            if ($existing) {
+                return ['success' => false, 'message' => "Page already exists at: {$path}"];
+            }
+
+            // Get next sort order
+            $maxOrder = $this->connection->fetchOne(
+                "SELECT MAX(sort_order) FROM phpcr_nodes WHERE parent = ? AND workspace_name = 'default'",
+                [$parent['id']]
+            );
+            $sortOrder = ($maxOrder ?? 0) + 1;
+
+            // Build XML props
+            $now = (new \DateTime())->format('Y-m-d\TH:i:s.v+00:00');
+            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish);
+
+            // Insert into BOTH workspaces
+            foreach (['default', 'default_live'] as $workspace) {
+                // Get parent ID for this workspace
+                $parentInWorkspace = $this->connection->fetchAssociative(
+                    "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
+                    [$parentPath, $workspace]
+                );
+
+                if (!$parentInWorkspace) {
+                    continue; // Skip if parent doesn't exist in this workspace
+                }
+
+                $this->connection->executeStatement(
+                    "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
+                    "VALUES (?, ?, ?, '', ?, ?, 'nt:unstructured', ?, ?, ?)",
+                    [$path, $parentInWorkspace['id'], $nodeName, $workspace, $uuid, $props, $depth, $sortOrder]
+                );
+            }
+
+            // Create route if publishing
+            if ($publish) {
+                $this->createRouteForPage($path, $props, $locale);
+            }
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_created',
@@ -723,12 +710,85 @@ class PageService
                 'message' => 'Page created successfully',
                 'path' => $path,
                 'uuid' => $uuid,
-                'url' => $url,
+                'url' => '/' . $locale . $fullUrl,
             ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Build XML props for a new page.
+     */
+    private function buildPagePropsXml(
+        string $uuid,
+        string $title,
+        string $url,
+        string $locale,
+        string $now,
+        ?string $seoTitle = null,
+        ?string $seoDescription = null,
+        bool $published = false
+    ): string {
+        $titleLen = strlen($title);
+        $urlLen = strlen($url);
+        $seoTitleValue = $seoTitle ?? $title;
+        $seoTitleLen = strlen($seoTitleValue);
+        $seoDescValue = $seoDescription ?? '';
+        $seoDescLen = strlen($seoDescValue);
+        $state = $published ? '2' : '1'; // 2 = published, 1 = draft
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">';
+
+        // Required PHPCR properties
+        $xml .= '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="9">sulu:page</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $uuid . '</sv:value></sv:property>';
+
+        // Page content properties
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $titleLen . '">' . htmlspecialchars($title, ENT_XML1) . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-url" sv:type="String" sv:multi-valued="0"><sv:value length="' . $urlLen . '">' . htmlspecialchars($url, ENT_XML1) . '</sv:value></sv:property>';
+
+        // Empty blocks
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-blocks-length" sv:type="Long" sv:multi-valued="0"><sv:value length="1">0</sv:value></sv:property>';
+
+        // Template and state
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-template" sv:type="String" sv:multi-valued="0"><sv:value length="8">tailwind</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-state" sv:type="Long" sv:multi-valued="0"><sv:value length="1">' . $state . '</sv:value></sv:property>';
+
+        // Permissions
+        $xml .= '<sv:property sv:name="sec:permissions" sv:type="String" sv:multi-valued="0"><sv:value length="2">[]</sv:value></sv:property>';
+
+        // User tracking
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-creator" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-changer" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-author" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+
+        // Dates
+        $nowLen = strlen($now);
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-authored" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-created" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-changed" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+
+        // Navigation
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-navContexts" sv:type="String" sv:multi-valued="1"/>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-nodeType" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="sulu:order" sv:type="Long" sv:multi-valued="0"><sv:value length="3">100</sv:value></sv:property>';
+
+        // Published date (only if published)
+        if ($published) {
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-published" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+        }
+
+        // SEO extension
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoTitleLen . '">' . htmlspecialchars($seoTitleValue, ENT_XML1) . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoDescLen . '">' . htmlspecialchars($seoDescValue, ENT_XML1) . '</sv:value></sv:property>';
+
+        $xml .= '</sv:node>' . "\n";
+
+        return $xml;
     }
 
     /**
