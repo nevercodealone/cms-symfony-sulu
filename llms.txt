@@ -176,9 +176,31 @@ Create new pages under an existing parent path.
 5. **Empty page**: Created pages have no blocks - use `sulu-block-add` after creation
 6. **Publish behavior**: If `publish: true`, page is immediately live and cache is invalidated
 
-## Block Types and Their Structures
+## Tailwind Block Types
 
-### 1. headline-paragraphs (Most Important Block Type!)
+All blocks render via `templates/includes/tailwind/blocks/{type}.html.twig`.
+
+### Available Blocks
+
+**Content:** headline-paragraphs, hl-des, code, table, faq, highlights, introduction
+**Marketing:** hero, hero-startpage, hero-image-right, heroslider, cta-button, consultant, contact, feature, feature-default
+**Media:** image, image-gallery, images-with-heading-and-description, logo-gallery, youTubeFromChannel
+**Navigation:** subpages-overview, table-of-contents, related-content-by-page-tag
+**Other:** team, chat, button, wordpressPosts
+
+### Twig Rendering (headline-paragraphs.html.twig)
+
+```twig
+{% for item in content.items %}
+  {% if item.type == 'description' %}
+    {{ item.description|raw }}
+  {% elseif item.type == 'code' %}
+    {% include 'includes/tailwind/blocks/code.html.twig' %}
+  {% endif %}
+{% endfor %}
+```
+
+### 1. headline-paragraphs (Main Content Block)
 
 For tutorials, guides, documentation with **alternating text and code**.
 
@@ -462,6 +484,25 @@ Changes are only visible in draft until `publish` is called.
   "error": "Block not found at position 99"
 }
 ```
+
+## Real Example: PHPStan Page
+
+Path: `/cmf/example/contents/glossare/nca-php-glossar/phpstan`
+URL: `/de/glossare/php-glossar/phpstan`
+
+Block structure:
+```
+Block 0: excerpt-image (header image)
+Block 1: headline-paragraphs "Was ist PHPStan?"
+  - description: "<p>PHPStan ist ein statisches Analysetool...</p>"
+  - code: "composer require --dev phpstan/phpstan" (bash)
+  - description: "<p>Nach der Installation...</p>"
+  - code: "vendor/bin/phpstan analyse src" (bash)
+Block 2: headline-paragraphs "PHPStan Level"
+  ...
+```
+
+Target: Technical glossary pages with explanations + code examples.
 
 ## Contact
 

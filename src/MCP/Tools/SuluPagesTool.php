@@ -38,14 +38,11 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Manage Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
-            'CREATE_PAGE: Use parentPath (PHPCR path like /cmf/example/contents/glossare), title, resourceSegment (URL slug like /my-page), ' .
-            'optional seoTitle, seoDescription, publish (boolean). Template is always "tailwind". ' .
-            'IMPORTANT: Block type "headline-paragraphs" requires items as JSON STRING (not array): ' .
-            '"[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
-            'Item types: description (content field, HTML) or code (code + language fields). ' .
-            'Languages: php, bash, javascript, html, css, xml, yaml, json. ' .
-            'AVOID: embedding <pre><code> in HTML, missing language field, <?php tags in code.';
+        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
+            'BLOCKS: headline-paragraphs (content+code), hl-des (headline+text), hero, hero-startpage, faq, consultant, contact, ' .
+            'cta-button, feature, table, image, image-gallery, code, quote, video, team, logo-gallery, highlights, introduction. ' .
+            'headline-paragraphs items JSON: "[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
+            'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags.';
     }
 
     public function getInputSchema(): StructuredSchema
