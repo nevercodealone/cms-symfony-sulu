@@ -7,13 +7,12 @@ namespace App\Tests\Unit\Sulu\Service;
 use App\Sulu\Logger\McpActivityLogger;
 use App\Sulu\Service\PageService;
 use Doctrine\DBAL\Connection;
-use PHPCR\SessionInterface;
 use PHPUnit\Framework\TestCase;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 class PageServiceCreateTest extends TestCase
 {
-    public function testCreatePageCallsSessionSaveAfterFlush(): void
+    public function testCreatePagePersistsViaDocumentManager(): void
     {
         // Mock Connection - parent path check
         $connection = $this->createMock(Connection::class);
@@ -48,17 +47,12 @@ class PageServiceCreateTest extends TestCase
         $documentManager->expects($this->once())->method('flush');
         $documentManager->expects($this->once())->method('clear');
 
-        // Mock PHPCR Session - KEY TEST: save() must be called
-        $phpcrSession = $this->createMock(SessionInterface::class);
-        $phpcrSession->expects($this->once())->method('save');
-
         $pageService = new PageService(
             $connection,
             $activityLogger,
             null,
             null,
-            $documentManager,
-            $phpcrSession
+            $documentManager
         );
 
         $result = $pageService->createPage([

@@ -895,9 +895,22 @@ XML;
             'fosCacheManager' => $fosCacheManager,
         ] = $this->createPageServiceWithDocumentManager();
 
-        // Parent path exists in database
+        // Mock connection to return data for both parent check AND publishPage fetch
+        $pageProps = '<?xml version="1.0" encoding="UTF-8"?><sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">' .
+            '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">new-page-uuid</sv:value></sv:property>' .
+            '<sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0"><sv:value length="10">/test-page</sv:value></sv:property>' .
+            '</sv:node>';
+
         $this->connection->method('fetchAssociative')
-            ->willReturn(['identifier' => 'parent-uuid']);
+            ->willReturnCallback(function ($sql) use ($pageProps) {
+                if (str_contains($sql, 'identifier')) {
+                    return ['identifier' => 'parent-uuid'];
+                }
+                if (str_contains($sql, 'props')) {
+                    return ['props' => $pageProps];
+                }
+                return ['id' => 1]; // For route parent lookup
+            });
 
         // Create mock parent document
         $parentDocument = $this->createMock(PageDocument::class);
@@ -916,13 +929,8 @@ XML;
 
         $documentManager->method('create')->willReturn($document);
 
-        // Expect publish to be called with the document (same instance, no reload)
+        // Flush called once after persist (publishPage uses direct SQL now)
         $documentManager->expects($this->once())
-            ->method('publish')
-            ->with($document, 'de');
-
-        // Expect flush to be called twice (once after persist, once after publish)
-        $documentManager->expects($this->exactly(2))
             ->method('flush');
 
         // Clear is called after publish

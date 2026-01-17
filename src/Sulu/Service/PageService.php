@@ -9,7 +9,6 @@ use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
-use PHPCR\SessionInterface;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 use Sulu\Bundle\PageBundle\Document\PageDocument;
 use Sulu\Component\Content\Document\WorkflowStage;
@@ -26,7 +25,6 @@ class PageService
         private ?CacheManagerInterface $cacheManager = null,
         private ?FOSCacheManager $fosCacheManager = null,
         private ?DocumentManagerInterface $documentManager = null,
-        private ?SessionInterface $phpcrSession = null,
     ) {
     }
 
@@ -435,10 +433,14 @@ class PageService
                 return ['success' => false, 'message' => 'Page not found'];
             }
 
+            // Copy content to live workspace
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
                 [$result['props'], $path, 'default_live']
             );
+
+            // Create route if it doesn't exist
+            $this->createRouteForPage($path, $result['props'], $locale);
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_published',
@@ -454,6 +456,149 @@ class PageService
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Create route node for a page.
+     */
+    private function createRouteForPage(string $pagePath, string $pageProps, string $locale): void
+    {
+        // Extract UUID and URL from page props
+        $xml = new \DOMDocument();
+        $xml->loadXML($pageProps);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $uuidNodes = $xpath->query('//sv:property[@sv:name="jcr:uuid"]/sv:value');
+        $urlNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-url"]/sv:value');
+
+        if (!$uuidNodes || $uuidNodes->length === 0 || !$urlNodes || $urlNodes->length === 0) {
+            return;
+        }
+
+        $pageUuid = $uuidNodes->item(0)?->nodeValue ?? '';
+        $pageUrl = $urlNodes->item(0)?->nodeValue ?? '';
+
+        if (empty($pageUuid) || empty($pageUrl)) {
+            return;
+        }
+
+        // Build route path: /cmf/example/routes/{locale}/{url}
+        $routePath = '/cmf/example/routes/' . $locale . $pageUrl;
+
+        // Check if route already exists
+        $existing = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$routePath]
+        );
+
+        if ($existing) {
+            return; // Route already exists
+        }
+
+        // Get parent route node ID
+        $parentPath = dirname($routePath);
+        $parent = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$parentPath]
+        );
+
+        if (!$parent) {
+            // Create parent path recursively if needed
+            $this->ensureRouteParentExists($parentPath, $locale);
+            $parent = $this->connection->fetchAssociative(
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+                [$parentPath]
+            );
+        }
+
+        if (!$parent) {
+            return; // Can't create route without parent
+        }
+
+        $routeUuid = $this->generateUuid();
+        $now = (new \DateTime())->format('Y-m-d\TH:i:s.vP');
+        $nodeName = basename($routePath);
+
+        // Build route props XML
+        $routeProps = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
+            '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" ' .
+            'xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" ' .
+            'xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">' .
+            '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="17">mix:referenceable</sv:value><sv:value length="9">sulu:path</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $routeUuid . '</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:history" sv:type="Boolean" sv:multi-valued="0"><sv:value length="0">0</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:created" sv:type="Date" sv:multi-valued="0"><sv:value length="29">' . $now . '</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:changed" sv:type="Date" sv:multi-valued="0"><sv:value length="29">' . $now . '</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:content" sv:type="Reference" sv:multi-valued="0"><sv:value length="36">' . $pageUuid . '</sv:value></sv:property>' .
+            '</sv:node>' . "\n";
+
+        // Insert route node
+        $this->connection->executeStatement(
+            "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
+            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            [$routePath, $parent['id'], $nodeName, $routeUuid, $routeProps, substr_count($routePath, '/'), 0]
+        );
+    }
+
+    /**
+     * Ensure parent route path exists.
+     */
+    private function ensureRouteParentExists(string $parentPath, string $locale): void
+    {
+        $existing = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$parentPath]
+        );
+
+        if ($existing) {
+            return;
+        }
+
+        // Recursively create parent
+        $grandparent = dirname($parentPath);
+        if ($grandparent !== '/cmf/example/routes/' . $locale && $grandparent !== '/cmf/example/routes') {
+            $this->ensureRouteParentExists($grandparent, $locale);
+        }
+
+        $parent = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$grandparent]
+        );
+
+        if (!$parent) {
+            return;
+        }
+
+        $uuid = $this->generateUuid();
+        $nodeName = basename($parentPath);
+
+        $props = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
+            '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" ' .
+            'xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" ' .
+            'xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">' .
+            '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="17">mix:referenceable</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $uuid . '</sv:value></sv:property>' .
+            '</sv:node>' . "\n";
+
+        $this->connection->executeStatement(
+            "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
+            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            [$parentPath, $parent['id'], $nodeName, $uuid, $props, substr_count($parentPath, '/'), 0]
+        );
+    }
+
+    /**
+     * Generate a UUID v4.
+     */
+    private function generateUuid(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
     /**
@@ -546,17 +691,14 @@ class PageService
             );
 
             $this->documentManager->flush();
-            $this->phpcrSession?->save();
 
             $uuid = $document->getUuid();
             $path = $document->getPath();
             $url = '/' . $locale . $document->getResourceSegment();
 
             if ($publish) {
-                $this->documentManager->publish($document, $locale);
-                $this->documentManager->flush();
-                $this->phpcrSession?->save();
-                $this->invalidatePageCache($path, $locale);
+                // Use direct SQL publish (documentManager->publish doesn't work in MCP context)
+                $this->publishPage($path, $locale);
             }
 
             // Clear document registry to ensure fresh data on subsequent queries
