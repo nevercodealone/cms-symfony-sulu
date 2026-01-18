@@ -251,10 +251,18 @@ class SuluPagesTool implements StreamableToolInterface
                 return $item;
             }, $items);
 
+            // Use correct nested property name based on block type
+            $nestedKey = match ($blockType) {
+                'faq' => 'faqs',
+                'table' => 'rows',
+                'image-with-flags' => 'flags',
+                default => 'items',
+            };
+
             $block = [
                 'type' => $blockType,
                 'headline' => $headline,
-                'items' => $normalizedItems,
+                $nestedKey => $normalizedItems,
             ];
         } else {
             // Fallback: use simple content parameter
@@ -340,7 +348,16 @@ class SuluPagesTool implements StreamableToolInterface
                 }
                 return $item;
             }, $items);
-            $blockData['items'] = $normalizedItems;
+
+            // Use correct nested property name if blockType is provided
+            $blockType = $arguments['blockType'] ?? null;
+            $nestedKey = match ($blockType) {
+                'faq' => 'faqs',
+                'table' => 'rows',
+                'image-with-flags' => 'flags',
+                default => 'items',
+            };
+            $blockData[$nestedKey] = $normalizedItems;
         }
 
         if (empty($blockData)) {
