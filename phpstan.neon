@@ -4,16 +4,10 @@ parameters:
     - tests
     - config
   level: 6
+  reportUnmatchedIgnoredErrors: false
   symfony:
     container_xml_path: %currentWorkingDirectory%/var/cache/website/dev/App_KernelDevDebugContainer.xml
   ignoreErrors:
-    # MCP SDK classes - external package not analyzed (McpServerCommand uses external MCP library)
-    -
-      message: '#unknown class Mcp#'
-      path: src/Command/MCP/*
-    -
-      message: '#not found#'
-      path: src/Command/MCP/*
     # PHPUnit mock methods - mocks don't expose these to static analysis
     - '#Call to an undefined method .*::expects\(\)#'
     - '#Call to an undefined method .*::method\(\)#'
