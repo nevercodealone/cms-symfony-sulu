@@ -275,20 +275,197 @@ INSTRUCTIONS;
     }
 
     /**
+     * Get all 32 available block types with detailed descriptions and Twig template info.
+     *
      * @return array<string, string>
      */
     private function getBlockTypes(): array
     {
         return [
-            'headline-paragraphs' => 'Headline with description paragraphs - main content block',
-            'code' => 'Code block for code snippets',
-            'hero' => 'Hero section for page headers',
-            'faq' => 'FAQ accordion for Q&A',
-            'table' => 'Data table',
-            'image' => 'Single image',
-            'button' => 'Button/CTA',
-            'contact' => 'Contact information',
-            'feature' => 'Feature showcase',
+            // === CONTENT BLOCKS ===
+            'headline-paragraphs' => <<<'DESC'
+Main content block with mixed text and code.
+Properties: headline, items[] (nested array)
+Nested item properties: type (description|code), description/code, language
+Twig: templates/includes/tailwind/blocks/headline-paragraphs.html.twig
+Example: {"type":"headline-paragraphs","headline":"Setup","items":[{"type":"description","content":"<p>Install:</p>"},{"type":"code","code":"composer require x","language":"bash"}]}
+DESC,
+            'faq' => <<<'DESC'
+FAQ accordion block.
+Properties: faqs[] (nested array) - NOTE: Uses "faqs" NOT "items"!
+Nested item properties: headline (question), subline (answer) - NOTE: Uses "subline" NOT "description"!
+Twig: {% for item in content.faqs %}<h2>{{ item.headline }}</h2><p>{{ item.subline }}</p>{% endfor %}
+Example: {"type":"faq","faqs":[{"headline":"How to order?","content":"Visit our shop."}]}
+DESC,
+            'code' => <<<'DESC'
+Standalone code block.
+Properties: description (text_editor with code)
+Twig: templates/includes/tailwind/blocks/code.html.twig
+DESC,
+            'introduction' => <<<'DESC'
+Text with bullet points.
+Properties: headline, description, descriptiontwo, items[] (nested: description)
+Twig: templates/includes/tailwind/blocks/introduction.html.twig
+DESC,
+            'table' => <<<'DESC'
+Data table with 3 columns.
+Properties: headline, description, columnheader1, columnheader2, columnheader3, rows[] (nested)
+Nested row properties: cell1, cell2, cell3 - NOTE: Uses "rows" NOT "items"!
+Twig: {% for row in content.rows %}<tr><td>{{ row.cell1 }}</td><td>{{ row.cell2 }}</td><td>{{ row.cell3 }}</td></tr>{% endfor %}
+Example: {"type":"table","headline":"Prices","columnheader1":"Plan","columnheader2":"Price","rows":[{"cell1":"Basic","cell2":"$10"}]}
+DESC,
+
+            // === HERO BLOCKS ===
+            'hero' => <<<'DESC'
+Hero section with image, headline, description, and CTA button.
+Properties: image, headline, description, buttonText, url
+Twig: templates/includes/tailwind/blocks/hero.html.twig
+DESC,
+            'hero-startpage' => <<<'DESC'
+Homepage hero with dual headlines and two CTA buttons.
+Properties: image, textone, texttwo, description, buttonText, buttonLink, buttonTextTwo, url
+Twig: templates/includes/tailwind/blocks/hero-startpage.html.twig
+DESC,
+            'hero-image-right' => <<<'DESC'
+Hero with image on right side, features list.
+Properties: image, headline, description, items[] (nested: headline, text, buttonText, buttonLink, url)
+Twig: templates/includes/tailwind/blocks/hero-image-right.html.twig
+DESC,
+            'heroslider' => <<<'DESC'
+Hero slider with multiple images.
+Properties: headline, description, pageurl1, pageurl2, images[] (1-6 images)
+Twig: templates/includes/tailwind/blocks/heroslider.html.twig
+DESC,
+
+            // === CTA BLOCKS ===
+            'cta-button' => <<<'DESC'
+Call-to-action section with two buttons.
+Properties: headline, description, text, url, texttwo, urltwo
+Twig: templates/includes/tailwind/blocks/cta-button.html.twig
+DESC,
+            'button' => <<<'DESC'
+Simple button/link.
+Properties: buttonText, url
+Twig: templates/includes/tailwind/blocks/button.html.twig
+DESC,
+
+            // === FEATURE BLOCKS ===
+            'feature' => <<<'DESC'
+Feature showcase with checkmark icons.
+Properties: subline, headline, description, items[] (nested: headline, description)
+Twig: {% for item in content.items %}<h3>{{ item.headline }}</h3><p>{{ item.description }}</p>{% endfor %}
+DESC,
+            'feature-default' => <<<'DESC'
+Feature grid layout.
+Properties: headline, description, items[] (nested: headline, description)
+Twig: templates/includes/tailwind/blocks/feature-default.html.twig
+DESC,
+            'feature-with-icons' => <<<'DESC'
+Features with icon lists.
+Properties: headline, description, items[] (nested: headline, text)
+Twig: templates/includes/tailwind/blocks/feature-with-icons.html.twig
+DESC,
+            'formats' => <<<'DESC'
+Format cards with icons.
+Properties: headline, description, items[] (nested: icon=user|newsletter|github, headline, description)
+Twig: templates/includes/tailwind/blocks/formats.html.twig
+DESC,
+
+            // === IMAGE BLOCKS ===
+            'image' => <<<'DESC'
+Single image display.
+Properties: image (media_selection)
+Twig: templates/includes/tailwind/blocks/image.html.twig
+DESC,
+            'image-gallery' => <<<'DESC'
+Image gallery.
+Properties: headline, description, image[] (multiple images)
+Twig: templates/includes/tailwind/blocks/image-gallery.html.twig
+DESC,
+            'images-with-heading-and-description' => <<<'DESC'
+Two images with text.
+Properties: image[] (max 2), headline, description
+Twig: templates/includes/tailwind/blocks/images-with-heading-and-description.html.twig
+DESC,
+            'image-with-flags' => <<<'DESC'
+Image with language flags.
+Properties: headline, image, flags[] (nested: language, url) - NOTE: Uses "flags" NOT "items"!
+Twig: templates/includes/tailwind/blocks/image-with-flags.html.twig
+DESC,
+            'logo-gallary' => <<<'DESC'
+Logo grid display.
+Properties: headline, items[] (nested: headline, url, image)
+Twig: templates/includes/tailwind/blocks/logo-gallary.html.twig
+DESC,
+            'excerpt-image' => <<<'DESC'
+Page excerpt image (uses page excerpt).
+Properties: headline
+Twig: templates/includes/tailwind/blocks/excerpt-image.html.twig
+DESC,
+
+            // === CONTACT BLOCKS ===
+            'team' => <<<'DESC'
+Team members from Sulu contacts.
+Properties: headline, description, organisation (contact_account_selection)
+Twig: templates/includes/tailwind/blocks/team.html.twig
+DESC,
+            'consultant' => <<<'DESC'
+Single consultant display.
+Properties: organisation (contact_account_selection, max 1), description
+Twig: templates/includes/tailwind/blocks/consultant.html.twig
+DESC,
+            'contact' => <<<'DESC'
+Contact box from snippets.
+Properties: snippets (snippet_selection), description
+Twig: templates/includes/tailwind/blocks/contact.html.twig
+DESC,
+            'chat' => <<<'DESC'
+Chat/embed section.
+Properties: headline, description
+Twig: templates/includes/tailwind/blocks/chat.html.twig
+DESC,
+
+            // === NAVIGATION BLOCKS ===
+            'highlights' => <<<'DESC'
+Highlight snippets.
+Properties: snippets (snippet_selection)
+Twig: templates/includes/tailwind/blocks/highlights.html.twig
+DESC,
+            'related-content-by-page-tag' => <<<'DESC'
+Related content by tags.
+Properties: snippets (uses excerpt tags)
+Twig: templates/includes/tailwind/blocks/related-content-by-page-tag.html.twig
+DESC,
+            'subpages-overview' => <<<'DESC'
+Child pages list (auto-loads children).
+Properties: items (smart_content)
+Twig: templates/includes/tailwind/blocks/subpages-overview.html.twig
+DESC,
+            'table-of-contents' => <<<'DESC'
+Auto-generated table of contents.
+Properties: headline
+Twig: templates/includes/tailwind/blocks/table-of-contents.html.twig
+DESC,
+
+            // === EXTERNAL BLOCKS ===
+            'youtube-from-channel' => <<<'DESC'
+YouTube playlist embed.
+Properties: headline, subline, playlistid
+Twig: templates/includes/tailwind/blocks/youtube-from-channel.html.twig
+DESC,
+            'wordpressposts' => <<<'DESC'
+WordPress posts integration.
+Properties: headline
+Twig: templates/includes/tailwind/blocks/wordpressposts.html.twig
+DESC,
+
+            // === LEGACY ===
+            'hl-des' => <<<'DESC'
+Simple headline and description block.
+Properties: headline, description
+Twig: templates/includes/tailwind/blocks/hl-des.html.twig
+Example: {"type":"hl-des","headline":"About Us","description":"<p>Company description</p>"}
+DESC,
         ];
     }
 
