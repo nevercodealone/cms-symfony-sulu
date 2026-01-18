@@ -5,19 +5,30 @@ declare(strict_types=1);
 namespace App\MCP\Tools;
 
 use App\Sulu\Service\PageService;
+use KLP\KlpMcpServer\Services\ProgressService\ProgressNotifierInterface;
 use KLP\KlpMcpServer\Services\ToolService\Annotation\ToolAnnotation;
-use KLP\KlpMcpServer\Services\ToolService\ToolInterface;
+use KLP\KlpMcpServer\Services\ToolService\StreamableToolInterface;
 use KLP\KlpMcpServer\Services\ToolService\Result\TextToolResult;
 use KLP\KlpMcpServer\Services\ToolService\Result\ToolResultInterface;
 use KLP\KlpMcpServer\Services\ToolService\Schema\PropertyType;
 use KLP\KlpMcpServer\Services\ToolService\Schema\SchemaProperty;
 use KLP\KlpMcpServer\Services\ToolService\Schema\StructuredSchema;
 
-class SuluPagesTool implements ToolInterface
+class SuluPagesTool implements StreamableToolInterface
 {
     public function __construct(
         private readonly PageService $pageService
     ) {
+    }
+
+    public function isStreaming(): bool
+    {
+        return false;
+    }
+
+    public function setProgressNotifier(ProgressNotifierInterface $progressNotifier): void
+    {
+        // Not used for non-streaming tool
     }
 
     public function getName(): string
@@ -27,12 +38,11 @@ class SuluPagesTool implements ToolInterface
 
     public function getDescription(): string
     {
-        return 'Manage Sulu CMS pages. Actions: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
-            'IMPORTANT: Block type "headline-paragraphs" requires items as JSON STRING (not array): ' .
-            '"[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
-            'Item types: description (content field, HTML) or code (code + language fields). ' .
-            'Languages: php, bash, javascript, html, css, xml, yaml, json. ' .
-            'AVOID: embedding <pre><code> in HTML, missing language field, <?php tags in code.';
+        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
+            'BLOCKS: headline-paragraphs (content+code), hl-des (headline+text), hero, hero-startpage, faq, consultant, contact, ' .
+            'cta-button, feature, table, image, image-gallery, code, quote, video, team, logo-gallery, highlights, introduction. ' .
+            'headline-paragraphs items JSON: "[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
+            'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags.';
     }
 
     public function getInputSchema(): StructuredSchema
@@ -41,7 +51,7 @@ class SuluPagesTool implements ToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
+                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
                 required: true
             ),
             new SchemaProperty(
@@ -104,6 +114,42 @@ class SuluPagesTool implements ToolInterface
                 description: 'For move_block: target position (0-based)',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'parentPath',
+                type: PropertyType::STRING,
+                description: 'For create_page: Parent page PHPCR path, e.g. /cmf/example/contents/glossare',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'title',
+                type: PropertyType::STRING,
+                description: 'For create_page: Page title',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'resourceSegment',
+                type: PropertyType::STRING,
+                description: 'For create_page: URL slug starting with /, e.g. /my-page (only lowercase letters, numbers, hyphens)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'seoTitle',
+                type: PropertyType::STRING,
+                description: 'For create_page: SEO meta title (defaults to page title if not set)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'seoDescription',
+                type: PropertyType::STRING,
+                description: 'For create_page: SEO meta description',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'publish',
+                type: PropertyType::STRING,
+                description: 'For create_page: Publish immediately after creation - "true" or "false" (default: "false")',
+                required: false
+            ),
         );
     }
 
@@ -123,6 +169,7 @@ class SuluPagesTool implements ToolInterface
         return match ($action) {
             'list' => $this->listPages($arguments['pathPrefix'] ?? '/cmf/example/contents', $locale),
             'get' => $this->getPage($arguments['path'] ?? '', $locale),
+            'create_page' => $this->createPage($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
             'move_block' => $this->moveBlock($arguments, $locale),
@@ -159,6 +206,25 @@ class SuluPagesTool implements ToolInterface
     /**
      * @param array<string, mixed> $arguments
      */
+    private function createPage(array $arguments, string $locale): ToolResultInterface
+    {
+        $data = [
+            'parentPath' => $arguments['parentPath'] ?? '',
+            'title' => $arguments['title'] ?? '',
+            'resourceSegment' => $arguments['resourceSegment'] ?? '',
+            'seoTitle' => $arguments['seoTitle'] ?? null,
+            'seoDescription' => $arguments['seoDescription'] ?? null,
+            'publish' => ($arguments['publish'] ?? 'false') === 'true' || ($arguments['publish'] ?? false) === true,
+        ];
+
+        $result = $this->pageService->createPage($data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
     private function addBlock(array $arguments, string $locale): ToolResultInterface
     {
         $path = $arguments['path'] ?? '';
@@ -185,10 +251,18 @@ class SuluPagesTool implements ToolInterface
                 return $item;
             }, $items);
 
+            // Use correct nested property name based on block type
+            $nestedKey = match ($blockType) {
+                'faq' => 'faqs',
+                'table' => 'rows',
+                'image-with-flags' => 'flags',
+                default => 'items',
+            };
+
             $block = [
                 'type' => $blockType,
                 'headline' => $headline,
-                'items' => $normalizedItems,
+                $nestedKey => $normalizedItems,
             ];
         } else {
             // Fallback: use simple content parameter
@@ -274,7 +348,16 @@ class SuluPagesTool implements ToolInterface
                 }
                 return $item;
             }, $items);
-            $blockData['items'] = $normalizedItems;
+
+            // Use correct nested property name if blockType is provided
+            $blockType = $arguments['blockType'] ?? null;
+            $nestedKey = match ($blockType) {
+                'faq' => 'faqs',
+                'table' => 'rows',
+                'image-with-flags' => 'flags',
+                default => 'items',
+            };
+            $blockData[$nestedKey] = $normalizedItems;
         }
 
         if (empty($blockData)) {

@@ -24,7 +24,7 @@ final readonly class SuluContentLoader implements LoaderInterface
 
     /**
      * @param string $source   Locale to load (e.g., 'de' or 'en')
-     * @param array  $options  Options: limit, webspace
+     * @param array<string, mixed>  $options  Options: limit, webspace
      *
      * @return iterable<TextDocument>
      */
@@ -35,7 +35,7 @@ final readonly class SuluContentLoader implements LoaderInterface
 
     /**
      * @param string $source   Locale to load (e.g., 'de' or 'en')
-     * @param array  $options  Options: limit, webspace
+     * @param array<string, mixed>  $options  Options: limit, webspace
      *
      * @return iterable<TextDocument>
      */
@@ -298,6 +298,8 @@ final readonly class SuluContentLoader implements LoaderInterface
 
     /**
      * Check if array is a blocks array
+     *
+     * @param array<mixed> $value
      */
     private function isBlockArray(array $value): bool
     {
@@ -311,6 +313,8 @@ final readonly class SuluContentLoader implements LoaderInterface
 
     /**
      * Extract text from block content
+     *
+     * @param array<mixed> $blocks
      */
     private function extractTextFromBlocks(array $blocks): string
     {

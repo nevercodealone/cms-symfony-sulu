@@ -353,6 +353,9 @@ QUALITÄT:
 Erstelle den vollständigen strukturierten Artikel.";
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getSuluContentSchema(): array
     {
         return [
@@ -371,7 +374,11 @@ Erstelle den vollständigen strukturierten Artikel.";
         ];
     }
 
-    private function processAIContent($contentResponse, $customHeadline, string $url): array
+    /**
+     * @param mixed $contentResponse
+     * @return array<string, mixed>
+     */
+    private function processAIContent($contentResponse, ?string $customHeadline, string $url): array
     {
         $content = $contentResponse->getContent();
         $structuredContent = $contentResponse->getMetadataValue('structured_content');
@@ -402,7 +409,11 @@ Erstelle den vollständigen strukturierten Artikel.";
         return $this->createSuluBlocksFromText($content, $customHeadline, $url);
     }
 
-    private function createSuluBlocksFromStructured(array $structured, $customHeadline, string $url): array
+    /**
+     * @param array<string, mixed> $structured
+     * @return array<string, mixed>
+     */
+    private function createSuluBlocksFromStructured(array $structured, ?string $customHeadline, string $url): array
     {
         $items = [];
 
@@ -480,7 +491,10 @@ Erstelle den vollständigen strukturierten Artikel.";
         ];
     }
 
-    private function createSuluBlocksFromText(string $content, $customHeadline, string $url): array
+    /**
+     * @return array<string, mixed>
+     */
+    private function createSuluBlocksFromText(string $content, ?string $customHeadline, string $url): array
     {
         $paragraphs = explode("\n\n", $content);
         $items = [];
@@ -522,6 +536,9 @@ Erstelle den vollständigen strukturierten Artikel.";
         ];
     }
 
+    /**
+     * @param array<string, mixed> $content
+     */
     private function showContentPreview(SymfonyStyle $io, array $content): void
     {
         $io->text('Headline: ' . $content['headline']);
@@ -590,6 +607,9 @@ Erstelle den vollständigen strukturierten Artikel.";
         }
     }
 
+    /**
+     * @param array<string, mixed> $content
+     */
     private function addContentToSuluPage(string $pagePath, array $content, int $position, string $locale): bool
     {
         // Validate input parameters (let these bubble up as InvalidArgumentException)
@@ -650,7 +670,10 @@ Erstelle den vollständigen strukturierten Artikel.";
         }
     }
 
-    private function addContentSerializedFormat($xml, $xpath, $content, $position, $locale, $pagePath): bool
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addContentSerializedFormat(\DOMDocument $xml, \DOMXPath $xpath, array $content, int $position, string $locale, string $pagePath): bool
     {
         $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks"]');
         $blocksValue = $blocksNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue;
@@ -695,7 +718,10 @@ Erstelle den vollständigen strukturierten Artikel.";
         return true;
     }
 
-    private function addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath): bool
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addContentXMLFormat(\DOMDocument $xml, \DOMXPath $xpath, array $content, int $position, string $locale, string $pagePath): bool
     {
         // Get current blocks length
         $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
@@ -736,7 +762,7 @@ Erstelle den vollständigen strukturierten Artikel.";
         return true;
     }
 
-    private function updateSuluPublishingMetadata($xml, $xpath, $locale): void
+    private function updateSuluPublishingMetadata(\DOMDocument $xml, \DOMXPath $xpath, string $locale): void
     {
         $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
         $currentTime = (new \DateTime())->format('Y-m-d\TH:i:s.v\+00:00');
@@ -771,7 +797,7 @@ Erstelle den vollständigen strukturierten Artikel.";
         }
     }
 
-    private function shiftBlockProperties($xml, $xpath, $locale, $fromIndex, $toIndex): void
+    private function shiftBlockProperties(\DOMDocument $xml, \DOMXPath $xpath, string $locale, int $fromIndex, int $toIndex): void
     {
         $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
 
@@ -785,7 +811,10 @@ Erstelle den vollständigen strukturierten Artikel.";
         }
     }
 
-    private function addBlockProperties($xml, $xpath, $locale, $position, $content): void
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addBlockProperties(\DOMDocument $xml, \DOMXPath $xpath, string $locale, int $position, array $content): void
     {
         $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
         $root = $xml->documentElement;

@@ -81,9 +81,9 @@ class PageController extends WebsiteController
     public function homepage(
         StructureInterface $structure,
         WordpressService $wordpressService,
-        $preview = false,
-        $partial = false
-    ) {
+        bool $preview = false,
+        bool $partial = false
+    ): Response {
 
         return $this->renderStructure(
             $structure,

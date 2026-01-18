@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -145,6 +146,7 @@ class GenerateCommand extends Command
 
         if (!$dryRun) {
             // Interactive options
+            /** @var QuestionHelper $helper */
             $helper = $this->getHelper('question');
             $question = new ChoiceQuestion(
                 'What would you like to do?',
@@ -321,6 +323,9 @@ QUALITÄTSKRITERIEN:
 Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getSuluContentSchema(): array
     {
         return [
@@ -340,6 +345,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         ];
     }
 
+    /**
+     * @param mixed $contentResponse
+     * @return array<string, mixed>
+     */
     private function processAIContent($contentResponse, ?string $headline, string $url): array
     {
         $content = $contentResponse->getContent();
@@ -352,6 +361,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         return $this->createSuluBlocksFromText($content, $headline, $url);
     }
 
+    /**
+     * @param array<string, mixed> $structured
+     * @return array<string, mixed>
+     */
     private function createSuluBlocksFromStructured(array $structured, ?string $headline, string $url): array
     {
         $items = [];
@@ -426,6 +439,9 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function createSuluBlocksFromText(string $content, ?string $headline, string $url): array
     {
         $paragraphs = explode("\n\n", $content);
@@ -468,6 +484,9 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         ];
     }
 
+    /**
+     * @param array<string, mixed> $content
+     */
     private function showContentPreview(SymfonyStyle $io, array $content): void
     {
         $io->text('Headline: ' . $content['headline']);
@@ -511,6 +530,9 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         return $input;
     }
 
+    /**
+     * @param array<string, mixed> $content
+     */
     private function addContentToSuluPage(string $pagePath, array $content, int $position, string $locale): bool
     {
         // Validate input parameters (let these bubble up as InvalidArgumentException)
@@ -571,7 +593,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         }
     }
 
-    private function addContentSerializedFormat($xml, $xpath, $content, $position, $locale, $pagePath): bool
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addContentSerializedFormat(\DOMDocument $xml, \DOMXPath $xpath, array $content, int $position, string $locale, string $pagePath): bool
     {
         $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks"]');
         $blocksValue = $blocksNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue;
@@ -613,7 +638,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         return true;
     }
 
-    private function addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath): bool
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addContentXMLFormat(\DOMDocument $xml, \DOMXPath $xpath, array $content, int $position, string $locale, string $pagePath): bool
     {
         // Get current blocks length
         $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
@@ -651,7 +679,7 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         return true;
     }
 
-    private function shiftBlockProperties($xml, $xpath, $locale, $fromIndex, $toIndex): void
+    private function shiftBlockProperties(\DOMDocument $xml, \DOMXPath $xpath, string $locale, int $fromIndex, int $toIndex): void
     {
         $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
         
@@ -665,7 +693,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         }
     }
 
-    private function addBlockProperties($xml, $xpath, $locale, $position, $content): void
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addBlockProperties(\DOMDocument $xml, \DOMXPath $xpath, string $locale, int $position, array $content): void
     {
         $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
         $root = $xml->documentElement;

@@ -8,6 +8,9 @@ use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
 
 class AIContentGeneratedEvent extends DomainEvent
 {
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function __construct(
         private string $resourceKey,
         private string $resourceId,

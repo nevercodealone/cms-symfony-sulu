@@ -249,6 +249,9 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         return implode(' ', $keyWords) . " - " . date('M Y');
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function parseContentToSuluBlocks(string $content, string $url): array
     {
         $blocks = [];
@@ -332,6 +335,9 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         return $input;
     }
 
+    /**
+     * @param array<string, mixed> $content
+     */
     private function addToSuluPage(string $pagePath, array $content, int $position): bool
     {
         try {
@@ -350,19 +356,31 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
             
             $blocksNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks"]');
             
-            if ($blocksNodes->length > 0) {
+            if ($blocksNodes !== false && $blocksNodes->length > 0) {
                 // Format 1: Serialized blocks
-                $blocksValue = $blocksNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue;
-                $currentBlocks = unserialize(base64_decode($blocksValue));
-                
-                array_splice($currentBlocks, $position, 0, [$content]);
-                
-                $newBlocksValue = base64_encode(serialize($currentBlocks));
-                $blocksNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = $newBlocksValue;
-                
-                $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-length"]');
-                if ($lengthNodes->length > 0) {
-                    $lengthNodes->item(0)->getElementsByTagName('value')->item(0)->nodeValue = count($currentBlocks);
+                $blocksNode = $blocksNodes->item(0);
+                if ($blocksNode instanceof \DOMElement) {
+                    $valueNode = $blocksNode->getElementsByTagName('value')->item(0);
+                    if ($valueNode) {
+                        $blocksValue = $valueNode->nodeValue ?? '';
+                        $currentBlocks = unserialize(base64_decode($blocksValue));
+
+                        array_splice($currentBlocks, $position, 0, [$content]);
+
+                        $newBlocksValue = base64_encode(serialize($currentBlocks));
+                        $valueNode->nodeValue = $newBlocksValue;
+
+                        $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-length"]');
+                        if ($lengthNodes !== false && $lengthNodes->length > 0) {
+                            $lengthNode = $lengthNodes->item(0);
+                            if ($lengthNode instanceof \DOMElement) {
+                                $lengthValueNode = $lengthNode->getElementsByTagName('value')->item(0);
+                                if ($lengthValueNode) {
+                                    $lengthValueNode->nodeValue = (string) count($currentBlocks);
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 // Format 2: Individual XML properties (older format)
@@ -388,7 +406,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         }
     }
 
-    private function addContentXMLFormat($xml, $xpath, $content, $position, $locale, $pagePath): bool
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addContentXMLFormat(\DOMDocument $xml, \DOMXPath $xpath, array $content, int $position, string $locale, string $pagePath): bool
     {
         // Get current blocks length
         $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]');
@@ -426,10 +447,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         return true;
     }
 
-    private function shiftBlockProperties($xml, $xpath, $locale, $fromIndex, $toIndex): void
+    private function shiftBlockProperties(\DOMDocument $xml, \DOMXPath $xpath, string $locale, int $fromIndex, int $toIndex): void
     {
         $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
-        
+
         // Find all properties for this block index
         $properties = $xpath->query('//sv:property[starts-with(@sv:name, "i18n:' . $locale . '-blocks-") and contains(@sv:name, "#' . $fromIndex . '")]');
         
@@ -440,7 +461,10 @@ Erstelle jetzt den vollständigen Artikel als strukturierten Text.";
         }
     }
 
-    private function addBlockProperties($xml, $xpath, $locale, $position, $content): void
+    /**
+     * @param array<string, mixed> $content
+     */
+    private function addBlockProperties(\DOMDocument $xml, \DOMXPath $xpath, string $locale, int $position, array $content): void
     {
         $svNamespace = 'http://www.jcp.org/jcr/sv/1.0';
         $root = $xml->documentElement;

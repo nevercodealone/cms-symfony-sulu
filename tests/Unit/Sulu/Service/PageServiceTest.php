@@ -11,6 +11,8 @@ use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Sulu\Bundle\PageBundle\Document\PageDocument;
+use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 class PageServiceTest extends TestCase
 {
@@ -497,7 +499,7 @@ XML;
         $this->assertArrayHasKey('items', $result['blocks'][0]);
         $this->assertCount(2, $result['blocks'][0]['items']);
         $this->assertEquals('description', $result['blocks'][0]['items'][0]['type']);
-        $this->assertEquals('<p>Hello</p>', $result['blocks'][0]['items'][0]['content']);
+        $this->assertEquals('<p>Hello</p>', $result['blocks'][0]['items'][0]['description']);
         $this->assertEquals('code', $result['blocks'][0]['items'][1]['type']);
         $this->assertEquals('echo "hi";', $result['blocks'][0]['items'][1]['code']);
         $this->assertEquals('php', $result['blocks'][0]['items'][1]['language']);
@@ -684,5 +686,300 @@ XML;
             ->method('flush');
 
         $pageService->unpublishPage('/cmf/example/contents/test', 'de');
+    }
+    // ==========================================================================
+    // Page Discovery Tests (TDD)
+    // ==========================================================================
+
+    public function testSearchPagesFindsMatchingTitles(): void
+    {
+        $phpXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">PHP Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">/php-glossar</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $jsXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="18">JavaScript Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="19">/javascript-glossar</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/php-glossar', 'props' => $phpXml],
+                ['path' => '/cmf/example/contents/javascript-glossar', 'props' => $jsXml],
+            ]);
+
+        $result = $this->pageService->searchPages('PHP', 'de');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('PHP Glossar', $result[0]['title']);
+        $this->assertEquals('/cmf/example/contents/php-glossar', $result[0]['path']);
+    }
+
+    public function testSearchPagesCaseInsensitive(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">PHP Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/php-glossar', 'props' => $xml],
+            ]);
+
+        $result = $this->pageService->searchPages('php', 'de');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('PHP Glossar', $result[0]['title']);
+    }
+
+    public function testSearchPagesReturnsEmptyWhenNoMatch(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">PHP Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/php-glossar', 'props' => $xml],
+            ]);
+
+        $result = $this->pageService->searchPages('Python', 'de');
+
+        $this->assertCount(0, $result);
+    }
+
+    public function testGetPageTreeReturnsHierarchy(): void
+    {
+        $parentXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">/glossar</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $childXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">PHP Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">/php-glossar</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/glossar', 'props' => $parentXml],
+                ['path' => '/cmf/example/contents/glossar/php-glossar', 'props' => $childXml],
+            ]);
+
+        $result = $this->pageService->getPageTree('/cmf/example/contents/glossar', 'de');
+
+        $this->assertArrayHasKey('path', $result);
+        $this->assertEquals('/cmf/example/contents/glossar', $result['path']);
+        $this->assertEquals('Glossar', $result['title']);
+        $this->assertArrayHasKey('children', $result);
+        $this->assertCount(1, $result['children']);
+        $this->assertEquals('PHP Glossar', $result['children'][0]['title']);
+    }
+
+    public function testGetPageTreeRespectsDepth(): void
+    {
+        $level1Xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Level1</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $level2Xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Level2</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $level3Xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Level3</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/level1', 'props' => $level1Xml],
+                ['path' => '/cmf/example/contents/level1/level2', 'props' => $level2Xml],
+                ['path' => '/cmf/example/contents/level1/level2/level3', 'props' => $level3Xml],
+            ]);
+
+        // Depth 1 should only include root + direct children
+        $result = $this->pageService->getPageTree('/cmf/example/contents/level1', 'de', 1);
+
+        $this->assertEquals('Level1', $result['title']);
+        $this->assertCount(1, $result['children']);
+        $this->assertEquals('Level2', $result['children'][0]['title']);
+        // Level3 should not have children at depth 1
+        $this->assertEmpty($result['children'][0]['children'] ?? []);
+    }
+
+    public function testGetPageTreeReturnsNullForNonexistentPath(): void
+    {
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([]);
+
+        $result = $this->pageService->getPageTree('/cmf/example/contents/nonexistent', 'de');
+
+        $this->assertNull($result);
+    }
+
+    public function testFindPageByUrlReturnsPage(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">PHP Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">/php-glossar</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/php-glossar', 'props' => $xml],
+            ]);
+
+        $result = $this->pageService->findPageByUrl('/php-glossar', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertEquals('PHP Glossar', $result['title']);
+        $this->assertEquals('/cmf/example/contents/php-glossar', $result['path']);
+    }
+
+    public function testFindPageByUrlHandlesFullUrl(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">PHP Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">/php-glossar</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/php-glossar', 'props' => $xml],
+            ]);
+
+        // Should handle /de/php-glossar by stripping the locale prefix
+        $result = $this->pageService->findPageByUrl('/de/php-glossar', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertEquals('PHP Glossar', $result['title']);
+    }
+
+    public function testFindPageByUrlReturnsNullWhenNotFound(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">PHP Glossar</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">/php-glossar</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')
+            ->willReturn([
+                ['path' => '/cmf/example/contents/php-glossar', 'props' => $xml],
+            ]);
+
+        $result = $this->pageService->findPageByUrl('/nonexistent-page', 'de');
+
+        $this->assertNull($result);
     }
 }

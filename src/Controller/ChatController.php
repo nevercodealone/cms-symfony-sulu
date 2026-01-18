@@ -21,7 +21,7 @@ class ChatController extends DefaultController
         if (!$preview) {
             $response->headers->set(
                 SuluHttpCache::HEADER_REVERSE_PROXY_TTL,
-                $response->getMaxAge()
+                (string) $response->getMaxAge()
             );
         }
 

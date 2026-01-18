@@ -24,7 +24,7 @@ final readonly class YouTubeChannelLoader implements LoaderInterface
 
     /**
      * @param string            $source  YouTube Channel Handle
-     * @param array{limit: int} $options
+     * @param array{limit?: int} $options
      *
      * @return iterable<TextDocument>
      */
@@ -35,7 +35,7 @@ final readonly class YouTubeChannelLoader implements LoaderInterface
 
     /**
      * @param string            $source  YouTube Channel Handle
-     * @param array{limit: int} $options
+     * @param array{limit?: int} $options
      *
      * @return iterable<TextDocument>
      */

@@ -70,6 +70,8 @@ class McpAccessTokenRepository extends ServiceEntityRepository
 
     /**
      * Find all active tokens for a client
+     *
+     * @return array<int, McpAccessToken>
      */
     public function findByClientName(string $clientName): array
     {

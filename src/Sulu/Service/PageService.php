@@ -4,24 +4,39 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use App\Sulu\Block\BlockExtractor;
+use App\Sulu\Block\BlockTypeRegistry;
+use App\Sulu\Block\BlockWriter;
 use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
  */
 class PageService
 {
+    private BlockExtractor $blockExtractor;
+    private BlockWriter $blockWriter;
+
     public function __construct(
         private Connection $connection,
         private McpActivityLogger $activityLogger,
         private ?CacheManagerInterface $cacheManager = null,
         private ?FOSCacheManager $fosCacheManager = null,
+        ?BlockTypeRegistry $blockTypeRegistry = null,
+        ?BlockExtractor $blockExtractor = null,
+        ?BlockWriter $blockWriter = null,
+        private ?DocumentManagerInterface $documentManager = null,
     ) {
+        // Create default instances if not provided (backwards compatibility)
+        $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
+        $this->blockExtractor = $blockExtractor ?? new BlockExtractor($registry);
+        $this->blockWriter = $blockWriter ?? new BlockWriter($registry);
     }
 
     /**
@@ -147,9 +162,15 @@ class PageService
     }
 
     /**
-     * Add a content block to a page using expanded PHPCR property format.
+     * Add a content block to a page using BlockWriter.
      *
-     * @param array{type: string, headline?: string, description?: string, items?: array<mixed>} $block
+     * Supports all 32 block types including:
+     * - FAQ: use 'faqs' array with items having 'headline' and 'content'
+     * - Table: use 'rows' array with items having 'cell1', 'cell2', 'cell3'
+     * - Image-with-flags: use 'flags' array with items having 'language' and 'url'
+     * - Feature: use 'items' array with items having 'headline' and 'content'
+     *
+     * @param array{type: string, headline?: string, description?: string, items?: array<mixed>, faqs?: array<mixed>, rows?: array<mixed>, flags?: array<mixed>} $block
      * @return array{success: bool, message: string, position: int}
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
@@ -185,45 +206,14 @@ class PageService
                 return ['success' => false, 'message' => 'Invalid XML structure', 'position' => -1];
             }
 
-            // Add block type property
-            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-type#{$newIndex}", $block['type']);
-            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-settings#{$newIndex}", '[]');
-
-            // Add block-specific properties based on type
-            if ($block['type'] === 'headline-paragraphs') {
-                if (isset($block['headline'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-headline#{$newIndex}", $block['headline']);
-                }
-                if (isset($block['items'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-length", (string) count($block['items']), 'Long');
-                    foreach ($block['items'] as $itemIndex => $item) {
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-type#{$itemIndex}", $item['type'] ?? 'description');
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-settings#{$itemIndex}", '[]');
-                        if (isset($item['description'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-description#{$itemIndex}", $item['description']);
-                        }
-                        if (isset($item['code'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-code#{$itemIndex}", $item['code']);
-                        }
-                        if (isset($item['language'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-language#{$itemIndex}", $item['language']);
-                        }
-                    }
-                }
-            } elseif ($block['type'] === 'hl-des') {
-                if (isset($block['headline'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-headline#{$newIndex}", $block['headline']);
-                }
-                if (isset($block['description'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-description#{$newIndex}", $block['description']);
-                }
-            }
+            // Use BlockWriter to add the block (supports all 32 block types)
+            $this->blockWriter->addBlock($xml, $rootNode, $locale, $newIndex, $block);
 
             // Update blocks length
             if ($lengthNodes !== false && $lengthNodes->length > 0 && $lengthNodes->item(0)) {
                 $lengthNodes->item(0)->nodeValue = (string) ($currentLength + 1);
             } else {
-                $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-length", (string) ($currentLength + 1));
+                $this->blockWriter->addProperty($xml, $rootNode, "i18n:{$locale}-blocks-length", (string) ($currentLength + 1), 'Long');
             }
 
             $updatedXml = $xml->saveXML();
@@ -252,29 +242,12 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $newIndex];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage(), 'position' => -1];
         }
-    }
-
-    /**
-     * Add a PHPCR property to the XML document.
-     */
-    private function addPhpcrProperty(DOMDocument $xml, \DOMNode $rootNode, string $name, string $value, string $type = 'String'): void
-    {
-        $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
-        $property->setAttribute('sv:name', $name);
-        $property->setAttribute('sv:type', $type);
-        $property->setAttribute('sv:multi-valued', '0');
-
-        $valueNode = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
-        $valueNode->setAttribute('length', (string) strlen($value));
-        $valueNode->appendChild($xml->createTextNode($value));
-        $property->appendChild($valueNode);
-
-        $rootNode->appendChild($property);
     }
 
     /**
@@ -396,6 +369,7 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             // Re-read page to return current state (helps with caching issues)
             $updatedPage = $this->getPage($path, $locale);
             $blockCount = $updatedPage ? count($updatedPage['blocks']) : 0;
@@ -429,10 +403,14 @@ class PageService
                 return ['success' => false, 'message' => 'Page not found'];
             }
 
+            // Copy content to live workspace
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
                 [$result['props'], $path, 'default_live']
             );
+
+            // Create route if it doesn't exist
+            $this->createRouteForPage($path, $result['props'], $locale);
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_published',
@@ -443,11 +421,350 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             return ['success' => true, 'message' => 'Page published successfully'];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Create route node for a page.
+     */
+    private function createRouteForPage(string $pagePath, string $pageProps, string $locale): void
+    {
+        // Extract UUID and URL from page props
+        $xml = new \DOMDocument();
+        $xml->loadXML($pageProps);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $uuidNodes = $xpath->query('//sv:property[@sv:name="jcr:uuid"]/sv:value');
+        $urlNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-url"]/sv:value');
+
+        if (!$uuidNodes || $uuidNodes->length === 0 || !$urlNodes || $urlNodes->length === 0) {
+            return;
+        }
+
+        $pageUuid = $uuidNodes->item(0)?->nodeValue ?? '';
+        $pageUrl = $urlNodes->item(0)?->nodeValue ?? '';
+
+        if (empty($pageUuid) || empty($pageUrl)) {
+            return;
+        }
+
+        // Build route path: /cmf/example/routes/{locale}/{url}
+        $routePath = '/cmf/example/routes/' . $locale . $pageUrl;
+
+        // Check if route already exists
+        $existing = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$routePath]
+        );
+
+        if ($existing) {
+            return; // Route already exists
+        }
+
+        // Get parent route node ID
+        $parentPath = dirname($routePath);
+        $parent = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$parentPath]
+        );
+
+        if (!$parent) {
+            // Create parent path recursively if needed
+            $this->ensureRouteParentExists($parentPath, $locale);
+            $parent = $this->connection->fetchAssociative(
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+                [$parentPath]
+            );
+        }
+
+        if (!$parent) {
+            return; // Can't create route without parent
+        }
+
+        $routeUuid = $this->generateUuid();
+        $now = (new \DateTime())->format('Y-m-d\TH:i:s.vP');
+        $nodeName = basename($routePath);
+
+        // Build route props XML
+        $routeProps = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
+            '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" ' .
+            'xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" ' .
+            'xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">' .
+            '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="17">mix:referenceable</sv:value><sv:value length="9">sulu:path</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $routeUuid . '</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:history" sv:type="Boolean" sv:multi-valued="0"><sv:value length="0">0</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:created" sv:type="Date" sv:multi-valued="0"><sv:value length="29">' . $now . '</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:changed" sv:type="Date" sv:multi-valued="0"><sv:value length="29">' . $now . '</sv:value></sv:property>' .
+            '<sv:property sv:name="sulu:content" sv:type="Reference" sv:multi-valued="0"><sv:value length="36">' . $pageUuid . '</sv:value></sv:property>' .
+            '</sv:node>' . "\n";
+
+        // Insert route node
+        $this->connection->executeStatement(
+            "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
+            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            [$routePath, $parent['id'], $nodeName, $routeUuid, $routeProps, substr_count($routePath, '/'), 0]
+        );
+    }
+
+    /**
+     * Ensure parent route path exists.
+     */
+    private function ensureRouteParentExists(string $parentPath, string $locale): void
+    {
+        $existing = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$parentPath]
+        );
+
+        if ($existing) {
+            return;
+        }
+
+        // Recursively create parent
+        $grandparent = dirname($parentPath);
+        if ($grandparent !== '/cmf/example/routes/' . $locale && $grandparent !== '/cmf/example/routes') {
+            $this->ensureRouteParentExists($grandparent, $locale);
+        }
+
+        $parent = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            [$grandparent]
+        );
+
+        if (!$parent) {
+            return;
+        }
+
+        $uuid = $this->generateUuid();
+        $nodeName = basename($parentPath);
+
+        $props = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
+            '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" ' .
+            'xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" ' .
+            'xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">' .
+            '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="17">mix:referenceable</sv:value></sv:property>' .
+            '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $uuid . '</sv:value></sv:property>' .
+            '</sv:node>' . "\n";
+
+        $this->connection->executeStatement(
+            "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
+            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            [$parentPath, $parent['id'], $nodeName, $uuid, $props, substr_count($parentPath, '/'), 0]
+        );
+    }
+
+    /**
+     * Generate a UUID v4.
+     */
+    private function generateUuid(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
+    /**
+     * Create a new page using DocumentManager.
+     *
+     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool} $data
+     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string}
+     */
+    public function createPage(array $data, string $locale = 'de'): array
+    {
+        $parentPath = $data['parentPath'] ?? '';
+        $title = $data['title'] ?? '';
+        $resourceSegment = $data['resourceSegment'] ?? '';
+        $seoTitle = $data['seoTitle'] ?? null;
+        $seoDescription = $data['seoDescription'] ?? null;
+        $publish = $data['publish'] ?? false;
+
+        // Validate required fields
+        if (empty($parentPath)) {
+            return ['success' => false, 'message' => 'parentPath is required'];
+        }
+        if (empty($title)) {
+            return ['success' => false, 'message' => 'title is required'];
+        }
+        if (empty($resourceSegment)) {
+            return ['success' => false, 'message' => 'resourceSegment is required'];
+        }
+
+        // Validate resourceSegment format
+        if (!preg_match('#^/[a-z0-9-]+$#', $resourceSegment)) {
+            return ['success' => false, 'message' => 'resourceSegment must start with / and contain only lowercase letters, numbers, and hyphens'];
+        }
+
+        try {
+            // Get parent info from default workspace
+            $parent = $this->connection->fetchAssociative(
+                "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$parentPath]
+            );
+
+            if (!$parent) {
+                return ['success' => false, 'message' => "Parent path does not exist: {$parentPath}"];
+            }
+
+            // Extract parent URL to build full URL
+            $parentUrl = $parent['props'] ? ($this->extractPropertyFromXml($parent['props'], "i18n:{$locale}-url") ?? '') : '';
+            $fullUrl = rtrim($parentUrl, '/') . $resourceSegment;
+
+            // Generate UUID and build path
+            $uuid = $this->generateUuid();
+            $nodeName = ltrim($resourceSegment, '/');
+            $path = $parentPath . '/' . $nodeName;
+            $depth = substr_count($path, '/');
+
+            // Check if page already exists
+            $existing = $this->connection->fetchAssociative(
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                [$path]
+            );
+
+            if ($existing) {
+                return ['success' => false, 'message' => "Page already exists at: {$path}"];
+            }
+
+            // Get next sort order
+            $maxOrder = $this->connection->fetchOne(
+                "SELECT MAX(sort_order) FROM phpcr_nodes WHERE parent = ? AND workspace_name = 'default'",
+                [$parent['id']]
+            );
+            $sortOrder = ($maxOrder ?? 0) + 1;
+
+            // Build XML props
+            $now = (new \DateTime())->format('Y-m-d\TH:i:s.v+00:00');
+            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish);
+
+            // Insert into BOTH workspaces
+            foreach (['default', 'default_live'] as $workspace) {
+                // Get parent ID for this workspace
+                $parentInWorkspace = $this->connection->fetchAssociative(
+                    "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
+                    [$parentPath, $workspace]
+                );
+
+                if (!$parentInWorkspace) {
+                    continue; // Skip if parent doesn't exist in this workspace
+                }
+
+                $this->connection->executeStatement(
+                    "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
+                    "VALUES (?, ?, ?, '', ?, ?, 'nt:unstructured', ?, ?, ?)",
+                    [$path, $parentInWorkspace['id'], $nodeName, $workspace, $uuid, $props, $depth, $sortOrder]
+                );
+            }
+
+            // Create route if publishing
+            if ($publish) {
+                $this->createRouteForPage($path, $props, $locale);
+            }
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_created',
+                $path,
+                $locale,
+                [
+                    'title' => $title,
+                    'resourceSegment' => $resourceSegment,
+                    'published' => $publish,
+                ]
+            );
+
+
+            return [
+                'success' => true,
+                'message' => 'Page created successfully',
+                'path' => $path,
+                'uuid' => $uuid,
+                'url' => '/' . $locale . $fullUrl,
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Build XML props for a new page.
+     */
+    private function buildPagePropsXml(
+        string $uuid,
+        string $title,
+        string $url,
+        string $locale,
+        string $now,
+        ?string $seoTitle = null,
+        ?string $seoDescription = null,
+        bool $published = false
+    ): string {
+        $titleLen = strlen($title);
+        $urlLen = strlen($url);
+        $seoTitleValue = $seoTitle ?? $title;
+        $seoTitleLen = strlen($seoTitleValue);
+        $seoDescValue = $seoDescription ?? '';
+        $seoDescLen = strlen($seoDescValue);
+        $state = $published ? '2' : '1'; // 2 = published, 1 = draft
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">';
+
+        // Required PHPCR properties
+        $xml .= '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="9">sulu:page</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $uuid . '</sv:value></sv:property>';
+
+        // Page content properties
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $titleLen . '">' . htmlspecialchars($title, ENT_XML1) . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-url" sv:type="String" sv:multi-valued="0"><sv:value length="' . $urlLen . '">' . htmlspecialchars($url, ENT_XML1) . '</sv:value></sv:property>';
+
+        // Empty blocks
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-blocks-length" sv:type="Long" sv:multi-valued="0"><sv:value length="1">0</sv:value></sv:property>';
+
+        // Template and state
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-template" sv:type="String" sv:multi-valued="0"><sv:value length="8">tailwind</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-state" sv:type="Long" sv:multi-valued="0"><sv:value length="1">' . $state . '</sv:value></sv:property>';
+
+        // Permissions
+        $xml .= '<sv:property sv:name="sec:permissions" sv:type="String" sv:multi-valued="0"><sv:value length="2">[]</sv:value></sv:property>';
+
+        // User tracking
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-creator" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-changer" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-author" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+
+        // Dates
+        $nowLen = strlen($now);
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-authored" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-created" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-changed" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+
+        // Navigation
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-navContexts" sv:type="String" sv:multi-valued="1"/>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-nodeType" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="sulu:order" sv:type="Long" sv:multi-valued="0"><sv:value length="3">100</sv:value></sv:property>';
+
+        // Published date (only if published)
+        if ($published) {
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-published" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
+        }
+
+        // SEO extension
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoTitleLen . '">' . htmlspecialchars($seoTitleValue, ENT_XML1) . '</sv:value></sv:property>';
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoDescLen . '">' . htmlspecialchars($seoDescValue, ENT_XML1) . '</sv:value></sv:property>';
+
+        $xml .= '</sv:node>' . "\n";
+
+        return $xml;
     }
 
     /**
@@ -475,121 +792,27 @@ class PageService
     }
 
     /**
-     * Extract blocks from PHPCR XML using expanded property format.
+     * Extract blocks from PHPCR XML using BlockExtractor.
+     *
+     * Supports all 32 block types including those with custom nested names:
+     * - FAQ: uses 'faqs' (not 'items'), properties: headline, subline
+     * - Table: uses 'rows' (not 'items'), properties: cell1, cell2, cell3
+     * - Image-with-flags: uses 'flags', properties: language, url
      *
      * @return array<mixed>
      */
     private function extractBlocks(string $xmlString, string $locale): array
     {
-        try {
-            $xml = new DOMDocument();
-            $xml->loadXML($xmlString);
-
-            $xpath = new DOMXPath($xml);
-            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
-
-            // Get blocks length
-            $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]/sv:value');
-            if ($lengthNodes === false || $lengthNodes->length === 0 || !$lengthNodes->item(0)) {
-                return [];
-            }
-
-            $blocksLength = (int) $lengthNodes->item(0)->nodeValue;
-            $blocks = [];
-
-            for ($i = 0; $i < $blocksLength; $i++) {
-                $block = ['position' => $i];
-
-                // Get block type
-                $typeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-type#' . $i . '"]/sv:value');
-                if ($typeNodes !== false && $typeNodes->length > 0 && $typeNodes->item(0)) {
-                    $block['type'] = $typeNodes->item(0)->nodeValue;
-                }
-
-                // Get headline
-                $headlineNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-headline#' . $i . '"]/sv:value');
-                if ($headlineNodes !== false && $headlineNodes->length > 0 && $headlineNodes->item(0)) {
-                    $block['headline'] = $headlineNodes->item(0)->nodeValue;
-                }
-
-                // Get description (for hl-des blocks)
-                $descNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-description#' . $i . '"]/sv:value');
-                if ($descNodes !== false && $descNodes->length > 0 && $descNodes->item(0)) {
-                    $block['description'] = $descNodes->item(0)->nodeValue;
-                }
-
-                // Get nested items (for headline-paragraphs blocks)
-                $itemsLengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-length"]/sv:value');
-                if ($itemsLengthNodes !== false && $itemsLengthNodes->length > 0 && $itemsLengthNodes->item(0)) {
-                    $itemsLength = (int) $itemsLengthNodes->item(0)->nodeValue;
-                    $items = [];
-
-                    for ($j = 0; $j < $itemsLength; $j++) {
-                        $item = [];
-
-                        $itemTypeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-type#' . $j . '"]/sv:value');
-                        if ($itemTypeNodes !== false && $itemTypeNodes->length > 0 && $itemTypeNodes->item(0)) {
-                            $item['type'] = $itemTypeNodes->item(0)->nodeValue;
-                        }
-
-                        $itemDescNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-description#' . $j . '"]/sv:value');
-                        if ($itemDescNodes !== false && $itemDescNodes->length > 0 && $itemDescNodes->item(0)) {
-                            $item['content'] = $itemDescNodes->item(0)->nodeValue;
-                        }
-
-                        $itemCodeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-code#' . $j . '"]/sv:value');
-                        if ($itemCodeNodes !== false && $itemCodeNodes->length > 0 && $itemCodeNodes->item(0)) {
-                            $item['code'] = $itemCodeNodes->item(0)->nodeValue;
-                        }
-
-                        $itemLangNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-language#' . $j . '"]/sv:value');
-                        if ($itemLangNodes !== false && $itemLangNodes->length > 0 && $itemLangNodes->item(0)) {
-                            $item['language'] = $itemLangNodes->item(0)->nodeValue;
-                        }
-
-                        if (!empty($item)) {
-                            $items[] = $item;
-                        }
-                    }
-
-                    if (!empty($items)) {
-                        $block['items'] = $items;
-                    }
-                }
-
-                // Get image/media properties
-                $imageNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-image#' . $i . '"]/sv:value');
-                if ($imageNodes !== false && $imageNodes->length > 0 && $imageNodes->item(0)) {
-                    $imageData = $imageNodes->item(0)->nodeValue;
-                    if ($imageData) {
-                        $block['image'] = json_decode($imageData, true) ?: $imageData;
-                    }
-                }
-
-                // Get code block properties
-                $codeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-code#' . $i . '"]/sv:value');
-                if ($codeNodes !== false && $codeNodes->length > 0 && $codeNodes->item(0)) {
-                    $block['code'] = $codeNodes->item(0)->nodeValue;
-                }
-
-                $languageNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-language#' . $i . '"]/sv:value');
-                if ($languageNodes !== false && $languageNodes->length > 0 && $languageNodes->item(0)) {
-                    $block['language'] = $languageNodes->item(0)->nodeValue;
-                }
-
-                $blocks[] = $block;
-            }
-
-            return $blocks;
-        } catch (\Exception) {
-            // Ignore parsing errors
-        }
-
-        return [];
+        return $this->blockExtractor->extractBlocks($xmlString, $locale);
     }
 
     /**
-     * Update an existing block.
+     * Update an existing block using BlockWriter.
+     *
+     * Supports all 32 block types including nested updates for:
+     * - FAQ: update 'faqs' array
+     * - Table: update 'rows' array
+     * - Feature: update 'items' array
      *
      * @param array<string, mixed> $blockData
      * @return array{success: bool, message: string}
@@ -623,65 +846,15 @@ class PageService
                 return ['success' => false, 'message' => "Block position {$position} out of range (0-" . ($blocksLength - 1) . ")"];
             }
 
-            // Update block properties
-            foreach ($blockData as $key => $value) {
-                $propName = match ($key) {
-                    'headline' => "i18n:{$locale}-blocks-headline#{$position}",
-                    'description' => "i18n:{$locale}-blocks-description#{$position}",
-                    'content' => "i18n:{$locale}-blocks-description#{$position}",
-                    'code' => "i18n:{$locale}-blocks-code#{$position}",
-                    'language' => "i18n:{$locale}-blocks-language#{$position}",
-                    default => null,
-                };
-
-                if ($propName === null) {
-                    continue;
-                }
-
-                $propNodes = $xpath->query('//sv:property[@sv:name="' . $propName . '"]/sv:value');
-                if ($propNodes !== false && $propNodes->length > 0 && $propNodes->item(0)) {
-                    $propNodes->item(0)->nodeValue = (string) $value;
-                } else {
-                    // Add new property if it doesn't exist
-                    $rootNode = $xpath->query('/sv:node')->item(0);
-                    if ($rootNode) {
-                        $this->addPhpcrProperty($xml, $rootNode, $propName, (string) $value);
-                    }
-                }
+            // Get current block type
+            $typeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-type#' . $position . '"]/sv:value');
+            $blockType = 'hl-des'; // fallback
+            if ($typeNodes !== false && $typeNodes->length > 0 && $typeNodes->item(0)) {
+                $blockType = $typeNodes->item(0)->nodeValue ?? 'hl-des';
             }
 
-            // Handle complete items replacement for headline-paragraphs
-            if (isset($blockData['items']) && is_array($blockData['items'])) {
-                // Remove all old item properties for this block
-                $oldItemProps = $xpath->query('//sv:property[contains(@sv:name, "i18n:' . $locale . '-blocks-items#' . $position . '-")]');
-                if ($oldItemProps !== false) {
-                    foreach ($oldItemProps as $prop) {
-                        if ($prop->parentNode) {
-                            $prop->parentNode->removeChild($prop);
-                        }
-                    }
-                }
-
-                // Add new items
-                $rootNode = $xpath->query('/sv:node')->item(0);
-                if ($rootNode) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-length", (string) count($blockData['items']), 'Long');
-
-                    foreach ($blockData['items'] as $itemIndex => $item) {
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-type#{$itemIndex}", $item['type'] ?? 'description');
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-settings#{$itemIndex}", '[]');
-                        if (isset($item['description'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-description#{$itemIndex}", $item['description']);
-                        }
-                        if (isset($item['code'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-code#{$itemIndex}", $item['code']);
-                        }
-                        if (isset($item['language'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-language#{$itemIndex}", $item['language']);
-                        }
-                    }
-                }
-            }
+            // Use BlockWriter to update the block (supports all 32 block types)
+            $this->blockWriter->updateBlock($xml, $xpath, $locale, $position, $blockType, $blockData);
 
             $updatedXml = $xml->saveXML();
 
@@ -704,6 +877,7 @@ class PageService
 
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
+
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -825,6 +999,7 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
 
@@ -893,7 +1068,54 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             return ['success' => true, 'message' => 'Page unpublished successfully'];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Delete a page completely.
+     *
+     * Uses DocumentManager for proper deletion (same as Sulu admin API).
+     * This removes the page from both workspaces, routes, and search index.
+     *
+     * @param string $identifier UUID or path of the page
+     * @param string $locale Locale for search deindexing
+     * @return array{success: bool, message: string}
+     */
+    public function deletePage(string $identifier, string $locale = 'de'): array
+    {
+        if (!$this->documentManager) {
+            return ['success' => false, 'message' => 'DocumentManager not available'];
+        }
+
+        try {
+            // Find document by UUID or path
+            $document = $this->documentManager->find($identifier, $locale);
+
+            if ($document === null) {
+                return ['success' => false, 'message' => 'Page not found: ' . $identifier];
+            }
+
+            // Get path for logging before deletion
+            $path = method_exists($document, 'getPath') ? $document->getPath() : $identifier;
+
+
+            // Remove the document (this handles both workspaces and routes)
+            $this->documentManager->remove($document);
+            $this->documentManager->flush();
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_deleted',
+                $path,
+                $locale,
+                ['identifier' => $identifier]
+            );
+
+            return ['success' => true, 'message' => 'Page deleted successfully'];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -945,5 +1167,129 @@ class PageService
                 'description' => 'Embedded video',
             ],
         ];
+    }
+
+    // ==========================================================================
+    // Page Discovery Methods
+    // ==========================================================================
+
+    /**
+     * Search pages by title (case-insensitive).
+     *
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}>
+     */
+    public function searchPages(string $query, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
+    {
+        $allPages = $this->listPages($locale, $pathPrefix);
+        $queryLower = mb_strtolower($query);
+
+        return array_values(array_filter($allPages, function (array $page) use ($queryLower): bool {
+            return str_contains(mb_strtolower($page['title']), $queryLower);
+        }));
+    }
+
+    /**
+     * Get page tree with hierarchical structure.
+     *
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, children: array<mixed>}|null
+     */
+    public function getPageTree(string $rootPath, string $locale = 'de', int $depth = 2): ?array
+    {
+        $allPages = $this->listPages($locale, $rootPath);
+
+        if (empty($allPages)) {
+            return null;
+        }
+
+        // Find root node
+        $rootNode = null;
+        $childPages = [];
+
+        foreach ($allPages as $page) {
+            if ($page['path'] === $rootPath) {
+                $rootNode = $page;
+            } else {
+                $childPages[] = $page;
+            }
+        }
+
+        if ($rootNode === null) {
+            return null;
+        }
+
+        // Build tree structure
+        $rootNode['children'] = $this->buildChildTree($rootPath, $childPages, $depth, 0);
+
+        return $rootNode;
+    }
+
+    /**
+     * Build child tree recursively.
+     *
+     * @param array<int, array<string, mixed>> $pages
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildChildTree(string $parentPath, array $pages, int $maxDepth, int $currentDepth): array
+    {
+        if ($currentDepth >= $maxDepth) {
+            return [];
+        }
+
+        $children = [];
+        $parentPathLength = strlen($parentPath);
+
+        foreach ($pages as $page) {
+            $pagePath = $page['path'];
+
+            // Check if this page is a direct child of the parent
+            if (!str_starts_with($pagePath, $parentPath . '/')) {
+                continue;
+            }
+
+            $relativePath = substr($pagePath, $parentPathLength + 1);
+
+            // Direct child has no additional slashes in relative path
+            if (!str_contains($relativePath, '/')) {
+                $page['children'] = $this->buildChildTree($pagePath, $pages, $maxDepth, $currentDepth + 1);
+                $children[] = $page;
+            }
+        }
+
+        return $children;
+    }
+
+    /**
+     * Find page by frontend URL.
+     *
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}|null
+     */
+    public function findPageByUrl(string $url, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): ?array
+    {
+        // Strip locale prefix if present (e.g., /de/php-glossar -> /php-glossar)
+        $normalizedUrl = $this->normalizeUrl($url, $locale);
+
+        $allPages = $this->listPages($locale, $pathPrefix);
+
+        foreach ($allPages as $page) {
+            if (isset($page['url']) && $page['url'] === $normalizedUrl) {
+                return $page;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalize URL by stripping locale prefix.
+     */
+    private function normalizeUrl(string $url, string $locale): string
+    {
+        $localePrefix = '/' . $locale . '/';
+
+        if (str_starts_with($url, $localePrefix)) {
+            return '/' . substr($url, strlen($localePrefix));
+        }
+
+        return $url;
     }
 }
