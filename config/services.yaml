@@ -115,7 +115,7 @@ services:
     Sulu\Component\DocumentManager\DocumentManagerInterface:
         alias: sulu_document_manager.document_manager
         public: true
-        
+
     # AI Content Logger
     App\AI\Logger\AIContentLogger:
         arguments:
@@ -195,8 +195,27 @@ services:
             $vectorizer: '@ai.vectorizer.openai_embeddings'
         public: true
 
+    # Sulu Block Services (supports all 32 block types)
+    App\Sulu\Block\BlockTypeRegistry:
+        public: true
+
+    App\Sulu\Block\BlockExtractor:
+        arguments:
+            $registry: '@App\Sulu\Block\BlockTypeRegistry'
+        public: true
+
+    App\Sulu\Block\BlockWriter:
+        arguments:
+            $registry: '@App\Sulu\Block\BlockTypeRegistry'
+        public: true
+
     # Sulu Page Service - Direct SQL (bypasses DocumentManager for MCP compatibility)
     App\Sulu\Service\PageService:
+        arguments:
+            $blockTypeRegistry: '@App\Sulu\Block\BlockTypeRegistry'
+            $blockExtractor: '@App\Sulu\Block\BlockExtractor'
+            $blockWriter: '@App\Sulu\Block\BlockWriter'
+            $documentManager: '@Sulu\Component\DocumentManager\DocumentManagerInterface'
         public: true
 
     # MCP Tools
