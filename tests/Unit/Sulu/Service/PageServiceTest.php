@@ -499,7 +499,7 @@ XML;
         $this->assertArrayHasKey('items', $result['blocks'][0]);
         $this->assertCount(2, $result['blocks'][0]['items']);
         $this->assertEquals('description', $result['blocks'][0]['items'][0]['type']);
-        $this->assertEquals('<p>Hello</p>', $result['blocks'][0]['items'][0]['content']);
+        $this->assertEquals('<p>Hello</p>', $result['blocks'][0]['items'][0]['description']);
         $this->assertEquals('code', $result['blocks'][0]['items'][1]['type']);
         $this->assertEquals('echo "hi";', $result['blocks'][0]['items'][1]['code']);
         $this->assertEquals('php', $result['blocks'][0]['items'][1]['language']);
@@ -687,32 +687,6 @@ XML;
 
         $pageService->unpublishPage('/cmf/example/contents/test', 'de');
     }
-
-    /**
-     * Create PageService with DocumentManager for create page tests.
-     */
-    private function createPageServiceWithDocumentManager(): array
-    {
-        $documentManager = $this->createMock(DocumentManagerInterface::class);
-        $cacheManager = $this->createMock(CacheManagerInterface::class);
-        $fosCacheManager = $this->createMock(FOSCacheManager::class);
-
-        $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            $cacheManager,
-            $fosCacheManager,
-            $documentManager
-        );
-
-        return [
-            'pageService' => $pageService,
-            'documentManager' => $documentManager,
-            'cacheManager' => $cacheManager,
-            'fosCacheManager' => $fosCacheManager,
-        ];
-    }
-
     // ==========================================================================
     // Page Discovery Tests (TDD)
     // ==========================================================================

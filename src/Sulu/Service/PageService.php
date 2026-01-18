@@ -4,24 +4,39 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use App\Sulu\Block\BlockExtractor;
+use App\Sulu\Block\BlockTypeRegistry;
+use App\Sulu\Block\BlockWriter;
 use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
  */
 class PageService
 {
+    private BlockExtractor $blockExtractor;
+    private BlockWriter $blockWriter;
+
     public function __construct(
         private Connection $connection,
         private McpActivityLogger $activityLogger,
         private ?CacheManagerInterface $cacheManager = null,
         private ?FOSCacheManager $fosCacheManager = null,
+        ?BlockTypeRegistry $blockTypeRegistry = null,
+        ?BlockExtractor $blockExtractor = null,
+        ?BlockWriter $blockWriter = null,
+        private ?DocumentManagerInterface $documentManager = null,
     ) {
+        // Create default instances if not provided (backwards compatibility)
+        $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
+        $this->blockExtractor = $blockExtractor ?? new BlockExtractor($registry);
+        $this->blockWriter = $blockWriter ?? new BlockWriter($registry);
     }
 
     /**
@@ -147,9 +162,15 @@ class PageService
     }
 
     /**
-     * Add a content block to a page using expanded PHPCR property format.
+     * Add a content block to a page using BlockWriter.
      *
-     * @param array{type: string, headline?: string, description?: string, items?: array<mixed>} $block
+     * Supports all 32 block types including:
+     * - FAQ: use 'faqs' array with items having 'headline' and 'content'
+     * - Table: use 'rows' array with items having 'cell1', 'cell2', 'cell3'
+     * - Image-with-flags: use 'flags' array with items having 'language' and 'url'
+     * - Feature: use 'items' array with items having 'headline' and 'content'
+     *
+     * @param array{type: string, headline?: string, description?: string, items?: array<mixed>, faqs?: array<mixed>, rows?: array<mixed>, flags?: array<mixed>} $block
      * @return array{success: bool, message: string, position: int}
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
@@ -185,45 +206,14 @@ class PageService
                 return ['success' => false, 'message' => 'Invalid XML structure', 'position' => -1];
             }
 
-            // Add block type property
-            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-type#{$newIndex}", $block['type']);
-            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-settings#{$newIndex}", '[]');
-
-            // Add block-specific properties based on type
-            if ($block['type'] === 'headline-paragraphs') {
-                if (isset($block['headline'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-headline#{$newIndex}", $block['headline']);
-                }
-                if (isset($block['items'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-length", (string) count($block['items']), 'Long');
-                    foreach ($block['items'] as $itemIndex => $item) {
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-type#{$itemIndex}", $item['type'] ?? 'description');
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-settings#{$itemIndex}", '[]');
-                        if (isset($item['description'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-description#{$itemIndex}", $item['description']);
-                        }
-                        if (isset($item['code'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-code#{$itemIndex}", $item['code']);
-                        }
-                        if (isset($item['language'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$newIndex}-language#{$itemIndex}", $item['language']);
-                        }
-                    }
-                }
-            } elseif ($block['type'] === 'hl-des') {
-                if (isset($block['headline'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-headline#{$newIndex}", $block['headline']);
-                }
-                if (isset($block['description'])) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-description#{$newIndex}", $block['description']);
-                }
-            }
+            // Use BlockWriter to add the block (supports all 32 block types)
+            $this->blockWriter->addBlock($xml, $rootNode, $locale, $newIndex, $block);
 
             // Update blocks length
             if ($lengthNodes !== false && $lengthNodes->length > 0 && $lengthNodes->item(0)) {
                 $lengthNodes->item(0)->nodeValue = (string) ($currentLength + 1);
             } else {
-                $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-length", (string) ($currentLength + 1));
+                $this->blockWriter->addProperty($xml, $rootNode, "i18n:{$locale}-blocks-length", (string) ($currentLength + 1), 'Long');
             }
 
             $updatedXml = $xml->saveXML();
@@ -252,29 +242,12 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $newIndex];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage(), 'position' => -1];
         }
-    }
-
-    /**
-     * Add a PHPCR property to the XML document.
-     */
-    private function addPhpcrProperty(DOMDocument $xml, \DOMNode $rootNode, string $name, string $value, string $type = 'String'): void
-    {
-        $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
-        $property->setAttribute('sv:name', $name);
-        $property->setAttribute('sv:type', $type);
-        $property->setAttribute('sv:multi-valued', '0');
-
-        $valueNode = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
-        $valueNode->setAttribute('length', (string) strlen($value));
-        $valueNode->appendChild($xml->createTextNode($value));
-        $property->appendChild($valueNode);
-
-        $rootNode->appendChild($property);
     }
 
     /**
@@ -396,6 +369,7 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             // Re-read page to return current state (helps with caching issues)
             $updatedPage = $this->getPage($path, $locale);
             $blockCount = $updatedPage ? count($updatedPage['blocks']) : 0;
@@ -446,6 +420,7 @@ class PageService
 
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
+
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
@@ -705,6 +680,7 @@ class PageService
                 ]
             );
 
+
             return [
                 'success' => true,
                 'message' => 'Page created successfully',
@@ -816,121 +792,27 @@ class PageService
     }
 
     /**
-     * Extract blocks from PHPCR XML using expanded property format.
+     * Extract blocks from PHPCR XML using BlockExtractor.
+     *
+     * Supports all 32 block types including those with custom nested names:
+     * - FAQ: uses 'faqs' (not 'items'), properties: headline, subline
+     * - Table: uses 'rows' (not 'items'), properties: cell1, cell2, cell3
+     * - Image-with-flags: uses 'flags', properties: language, url
      *
      * @return array<mixed>
      */
     private function extractBlocks(string $xmlString, string $locale): array
     {
-        try {
-            $xml = new DOMDocument();
-            $xml->loadXML($xmlString);
-
-            $xpath = new DOMXPath($xml);
-            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
-
-            // Get blocks length
-            $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-length"]/sv:value');
-            if ($lengthNodes === false || $lengthNodes->length === 0 || !$lengthNodes->item(0)) {
-                return [];
-            }
-
-            $blocksLength = (int) $lengthNodes->item(0)->nodeValue;
-            $blocks = [];
-
-            for ($i = 0; $i < $blocksLength; $i++) {
-                $block = ['position' => $i];
-
-                // Get block type
-                $typeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-type#' . $i . '"]/sv:value');
-                if ($typeNodes !== false && $typeNodes->length > 0 && $typeNodes->item(0)) {
-                    $block['type'] = $typeNodes->item(0)->nodeValue;
-                }
-
-                // Get headline
-                $headlineNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-headline#' . $i . '"]/sv:value');
-                if ($headlineNodes !== false && $headlineNodes->length > 0 && $headlineNodes->item(0)) {
-                    $block['headline'] = $headlineNodes->item(0)->nodeValue;
-                }
-
-                // Get description (for hl-des blocks)
-                $descNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-description#' . $i . '"]/sv:value');
-                if ($descNodes !== false && $descNodes->length > 0 && $descNodes->item(0)) {
-                    $block['description'] = $descNodes->item(0)->nodeValue;
-                }
-
-                // Get nested items (for headline-paragraphs blocks)
-                $itemsLengthNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-length"]/sv:value');
-                if ($itemsLengthNodes !== false && $itemsLengthNodes->length > 0 && $itemsLengthNodes->item(0)) {
-                    $itemsLength = (int) $itemsLengthNodes->item(0)->nodeValue;
-                    $items = [];
-
-                    for ($j = 0; $j < $itemsLength; $j++) {
-                        $item = [];
-
-                        $itemTypeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-type#' . $j . '"]/sv:value');
-                        if ($itemTypeNodes !== false && $itemTypeNodes->length > 0 && $itemTypeNodes->item(0)) {
-                            $item['type'] = $itemTypeNodes->item(0)->nodeValue;
-                        }
-
-                        $itemDescNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-description#' . $j . '"]/sv:value');
-                        if ($itemDescNodes !== false && $itemDescNodes->length > 0 && $itemDescNodes->item(0)) {
-                            $item['content'] = $itemDescNodes->item(0)->nodeValue;
-                        }
-
-                        $itemCodeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-code#' . $j . '"]/sv:value');
-                        if ($itemCodeNodes !== false && $itemCodeNodes->length > 0 && $itemCodeNodes->item(0)) {
-                            $item['code'] = $itemCodeNodes->item(0)->nodeValue;
-                        }
-
-                        $itemLangNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-items#' . $i . '-language#' . $j . '"]/sv:value');
-                        if ($itemLangNodes !== false && $itemLangNodes->length > 0 && $itemLangNodes->item(0)) {
-                            $item['language'] = $itemLangNodes->item(0)->nodeValue;
-                        }
-
-                        if (!empty($item)) {
-                            $items[] = $item;
-                        }
-                    }
-
-                    if (!empty($items)) {
-                        $block['items'] = $items;
-                    }
-                }
-
-                // Get image/media properties
-                $imageNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-image#' . $i . '"]/sv:value');
-                if ($imageNodes !== false && $imageNodes->length > 0 && $imageNodes->item(0)) {
-                    $imageData = $imageNodes->item(0)->nodeValue;
-                    if ($imageData) {
-                        $block['image'] = json_decode($imageData, true) ?: $imageData;
-                    }
-                }
-
-                // Get code block properties
-                $codeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-code#' . $i . '"]/sv:value');
-                if ($codeNodes !== false && $codeNodes->length > 0 && $codeNodes->item(0)) {
-                    $block['code'] = $codeNodes->item(0)->nodeValue;
-                }
-
-                $languageNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-language#' . $i . '"]/sv:value');
-                if ($languageNodes !== false && $languageNodes->length > 0 && $languageNodes->item(0)) {
-                    $block['language'] = $languageNodes->item(0)->nodeValue;
-                }
-
-                $blocks[] = $block;
-            }
-
-            return $blocks;
-        } catch (\Exception) {
-            // Ignore parsing errors
-        }
-
-        return [];
+        return $this->blockExtractor->extractBlocks($xmlString, $locale);
     }
 
     /**
-     * Update an existing block.
+     * Update an existing block using BlockWriter.
+     *
+     * Supports all 32 block types including nested updates for:
+     * - FAQ: update 'faqs' array
+     * - Table: update 'rows' array
+     * - Feature: update 'items' array
      *
      * @param array<string, mixed> $blockData
      * @return array{success: bool, message: string}
@@ -964,65 +846,15 @@ class PageService
                 return ['success' => false, 'message' => "Block position {$position} out of range (0-" . ($blocksLength - 1) . ")"];
             }
 
-            // Update block properties
-            foreach ($blockData as $key => $value) {
-                $propName = match ($key) {
-                    'headline' => "i18n:{$locale}-blocks-headline#{$position}",
-                    'description' => "i18n:{$locale}-blocks-description#{$position}",
-                    'content' => "i18n:{$locale}-blocks-description#{$position}",
-                    'code' => "i18n:{$locale}-blocks-code#{$position}",
-                    'language' => "i18n:{$locale}-blocks-language#{$position}",
-                    default => null,
-                };
-
-                if ($propName === null) {
-                    continue;
-                }
-
-                $propNodes = $xpath->query('//sv:property[@sv:name="' . $propName . '"]/sv:value');
-                if ($propNodes !== false && $propNodes->length > 0 && $propNodes->item(0)) {
-                    $propNodes->item(0)->nodeValue = (string) $value;
-                } else {
-                    // Add new property if it doesn't exist
-                    $rootNode = $xpath->query('/sv:node')->item(0);
-                    if ($rootNode) {
-                        $this->addPhpcrProperty($xml, $rootNode, $propName, (string) $value);
-                    }
-                }
+            // Get current block type
+            $typeNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-blocks-type#' . $position . '"]/sv:value');
+            $blockType = 'hl-des'; // fallback
+            if ($typeNodes !== false && $typeNodes->length > 0 && $typeNodes->item(0)) {
+                $blockType = $typeNodes->item(0)->nodeValue ?? 'hl-des';
             }
 
-            // Handle complete items replacement for headline-paragraphs
-            if (isset($blockData['items']) && is_array($blockData['items'])) {
-                // Remove all old item properties for this block
-                $oldItemProps = $xpath->query('//sv:property[contains(@sv:name, "i18n:' . $locale . '-blocks-items#' . $position . '-")]');
-                if ($oldItemProps !== false) {
-                    foreach ($oldItemProps as $prop) {
-                        if ($prop->parentNode) {
-                            $prop->parentNode->removeChild($prop);
-                        }
-                    }
-                }
-
-                // Add new items
-                $rootNode = $xpath->query('/sv:node')->item(0);
-                if ($rootNode) {
-                    $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-length", (string) count($blockData['items']), 'Long');
-
-                    foreach ($blockData['items'] as $itemIndex => $item) {
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-type#{$itemIndex}", $item['type'] ?? 'description');
-                        $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-settings#{$itemIndex}", '[]');
-                        if (isset($item['description'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-description#{$itemIndex}", $item['description']);
-                        }
-                        if (isset($item['code'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-code#{$itemIndex}", $item['code']);
-                        }
-                        if (isset($item['language'])) {
-                            $this->addPhpcrProperty($xml, $rootNode, "i18n:{$locale}-blocks-items#{$position}-language#{$itemIndex}", $item['language']);
-                        }
-                    }
-                }
-            }
+            // Use BlockWriter to update the block (supports all 32 block types)
+            $this->blockWriter->updateBlock($xml, $xpath, $locale, $position, $blockType, $blockData);
 
             $updatedXml = $xml->saveXML();
 
@@ -1045,6 +877,7 @@ class PageService
 
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
+
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1166,6 +999,7 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
 
@@ -1234,7 +1068,54 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+
             return ['success' => true, 'message' => 'Page unpublished successfully'];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Delete a page completely.
+     *
+     * Uses DocumentManager for proper deletion (same as Sulu admin API).
+     * This removes the page from both workspaces, routes, and search index.
+     *
+     * @param string $identifier UUID or path of the page
+     * @param string $locale Locale for search deindexing
+     * @return array{success: bool, message: string}
+     */
+    public function deletePage(string $identifier, string $locale = 'de'): array
+    {
+        if (!$this->documentManager) {
+            return ['success' => false, 'message' => 'DocumentManager not available'];
+        }
+
+        try {
+            // Find document by UUID or path
+            $document = $this->documentManager->find($identifier, $locale);
+
+            if ($document === null) {
+                return ['success' => false, 'message' => 'Page not found: ' . $identifier];
+            }
+
+            // Get path for logging before deletion
+            $path = method_exists($document, 'getPath') ? $document->getPath() : $identifier;
+
+
+            // Remove the document (this handles both workspaces and routes)
+            $this->documentManager->remove($document);
+            $this->documentManager->flush();
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_deleted',
+                $path,
+                $locale,
+                ['identifier' => $identifier]
+            );
+
+            return ['success' => true, 'message' => 'Page deleted successfully'];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
