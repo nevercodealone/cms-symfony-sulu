@@ -62,21 +62,6 @@ Get hierarchical page structure. Use to find parent paths for new pages.
 }
 ```
 
-Response:
-```json
-{
-  "path": "/cmf/example/contents/glossare",
-  "title": "Glossare",
-  "children": [
-    {
-      "path": "/cmf/example/contents/glossare/php-glossar",
-      "title": "PHP Glossar",
-      "children": [...]
-    }
-  ]
-}
-```
-
 ### find_by_url Action
 
 Convert frontend URL to PHPCR path.
@@ -84,26 +69,8 @@ Convert frontend URL to PHPCR path.
 ```json
 {
   "action": "find_by_url",
-  "url": "/de/php-glossar",
-  "locale": "de"
-}
-```
-
-or without locale prefix:
-```json
-{
-  "action": "find_by_url",
   "url": "/php-glossar",
   "locale": "de"
-}
-```
-
-Response:
-```json
-{
-  "path": "/cmf/example/contents/php-glossar",
-  "title": "PHP Glossar",
-  "url": "/php-glossar"
 }
 ```
 
@@ -119,390 +86,802 @@ Create new pages under an existing parent path.
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `parentPath` | Yes | PHPCR path of parent page (use `sulu-page-tree` to find valid paths) |
+| `parentPath` | Yes | PHPCR path of parent page |
 | `title` | Yes | Page title |
-| `resourceSegment` | Yes | URL slug starting with `/`, e.g. `/my-page` (lowercase, numbers, hyphens only) |
+| `resourceSegment` | Yes | URL slug starting with `/`, e.g. `/my-page` |
 | `locale` | No | Language code: `de` or `en` (default: `de`) |
-| `seoTitle` | No | SEO meta title (defaults to page title) |
+| `seoTitle` | No | SEO meta title |
 | `seoDescription` | No | SEO meta description |
-| `publish` | No | Publish immediately: `true` or `false` (default: `false`) |
+| `publish` | No | Publish immediately (default: `false`) |
 
-#### Example: Create a New Page
+---
+
+## Block Type User Stories (32 Types)
+
+**As a content editor**, understand what each block accomplishes:
+
+### Content Blocks
+| Block | User Story |
+|-------|-----------|
+| **headline-paragraphs** | I want to create tutorials with mixed text and code, so developers can follow step-by-step instructions |
+| **faq** | I want to create FAQ sections with questions and answers, so visitors can quickly find common answers. **Uses `faqs[]` NOT `items[]`!** |
+| **code** | I want to display standalone code snippets with syntax highlighting |
+| **introduction** | I want to create intro sections with bullet points and two text areas |
+| **table** | I want to display data in 3-column tables with headers. **Uses `rows[]` NOT `items[]`!** |
+
+### Hero Blocks
+| Block | User Story |
+|-------|-----------|
+| **hero** | I want to create eye-catching page headers with image, headline, and CTA button |
+| **hero-startpage** | I want a homepage hero with dual headlines and two action buttons |
+| **hero-image-right** | I want a hero section with image on the right and feature list on left |
+| **heroslider** | I want a hero with multiple sliding images |
+
+### Feature Blocks
+| Block | User Story |
+|-------|-----------|
+| **feature** | I want to showcase features with checkmark icons and descriptions |
+| **feature-default** | I want a grid layout of feature cards |
+| **feature-with-icons** | I want features with nested icon bullet lists |
+| **formats** | I want to display format options with selectable icons (user/newsletter/github) |
+
+### Contact Blocks
+| Block | User Story |
+|-------|-----------|
+| **team** | I want to display team members from Sulu contact database |
+| **consultant** | I want to show a single contact person |
+| **contact** | I want to include contact info from snippets |
+| **chat** | I want to embed a chat widget or interactive element |
+
+### Navigation Blocks
+| Block | User Story |
+|-------|-----------|
+| **highlights** | I want to display snippet-based highlights |
+| **subpages-overview** | I want to automatically list all child pages |
+| **table-of-contents** | I want an auto-generated TOC from page headings |
+
+---
+
+## Complete Block Type Reference (32 Types)
+
+All blocks are defined in `config/templates/includes/tailwind/blocks/*.xml` and render via `templates/includes/tailwind/blocks/*.html.twig`.
+
+---
+
+### CONTENT BLOCKS
+
+#### 1. headline-paragraphs (Main Content Block)
+
+Primary block for tutorials, guides, documentation with alternating text and code.
+
+**XML:** `config/templates/includes/tailwind/blocks/headline-paragraphs.xml`
+**Twig:** `templates/includes/tailwind/blocks/headline-paragraphs.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Main heading |
+| `items[]` | nested block | Array of content items |
+
+**Nested items structure:**
+| Item Type | Properties | Description |
+|-----------|------------|-------------|
+| `description` | `description` (text_editor) | Rich text paragraph |
+| `code` | `code` (text_editor) | Code snippet |
 
 ```json
-// Step 1: Find valid parent path
-{"tool": "sulu-page-tree", "rootPath": "/cmf/example/contents", "depth": 1}
-
-// Step 2: Create the page
 {
-  "tool": "sulu-page-create",
-  "parentPath": "/cmf/example/contents/nca-php-glossar",
-  "title": "Docker Grundlagen",
-  "resourceSegment": "/docker-grundlagen",
-  "seoTitle": "Docker Grundlagen - Container Tutorial",
-  "seoDescription": "Lerne die Grundlagen von Docker und Container-Technologie.",
-  "locale": "de",
-  "publish": false
+  "blockType": "headline-paragraphs",
+  "headline": "Installation Guide",
+  "items": "[{\"type\":\"description\",\"description\":\"<p>Install dependencies:</p>\"},{\"type\":\"code\",\"code\":\"composer require vendor/package\"},{\"type\":\"description\",\"description\":\"<p>Configuration complete.</p>\"}]"
 }
 ```
 
-#### Response:
+---
+
+#### 2. faq (FAQ Accordion)
+
+FAQ block with question/answer pairs.
+
+**XML:** `config/templates/includes/tailwind/blocks/faq.xml`
+**Twig:** `templates/includes/tailwind/blocks/faq.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `faqs[]` | nested block | Array of FAQ items |
+
+**Nested faqs structure:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Question |
+| `subline` | text_line | Answer |
 
 ```json
 {
-  "success": true,
-  "message": "Page created successfully",
-  "path": "/cmf/example/contents/nca-php-glossar/docker-grundlagen",
-  "uuid": "abc123-def456-...",
-  "url": "/de/docker-grundlagen"
+  "blockType": "faq",
+  "faqs": "[{\"headline\":\"What is PHP?\",\"subline\":\"PHP is a server-side scripting language.\"},{\"headline\":\"What is Composer?\",\"subline\":\"Composer is a dependency manager for PHP.\"}]"
 }
 ```
 
-#### Error Response (Invalid Parent):
-
-```json
-{
-  "success": false,
-  "message": "Parent path does not exist: /cmf/example/contents/nonexistent"
-}
-```
-
-#### Important Notes:
-
-1. **Use sulu-page-tree first**: Always verify the parent path exists before creating
-2. **Template**: All pages use the `tailwind` template (hardcoded)
-3. **resourceSegment format**: Must start with `/` and contain only `[a-z0-9-]`
-4. **Parent must exist**: The parentPath must point to an existing page
-5. **Empty page**: Created pages have no blocks - use `sulu-block-add` after creation
-6. **Publish behavior**: If `publish: true`, page is immediately live and cache is invalidated
-
-## Tailwind Block Types
-
-All blocks render via `templates/includes/tailwind/blocks/{type}.html.twig`.
-
-### Available Blocks
-
-**Content:** headline-paragraphs, hl-des, code, table, faq, highlights, introduction
-**Marketing:** hero, hero-startpage, hero-image-right, heroslider, cta-button, consultant, contact, feature, feature-default
-**Media:** image, image-gallery, images-with-heading-and-description, logo-gallery, youTubeFromChannel
-**Navigation:** subpages-overview, table-of-contents, related-content-by-page-tag
-**Other:** team, chat, button, wordpressPosts
-
-### Twig Rendering (headline-paragraphs.html.twig)
-
+**Twig rendering:**
 ```twig
-{% for item in content.items %}
-  {% if item.type == 'description' %}
-    {{ item.description|raw }}
-  {% elseif item.type == 'code' %}
-    {% include 'includes/tailwind/blocks/code.html.twig' %}
-  {% endif %}
+{% for item in content.faqs %}
+  <h2>{{ item.headline }}</h2>
+  <p>{{ item.subline }}</p>
 {% endfor %}
 ```
 
-### 1. headline-paragraphs (Main Content Block)
+---
 
-For tutorials, guides, documentation with **alternating text and code**.
+#### 3. code (Standalone Code Block)
 
-#### CORRECT Structure:
+Code block with description.
 
-```json
-{
-  "action": "add_block",
-  "blockType": "headline-paragraphs",
-  "headline": "Installation Guide",
-  "items": "[{\"type\":\"description\",\"content\":\"<p>First, install the dependencies:</p>\"},{\"type\":\"code\",\"code\":\"composer require vendor/package\",\"language\":\"bash\"},{\"type\":\"description\",\"content\":\"<p>Then configure the class:</p>\"},{\"type\":\"code\",\"code\":\"$config = new Config();\\n$config->set('key', 'value');\",\"language\":\"php\"},{\"type\":\"description\",\"content\":\"<p>Done! Installation is complete.</p>\"}]",
-  "path": "/cmf/example/contents/page",
-  "locale": "de"
-}
-```
+**XML:** `config/templates/includes/tailwind/blocks/code.xml`
+**Twig:** `templates/includes/tailwind/blocks/code.html.twig`
 
-#### WRONG Structure (Code inline in HTML):
+| Property | Type | Description |
+|----------|------|-------------|
+| `description` | text_editor | Code content |
 
 ```json
 {
-  "items": "[{\"type\":\"description\",\"content\":\"<p>Text<pre><code>composer require x</code></pre>more text</p>\"}]"
-}
-```
-
-**Why wrong?** Code won't render as a code block, no syntax highlighting, poor readability.
-
-#### Item Types for headline-paragraphs:
-
-| type | fields | description |
-|------|--------|-------------|
-| `description` | `content` (HTML) | Prose text, can contain `<p>`, `<ul>`, `<h3>`, `<strong>` etc. |
-| `code` | `code`, `language` | Code block with syntax highlighting |
-
-#### Available Languages for Code Blocks:
-
-- `php` - PHP Code
-- `bash` - Shell/Terminal Commands
-- `javascript` - JavaScript/Node.js
-- `html` - HTML Markup
-- `css` - CSS Styles
-- `xml` - XML/SVG
-- `yaml` - YAML Config
-- `json` - JSON Data
-
-### 2. hl-des (Headline + Description)
-
-Simple block for headline with description.
-
-```json
-{
-  "action": "add_block",
-  "blockType": "hl-des",
-  "headline": "About Us",
-  "content": "<p>We are a team of developers...</p>",
-  "path": "/cmf/example/contents/page",
-  "locale": "de"
-}
-```
-
-### 3. text
-
-Pure text block without headline.
-
-```json
-{
-  "action": "add_block",
-  "blockType": "text",
-  "content": "<p>Lorem ipsum dolor sit amet...</p>",
-  "path": "/cmf/example/contents/page",
-  "locale": "de"
-}
-```
-
-### 4. code
-
-Standalone code block (without surrounding text).
-
-```json
-{
-  "action": "add_block",
   "blockType": "code",
-  "content": "echo 'Hello World';",
-  "path": "/cmf/example/contents/page",
-  "locale": "de"
+  "description": "<pre><code>echo 'Hello World';</code></pre>"
 }
 ```
 
-### 5. image
+---
 
-Image block with optional caption.
+#### 4. introduction (Text with Bullet Points)
+
+Introduction block with headline, description, bullet items, and bottom text.
+
+**XML:** `config/templates/includes/tailwind/blocks/introduction.xml`
+**Twig:** `templates/includes/tailwind/blocks/introduction.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Main heading |
+| `description` | text_editor | Intro text |
+| `items[]` | nested block | Bullet points |
+| `descriptiontwo` | text_editor | Bottom text |
+
+**Nested items:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `description` | text_editor | Bullet point text |
 
 ```json
 {
-  "action": "add_block",
-  "blockType": "image",
-  "headline": "Screenshot",
-  "content": "<p>Image description</p>",
-  "path": "/cmf/example/contents/page",
-  "locale": "de"
+  "blockType": "introduction",
+  "headline": "Why Choose Us",
+  "description": "<p>We offer the best service.</p>",
+  "items": "[{\"description\":\"<p>Fast delivery</p>\"},{\"description\":\"<p>24/7 support</p>\"}]",
+  "descriptiontwo": "<p>Contact us today!</p>"
 }
 ```
 
-**Note:** Images must be uploaded via Sulu Media Library. The image.ids are set separately.
+---
 
-### 6. quote
+#### 5. table (Data Table)
 
-Quote block.
+Table with headers and rows.
+
+**XML:** `config/templates/includes/tailwind/blocks/table.xml`
+**Twig:** `templates/includes/tailwind/blocks/table.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Table title |
+| `description` | text_editor | Table description |
+| `columnheader1` | text_line | Header column 1 |
+| `columnheader2` | text_line | Header column 2 |
+| `columnheader3` | text_line | Header column 3 |
+| `rows[]` | nested block | Table rows |
+
+**Nested rows:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `cell1` | text_line | Column 1 value |
+| `cell2` | text_line | Column 2 value |
+| `cell3` | text_line | Column 3 value |
 
 ```json
 {
-  "action": "add_block",
-  "blockType": "quote",
-  "content": "The best code is the code you don't have to write.",
-  "path": "/cmf/example/contents/page",
-  "locale": "de"
+  "blockType": "table",
+  "headline": "Pricing",
+  "columnheader1": "Plan",
+  "columnheader2": "Price",
+  "columnheader3": "Features",
+  "rows": "[{\"cell1\":\"Basic\",\"cell2\":\"$10\",\"cell3\":\"5 users\"},{\"cell1\":\"Pro\",\"cell2\":\"$25\",\"cell3\":\"Unlimited\"}]"
 }
 ```
 
-### 7. video
+---
 
-Video embed block.
+### HERO BLOCKS
+
+#### 6. hero (Standard Hero)
+
+Hero section with image, headline, description, and CTA button.
+
+**XML:** `config/templates/includes/tailwind/blocks/hero.xml`
+**Twig:** `templates/includes/tailwind/blocks/hero.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `image` | media_selection | Hero image (max 1) |
+| `headline` | text_line | Main heading |
+| `description` | text_editor | Hero text |
+| `buttonText` | text_line | CTA button label |
+| `url` | url | CTA button link |
 
 ```json
 {
-  "action": "add_block",
-  "blockType": "video",
-  "headline": "Tutorial Video",
-  "content": "https://youtube.com/watch?v=xxx",
-  "path": "/cmf/example/contents/page",
-  "locale": "de"
+  "blockType": "hero",
+  "headline": "Welcome to Our Site",
+  "description": "<p>We build amazing software.</p>",
+  "buttonText": "Get Started",
+  "url": "https://example.com/signup"
 }
 ```
 
-## Important Parameters
+---
 
-### Path Format
+#### 7. hero-startpage (Homepage Hero)
 
-Sulu uses PHPCR paths:
+Extended hero for homepage with two-part headline and dual buttons.
+
+**XML:** `config/templates/includes/tailwind/blocks/hero-startpage.xml`
+**Twig:** `templates/includes/tailwind/blocks/hero-startpage.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `image` | media_selection | Hero image |
+| `textone` | text_line | Headline part 1 |
+| `texttwo` | text_line | Headline part 2 |
+| `description` | text_editor | Hero description |
+| `buttonText` | text_line | Primary button text |
+| `buttonLink` | single_page_selection | Primary button page link |
+| `buttonTextTwo` | text_line | Secondary button text |
+| `url` | url | Secondary button URL |
+
+---
+
+#### 8. hero-image-right (Hero with Image Right)
+
+Hero with image on right side and feature items.
+
+**XML:** `config/templates/includes/tailwind/blocks/hero-image-right.xml`
+**Twig:** `templates/includes/tailwind/blocks/hero-image-right.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `image` | media_selection | Right-side image |
+| `headline` | text_line | Main heading |
+| `description` | text_editor | Description |
+| `items[]` | nested block | Feature items |
+
+**Nested items:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Item headline |
+| `text` | text_line | Item text |
+| `buttonText` | text_line | Button label |
+| `buttonLink` | single_page_selection | Button page |
+| `url` | url | External URL |
+
+---
+
+#### 9. heroslider (Hero Slider)
+
+Slider hero with multiple images and optional page links.
+
+**XML:** `config/templates/includes/tailwind/blocks/heroslider.xml`
+**Twig:** `templates/includes/tailwind/blocks/heroslider.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Slider headline |
+| `description` | text_editor | Description |
+| `pageurl1` | page_selection | Optional page link 1 |
+| `pageurl2` | page_selection | Optional page link 2 |
+| `images` | media_selection | Slider images (1-6) |
+
+---
+
+### CTA & BUTTON BLOCKS
+
+#### 10. cta-button (Call-to-Action)
+
+CTA section with headline, description, and two buttons.
+
+**XML:** `config/templates/includes/tailwind/blocks/cta-button.xml`
+**Twig:** `templates/includes/tailwind/blocks/cta-button.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | CTA headline |
+| `description` | text_editor | CTA description |
+| `text` | text_line | Primary button text |
+| `url` | url | Primary button URL |
+| `texttwo` | text_line | Secondary button text |
+| `urltwo` | url | Secondary button URL |
+
+```json
+{
+  "blockType": "cta-button",
+  "headline": "Ready to Start?",
+  "description": "<p>Join thousands of happy customers.</p>",
+  "text": "Sign Up Free",
+  "url": "/signup",
+  "texttwo": "Learn More",
+  "urltwo": "/features"
+}
 ```
-/cmf/example/contents/[section]/[subsection]/[page-slug]
+
+---
+
+#### 11. button (Simple Button)
+
+Simple button link.
+
+**XML:** `config/templates/includes/tailwind/blocks/button.xml`
+**Twig:** `templates/includes/tailwind/blocks/button.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `buttonText` | text_line | Button label |
+| `url` | url | Button link |
+
+---
+
+### FEATURE BLOCKS
+
+#### 12. feature (Feature Showcase)
+
+Feature section with subline, headline, description, and feature items.
+
+**XML:** `config/templates/includes/tailwind/blocks/feature.xml`
+**Twig:** `templates/includes/tailwind/blocks/feature.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `subline` | text_line | Small text above headline |
+| `headline` | text_line | Main heading |
+| `description` | text_editor | Description |
+| `items[]` | nested block | Feature items |
+
+**Nested items:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Feature title |
+| `description` | text_editor | Feature description |
+
+---
+
+#### 13. feature-default (Default Feature Grid)
+
+Feature grid with headline, description, and items.
+
+**XML:** `config/templates/includes/tailwind/blocks/feature-default.xml`
+**Twig:** `templates/includes/tailwind/blocks/feature-default.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Section headline |
+| `description` | text_editor | Section description |
+| `items[]` | nested block | Feature items |
+
+**Nested items:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Feature title |
+| `description` | text_editor | Feature text |
+
+---
+
+#### 14. feature-with-icons (Feature with Icon Lists)
+
+Feature items with nested icon bullet points.
+
+**XML:** `config/templates/includes/tailwind/blocks/feature-with-icons.xml`
+**Twig:** `templates/includes/tailwind/blocks/feature-with-icons.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Section headline |
+| `description` | text_editor | Section description |
+| `items[]` | nested block | Feature groups |
+
+**Nested items → nested items:**
+| Level | Property | Description |
+|-------|----------|-------------|
+| items | `headline` | Group headline |
+| items.items | `text` | Bullet point text |
+
+---
+
+#### 15. formats (Format Cards with Icons)
+
+Format cards with selectable icons.
+
+**XML:** `config/templates/includes/tailwind/blocks/formats.xml`
+**Twig:** `templates/includes/tailwind/blocks/formats.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Section headline |
+| `description` | text_editor | Section description |
+| `items[]` | nested block | Format items |
+
+**Nested items:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `icon` | single_select | Icon: user, newsletter, github |
+| `headline` | text_line | Format title |
+| `description` | text_editor | Format description |
+
+---
+
+### IMAGE & MEDIA BLOCKS
+
+#### 16. image (Single Image)
+
+Single image block.
+
+**XML:** `config/templates/includes/tailwind/blocks/image.xml`
+**Twig:** `templates/includes/tailwind/blocks/image.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `image` | media_selection | Image (max 1) |
+
+---
+
+#### 17. image-gallery (Image Gallery)
+
+Gallery with headline, description, and multiple images.
+
+**XML:** `config/templates/includes/tailwind/blocks/image-gallery.xml`
+**Twig:** `templates/includes/tailwind/blocks/image-gallery.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Gallery title |
+| `description` | text_editor | Gallery description |
+| `image` | media_selection | Multiple images |
+
+---
+
+#### 18. images-with-heading-and-description
+
+Two images with headline and description.
+
+**XML:** `config/templates/includes/tailwind/blocks/images-with-heading-and-description.xml`
+**Twig:** `templates/includes/tailwind/blocks/images-with-heading-and-description.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `image` | media_selection | Images (max 2) |
+| `headline` | text_line | Heading |
+| `description` | text_editor | Description |
+
+---
+
+#### 19. image-with-flags (Image with Language Flags)
+
+Image with country/language flag links.
+
+**XML:** `config/templates/includes/tailwind/blocks/image-with-flags.xml`
+**Twig:** `templates/includes/tailwind/blocks/image-with-flags.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Heading |
+| `image` | media_selection | Main image |
+| `flags[]` | nested block | Flag links |
+
+**Nested flags:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `language` | text_line | Country/language name |
+| `url` | url | Link URL |
+
+---
+
+#### 20. logo-gallary (Logo Gallery)
+
+Logo grid with links.
+
+**XML:** `config/templates/includes/tailwind/blocks/logo-gallery.xml`
+**Twig:** `templates/includes/tailwind/blocks/logo-gallary.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Gallery title |
+| `items[]` | nested block | Logo items |
+
+**Nested items:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Logo alt text |
+| `url` | url | Logo link |
+| `image` | media_selection | Logo image |
+
+---
+
+#### 21. excerpt-image (Excerpt Image)
+
+Displays page excerpt image with headline.
+
+**XML:** `config/templates/includes/tailwind/blocks/excerpt-image.xml`
+**Twig:** `templates/includes/tailwind/blocks/excerpt-image.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Optional override headline |
+
+---
+
+### CONTACT & TEAM BLOCKS
+
+#### 22. team (Team Members)
+
+Team member grid from contact accounts.
+
+**XML:** `config/templates/includes/tailwind/blocks/team.xml`
+**Twig:** `templates/includes/tailwind/blocks/team.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Section headline |
+| `description` | text_editor | Section description |
+| `organisation` | contact_account_selection | Team members from Sulu contacts |
+
+**Twig accesses from contact:**
+- `item.avatar.thumbnails['team']`
+- `item.fullName`
+- `item.positionName`
+- `item.contactDetails.socialMedia`
+- `item.note`
+
+---
+
+#### 23. consultant (Single Consultant)
+
+Single consultant/contact person display.
+
+**XML:** `config/templates/includes/tailwind/blocks/consultant.xml`
+**Twig:** `templates/includes/tailwind/blocks/consultant.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `organisation` | contact_account_selection | Consultant (max 1) |
+| `description` | text_editor | Additional description |
+
+---
+
+#### 24. contact (Contact Box)
+
+Contact section using snippets.
+
+**XML:** `config/templates/includes/tailwind/blocks/contact.xml`
+**Twig:** `templates/includes/tailwind/blocks/contact.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `snippets` | snippet_selection | Contact snippet (default: 'contact') |
+| `description` | text_editor | Additional description |
+
+---
+
+#### 25. chat (Chat/Embed Block)
+
+Chat or embed section.
+
+**XML:** `config/templates/includes/tailwind/blocks/chat.xml`
+**Twig:** `templates/includes/tailwind/blocks/chat.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Section headline |
+| `description` | text_editor | Description/embed code |
+
+---
+
+### NAVIGATION & DYNAMIC BLOCKS
+
+#### 26. highlights (Snippet Highlights)
+
+Display highlight snippets.
+
+**XML:** `config/templates/includes/tailwind/blocks/highlights.xml`
+**Twig:** `templates/includes/tailwind/blocks/highlights.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `snippets` | snippet_selection | Highlight snippets (default: 'highlights') |
+
+---
+
+#### 27. related-content-by-page-tag
+
+Related content based on page tags.
+
+**XML:** `config/templates/includes/tailwind/blocks/related-content-by-page-tag.xml`
+**Twig:** `templates/includes/tailwind/blocks/related-content-by-page-tag.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `snippets` | snippet_selection | Uses excerpt tags for matching |
+
+---
+
+#### 28. subpages-overview (Child Pages)
+
+Automatically lists child pages using smart_content.
+
+**XML:** `config/templates/includes/tailwind/blocks/subpages-overview.xml`
+**Twig:** `templates/includes/tailwind/blocks/subpages-overview.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `items` | smart_content | Auto-loads child pages with excerpts |
+
+---
+
+#### 29. table-of-contents (TOC)
+
+Auto-generated table of contents.
+
+**XML:** `config/templates/includes/tailwind/blocks/table-of-contents.xml`
+**Twig:** `templates/includes/tailwind/blocks/table-of-contents.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | TOC title (e.g., "Contents") |
+
+---
+
+#### 30. youtube-from-channel (YouTube Playlist)
+
+YouTube playlist embed.
+
+**XML:** `config/templates/includes/tailwind/blocks/youTubeFromChannel.xml`
+**Twig:** `templates/includes/tailwind/blocks/youtube-from-channel.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Section headline |
+| `subline` | text_line | Section subline |
+| `playlistid` | text_line | YouTube playlist ID |
+
+```json
+{
+  "blockType": "youtube-from-channel",
+  "headline": "Our Videos",
+  "subline": "Watch our latest tutorials",
+  "playlistid": "PLxxxxxxxxxxxxxxxx"
+}
 ```
 
-Examples:
-- `/cmf/example/contents/glossare/nca-php-glossar/phpunit`
-- `/cmf/example/contents/blog/2025/my-article`
+---
 
-### Locale
+#### 31. wordpressposts (WordPress Posts)
 
-- `de` - German
-- `en` - English
+Fetches and displays WordPress posts.
 
-### Position (0-based)
+**XML:** `config/templates/includes/tailwind/blocks/wordpressPosts.xml`
+**Twig:** `templates/includes/tailwind/blocks/wordpressposts.html.twig`
 
-- `position: 0` = First block
-- `position: 5` = Sixth block
-- For `add_block`: Position where to insert
-- For `update_block`/`remove_block`: Which block is affected
+| Property | Type | Description |
+|----------|------|-------------|
+| `headline` | text_line | Section headline |
+
+---
+
+## Block Categories Summary
+
+| Category | Block Types |
+|----------|-------------|
+| **Content** | headline-paragraphs, faq, code, introduction, table |
+| **Hero** | hero, hero-startpage, hero-image-right, heroslider |
+| **CTA** | cta-button, button |
+| **Feature** | feature, feature-default, feature-with-icons, formats |
+| **Image** | image, image-gallery, images-with-heading-and-description, image-with-flags, logo-gallary, excerpt-image |
+| **Contact** | team, consultant, contact, chat |
+| **Navigation** | highlights, related-content-by-page-tag, subpages-overview, table-of-contents |
+| **External** | youtube-from-channel, wordpressposts |
+
+---
 
 ## Workflow Examples
 
-### Create New Page with Content
+### Create Page with FAQ
 
-```
-1. search -> Find existing similar pages by title
-2. tree -> Understand page hierarchy, find parent path
-3. create_page -> Create page under parent
-4. add_block (headline-paragraphs) -> Add content blocks
-5. add_block -> Add more blocks as needed
-6. publish -> Make live
-```
-
-Example workflow:
 ```json
-// Step 1: Search for existing Docker pages
-{"action": "search", "query": "Docker", "locale": "de"}
+// 1. Create page
+{"tool": "sulu-page-create", "parentPath": "/cmf/example/contents/support", "title": "Häufige Fragen", "resourceSegment": "/faq"}
 
-// Step 2: Get tree to find parent path
-{"action": "tree", "rootPath": "/cmf/example/contents/glossare", "depth": 1}
+// 2. Add FAQ block
+{"tool": "sulu-block-add", "path": "/cmf/example/contents/support/faq", "blockType": "faq", "faqs": "[{\"headline\":\"Wie kann ich bestellen?\",\"subline\":\"Besuchen Sie unseren Shop und legen Sie Produkte in den Warenkorb.\"},{\"headline\":\"Wie lange dauert die Lieferung?\",\"subline\":\"Standard-Lieferung dauert 3-5 Werktage.\"}]"}
 
-// Step 3: Create the page
-{"action": "create_page", "parentPath": "/cmf/example/contents/glossare", "title": "Docker Tutorial", "resourceSegment": "/docker-tutorial", "seoTitle": "Docker Tutorial", "seoDescription": "Learn Docker basics"}
-
-// Step 4: Add content block
-{"action": "add_block", "path": "/cmf/example/contents/glossare/docker-tutorial", "blockType": "headline-paragraphs", "headline": "Getting Started", "items": "[{\"type\":\"description\",\"content\":\"<p>Docker is a containerization platform.</p>\"}]"}
-
-// Step 5: Publish
-{"action": "publish", "path": "/cmf/example/contents/glossare/docker-tutorial"}
+// 3. Publish
+{"tool": "sulu-page-publish", "path": "/cmf/example/contents/support/faq"}
 ```
 
-### Add Content to Existing Page
+### Create Page with Table
 
-```
-1. get -> Check current blocks
-2. add_block (headline-paragraphs) with items array
-3. publish -> Make live
-```
+```json
+// 1. Create page
+{"tool": "sulu-page-create", "parentPath": "/cmf/example/contents/preise", "title": "Preisliste", "resourceSegment": "/preisliste"}
 
-### Update Block
+// 2. Add table block
+{"tool": "sulu-block-add", "path": "/cmf/example/contents/preise/preisliste", "blockType": "table", "headline": "Unsere Tarife", "description": "<p>Wählen Sie den passenden Tarif.</p>", "columnheader1": "Tarif", "columnheader2": "Preis", "columnheader3": "Funktionen", "rows": "[{\"cell1\":\"Starter\",\"cell2\":\"9,99 €\",\"cell3\":\"5 Projekte\"},{\"cell1\":\"Professional\",\"cell2\":\"29,99 €\",\"cell3\":\"Unbegrenzt\"}]"}
 
-```
-1. get -> Find position and current content
-2. update_block with new items
-3. publish
+// 3. Publish
+{"tool": "sulu-page-publish", "path": "/cmf/example/contents/preise/preisliste"}
 ```
 
-### Delete Block
-
-```
-1. get -> Identify position
-2. remove_block with position
-3. publish
-```
+---
 
 ## Common Mistakes to Avoid
 
-### Mistake 1: Embedding code in HTML
+### Mistake 1: Using wrong nested block name for FAQ
 ```json
-{"content": "<p>Install:<pre><code>npm install</code></pre></p>"}
+{"blockType": "faq", "items": "[...]"}
 ```
-**Fix:** Use a separate code item.
+**Fix:** FAQ uses `faqs`, not `items`:
+```json
+{"blockType": "faq", "faqs": "[...]"}
+```
 
-### Mistake 2: items as object instead of JSON string
+### Mistake 2: Using `description` for FAQ answers
+```json
+{"faqs": "[{\"headline\":\"Question\",\"description\":\"Answer\"}]"}
+```
+**Fix:** FAQ uses `subline` for answers:
+```json
+{"faqs": "[{\"headline\":\"Question\",\"subline\":\"Answer\"}]"}
+```
+
+### Mistake 3: Using wrong nested block name for table
+```json
+{"blockType": "table", "items": "[...]"}
+```
+**Fix:** Table uses `rows`:
+```json
+{"blockType": "table", "rows": "[...]"}
+```
+
+### Mistake 4: items as object instead of JSON string
 ```json
 {"items": [{"type":"description"...}]}
 ```
-**Fix:** items must be a JSON string, not an array object:
+**Fix:** Nested blocks must be JSON strings:
 ```json
 {"items": "[{\"type\":\"description\"...}]"}
 ```
 
-### Mistake 3: Forgetting language for code items
-```json
-{"type": "code", "code": "echo 1;"}
-```
-**Fix:** Always specify `"language": "php"` (or other).
-
-### Mistake 4: Forgetting to publish
+### Mistake 5: Forgetting to publish
 Changes are only visible in draft until `publish` is called.
 
-### Mistake 5: <?php in code blocks
-```json
-{"type": "code", "code": "<?php\necho 'test';", "language": "php"}
-```
-**Fix:** No `<?php` tag! The block is already marked as PHP:
-```json
-{"type": "code", "code": "echo 'test';", "language": "php"}
-```
+---
 
-### Mistake 6: Invalid resourceSegment for create_page
-```json
-{"resourceSegment": "my-page"}
-{"resourceSegment": "/My-Page"}
-{"resourceSegment": "/my_page"}
+## Path Format
+
+Sulu uses PHPCR paths:
 ```
-**Fix:** Must start with `/` and contain only lowercase letters, numbers, hyphens:
-```json
-{"resourceSegment": "/my-page"}
+/cmf/example/contents/[section]/[page-slug]
 ```
 
-### Mistake 7: Creating page under non-existent parent
-```json
-{"action": "create_page", "parentPath": "/cmf/example/contents/nonexistent/path", ...}
-```
-**Fix:** Use `search` or `tree` first to find valid parent paths.
+## Locale
 
-## Response Interpretation
+- `de` - German (default)
+- `en` - English
 
-### Successful Response
-```json
-{
-  "success": true,
-  "message": "Block added successfully",
-  "blocks": [...]
-}
-```
-
-### Error
-```json
-{
-  "success": false,
-  "error": "Block not found at position 99"
-}
-```
-
-## Real Example: PHPStan Page
-
-Path: `/cmf/example/contents/glossare/nca-php-glossar/phpstan`
-URL: `/de/glossare/php-glossar/phpstan`
-
-Block structure:
-```
-Block 0: excerpt-image (header image)
-Block 1: headline-paragraphs "Was ist PHPStan?"
-  - description: "<p>PHPStan ist ein statisches Analysetool...</p>"
-  - code: "composer require --dev phpstan/phpstan" (bash)
-  - description: "<p>Nach der Installation...</p>"
-  - code: "vendor/bin/phpstan analyse src" (bash)
-Block 2: headline-paragraphs "PHPStan Level"
-  ...
-```
-
-Target: Technical glossary pages with explanations + code examples.
+---
 
 ## Contact
 
