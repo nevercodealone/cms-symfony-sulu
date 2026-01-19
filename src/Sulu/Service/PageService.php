@@ -509,7 +509,7 @@ class PageService
         $this->connection->executeStatement(
             "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
             "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
-            [$routePath, $parent['id'], $nodeName, $routeUuid, $routeProps, substr_count($routePath, '/'), 0]
+            [$routePath, $parentPath, $nodeName, $routeUuid, $routeProps, substr_count($routePath, '/'), 0]
         );
     }
 
@@ -557,7 +557,7 @@ class PageService
         $this->connection->executeStatement(
             "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
             "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
-            [$parentPath, $parent['id'], $nodeName, $uuid, $props, substr_count($parentPath, '/'), 0]
+            [$parentPath, $grandparent, $nodeName, $uuid, $props, substr_count($parentPath, '/'), 0]
         );
     }
 
@@ -660,7 +660,7 @@ class PageService
                 $this->connection->executeStatement(
                     "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
                     "VALUES (?, ?, ?, '', ?, ?, 'nt:unstructured', ?, ?, ?)",
-                    [$path, $parentInWorkspace['id'], $nodeName, $workspace, $uuid, $props, $depth, $sortOrder]
+                    [$path, $parentPath, $nodeName, $workspace, $uuid, $props, $depth, $sortOrder]
                 );
             }
 
