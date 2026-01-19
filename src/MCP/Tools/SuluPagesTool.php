@@ -38,10 +38,11 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
             'BLOCKS: headline-paragraphs (content+code), hl-des (headline+text), hero, hero-startpage, faq, consultant, contact, ' .
             'cta-button, feature, table, image, image-gallery, code, quote, video, team, logo-gallery, highlights, introduction. ' .
             'headline-paragraphs items JSON: "[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
+            'FAQ append_to_block: Add items to existing block without replacing. Use items JSON with only new entries. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags.';
     }
 
@@ -51,7 +52,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, move_block, remove_block, publish, unpublish, list_block_types',
+                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types',
                 required: true
             ),
             new SchemaProperty(
@@ -93,13 +94,13 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'items',
                 type: PropertyType::STRING,
-                description: 'JSON array for headline-paragraphs blocks. Item types: {"type":"description","content":"<p>HTML</p>"} or {"type":"code","code":"code here","language":"php|bash|xml|yaml|json"}. Example: [{"type":"description","content":"<p>Install:</p>"},{"type":"code","code":"composer require x","language":"bash"}]',
+                description: 'JSON array of items. For headline-paragraphs: [{"type":"description","content":"<p>HTML</p>"},{"type":"code","code":"...","language":"php"}]. For FAQ append_to_block: [{"headline":"Question?","subline":"Answer"}]. For table: [{"col1":"...","col2":"..."}]',
                 required: false
             ),
             new SchemaProperty(
                 name: 'position',
                 type: PropertyType::INTEGER,
-                description: 'Block position (0-based index). For add_block: where to insert. For update_block/remove_block: which block to modify',
+                description: 'Block position (0-based index). For add_block: where to insert. For update_block/remove_block/append_to_block: which block to modify',
                 required: false
             ),
             new SchemaProperty(
@@ -172,6 +173,7 @@ class SuluPagesTool implements StreamableToolInterface
             'create_page' => $this->createPage($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
+            'append_to_block' => $this->appendToBlock($arguments, $locale),
             'move_block' => $this->moveBlock($arguments, $locale),
             'remove_block' => $this->removeBlock($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
@@ -365,6 +367,44 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * Append items to an existing block without replacing existing items.
+     * Useful for adding FAQ entries, table rows, etc. incrementally.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function appendToBlock(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        $position = (int) ($arguments['position'] ?? 0);
+
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        if (!isset($arguments['items'])) {
+            return new TextToolResult('Error: items is required for append_to_block action');
+        }
+
+        $items = json_decode($arguments['items'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return new TextToolResult('Error: items must be valid JSON array');
+        }
+
+        // Normalize items: content -> description for Sulu storage
+        $normalizedItems = array_map(function ($item) {
+            if (isset($item['content']) && !isset($item['description'])) {
+                $item['description'] = $item['content'];
+                unset($item['content']);
+            }
+            return $item;
+        }, $items);
+
+        $result = $this->pageService->appendToBlock($path, $position, $normalizedItems, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }

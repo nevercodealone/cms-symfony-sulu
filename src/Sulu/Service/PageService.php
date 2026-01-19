@@ -815,7 +815,7 @@ class PageService
      * - Feature: update 'items' array
      *
      * @param array<string, mixed> $blockData
-     * @return array{success: bool, message: string}
+     * @return array{success: bool, message: string, blocks?: array<int, array<string, mixed>>}
      */
     public function updateBlock(string $path, int $position, array $blockData, string $locale = 'de'): array
     {
@@ -887,6 +887,71 @@ class PageService
                 'message' => 'Block updated successfully',
                 'blocks' => $updatedPage['blocks'] ?? [],
             ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Append items to an existing block without replacing existing content.
+     *
+     * Useful for adding new FAQ entries, table rows, or feature items
+     * without having to resend all existing items.
+     *
+     * @param array<array<string, mixed>> $newItems Items to append
+     * @return array{success: bool, message: string, items_added?: int, total_items?: int}
+     */
+    public function appendToBlock(string $path, int $position, array $newItems, string $locale = 'de'): array
+    {
+        try {
+            // Get current page and block
+            $page = $this->getPage($path, $locale);
+            if (!$page) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $blocks = $page['blocks'];
+            if ($position < 0 || $position >= count($blocks)) {
+                return ['success' => false, 'message' => "Block position {$position} out of range"];
+            }
+
+            $block = $blocks[$position];
+            $blockType = $block['type'] ?? 'unknown';
+
+            // Determine the nested key based on block type
+            $nestedKey = match ($blockType) {
+                'faq' => 'faqs',
+                'table' => 'rows',
+                'image-with-flags' => 'flags',
+                default => 'items',
+            };
+
+            // Get existing items
+            $existingItems = $block[$nestedKey] ?? [];
+            if (!is_array($existingItems)) {
+                $existingItems = [];
+            }
+
+            // Merge existing and new items
+            $mergedItems = array_merge($existingItems, $newItems);
+
+            // Update the block with merged items
+            $blockData = [$nestedKey => $mergedItems];
+
+            $result = $this->updateBlock($path, $position, $blockData, $locale);
+
+            if ($result['success']) {
+                return [
+                    'success' => true,
+                    'message' => 'Items appended successfully',
+                    'items_added' => count($newItems),
+                    'total_items' => count($mergedItems),
+                    'blocks' => $result['blocks'] ?? [],
+                ];
+            }
+
+            return $result;
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
