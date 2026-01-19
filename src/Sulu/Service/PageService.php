@@ -7,6 +7,7 @@ namespace App\Sulu\Service;
 use App\Sulu\Block\BlockExtractor;
 use App\Sulu\Block\BlockTypeRegistry;
 use App\Sulu\Block\BlockWriter;
+use App\Sulu\Cache\HttpCacheClearer;
 use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
@@ -32,6 +33,7 @@ class PageService
         ?BlockExtractor $blockExtractor = null,
         ?BlockWriter $blockWriter = null,
         private ?DocumentManagerInterface $documentManager = null,
+        private ?HttpCacheClearer $httpCacheClearer = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -68,6 +70,12 @@ class PageService
             } catch (\Exception $e) {
                 // Log but don't fail the operation
             }
+        }
+
+        // Direct HTTP cache clearing for CLI/MCP processes
+        // FOS HttpCache with use_kernel_dispatcher only works in HTTP requests
+        if ($this->httpCacheClearer) {
+            $this->httpCacheClearer->clear();
         }
     }
 
