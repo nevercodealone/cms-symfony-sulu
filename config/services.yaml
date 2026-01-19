@@ -212,6 +212,8 @@ services:
     # Sulu Page Service - Direct SQL (bypasses DocumentManager for MCP compatibility)
     App\Sulu\Service\PageService:
         arguments:
+            $cacheManager: '@?sulu_http_cache.cache_manager'
+            $fosCacheManager: '@?fos_http_cache.cache_manager'
             $blockTypeRegistry: '@App\Sulu\Block\BlockTypeRegistry'
             $blockExtractor: '@App\Sulu\Block\BlockExtractor'
             $blockWriter: '@App\Sulu\Block\BlockWriter'

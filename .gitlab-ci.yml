@@ -52,6 +52,15 @@ codeanalysis_phpunit:
   tags:
     - docker1
 
+codeanalysis_phpstan:
+  stage: codeanalysis
+  image: $CI_DEV_IMAGE
+  script:
+    - cd /var/www/html
+    - vendor/bin/phpstan analyse --configuration=phpstan-ci.neon
+  tags:
+    - docker1
+
 dumpfinder:
   stage: codeanalysis
   image: $CI_DEV_IMAGE

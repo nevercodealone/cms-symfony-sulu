@@ -51,9 +51,11 @@
       </div>
     </div>
     <div class="col-span-6 flex justify-center items-center">
-      {% set source = content.image[0].formats['contact'] %}
-      {% set title = content.image[0].title %}
-      <img src="{{ source }}" alt="{{ title }}">
+      {% if content.image is defined and content.image is not empty %}
+        {% set source = content.image[0].formats['contact'] %}
+        {% set title = content.image[0].title %}
+        <img src="{{ source }}" alt="{{ title }}">
+      {% endif %}
     </div>
   </div>
 </div>
