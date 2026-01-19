@@ -57,6 +57,7 @@ codeanalysis_phpstan:
   image: $CI_DEV_IMAGE
   script:
     - cd /var/www/html
+    - php bin/websiteconsole cache:warmup --env=dev
     - vendor/bin/phpstan analyse --configuration=phpstan.neon
   tags:
     - docker1
