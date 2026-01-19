@@ -401,30 +401,59 @@ class SuluPagesTool implements StreamableToolInterface
     }
 
     /**
-     * @return array{type: string, headline?: string, description?: string, items?: array<mixed>}
+     * Build block structure for simple content parameter.
+     * For complex blocks with nested items, use the 'items' parameter instead.
+     *
+     * @return array<string, mixed>
      */
     private function buildBlock(string $type, string $headline, string $content): array
     {
-        return match ($type) {
-            'hl-des' => [
-                'type' => 'hl-des',
+        // Blocks that use 'description' field
+        $descriptionBlocks = [
+            'hl-des', 'hero', 'hero-startpage', 'hero-image-right', 'heroslider',
+            'cta-button', 'feature', 'feature-default', 'feature-with-icons',
+            'image-gallery', 'images-with-heading-and-description', 'team',
+            'consultant', 'contact', 'chat', 'introduction', 'table',
+        ];
+
+        // Blocks that use nested 'items' array
+        $itemsBlocks = ['headline-paragraphs', 'formats', 'logo-gallary'];
+
+        // Blocks that use 'faqs' array
+        $faqBlocks = ['faq'];
+
+        if (in_array($type, $descriptionBlocks, true)) {
+            return [
+                'type' => $type,
                 'headline' => $headline,
                 'description' => $content,
-            ],
-            'headline-paragraphs' => [
-                'type' => 'headline-paragraphs',
+            ];
+        }
+
+        if (in_array($type, $itemsBlocks, true)) {
+            return [
+                'type' => $type,
                 'headline' => $headline,
                 'items' => [
                     ['type' => 'description', 'description' => $content],
                 ],
-            ],
-            default => [
-                'type' => 'headline-paragraphs',
-                'headline' => $headline,
-                'items' => [
-                    ['type' => 'description', 'description' => $content],
+            ];
+        }
+
+        if (in_array($type, $faqBlocks, true)) {
+            return [
+                'type' => $type,
+                'faqs' => [
+                    ['headline' => $headline, 'subline' => $content],
                 ],
-            ],
-        };
+            ];
+        }
+
+        // For all other block types, preserve the type and use common properties
+        return [
+            'type' => $type,
+            'headline' => $headline,
+            'description' => $content,
+        ];
     }
 }
