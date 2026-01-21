@@ -187,8 +187,8 @@ class PageService
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
     {
-        // Validate block data before proceeding
-        $validationError = $this->blockValidator->validateWithMessage($block);
+        // Validate block data before proceeding (includes path-based restrictions)
+        $validationError = $this->blockValidator->validateWithPath($block, $path);
         if ($validationError !== null) {
             return ['success' => false, 'message' => $validationError, 'position' => -1];
         }

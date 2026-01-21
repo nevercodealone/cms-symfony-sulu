@@ -14,6 +14,14 @@ namespace App\Sulu\Block;
  */
 final class BlockValidator
 {
+    /**
+     * Path-based block type restrictions.
+     * Block types listed here are only allowed on pages matching the specified path prefix.
+     */
+    private const PATH_BLOCK_RULES = [
+        'hl-des' => '/training/',  // hl-des only allowed on training pages
+    ];
+
     public function __construct(
         private BlockTypeRegistry $registry
     ) {
@@ -105,6 +113,49 @@ final class BlockValidator
             return null;
         }
         return implode('; ', $result['errors']);
+    }
+
+    /**
+     * Validate block including path-based restrictions.
+     *
+     * Some block types are restricted to specific page paths.
+     * For example, 'hl-des' is only allowed on /training/* pages.
+     *
+     * @param array<string, mixed> $block
+     * @param string $path The PHPCR path of the page
+     */
+    public function validateWithPath(array $block, string $path): ?string
+    {
+        // Run standard validation first
+        $error = $this->validateWithMessage($block);
+        if ($error !== null) {
+            return $error;
+        }
+
+        // Check path-based restrictions
+        $type = $block['type'] ?? null;
+        if (is_string($type)) {
+            return $this->validateBlockTypeForPath($type, $path);
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if a block type is allowed on the given path.
+     */
+    private function validateBlockTypeForPath(string $blockType, string $path): ?string
+    {
+        if (!isset(self::PATH_BLOCK_RULES[$blockType])) {
+            return null; // No path restriction for this block type
+        }
+
+        $requiredPath = self::PATH_BLOCK_RULES[$blockType];
+        if (!str_contains($path, $requiredPath)) {
+            return "Block type '{$blockType}' is only allowed on {$requiredPath}* pages. Use 'headline-description' or 'headline-paragraphs' instead.";
+        }
+
+        return null;
     }
 
     /**

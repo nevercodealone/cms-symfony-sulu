@@ -151,4 +151,76 @@ class BlockValidatorTest extends TestCase
 
         $this->assertTrue($result['valid']);
     }
+
+    // ==========================================================================
+    // Path-Based Validation Tests
+    // ==========================================================================
+
+    public function testHlDesOnlyAllowedOnTrainingPages(): void
+    {
+        $block = ['type' => 'hl-des', 'headline' => 'Test', 'description' => 'Content'];
+
+        // Should fail on glossar page
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/glossare/test');
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('only allowed on /training/', $error);
+
+        // Should fail on root page
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents');
+        $this->assertNotNull($error);
+
+        // Should pass on training page
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
+        $this->assertNull($error);
+
+        // Should pass on nested training page
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/php/basics');
+        $this->assertNull($error);
+    }
+
+    public function testHeadlineParagraphsAllowedOnAnyPage(): void
+    {
+        $block = ['type' => 'headline-paragraphs', 'headline' => 'Test'];
+
+        // Should pass on glossar page
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/glossare/test');
+        $this->assertNull($error);
+
+        // Should pass on training page
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
+        $this->assertNull($error);
+
+        // Should pass on root page
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents');
+        $this->assertNull($error);
+    }
+
+    public function testValidateWithPathRunsStandardValidationFirst(): void
+    {
+        // Invalid block (missing type)
+        $block = ['headline' => 'Test'];
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
+
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('Block type is required', $error);
+    }
+
+    public function testValidateWithPathRejectsUnknownBlockTypes(): void
+    {
+        $block = ['type' => 'nonexistent-block-type'];
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
+
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('Unknown block type', $error);
+    }
+
+    public function testHlDesErrorMessageSuggestsAlternatives(): void
+    {
+        $block = ['type' => 'hl-des', 'headline' => 'Test'];
+        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/glossare/test');
+
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('headline-description', $error);
+        $this->assertStringContainsString('headline-paragraphs', $error);
+    }
 }
