@@ -135,7 +135,7 @@ XML;
 
         $this->assertTrue($result['success']);
         $this->assertEquals('Block added successfully', $result['message']);
-        $this->assertEquals(2, $result['position']); // Should be appended at position 2
+        $this->assertEquals(0, $result['position']); // Should be inserted at position 0 as requested
     }
 
     public function testAddBlockWithItemsSuccess(): void
