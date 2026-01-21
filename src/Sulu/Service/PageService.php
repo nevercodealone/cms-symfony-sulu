@@ -84,20 +84,6 @@ class PageService
     }
 
     /**
-     * Clear DocumentManager cache to ensure Sulu Admin sees latest changes.
-     *
-     * When PageService updates phpcr_nodes directly via SQL, the DocumentManager's
-     * internal object cache becomes stale. Calling clear() forces the DocumentManager
-     * to re-read from the database on next find() call.
-     */
-    private function clearDocumentManagerCache(): void
-    {
-        if ($this->documentManager) {
-            $this->documentManager->clear();
-        }
-    }
-
-    /**
      * Get page UUID from database.
      */
     private function getPageUuid(string $path): ?string
@@ -283,8 +269,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $insertIndex];
 
@@ -468,8 +452,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state (helps with caching issues)
             $updatedPage = $this->getPage($path, $locale);
@@ -522,8 +504,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
@@ -783,8 +763,6 @@ class PageService
                 ]
             );
 
-            // Clear DocumentManager cache so Sulu Admin sees the new page
-            $this->clearDocumentManagerCache();
 
             return [
                 'success' => true,
@@ -983,8 +961,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1171,8 +1147,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1242,8 +1216,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Page unpublished successfully'];
 
