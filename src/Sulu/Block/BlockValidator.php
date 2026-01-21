@@ -11,6 +11,14 @@ namespace App\Sulu\Block;
  * - Unknown block types
  * - Missing required fields
  * - Invalid nested item structure
+ * - Path-based block type restrictions (e.g., hl-des only on /training/*)
+ *
+ * This validation runs BEFORE attempting XML writes, providing clear error
+ * messages to MCP clients. Validation is done here (not in BlockWriter)
+ * because PageService needs to return errors before any DB operations.
+ *
+ * @see BlockTypeRegistry For block type definitions
+ * @see PageService::addBlock() Where validation is called
  */
 final class BlockValidator
 {

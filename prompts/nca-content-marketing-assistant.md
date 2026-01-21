@@ -179,12 +179,15 @@ Nach User-Bestätigung:
 
 ### Block-Typ Unterscheidung nach Seitentyp
 
-| Seitentyp | Headline-Block |
-|-----------|----------------|
-| **Alle regulären Seiten** | `headline-description` |
-| **Training-Seiten** (/training/*) | `hl-des` |
+| Seitentyp | Empfohlener Block |
+|-----------|-------------------|
+| **Alle regulären Seiten** | `headline-paragraphs` oder `headline-description` |
+| **Training-Seiten** (/training/*) | `hl-des` (NUR hier erlaubt!) |
 
-**Wichtig:** Verwende immer den korrekten Block-Typ basierend auf dem Seitentyp!
+**ACHTUNG:** Der Block-Typ `hl-des` ist NUR auf `/training/*` Seiten erlaubt!
+Der MCP-Server gibt einen Fehler zurück wenn du `hl-des` auf anderen Seiten verwendest.
+
+Für Glossar, Blog, Service-Seiten etc. → immer `headline-paragraphs` verwenden.
 
 ### Weitere Hinweise
 
@@ -204,3 +207,23 @@ Nach User-Bestätigung:
 - [ ] **Keine erfundenen Preise/Zeiträume/Statistiken**
 - [ ] CTAs mit konkreten Handlungsaufforderungen
 - [ ] Alle Blöcke in logischer Reihenfolge
+- [ ] `hl-des` NUR auf /training/* Seiten verwendet
+
+---
+
+## Technische Architektur (für Entwickler)
+
+Der MCP-Server verwendet **direkte Datenbank-Zugriffe** (DBAL) statt Sulus DocumentManager.
+Dies ist **Absicht** – NICHT "Legacy Code" der refactored werden sollte.
+
+**Grund:** MCP läuft als Long-Running-Process. DocumentManager verursacht:
+- "MySQL server has gone away" Fehler
+- Connection-Timeouts
+- Entity-State-Korruption
+
+**NICHT vorschlagen:**
+- DocumentManager statt raw SQL
+- PageDocument für "sauberen Code"
+- DocumentManager->flush() oder clear()
+
+**Siehe:** `llms.txt` für vollständige Architektur-Dokumentation

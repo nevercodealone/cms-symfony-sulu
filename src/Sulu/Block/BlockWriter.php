@@ -13,6 +13,23 @@ use DOMXPath;
  *
  * Supports all 32 block types including those with custom nested block names
  * (e.g., FAQ uses 'faqs', table uses 'rows', image-with-flags uses 'flags').
+ *
+ * ARCHITECTURE NOTE - DIRECT XML MANIPULATION BY DESIGN:
+ * ======================================================
+ * This class writes blocks by manipulating PHPCR XML directly, NOT through
+ * Sulu's DocumentManager or BlockPropertyType. This is intentional.
+ *
+ * The MCP server runs as a long-lived process where DocumentManager's
+ * connection management and entity state cause problems. Direct XML gives
+ * us reliable, predictable writes without Sulu's abstraction overhead.
+ *
+ * DO NOT attempt to refactor this to use:
+ * - Sulu\Component\Content\Compat\Block\BlockPropertyType
+ * - DocumentManager->persist() / flush()
+ * - StructureBridge or PageDocument
+ *
+ * @see PageService For why direct database access is used
+ * @see BlockTypeRegistry For block type definitions and schemas
  */
 final class BlockWriter
 {

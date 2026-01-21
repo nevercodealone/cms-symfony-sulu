@@ -14,6 +14,21 @@ use KLP\KlpMcpServer\Services\ToolService\Schema\PropertyType;
 use KLP\KlpMcpServer\Services\ToolService\Schema\SchemaProperty;
 use KLP\KlpMcpServer\Services\ToolService\Schema\StructuredSchema;
 
+/**
+ * MCP Tool for Sulu CMS page and block operations.
+ *
+ * ARCHITECTURE NOTE - DIRECT DATABASE BY DESIGN:
+ * ==============================================
+ * This tool uses PageService which operates via direct DBAL queries to the
+ * phpcr_nodes table, NOT via Sulu's DocumentManager.
+ *
+ * This is intentional - MCP runs as a long-lived process where DocumentManager
+ * causes connection timeouts, entity state corruption, and "MySQL server has
+ * gone away" errors. DO NOT refactor to use DocumentManager.
+ *
+ * @see PageService For the actual database operations
+ * @see llms.txt For full architecture documentation
+ */
 class SuluPagesTool implements StreamableToolInterface
 {
     public function __construct(

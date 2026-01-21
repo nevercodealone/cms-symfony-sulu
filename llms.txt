@@ -2,6 +2,49 @@
 
 > This file helps LLMs correctly use the Sulu CMS API.
 
+---
+
+## ARCHITECTURE WARNING - READ FIRST
+
+**This MCP server uses DIRECT DATABASE ACCESS intentionally. DO NOT suggest refactoring to use Sulu's DocumentManager.**
+
+### Why Direct Database (DBAL) Instead of DocumentManager?
+
+1. **Long-running process**: MCP server runs continuously. DocumentManager causes "MySQL server has gone away" errors and entity state corruption in long-lived processes.
+
+2. **Connection timeouts**: DocumentManager's internal connection pooling doesn't handle connection drops gracefully. Direct DBAL reconnects automatically.
+
+3. **Event dispatcher conflicts**: DocumentManager triggers Sulu's event system (subscribers, workflows) which expects HTTP request context that doesn't exist in MCP.
+
+4. **Cache clearing issues**: `$documentManager->clear()` causes connection errors. We tried it, rolled it back (see commit c3657fa).
+
+### What NOT to Suggest
+
+- "Use DocumentManager instead of raw SQL" - NO, it breaks in MCP context
+- "Use PageDocument for cleaner code" - NO, same issues
+- "Flush via DocumentManager" - NO, causes connection errors
+- "Clear DocumentManager cache" - NO, causes "server gone away" errors
+- "Use StructureBridge" - NO, requires event dispatching
+
+### What IS Correct
+
+- Direct `$connection->fetchAssociative()` queries to `phpcr_nodes` table
+- XML manipulation via DOMDocument/DOMXPath for block CRUD
+- BlockWriter/BlockExtractor classes for PHPCR XML handling
+- Manual cache invalidation via HttpCacheClearer
+
+### Code Locations
+
+| File | Purpose |
+|------|---------|
+| `src/Sulu/Service/PageService.php` | Main service - direct DB queries |
+| `src/Sulu/Block/BlockWriter.php` | Writes blocks to PHPCR XML |
+| `src/Sulu/Block/BlockExtractor.php` | Reads blocks from PHPCR XML |
+| `src/Sulu/Block/BlockTypeRegistry.php` | Hardcoded block schemas |
+| `src/Sulu/Block/BlockValidator.php` | Validates blocks before write |
+
+---
+
 ## Overview
 
 The Sulu MCP Server enables managing CMS pages via these actions:
@@ -827,6 +870,14 @@ Fetches and displays WordPress posts.
 ---
 
 ## Common Mistakes to Avoid
+
+### Mistake 0: Using hl-des on non-training pages
+```json
+{"blockType": "hl-des", "path": "/cmf/example/contents/glossare/php"}
+```
+**Error:** `Block type 'hl-des' is only allowed on /training/* pages. Use 'headline-description' or 'headline-paragraphs' instead.`
+
+**Fix:** Use `headline-paragraphs` for glossar, blog, and other content pages. `hl-des` is restricted to `/training/*` pages only.
 
 ### Mistake 1: Using wrong nested block name for FAQ
 ```json

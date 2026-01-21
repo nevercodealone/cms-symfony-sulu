@@ -12,6 +12,23 @@ use DOMXPath;
  *
  * Supports all 32 block types including those with custom nested block names
  * (e.g., FAQ uses 'faqs', table uses 'rows', image-with-flags uses 'flags').
+ *
+ * ARCHITECTURE NOTE - DIRECT XML PARSING BY DESIGN:
+ * =================================================
+ * This class reads blocks by parsing PHPCR XML directly, NOT through
+ * Sulu's DocumentManager or ContentTypeManager. This is intentional.
+ *
+ * The MCP server runs as a long-lived process where DocumentManager causes
+ * connection timeouts and state issues. Direct XML parsing is fast, reliable,
+ * and doesn't require Sulu's complex hydration pipeline.
+ *
+ * DO NOT attempt to refactor this to use:
+ * - DocumentManager->find() with block property access
+ * - Sulu\Component\Content\Compat\StructureManagerInterface
+ * - PageDocument->getStructure()->getProperty('blocks')
+ *
+ * @see PageService For why direct database access is used
+ * @see BlockTypeRegistry For block type definitions and schemas
  */
 final class BlockExtractor
 {

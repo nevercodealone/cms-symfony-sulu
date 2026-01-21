@@ -10,6 +10,25 @@ namespace App\Sulu\Block;
  * Hardcoded schemas matching XML configs in config/templates/includes/tailwind/blocks/*.xml
  * Using const array per Symfony best practices (constructor injection, no global state).
  *
+ * WHY HARDCODED SCHEMAS (NOT AUTO-GENERATED):
+ * ===========================================
+ * These schemas are intentionally hardcoded, not parsed from XML files.
+ *
+ * 1. MCP server needs instant access without file I/O on every request
+ * 2. Sulu's template XML format is complex with inheritance and includes
+ * 3. Schema rarely changes - manual sync is acceptable tradeoff
+ * 4. Allows adding MCP-specific metadata (e.g., nested key names)
+ *
+ * WHEN ADDING NEW BLOCK TYPES:
+ * - Add entry to SCHEMAS constant below
+ * - Match property names exactly from XML config
+ * - Note custom nested names: FAQ uses 'faqs', table uses 'rows', etc.
+ *
+ * DO NOT attempt to:
+ * - Auto-parse from config/templates/includes/tailwind/blocks/*.xml
+ * - Use Sulu's StructureMetadataFactory or similar
+ * - Generate at runtime from Sulu's ContentTypeManager
+ *
  * @see https://symfony.com/doc/current/best_practices.html
  */
 final class BlockTypeRegistry

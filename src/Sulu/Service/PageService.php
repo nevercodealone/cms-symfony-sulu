@@ -19,6 +19,33 @@ use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
+ *
+ * ARCHITECTURE DECISION - DO NOT REFACTOR TO USE DocumentManager:
+ * ===============================================================
+ * This service intentionally uses direct DBAL queries to read/write PHPCR XML
+ * instead of Sulu's DocumentManager. This is NOT legacy code to be "improved".
+ *
+ * WHY DIRECT DATABASE ACCESS:
+ * 1. MCP Server runs as long-lived process - DocumentManager has connection
+ *    timeout issues and entity manager state problems in long-running processes
+ * 2. DocumentManager requires complex event dispatching, workflows, and
+ *    subscriber chains that cause issues outside HTTP request context
+ * 3. Direct XML manipulation gives us precise control over block structure
+ *    without fighting Sulu's internal abstractions
+ * 4. Cache clearing via DocumentManager causes "MySQL server has gone away"
+ *    errors in MCP context (see commit c3657fa)
+ *
+ * WHAT NOT TO DO:
+ * - Don't try to replace Connection with DocumentManager for block operations
+ * - Don't add DocumentManager->flush() calls for block CRUD operations
+ * - Don't add DocumentManager->clear() for cache management
+ * - Don't wrap this in Sulu's PageDocument or StructureManager
+ *
+ * The only DocumentManager usage is deletePage() which requires it for proper
+ * cleanup of routes and search indexes - and even that is carefully isolated.
+ *
+ * @see BlockWriter For XML block writing logic
+ * @see BlockExtractor For XML block reading logic
  */
 class PageService
 {
