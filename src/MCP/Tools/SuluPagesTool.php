@@ -39,10 +39,10 @@ class SuluPagesTool implements StreamableToolInterface
     public function getDescription(): string
     {
         return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, list_snippets. ' .
-            'BLOCKS: headline-paragraphs (content+code), hl-des (headline+text), hero, hero-startpage, faq, consultant, contact, ' .
-            'cta-button, feature, table, image, image-gallery, code, quote, video, team, logo-gallery, highlights, introduction. ' .
-            'headline-paragraphs items JSON: "[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
-            'FAQ append_to_block: Add items to existing block without replacing. Use items JSON with only new entries. ' .
+            'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
+            'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
+            'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
+            'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"<p>Answer</p>"}]}. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags.';
     }
 
