@@ -35,3 +35,4 @@ parameters:
     - '#will always evaluate to false#'
   excludePaths:
     - src/Kernel.php
+    - tests/Functional

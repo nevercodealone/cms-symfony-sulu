@@ -38,11 +38,11 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types. ' .
-            'BLOCKS: headline-paragraphs (content+code), hl-des (headline+text), hero, hero-startpage, faq, consultant, contact, ' .
-            'cta-button, feature, table, image, image-gallery, code, quote, video, team, logo-gallery, highlights, introduction. ' .
-            'headline-paragraphs items JSON: "[{\"type\":\"description\",\"content\":\"<p>Text</p>\"},{\"type\":\"code\",\"code\":\"echo 1;\",\"language\":\"php\"}]". ' .
-            'FAQ append_to_block: Add items to existing block without replacing. Use items JSON with only new entries. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, list_snippets. ' .
+            'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
+            'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
+            'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
+            'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"<p>Answer</p>"}]}. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags.';
     }
 
@@ -52,7 +52,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types',
+                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, list_snippets',
                 required: true
             ),
             new SchemaProperty(
@@ -151,6 +151,42 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For create_page: Publish immediately after creation - "true" or "false" (default: "false")',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'snippets',
+                type: PropertyType::STRING,
+                description: 'For contact block: JSON array of snippet UUIDs to reference, e.g. ["uuid1", "uuid2"]',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'text',
+                type: PropertyType::STRING,
+                description: 'For cta-button block: Primary button text',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'url',
+                type: PropertyType::STRING,
+                description: 'For cta-button block: Primary button URL',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'texttwo',
+                type: PropertyType::STRING,
+                description: 'For cta-button block: Secondary button text',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'urltwo',
+                type: PropertyType::STRING,
+                description: 'For cta-button block: Secondary button URL',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'snippetType',
+                type: PropertyType::STRING,
+                description: 'For list_snippets action: filter by snippet type (e.g. "contact", "team")',
+                required: false
+            ),
         );
     }
 
@@ -179,6 +215,7 @@ class SuluPagesTool implements StreamableToolInterface
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
             'list_block_types' => $this->listBlockTypes(),
+            'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -244,8 +281,13 @@ class SuluPagesTool implements StreamableToolInterface
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return new TextToolResult('Error: items must be valid JSON array');
             }
-            // Normalize items: content -> description for Sulu storage
+            // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
+                // Don't normalize code items - they use 'code' not 'description'
+                $itemType = $item['type'] ?? '';
+                if ($itemType === 'code') {
+                    return $item;
+                }
                 if (isset($item['content']) && !isset($item['description'])) {
                     $item['description'] = $item['content'];
                     unset($item['content']);
@@ -270,6 +312,28 @@ class SuluPagesTool implements StreamableToolInterface
             // Fallback: use simple content parameter
             $content = $arguments['content'] ?? '';
             $block = $this->buildBlock($blockType, $headline, $content);
+        }
+
+        // Handle snippets parameter for contact block
+        if (isset($arguments['snippets'])) {
+            $snippets = json_decode($arguments['snippets'], true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($snippets)) {
+                $block['snippets'] = $snippets;
+            }
+        }
+
+        // Handle CTA-button fields
+        if (isset($arguments['text'])) {
+            $block['text'] = $arguments['text'];
+        }
+        if (isset($arguments['url'])) {
+            $block['url'] = $arguments['url'];
+        }
+        if (isset($arguments['texttwo'])) {
+            $block['texttwo'] = $arguments['texttwo'];
+        }
+        if (isset($arguments['urltwo'])) {
+            $block['urltwo'] = $arguments['urltwo'];
         }
 
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
@@ -328,6 +392,15 @@ class SuluPagesTool implements StreamableToolInterface
             return new TextToolResult('Error: path is required');
         }
 
+        // Auto-detect blockType from existing block if not provided
+        $blockType = $arguments['blockType'] ?? null;
+        if ($blockType === null) {
+            $page = $this->pageService->getPage($path, $locale);
+            if ($page && isset($page['blocks'][$position])) {
+                $blockType = $page['blocks'][$position]['type'] ?? null;
+            }
+        }
+
         $blockData = [];
         if (isset($arguments['headline'])) {
             $blockData['headline'] = $arguments['headline'];
@@ -342,8 +415,13 @@ class SuluPagesTool implements StreamableToolInterface
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return new TextToolResult('Error: items must be valid JSON array');
             }
-            // Normalize items: content -> description for Sulu storage
+            // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
+                // Don't normalize code items - they use 'code' not 'description'
+                $itemType = $item['type'] ?? '';
+                if ($itemType === 'code') {
+                    return $item;
+                }
                 if (isset($item['content']) && !isset($item['description'])) {
                     $item['description'] = $item['content'];
                     unset($item['content']);
@@ -351,8 +429,7 @@ class SuluPagesTool implements StreamableToolInterface
                 return $item;
             }, $items);
 
-            // Use correct nested property name if blockType is provided
-            $blockType = $arguments['blockType'] ?? null;
+            // Use correct nested property name based on auto-detected or provided blockType
             $nestedKey = match ($blockType) {
                 'faq' => 'faqs',
                 'table' => 'rows',
@@ -395,8 +472,13 @@ class SuluPagesTool implements StreamableToolInterface
             return new TextToolResult('Error: items must be valid JSON array');
         }
 
-        // Normalize items: content -> description for Sulu storage
+        // Normalize items: content -> description for Sulu storage (except for code items)
         $normalizedItems = array_map(function ($item) {
+            // Don't normalize code items - they use 'code' not 'description'
+            $itemType = $item['type'] ?? '';
+            if ($itemType === 'code') {
+                return $item;
+            }
             if (isset($item['content']) && !isset($item['description'])) {
                 $item['description'] = $item['content'];
                 unset($item['content']);
@@ -438,6 +520,13 @@ class SuluPagesTool implements StreamableToolInterface
         $types = $this->pageService->listBlockTypes();
 
         return new TextToolResult(json_encode(['types' => $types], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    private function listSnippets(?string $snippetType, string $locale): ToolResultInterface
+    {
+        $snippets = $this->pageService->listSnippets($snippetType, $locale);
+
+        return new TextToolResult(json_encode(['snippets' => $snippets], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**

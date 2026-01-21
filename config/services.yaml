@@ -209,6 +209,12 @@ services:
             $registry: '@App\Sulu\Block\BlockTypeRegistry'
         public: true
 
+    # HTTP Cache Clearer for MCP/CLI operations
+    App\Sulu\Cache\HttpCacheClearer:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $environment: '%kernel.environment%'
+
     # Sulu Page Service - Direct SQL (bypasses DocumentManager for MCP compatibility)
     App\Sulu\Service\PageService:
         arguments:
@@ -218,6 +224,7 @@ services:
             $blockExtractor: '@App\Sulu\Block\BlockExtractor'
             $blockWriter: '@App\Sulu\Block\BlockWriter'
             $documentManager: '@Sulu\Component\DocumentManager\DocumentManagerInterface'
+            $httpCacheClearer: '@App\Sulu\Cache\HttpCacheClearer'
         public: true
 
     # MCP Tools

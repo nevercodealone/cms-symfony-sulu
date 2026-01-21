@@ -6,7 +6,9 @@ namespace App\Sulu\Service;
 
 use App\Sulu\Block\BlockExtractor;
 use App\Sulu\Block\BlockTypeRegistry;
+use App\Sulu\Block\BlockValidator;
 use App\Sulu\Block\BlockWriter;
+use App\Sulu\Cache\HttpCacheClearer;
 use App\Sulu\Logger\McpActivityLogger;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
@@ -22,6 +24,7 @@ class PageService
 {
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
+    private BlockValidator $blockValidator;
 
     public function __construct(
         private Connection $connection,
@@ -31,12 +34,15 @@ class PageService
         ?BlockTypeRegistry $blockTypeRegistry = null,
         ?BlockExtractor $blockExtractor = null,
         ?BlockWriter $blockWriter = null,
+        ?BlockValidator $blockValidator = null,
         private ?DocumentManagerInterface $documentManager = null,
+        private ?HttpCacheClearer $httpCacheClearer = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
         $this->blockExtractor = $blockExtractor ?? new BlockExtractor($registry);
         $this->blockWriter = $blockWriter ?? new BlockWriter($registry);
+        $this->blockValidator = $blockValidator ?? new BlockValidator($registry);
     }
 
     /**
@@ -68,6 +74,26 @@ class PageService
             } catch (\Exception $e) {
                 // Log but don't fail the operation
             }
+        }
+
+        // Direct HTTP cache clearing for CLI/MCP processes
+        // FOS HttpCache with use_kernel_dispatcher only works in HTTP requests
+        if ($this->httpCacheClearer) {
+            $this->httpCacheClearer->clear();
+        }
+    }
+
+    /**
+     * Clear DocumentManager cache to ensure Sulu Admin sees latest changes.
+     *
+     * When PageService updates phpcr_nodes directly via SQL, the DocumentManager's
+     * internal object cache becomes stale. Calling clear() forces the DocumentManager
+     * to re-read from the database on next find() call.
+     */
+    private function clearDocumentManagerCache(): void
+    {
+        if ($this->documentManager) {
+            $this->documentManager->clear();
         }
     }
 
@@ -175,6 +201,12 @@ class PageService
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
     {
+        // Validate block data before proceeding
+        $validationError = $this->blockValidator->validateWithMessage($block);
+        if ($validationError !== null) {
+            return ['success' => false, 'message' => $validationError, 'position' => -1];
+        }
+
         try {
             $result = $this->connection->fetchAssociative(
                 "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
@@ -198,8 +230,17 @@ class PageService
                 $currentLength = (int) $lengthNodes->item(0)->nodeValue;
             }
 
-            // Use the next available index
-            $newIndex = $currentLength;
+            // Determine insertion index: use position if valid, otherwise append
+            $insertIndex = $currentLength; // Default: append at end
+            if ($position >= 0 && $position < $currentLength) {
+                // Insert at specified position - shift existing blocks up
+                $this->shiftBlocksUp($xpath, $xml, $locale, $position, $currentLength);
+                $insertIndex = $position;
+            } elseif ($position >= $currentLength) {
+                // Position beyond current length - append at end
+                $insertIndex = $currentLength;
+            }
+
             $rootNode = $xpath->query('/sv:node')->item(0);
 
             if (!$rootNode) {
@@ -207,7 +248,7 @@ class PageService
             }
 
             // Use BlockWriter to add the block (supports all 32 block types)
-            $this->blockWriter->addBlock($xml, $rootNode, $locale, $newIndex, $block);
+            $this->blockWriter->addBlock($xml, $rootNode, $locale, $insertIndex, $block);
 
             // Update blocks length
             if ($lengthNodes !== false && $lengthNodes->length > 0 && $lengthNodes->item(0)) {
@@ -235,18 +276,76 @@ class PageService
                 [
                     'blockType' => $block['type'],
                     'headline' => $block['headline'] ?? null,
-                    'position' => $newIndex,
+                    'position' => $insertIndex,
                 ]
             );
 
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Clear DocumentManager cache so Sulu Admin sees the changes
+            $this->clearDocumentManagerCache();
 
-            return ['success' => true, 'message' => 'Block added successfully', 'position' => $newIndex];
+            return ['success' => true, 'message' => 'Block added successfully', 'position' => $insertIndex];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage(), 'position' => -1];
+        }
+    }
+
+    /**
+     * Shift existing blocks up to make room for insertion at a specific position.
+     *
+     * Renumbers blocks from highest to lowest index to avoid collisions.
+     * For example, when inserting at position 1 with 3 blocks:
+     *   Block 2 -> Block 3
+     *   Block 1 -> Block 2
+     *   Position 1 is now free for the new block
+     */
+    private function shiftBlocksUp(\DOMXPath $xpath, \DOMDocument $xml, string $locale, int $fromPosition, int $currentLength): void
+    {
+        // Collect all block properties grouped by position
+        $blockProperties = [];
+        $allProperties = $xpath->query('//sv:property[starts-with(@sv:name, "i18n:' . $locale . '-blocks-")]');
+
+        if ($allProperties === false) {
+            return;
+        }
+
+        foreach ($allProperties as $prop) {
+            if ($prop instanceof \DOMElement) {
+                $name = $prop->getAttribute('sv:name');
+                // Skip the length property
+                if ($name === "i18n:{$locale}-blocks-length") {
+                    continue;
+                }
+                // Extract position from property name (first # number)
+                if (preg_match('/#(\d+)/', $name, $matches)) {
+                    $pos = (int) $matches[1];
+                    if ($pos >= $fromPosition) {
+                        if (!isset($blockProperties[$pos])) {
+                            $blockProperties[$pos] = [];
+                        }
+                        $blockProperties[$pos][] = $prop;
+                    }
+                }
+            }
+        }
+
+        // Renumber from highest to lowest to avoid collisions
+        for ($i = $currentLength - 1; $i >= $fromPosition; $i--) {
+            if (isset($blockProperties[$i])) {
+                foreach ($blockProperties[$i] as $prop) {
+                    if ($prop instanceof \DOMElement) {
+                        $name = $prop->getAttribute('sv:name');
+                        // Replace #oldPos with #newPos (only first occurrence to preserve nested indices)
+                        $newName = preg_replace('/#' . $i . '(?!\d)/', '#' . ($i + 1), $name, 1);
+                        if ($newName !== null) {
+                            $prop->setAttribute('sv:name', $newName);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -369,6 +468,8 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Clear DocumentManager cache so Sulu Admin sees the changes
+            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state (helps with caching issues)
             $updatedPage = $this->getPage($path, $locale);
@@ -421,6 +522,8 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Clear DocumentManager cache so Sulu Admin sees the changes
+            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
@@ -680,6 +783,8 @@ class PageService
                 ]
             );
 
+            // Clear DocumentManager cache so Sulu Admin sees the new page
+            $this->clearDocumentManagerCache();
 
             return [
                 'success' => true,
@@ -878,6 +983,8 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Clear DocumentManager cache so Sulu Admin sees the changes
+            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1064,6 +1171,8 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Clear DocumentManager cache so Sulu Admin sees the changes
+            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1133,6 +1242,8 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Clear DocumentManager cache so Sulu Admin sees the changes
+            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Page unpublished successfully'];
 
@@ -1232,6 +1343,51 @@ class PageService
                 'description' => 'Embedded video',
             ],
         ];
+    }
+
+    /**
+     * List available snippets from PHPCR.
+     *
+     * @return array<int, array{uuid: string, title: string, type: string, path: string}>
+     */
+    public function listSnippets(?string $snippetType = null, string $locale = 'de'): array
+    {
+        $pathPrefix = '/cmf/example/snippets';
+        if ($snippetType !== null) {
+            $pathPrefix .= '/' . $snippetType;
+        }
+
+        $results = $this->connection->fetchAllAssociative(
+            "SELECT path, identifier, props FROM phpcr_nodes
+             WHERE path LIKE ? AND workspace_name = 'default'
+             ORDER BY path",
+            [$pathPrefix . '%']
+        );
+
+        $snippets = [];
+        foreach ($results as $row) {
+            $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
+            $template = $this->extractPropertyFromXml($row['props'], 'template');
+
+            // Skip folder nodes (they don't have titles)
+            if ($title === null) {
+                continue;
+            }
+
+            // Extract snippet type from path: /cmf/example/snippets/contact/... -> contact
+            $pathParts = explode('/', $row['path']);
+            $type = $pathParts[4] ?? 'unknown';
+
+            $snippets[] = [
+                'uuid' => $row['identifier'],
+                'title' => $title,
+                'type' => $type,
+                'template' => $template ?? 'default',
+                'path' => $row['path'],
+            ];
+        }
+
+        return $snippets;
     }
 
     // ==========================================================================
