@@ -45,7 +45,7 @@ class McpOAuthService
         ?string $state = null
     ): McpAuthCode {
         $code = new McpAuthCode();
-        $code->setCode(bin2hex(random_bytes(32)));
+        $code->setCode(bin2hex(random_bytes(64)));
         $code->setClientName($clientName);
         $code->setRedirectUri($redirectUri);
         $code->setPkceChallenge($pkceChallenge);
@@ -86,7 +86,7 @@ class McpOAuthService
 
         // Create access token
         $accessToken = new McpAccessToken();
-        $accessToken->setToken(bin2hex(random_bytes(32)));
+        $accessToken->setToken(bin2hex(random_bytes(64)));
         $accessToken->setClientName($authCode->getClientName());
         $accessToken->setExpiresAt(new \DateTimeImmutable("+{$this->tokenLifetime} seconds"));
         $accessToken->setCreatedIp($clientIp);
