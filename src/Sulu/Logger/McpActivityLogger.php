@@ -14,8 +14,11 @@ use Exception;
  */
 class McpActivityLogger
 {
+    private const DEFAULT_WEBSPACE = 'example';
+
     public function __construct(
         private readonly Connection $connection,
+        private readonly string $webspaceKey = self::DEFAULT_WEBSPACE,
     ) {
     }
 
@@ -90,10 +93,10 @@ class McpActivityLogger
                 'pages',
                 $pageUuid,
                 $locale,
-                'example',
+                $this->webspaceKey,
                 sprintf('%s [MCP: %s]', $pageTitle, $actionType),
                 $locale,
-                'sulu.webspaces.example',
+                'sulu.webspaces.' . $this->webspaceKey,
                 'Sulu\Bundle\PageBundle\Document\PageDocument',
                 $pageUuid,
                 $userId,
@@ -138,7 +141,9 @@ class McpActivityLogger
             }
 
             $xml = new \DOMDocument();
-            @$xml->loadXML($result['props']);
+            $previousValue = libxml_use_internal_errors(true);
+            $xml->loadXML($result['props'], LIBXML_NONET | LIBXML_NOENT);
+            libxml_use_internal_errors($previousValue);
             $xpath = new \DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
