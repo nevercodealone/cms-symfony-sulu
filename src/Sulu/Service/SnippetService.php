@@ -18,7 +18,7 @@ class SnippetService
 {
     private const WORKSPACE_DEFAULT = 'default';
     private const WORKSPACE_LIVE = 'default_live';
-    private const SNIPPETS_PATH = '/cmf/example/snippets';
+    private const SNIPPETS_PATH = '/cmf/snippets';
 
     public function __construct(
         private Connection $connection,
@@ -77,9 +77,7 @@ class SnippetService
                 continue;
             }
 
-            // Extract snippet type from path: /cmf/example/snippets/contact/... -> contact
-            $pathParts = explode('/', $row['path']);
-            $type = $pathParts[4] ?? 'unknown';
+            $type = $this->extractTypeFromPath($row['path']);
 
             $snippets[] = [
                 'uuid' => $row['identifier'],
@@ -134,9 +132,7 @@ class SnippetService
         $title = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-title");
         $template = $this->extractPropertyFromXml($result['props'], 'template');
 
-        // Extract snippet type from path
-        $pathParts = explode('/', $result['path']);
-        $type = $pathParts[4] ?? 'unknown';
+        $type = $this->extractTypeFromPath($result['path']);
 
         return [
             'uuid' => $result['identifier'],
@@ -148,7 +144,7 @@ class SnippetService
     }
 
     /**
-     * List available snippet types (folder names under /cmf/example/snippets).
+     * List available snippet types (folder names under /cmf/snippets).
      *
      * @return array<string>
      */
@@ -162,15 +158,25 @@ class SnippetService
             [self::SNIPPETS_PATH . '/%', self::WORKSPACE_DEFAULT, self::SNIPPETS_PATH . '/%/%']
         );
 
-        $types = [];
-        foreach ($results as $row) {
-            $pathParts = explode('/', $row['path']);
-            if (isset($pathParts[4])) {
-                $types[] = $pathParts[4];
-            }
-        }
+        return array_map(
+            fn(array $row): string => $this->extractTypeFromPath($row['path']),
+            $results
+        );
+    }
 
-        return array_unique($types);
+    /**
+     * Extract snippet type from PHPCR path.
+     *
+     * Path structure: {SNIPPETS_PATH}/{type}/{name}
+     */
+    private function extractTypeFromPath(string $path): string
+    {
+        $relativePath = substr($path, strlen(self::SNIPPETS_PATH) + 1);
+        $firstSlash = strpos($relativePath, '/');
+
+        return $firstSlash !== false
+            ? substr($relativePath, 0, $firstSlash)
+            : $relativePath;
     }
 
     /**
