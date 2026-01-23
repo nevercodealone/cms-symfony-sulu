@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 
 class McpOAuthController extends AbstractController
@@ -20,6 +21,8 @@ class McpOAuthController extends AbstractController
         private string $projectName,
         #[Autowire('%env(APP_URL)%')]
         private string $appUrl,
+        #[Autowire(service: 'limiter.mcp_oauth_login')]
+        private ?RateLimiterFactory $loginLimiter = null,
     ) {
     }
 
@@ -106,6 +109,24 @@ class McpOAuthController extends AbstractController
                     'state' => $state,
                 ]);
                 return $this->redirect($redirectUri . '?' . $params);
+            }
+
+            // Check rate limit before password validation
+            if ($this->loginLimiter !== null) {
+                $limiter = $this->loginLimiter->create($request->getClientIp() ?? 'unknown');
+                if (!$limiter->consume()->isAccepted()) {
+                    $error = 'Too many login attempts. Please try again later.';
+                    return $this->render('mcp/oauth_consent.html.twig', [
+                        'project_name' => $this->projectName,
+                        'client_id' => $clientId,
+                        'scope' => $scope,
+                        'redirect_uri' => $redirectUri,
+                        'code_challenge' => $codeChallenge,
+                        'code_challenge_method' => $codeChallengeMethod,
+                        'state' => $state,
+                        'error' => $error,
+                    ]);
+                }
             }
 
             // Validate password
