@@ -49,6 +49,9 @@ use Sulu\Component\DocumentManager\DocumentManagerInterface;
  */
 class PageService
 {
+    private const WORKSPACE_DEFAULT = 'default';
+    private const WORKSPACE_LIVE = 'default_live';
+
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
     private BlockValidator $blockValidator;
@@ -116,7 +119,7 @@ class PageService
     private function getPageUuid(string $path): ?string
     {
         $result = $this->connection->fetchAssociative(
-            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
             [$path]
         );
 
@@ -144,7 +147,7 @@ class PageService
     {
         $results = $this->connection->fetchAllAssociative(
             "SELECT path, props FROM phpcr_nodes
-             WHERE path LIKE ? AND workspace_name = 'default'
+             WHERE path LIKE ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'
              ORDER BY path",
             [$pathPrefix . '%']
         );
@@ -177,7 +180,7 @@ class PageService
     public function getPage(string $path, string $locale = 'de'): ?array
     {
         $result = $this->connection->fetchAssociative(
-            "SELECT path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+            "SELECT path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
             [$path]
         );
 
@@ -222,7 +225,7 @@ class PageService
 
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -231,7 +234,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -275,11 +278,11 @@ class PageService
             // Update both workspaces
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -369,7 +372,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -378,7 +381,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -462,11 +465,11 @@ class PageService
 
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -505,7 +508,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -516,7 +519,7 @@ class PageService
             // Copy content to live workspace
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$result['props'], $path, 'default_live']
+                [$result['props'], $path, self::WORKSPACE_LIVE]
             );
 
             // Create route if it doesn't exist
@@ -546,7 +549,7 @@ class PageService
     {
         // Extract UUID and URL from page props
         $xml = new \DOMDocument();
-        $xml->loadXML($pageProps);
+        $this->loadXmlSecurely($xml, $pageProps);
         $xpath = new \DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
@@ -569,7 +572,7 @@ class PageService
 
         // Check if route already exists
         $existing = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$routePath]
         );
 
@@ -580,7 +583,7 @@ class PageService
         // Get parent route node ID
         $parentPath = dirname($routePath);
         $parent = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$parentPath]
         );
 
@@ -588,7 +591,7 @@ class PageService
             // Create parent path recursively if needed
             $this->ensureRouteParentExists($parentPath, $locale);
             $parent = $this->connection->fetchAssociative(
-                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
                 [$parentPath]
             );
         }
@@ -618,7 +621,7 @@ class PageService
         // Insert route node
         $this->connection->executeStatement(
             "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
-            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            "VALUES (?, ?, ?, '', '" . self::WORKSPACE_LIVE . "', ?, 'nt:unstructured', ?, ?, ?)",
             [$routePath, $parentPath, $nodeName, $routeUuid, $routeProps, substr_count($routePath, '/'), 0]
         );
     }
@@ -629,7 +632,7 @@ class PageService
     private function ensureRouteParentExists(string $parentPath, string $locale): void
     {
         $existing = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$parentPath]
         );
 
@@ -644,7 +647,7 @@ class PageService
         }
 
         $parent = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$grandparent]
         );
 
@@ -666,7 +669,7 @@ class PageService
 
         $this->connection->executeStatement(
             "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
-            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            "VALUES (?, ?, ?, '', '" . self::WORKSPACE_LIVE . "', ?, 'nt:unstructured', ?, ?, ?)",
             [$parentPath, $grandparent, $nodeName, $uuid, $props, substr_count($parentPath, '/'), 0]
         );
     }
@@ -716,7 +719,7 @@ class PageService
         try {
             // Get parent info from default workspace
             $parent = $this->connection->fetchAssociative(
-                "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$parentPath]
             );
 
@@ -736,7 +739,7 @@ class PageService
 
             // Check if page already exists
             $existing = $this->connection->fetchAssociative(
-                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -746,7 +749,7 @@ class PageService
 
             // Get next sort order
             $maxOrder = $this->connection->fetchOne(
-                "SELECT MAX(sort_order) FROM phpcr_nodes WHERE parent = ? AND workspace_name = 'default'",
+                "SELECT MAX(sort_order) FROM phpcr_nodes WHERE parent = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$parent['id']]
             );
             $sortOrder = ($maxOrder ?? 0) + 1;
@@ -756,7 +759,7 @@ class PageService
             $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish);
 
             // Insert into BOTH workspaces
-            foreach (['default', 'default_live'] as $workspace) {
+            foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
                 // Get parent ID for this workspace
                 $parentInWorkspace = $this->connection->fetchAssociative(
                     "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
@@ -884,7 +887,7 @@ class PageService
     {
         try {
             $xml = new DOMDocument();
-            $xml->loadXML($xmlString);
+            $this->loadXmlSecurely($xml, $xmlString);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -931,7 +934,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -940,7 +943,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -971,11 +974,11 @@ class PageService
             // Update both workspaces for immediate visibility
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -1077,7 +1080,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -1086,7 +1089,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -1157,11 +1160,11 @@ class PageService
             // Update both workspaces for immediate visibility
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -1198,7 +1201,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
                 [$path]
             );
 
@@ -1207,7 +1210,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -1231,7 +1234,7 @@ class PageService
 
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -1358,7 +1361,7 @@ class PageService
 
         $results = $this->connection->fetchAllAssociative(
             "SELECT path, identifier, props FROM phpcr_nodes
-             WHERE path LIKE ? AND workspace_name = 'default'
+             WHERE path LIKE ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'
              ORDER BY path",
             [$pathPrefix . '%']
         );
@@ -1497,6 +1500,19 @@ class PageService
         }
 
         return null;
+    }
+
+    /**
+     * Load XML securely with XXE protection.
+     *
+     * Disables external entity loading to prevent XXE attacks.
+     */
+    private function loadXmlSecurely(DOMDocument $xml, string $xmlString): bool
+    {
+        $previousValue = libxml_use_internal_errors(true);
+        $result = $xml->loadXML($xmlString, LIBXML_NONET | LIBXML_NOENT);
+        libxml_use_internal_errors($previousValue);
+        return $result;
     }
 
     /**
