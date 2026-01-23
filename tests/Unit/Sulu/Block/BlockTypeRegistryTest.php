@@ -306,4 +306,99 @@ class BlockTypeRegistryTest extends TestCase
             'hl-des' => ['hl-des'],
         ];
     }
+
+    // === Description Tests ===
+
+    public function testGetDescriptionReturnsStringForKnownType(): void
+    {
+        $description = $this->registry->getDescription('faq');
+
+        $this->assertNotNull($description);
+        $this->assertIsString($description);
+        $this->assertStringContainsString('FAQ', $description);
+    }
+
+    public function testGetDescriptionReturnsNullForUnknownType(): void
+    {
+        $this->assertNull($this->registry->getDescription('unknown-block-type'));
+    }
+
+    public function testAllBlockTypesHaveDescriptions(): void
+    {
+        foreach ($this->registry->getAllTypes() as $type) {
+            $description = $this->registry->getDescription($type);
+            $this->assertNotNull($description, "Block type '{$type}' is missing a description");
+            $this->assertNotEmpty($description, "Block type '{$type}' has empty description");
+        }
+    }
+
+    // === Example Tests ===
+
+    public function testGetExampleReturnsArrayForKnownType(): void
+    {
+        $example = $this->registry->getExample('faq');
+
+        $this->assertNotNull($example);
+        $this->assertIsArray($example);
+        $this->assertArrayHasKey('type', $example);
+        $this->assertEquals('faq', $example['type']);
+        $this->assertArrayHasKey('faqs', $example);
+    }
+
+    public function testGetExampleReturnsNullForUnknownType(): void
+    {
+        $this->assertNull($this->registry->getExample('unknown-block-type'));
+    }
+
+    public function testAllBlockTypesHaveExamples(): void
+    {
+        foreach ($this->registry->getAllTypes() as $type) {
+            $example = $this->registry->getExample($type);
+            $this->assertNotNull($example, "Block type '{$type}' is missing an example");
+            $this->assertIsArray($example, "Block type '{$type}' example should be an array");
+            $this->assertArrayHasKey('type', $example, "Block type '{$type}' example missing 'type' key");
+            $this->assertEquals($type, $example['type'], "Block type '{$type}' example has wrong type");
+        }
+    }
+
+    public function testFaqExampleUsesCorrectNestedName(): void
+    {
+        $example = $this->registry->getExample('faq');
+
+        $this->assertArrayHasKey('faqs', $example);
+        $this->assertArrayNotHasKey('items', $example);
+    }
+
+    public function testTableExampleUsesCorrectNestedName(): void
+    {
+        $example = $this->registry->getExample('table');
+
+        $this->assertArrayHasKey('rows', $example);
+        $this->assertArrayNotHasKey('items', $example);
+    }
+
+    public function testHeadlineParagraphsExampleHasItems(): void
+    {
+        $example = $this->registry->getExample('headline-paragraphs');
+
+        $this->assertArrayHasKey('items', $example);
+        $this->assertIsArray($example['items']);
+        $this->assertNotEmpty($example['items']);
+    }
+
+    // === getAllDescriptions / getAllExamples Tests ===
+
+    public function testGetAllDescriptionsReturns32Entries(): void
+    {
+        $descriptions = $this->registry->getAllDescriptions();
+
+        $this->assertCount(32, $descriptions);
+    }
+
+    public function testGetAllExamplesReturns32Entries(): void
+    {
+        $examples = $this->registry->getAllExamples();
+
+        $this->assertCount(32, $examples);
+    }
 }

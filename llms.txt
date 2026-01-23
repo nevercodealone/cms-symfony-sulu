@@ -37,11 +37,31 @@
 
 | File | Purpose |
 |------|---------|
-| `src/Sulu/Service/PageService.php` | Main service - direct DB queries |
+| `src/Sulu/Service/PageService.php` | Page CRUD operations - direct DB queries |
+| `src/Sulu/Service/SnippetService.php` | Snippet listing - direct DB queries |
+| `src/Sulu/Service/MediaService.php` | Media listing/search - direct DB queries |
 | `src/Sulu/Block/BlockWriter.php` | Writes blocks to PHPCR XML |
 | `src/Sulu/Block/BlockExtractor.php` | Reads blocks from PHPCR XML |
-| `src/Sulu/Block/BlockTypeRegistry.php` | Hardcoded block schemas |
+| `src/Sulu/Block/BlockTypeRegistry.php` | Block schemas, descriptions & examples |
 | `src/Sulu/Block/BlockValidator.php` | Validates blocks before write |
+| `src/MCP/Tools/SuluPagesTool.php` | MCP tool exposing all actions |
+
+### Service Separation Architecture
+
+The MCP server follows Single Responsibility Principle with focused services:
+
+```
+src/Sulu/
+├── Service/
+│   ├── PageService.php          # Page CRUD only
+│   ├── MediaService.php         # Media listing/search
+│   └── SnippetService.php       # Snippet operations
+├── Block/
+│   ├── BlockTypeRegistry.php    # Schemas + descriptions + examples
+│   ├── BlockExtractor.php       # XML reading
+│   ├── BlockWriter.php          # XML writing
+│   └── BlockValidator.php       # Validation
+```
 
 ---
 
@@ -50,23 +70,29 @@
 The Sulu MCP Server enables managing CMS pages via these actions:
 
 ### Page Discovery
-- `sulu-page-search` - Search pages by title (case-insensitive)
-- `sulu-page-tree` - Get hierarchical page tree structure
-- `sulu-page-find-by-url` - Find page by frontend URL
-- `sulu-page-list` - List all pages under a path
+- `list` - List all pages under a path
+- `get` - Get page with all blocks
+- `search` - Search pages by title (case-insensitive)
+- `tree` - Get hierarchical page tree structure
+- `find_by_url` - Find page by frontend URL
 
 ### Page Management
-- `sulu-page-get` - Get page with all blocks
-- `sulu-page-create` - Create a new page
-- `sulu-page-publish` - Publish page
-- `sulu-page-unpublish` - Unpublish page
+- `create_page` - Create a new page
+- `publish` - Publish page
+- `unpublish` - Unpublish page
 
 ### Block Management
-- `sulu-block-add` - Add a block
-- `sulu-block-update` - Update a block
-- `sulu-block-move` - Move a block
-- `sulu-block-remove` - Remove a block
-- `sulu-block-types` - List available block types
+- `add_block` - Add a block
+- `update_block` - Update a block
+- `append_to_block` - Append items to existing block
+- `move_block` - Move a block
+- `remove_block` - Remove a block
+- `list_block_types` - List all 32 block types with descriptions & examples
+- `get_block_schema` - Get detailed schema for a specific block type
+
+### Media & Snippets
+- `list_media` - Search/list media with pagination
+- `list_snippets` - List snippets with diagnostic info
 
 ## Page Discovery
 
@@ -866,6 +892,137 @@ Fetches and displays WordPress posts.
 // 3. Publish
 {"tool": "sulu-page-publish", "path": "/cmf/example/contents/preise/preisliste"}
 ```
+
+---
+
+## Media & Snippet Actions
+
+### list_media Action
+
+Search and list media files from Sulu's media library.
+
+```json
+{
+  "action": "list_media",
+  "search": "logo",
+  "collectionId": 1,
+  "locale": "de",
+  "limit": 50,
+  "offset": 0
+}
+```
+
+Response:
+```json
+{
+  "media": [
+    {
+      "id": 42,
+      "title": "Company Logo",
+      "filename": "logo.png",
+      "mimeType": "image/png",
+      "size": 12345,
+      "collectionId": 1
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+Use media IDs in blocks:
+```json
+{
+  "blockType": "image",
+  "image": {"id": 42}
+}
+```
+
+### list_snippets Action
+
+List snippets with diagnostic information when empty.
+
+```json
+{
+  "action": "list_snippets",
+  "snippetType": "contact",
+  "locale": "de"
+}
+```
+
+Response (with snippets):
+```json
+{
+  "snippets": [
+    {
+      "uuid": "abc-123-def",
+      "title": "Main Contact",
+      "type": "contact",
+      "template": "contact",
+      "path": "/cmf/example/snippets/contact/main"
+    }
+  ]
+}
+```
+
+Response (no snippets - with diagnostic):
+```json
+{
+  "snippets": [],
+  "diagnostic": {
+    "searched_path": "/cmf/example/snippets/contact",
+    "workspaces_checked": ["default", "default_live"],
+    "hint": "No snippets found at this path. Create snippets in Sulu admin under 'Snippets' section."
+  }
+}
+```
+
+### get_block_schema Action
+
+Get detailed schema for a specific block type including description and example.
+
+```json
+{
+  "action": "get_block_schema",
+  "blockTypeName": "faq"
+}
+```
+
+Response:
+```json
+{
+  "name": "faq",
+  "properties": [],
+  "nested": "faqs",
+  "nestedProperties": ["headline", "subline"],
+  "description": "FAQ section with expandable questions/answers. Uses faqs[] array (NOT items).",
+  "example": {
+    "type": "faq",
+    "faqs": [
+      {"headline": "What is PHP?", "subline": "<p>PHP is a server-side scripting language.</p>"}
+    ]
+  }
+}
+```
+
+### list_block_types Action
+
+List all 32 block types with full documentation.
+
+```json
+{
+  "action": "list_block_types"
+}
+```
+
+Response includes for each type:
+- `name` - Block type identifier
+- `properties` - Top-level properties
+- `nested` - Name of nested array (e.g., 'items', 'faqs', 'rows')
+- `nestedProperties` - Properties within nested items
+- `description` - Human-readable description
+- `example` - Complete example data structure
 
 ---
 

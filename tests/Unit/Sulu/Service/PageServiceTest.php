@@ -440,19 +440,6 @@ XML;
         $this->assertEquals('Page not published or not found', $result['message']);
     }
 
-    public function testListBlockTypesReturnsTypes(): void
-    {
-        $result = $this->pageService->listBlockTypes();
-
-        $this->assertIsArray($result);
-        $this->assertNotEmpty($result);
-
-        $typeNames = array_column($result, 'name');
-        $this->assertContains('headline-paragraphs', $typeNames);
-        $this->assertContains('hl-des', $typeNames);
-        $this->assertContains('code', $typeNames);
-    }
-
     public function testExtractBlocksWithNestedItems(): void
     {
         $xmlWithItems = <<<'XML'

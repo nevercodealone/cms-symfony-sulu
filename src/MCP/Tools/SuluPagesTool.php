@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\MCP\Tools;
 
+use App\Sulu\Block\BlockTypeRegistry;
+use App\Sulu\Service\MediaService;
 use App\Sulu\Service\PageService;
+use App\Sulu\Service\SnippetService;
 use KLP\KlpMcpServer\Services\ProgressService\ProgressNotifierInterface;
 use KLP\KlpMcpServer\Services\ToolService\Annotation\ToolAnnotation;
 use KLP\KlpMcpServer\Services\ToolService\StreamableToolInterface;
@@ -32,7 +35,10 @@ use KLP\KlpMcpServer\Services\ToolService\Schema\StructuredSchema;
 class SuluPagesTool implements StreamableToolInterface
 {
     public function __construct(
-        private readonly PageService $pageService
+        private readonly PageService $pageService,
+        private readonly BlockTypeRegistry $blockTypeRegistry,
+        private readonly SnippetService $snippetService,
+        private readonly MediaService $mediaService,
     ) {
     }
 
@@ -53,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, list_snippets. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
@@ -67,7 +73,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, list_snippets',
+                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media',
                 required: true
             ),
             new SchemaProperty(
@@ -202,6 +208,36 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For list_snippets action: filter by snippet type (e.g. "contact", "team")',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'blockTypeName',
+                type: PropertyType::STRING,
+                description: 'For get_block_schema action: name of the block type to get schema for (e.g. "faq", "headline-paragraphs")',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'search',
+                type: PropertyType::STRING,
+                description: 'For list_media action: search term to filter media by title or filename',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'collectionId',
+                type: PropertyType::INTEGER,
+                description: 'For list_media action: filter media by collection ID',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'limit',
+                type: PropertyType::INTEGER,
+                description: 'For list_media action: maximum number of results (default: 50)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'offset',
+                type: PropertyType::INTEGER,
+                description: 'For list_media action: pagination offset (default: 0)',
+                required: false
+            ),
         );
     }
 
@@ -230,7 +266,9 @@ class SuluPagesTool implements StreamableToolInterface
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
             'list_block_types' => $this->listBlockTypes(),
+            'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? ''),
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
+            'list_media' => $this->listMedia($arguments, $locale),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -530,18 +568,82 @@ class SuluPagesTool implements StreamableToolInterface
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
 
+    /**
+     * List all block types with full schema information from BlockTypeRegistry.
+     */
     private function listBlockTypes(): ToolResultInterface
     {
-        $types = $this->pageService->listBlockTypes();
+        $types = [];
+        foreach ($this->blockTypeRegistry->getAllTypes() as $name) {
+            $schema = $this->blockTypeRegistry->getSchema($name);
+            $types[] = [
+                'name' => $name,
+                'properties' => $schema['properties'] ?? [],
+                'nested' => $this->blockTypeRegistry->getNestedName($name),
+                'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($name),
+                'description' => $this->blockTypeRegistry->getDescription($name),
+                'example' => $this->blockTypeRegistry->getExample($name),
+            ];
+        }
 
-        return new TextToolResult(json_encode(['types' => $types], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+        return new TextToolResult(json_encode(['types' => $types, 'total' => count($types)], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
+    /**
+     * Get detailed schema for a specific block type.
+     */
+    private function getBlockSchema(string $blockType): ToolResultInterface
+    {
+        if (empty($blockType)) {
+            return new TextToolResult(json_encode([
+                'error' => 'blockTypeName is required',
+                'available_types' => $this->blockTypeRegistry->getAllTypes(),
+            ], JSON_PRETTY_PRINT));
+        }
+
+        if (!$this->blockTypeRegistry->hasType($blockType)) {
+            return new TextToolResult(json_encode([
+                'error' => "Block type '{$blockType}' not found",
+                'available_types' => $this->blockTypeRegistry->getAllTypes(),
+            ], JSON_PRETTY_PRINT));
+        }
+
+        $schema = $this->blockTypeRegistry->getSchema($blockType);
+        return new TextToolResult(json_encode([
+            'name' => $blockType,
+            'properties' => $schema['properties'] ?? [],
+            'nested' => $this->blockTypeRegistry->getNestedName($blockType),
+            'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($blockType),
+            'description' => $this->blockTypeRegistry->getDescription($blockType),
+            'example' => $this->blockTypeRegistry->getExample($blockType),
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * List snippets using SnippetService.
+     */
     private function listSnippets(?string $snippetType, string $locale): ToolResultInterface
     {
-        $snippets = $this->pageService->listSnippets($snippetType, $locale);
+        $result = $this->snippetService->listSnippets($snippetType, $locale);
 
-        return new TextToolResult(json_encode(['snippets' => $snippets], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * List media using MediaService.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function listMedia(array $arguments, string $locale): ToolResultInterface
+    {
+        $search = $arguments['search'] ?? null;
+        $collectionId = isset($arguments['collectionId']) ? (int) $arguments['collectionId'] : null;
+        $limit = (int) ($arguments['limit'] ?? 50);
+        $offset = (int) ($arguments['offset'] ?? 0);
+
+        $result = $this->mediaService->listMedia($search, $collectionId, $locale, $limit, $offset);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
