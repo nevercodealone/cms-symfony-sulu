@@ -141,7 +141,7 @@ class PageService
     /**
      * List pages under a path prefix.
      *
-     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}>
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string}>
      */
     public function listPages(string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
     {
@@ -152,6 +152,18 @@ class PageService
             [$pathPrefix . '%']
         );
 
+        // Batch check which pages exist in live workspace
+        $livePaths = [];
+        if (!empty($results)) {
+            $paths = array_column($results, 'path');
+            $placeholders = implode(',', array_fill(0, count($paths), '?'));
+            $liveResults = $this->connection->fetchAllAssociative(
+                "SELECT path FROM phpcr_nodes WHERE path IN ({$placeholders}) AND workspace_name = ?",
+                [...$paths, self::WORKSPACE_LIVE]
+            );
+            $livePaths = array_flip(array_column($liveResults, 'path'));
+        }
+
         $pages = [];
         foreach ($results as $row) {
             $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
@@ -159,12 +171,17 @@ class PageService
             $url = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-url");
 
             if ($title !== null) {
+                $existsInLive = isset($livePaths[$row['path']]);
+                $pubMeta = $this->extractPublicationMeta($row['props'], $locale, $existsInLive);
+
                 $pages[] = [
                     'path' => $row['path'],
                     'url' => $url,
                     'fullUrl' => $url !== null ? '/' . $locale . $url : null,
                     'title' => $title,
                     'template' => $template ?? 'default',
+                    'published' => $pubMeta['published'],
+                    'state' => $pubMeta['state'],
                 ];
             }
         }
@@ -175,7 +192,7 @@ class PageService
     /**
      * Get page content including blocks.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null}|null
      */
     public function getPage(string $path, string $locale = 'de'): ?array
     {
@@ -193,6 +210,10 @@ class PageService
         $url = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-url");
         $blocks = $this->extractBlocks($result['props'], $locale);
 
+        // Get publication metadata
+        $existsInLive = $this->isPagePublished($path);
+        $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $existsInLive);
+
         return [
             'path' => $result['path'],
             'url' => $url,
@@ -200,6 +221,11 @@ class PageService
             'title' => $title,
             'template' => $template,
             'blocks' => $blocks,
+            'published' => $pubMeta['published'],
+            'state' => $pubMeta['state'],
+            'publishedAt' => $pubMeta['publishedAt'],
+            'createdAt' => $pubMeta['createdAt'],
+            'modifiedAt' => $pubMeta['modifiedAt'],
         ];
     }
 
@@ -1307,7 +1333,7 @@ class PageService
     /**
      * Search pages by title (case-insensitive).
      *
-     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}>
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string}>
      */
     public function searchPages(string $query, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
     {
@@ -1322,7 +1348,7 @@ class PageService
     /**
      * Get page tree with hierarchical structure.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, children: array<mixed>}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string, children: array<mixed>}|null
      */
     public function getPageTree(string $rootPath, string $locale = 'de', int $depth = 2): ?array
     {
@@ -1392,7 +1418,7 @@ class PageService
     /**
      * Find page by frontend URL.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string}|null
      */
     public function findPageByUrl(string $url, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): ?array
     {
@@ -1435,5 +1461,46 @@ class PageService
         }
 
         return $url;
+    }
+
+    /**
+     * Check if a page exists in the live workspace.
+     */
+    private function isPagePublished(string $path): bool
+    {
+        $result = $this->connection->fetchAssociative(
+            "SELECT 1 FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
+            [$path, self::WORKSPACE_LIVE]
+        );
+        return $result !== false;
+    }
+
+    /**
+     * Extract publication metadata from PHPCR XML properties.
+     *
+     * @return array{published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null}
+     */
+    private function extractPublicationMeta(string $props, string $locale, bool $existsInLive): array
+    {
+        $state = $this->extractPropertyFromXml($props, "i18n:{$locale}-state");
+        $publishedAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-published");
+        $createdAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-created");
+        $changedAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-changed");
+
+        // Determine state string
+        $stateValue = (int) ($state ?? 1);
+        $stateString = match (true) {
+            $stateValue === 2 && $existsInLive => 'published',
+            $publishedAt !== null => 'unpublished',  // Was published before
+            default => 'draft',
+        };
+
+        return [
+            'published' => $stateValue === 2 && $existsInLive,
+            'state' => $stateString,
+            'publishedAt' => $publishedAt,
+            'createdAt' => $createdAt,
+            'modifiedAt' => $changedAt,
+        ];
     }
 }
