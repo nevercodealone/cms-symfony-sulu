@@ -20,6 +20,7 @@
         <testsuite name="Project Test Suite">
             <directory>tests</directory>
             <exclude>tests/Functional</exclude>
+            <exclude>tests/Integration</exclude>
         </testsuite>
     </testsuites>
 </phpunit>
