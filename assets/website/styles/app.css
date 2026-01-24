@@ -53,3 +53,12 @@ li {
 .video-container embed {
   @apply absolute top-0 left-0 w-full h-full;
 }
+
+/* Card-trio badge pulse animation */
+@keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    50% { box-shadow: 0 0 12px 4px rgba(239, 68, 68, 0.3); }
+}
+.badge-urgent {
+    animation: badge-pulse 2s ease-in-out infinite;
+}

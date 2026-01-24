@@ -1,0 +1,153 @@
+<!-- card-trio.html.twig -->
+<section class="bg-slate-100 py-16 px-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header: subline (green), headline (h2), description -->
+        <header class="text-center mb-12">
+            {% if content.subline %}
+                <p class="text-nca font-medium mb-3 tracking-wide uppercase text-sm">
+                    {{ content.subline }}
+                </p>
+            {% endif %}
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                {{ content.headline }}
+            </h2>
+            {% if content.description %}
+                <div class="text-gray-600 text-lg max-w-2xl mx-auto">
+                    {{ content.description|raw }}
+                </div>
+            {% endif %}
+        </header>
+
+        <!-- Cards Grid: 1 col mobile, 3 col md+ -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {# Card 1 #}
+            {% if content.card1Title is defined and content.card1Title is not empty %}
+                <sulu-link href="{{ content.card1LinkPage }}" class="group relative bg-white rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-2 border-transparent hover:border-nca/30 no-underline">
+                    {# Badge #}
+                    {% if content.card1BadgeType != 'none' and content.card1BadgeText %}
+                        <span class="{% if content.card1BadgeType == 'urgent' %}badge-urgent bg-red-500{% elseif content.card1BadgeType == 'warning' %}bg-amber-500{% elseif content.card1BadgeType == 'success' %}bg-emerald-500{% else %}bg-blue-500{% endif %} absolute -top-3 right-6 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            {{ content.card1BadgeText }}
+                        </span>
+                    {% endif %}
+
+                    {# Icon #}
+                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-nca transition-colors">
+                        <i class="fa fa-{{ content.card1Icon }} text-2xl text-gray-600 group-hover:text-white transition-colors"></i>
+                    </div>
+
+                    {# Content #}
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ content.card1Title }}</h3>
+                    <div class="text-gray-600 mb-6">{{ content.card1Description|raw }}</div>
+
+                    {# Tags #}
+                    {% if content.card1Tags is defined and content.card1Tags is not empty %}
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            {% for tag in content.card1Tags %}
+                                <span class="text-xs font-medium bg-slate-100 text-gray-600 px-3 py-1.5 rounded-full">{{ tag.text }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {# Link #}
+                    {% if content.card1LinkText %}
+                        <span class="flex items-center text-nca font-semibold">
+                            {{ content.card1LinkText }}
+                            <i class="fa fa-arrow-right ml-2 text-sm transition-transform duration-300 group-hover:translate-x-2"></i>
+                        </span>
+                    {% endif %}
+                </sulu-link>
+            {% endif %}
+
+            {# Card 2 #}
+            {% if content.card2Title is defined and content.card2Title is not empty %}
+                <sulu-link href="{{ content.card2LinkPage }}" class="group relative bg-white rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-2 border-transparent hover:border-nca/30 no-underline">
+                    {# Badge #}
+                    {% if content.card2BadgeType != 'none' and content.card2BadgeText %}
+                        <span class="{% if content.card2BadgeType == 'urgent' %}badge-urgent bg-red-500{% elseif content.card2BadgeType == 'warning' %}bg-amber-500{% elseif content.card2BadgeType == 'success' %}bg-emerald-500{% else %}bg-blue-500{% endif %} absolute -top-3 right-6 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            {{ content.card2BadgeText }}
+                        </span>
+                    {% endif %}
+
+                    {# Icon #}
+                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-nca transition-colors">
+                        <i class="fa fa-{{ content.card2Icon }} text-2xl text-gray-600 group-hover:text-white transition-colors"></i>
+                    </div>
+
+                    {# Content #}
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ content.card2Title }}</h3>
+                    <div class="text-gray-600 mb-6">{{ content.card2Description|raw }}</div>
+
+                    {# Tags #}
+                    {% if content.card2Tags is defined and content.card2Tags is not empty %}
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            {% for tag in content.card2Tags %}
+                                <span class="text-xs font-medium bg-slate-100 text-gray-600 px-3 py-1.5 rounded-full">{{ tag.text }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {# Link #}
+                    {% if content.card2LinkText %}
+                        <span class="flex items-center text-nca font-semibold">
+                            {{ content.card2LinkText }}
+                            <i class="fa fa-arrow-right ml-2 text-sm transition-transform duration-300 group-hover:translate-x-2"></i>
+                        </span>
+                    {% endif %}
+                </sulu-link>
+            {% endif %}
+
+            {# Card 3 #}
+            {% if content.card3Title is defined and content.card3Title is not empty %}
+                <sulu-link href="{{ content.card3LinkPage }}" class="group relative bg-white rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-2 border-transparent hover:border-nca/30 no-underline">
+                    {# Badge #}
+                    {% if content.card3BadgeType != 'none' and content.card3BadgeText %}
+                        <span class="{% if content.card3BadgeType == 'urgent' %}badge-urgent bg-red-500{% elseif content.card3BadgeType == 'warning' %}bg-amber-500{% elseif content.card3BadgeType == 'success' %}bg-emerald-500{% else %}bg-blue-500{% endif %} absolute -top-3 right-6 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            {{ content.card3BadgeText }}
+                        </span>
+                    {% endif %}
+
+                    {# Icon #}
+                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-nca transition-colors">
+                        <i class="fa fa-{{ content.card3Icon }} text-2xl text-gray-600 group-hover:text-white transition-colors"></i>
+                    </div>
+
+                    {# Content #}
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ content.card3Title }}</h3>
+                    <div class="text-gray-600 mb-6">{{ content.card3Description|raw }}</div>
+
+                    {# Tags #}
+                    {% if content.card3Tags is defined and content.card3Tags is not empty %}
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            {% for tag in content.card3Tags %}
+                                <span class="text-xs font-medium bg-slate-100 text-gray-600 px-3 py-1.5 rounded-full">{{ tag.text }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {# Link #}
+                    {% if content.card3LinkText %}
+                        <span class="flex items-center text-nca font-semibold">
+                            {{ content.card3LinkText }}
+                            <i class="fa fa-arrow-right ml-2 text-sm transition-transform duration-300 group-hover:translate-x-2"></i>
+                        </span>
+                    {% endif %}
+                </sulu-link>
+            {% endif %}
+        </div>
+
+        <!-- Footer (optional) -->
+        {% if content.showFooter %}
+            <footer class="text-center mt-12">
+                {% if content.footerText %}
+                    <p class="text-gray-500 mb-4">{{ content.footerText }}</p>
+                {% endif %}
+                {% if content.footerButtonPage and content.footerButtonText %}
+                    <sulu-link href="{{ content.footerButtonPage }}" class="inline-flex items-center gap-2 bg-green-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-800 transition-colors no-underline">
+                        {{ content.footerButtonText }}
+                    </sulu-link>
+                {% endif %}
+            </footer>
+        {% endif %}
+    </div>
+</section>
+<!-- end card-trio.html.twig -->
