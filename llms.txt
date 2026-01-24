@@ -700,52 +700,51 @@ Displays page excerpt image with headline.
 
 ### CARD BLOCKS
 
-#### 32. card-trio (Three-Card Section)
+#### 32. card-trio (1-3 Card Section)
 
-Three-card section with icons, badges, tags, and internal page links.
+Card section with 1-3 cards featuring icons, badges, tags, and internal page links. Uses nested `cards[]` array.
 
 **XML:** `config/templates/includes/tailwind/blocks/card-trio.xml`
 **Twig:** `templates/includes/tailwind/blocks/card-trio.html.twig`
 
+**Top-Level Properties:**
 | Property | Type | Description |
 |----------|------|-------------|
 | `subline` | text_line | Small text above headline (green) |
 | `headline` | text_line | Main heading |
 | `description` | text_editor | Section description |
-| `card1Icon` | single_select | FA icon: code, users, cog, bar-chart, lightbulb-o, rocket, shield, heart, star, check |
-| `card1Title` | text_line | Card title |
-| `card1Description` | text_editor | Card description |
-| `card1Tags[]` | nested block | Tags (0-5 items with `text`) |
-| `card1LinkText` | text_line | Link text (e.g., "Learn more") |
-| `card1LinkPage` | single_page_selection | Internal page link |
-| `card1BadgeType` | single_select | Badge: none, urgent, warning, success, info |
-| `card1BadgeText` | text_line | Badge text (e.g., "New") |
-| `card2*`, `card3*` | ... | Same properties for cards 2 and 3 |
-| `showFooter` | checkbox | Show footer section |
 | `footerText` | text_line | Footer text |
 | `footerButtonText` | text_line | Footer button text |
-| `footerButtonPage` | single_page_selection | Footer button page link |
+| `footerButtonPage` | single_page_selection | Footer button page link (UUID) |
+
+**Nested `cards[]` Properties (1-3 cards, type: "card"):**
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | string | Must be "card" |
+| `icon` | single_select | code, users, cog, bar-chart, lightbulb-o, rocket, shield, heart, star, check, universal-access, microchip |
+| `title` | text_line | Card title |
+| `description` | text_editor | Card description |
+| `tags[]` | nested block | Tags (0-5 items with `type:"tag"` and `text`) |
+| `linkText` | text_line | Link text (e.g., "Learn more") |
+| `linkPage` | single_page_selection | Internal page link (UUID) |
+| `badgeType` | single_select | none, urgent, warning, success, info |
+| `badgeText` | text_line | Badge text (e.g., "New") |
 
 **Badge Colors:**
-- `urgent` - Red with pulse animation
+- `urgent` - Red
 - `warning` - Amber
 - `success` - Green
 - `info` - Blue
 
+**MCP Example:**
 ```json
 {
+  "action": "add_block",
+  "path": "/cmf/example/contents/my-page",
   "blockType": "card-trio",
-  "subline": "Our Services",
   "headline": "What We Offer",
-  "description": "<p>Choose from our services.</p>",
-  "card1Icon": "code",
-  "card1Title": "Development",
-  "card1Description": "<p>Custom software.</p>",
-  "card1Tags": "[{\"text\":\"PHP\"},{\"text\":\"Symfony\"}]",
-  "card1LinkText": "Learn more",
-  "card1LinkPage": "/services/development",
-  "card1BadgeType": "success",
-  "card1BadgeText": "Popular"
+  "items": "[{\"type\":\"card\",\"icon\":\"code\",\"title\":\"Development\",\"description\":\"<p>Custom software.</p>\",\"tags\":[{\"type\":\"tag\",\"text\":\"PHP\"},{\"type\":\"tag\",\"text\":\"Symfony\"}],\"linkText\":\"Learn more\",\"linkPage\":\"page-uuid\",\"badgeType\":\"success\",\"badgeText\":\"Popular\"},{\"type\":\"card\",\"icon\":\"users\",\"title\":\"Consulting\",\"description\":\"<p>Expert advice.</p>\",\"tags\":[],\"linkText\":\"Get started\",\"linkPage\":\"page-uuid\",\"badgeType\":\"none\"}]",
+  "locale": "de"
 }
 ```
 

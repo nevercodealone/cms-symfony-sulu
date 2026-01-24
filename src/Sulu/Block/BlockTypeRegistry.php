@@ -69,7 +69,7 @@ final class BlockTypeRegistry
         'excerpt-image' => 'Page excerpt with featured image.',
 
         // === CARD BLOCKS ===
-        'card-trio' => '1-3 card section with icons, badges, tags, and links. Uses cards[] array with icon, title, description, tags[], linkText, linkPage, badgeType, badgeText.',
+        'card-trio' => '1-3 card section with icons, badges, tags, and links. Uses cards[] array with type:"card", icon (code|users|cog|rocket|shield|heart|star|check|universal-access|microchip|bar-chart|lightbulb-o), title, description, tags[] with type:"tag" and text, linkText, linkPage (UUID), badgeType (none|urgent|warning|success|info), badgeText. Footer: showFooter, footerText, footerButtonText, footerButtonPage (UUID).',
 
         // === CONTACT BLOCKS ===
         'team' => 'Team section with headline, description, and organisation.',
@@ -275,40 +275,42 @@ final class BlockTypeRegistry
             'description' => '<p>Choose from our specialized services.</p>',
             'cards' => [
                 [
+                    'type' => 'card',
                     'icon' => 'code',
                     'title' => 'Development',
                     'description' => '<p>Custom software development.</p>',
-                    'tags' => [['text' => 'PHP'], ['text' => 'Symfony']],
+                    'tags' => [['type' => 'tag', 'text' => 'PHP'], ['type' => 'tag', 'text' => 'Symfony']],
                     'linkText' => 'Learn more',
-                    'linkPage' => '/services/development',
+                    'linkPage' => 'page-uuid-here',
                     'badgeType' => 'none',
                     'badgeText' => '',
                 ],
                 [
+                    'type' => 'card',
                     'icon' => 'users',
                     'title' => 'Consulting',
                     'description' => '<p>Expert consulting services.</p>',
-                    'tags' => [['text' => 'Strategy']],
+                    'tags' => [['type' => 'tag', 'text' => 'Strategy']],
                     'linkText' => 'Get started',
-                    'linkPage' => '/services/consulting',
+                    'linkPage' => 'page-uuid-here',
                     'badgeType' => 'success',
                     'badgeText' => 'Popular',
                 ],
                 [
+                    'type' => 'card',
                     'icon' => 'rocket',
                     'title' => 'Training',
                     'description' => '<p>Professional training courses.</p>',
-                    'tags' => [['text' => 'Workshop']],
+                    'tags' => [['type' => 'tag', 'text' => 'Workshop']],
                     'linkText' => 'Book now',
-                    'linkPage' => '/services/training',
+                    'linkPage' => 'page-uuid-here',
                     'badgeType' => 'urgent',
                     'badgeText' => 'New',
                 ],
             ],
-            'showFooter' => true,
             'footerText' => 'Need help choosing?',
             'footerButtonText' => 'Contact Us',
-            'footerButtonPage' => '/contact',
+            'footerButtonPage' => 'page-uuid-here',
         ],
 
         // === CONTACT BLOCKS ===
@@ -480,9 +482,9 @@ final class BlockTypeRegistry
 
         // === CARD BLOCKS ===
         'card-trio' => [
-            'properties' => ['subline', 'headline', 'description', 'showFooter', 'footerText', 'footerButtonText', 'footerButtonPage'],
+            'properties' => ['subline', 'headline', 'description', 'footerText', 'footerButtonText', 'footerButtonPage'],
             'nested' => 'cards',
-            'nestedProperties' => ['icon', 'title', 'description', 'tags', 'linkText', 'linkPage', 'badgeType', 'badgeText'],
+            'nestedProperties' => ['type', 'icon', 'title', 'description', 'tags', 'linkText', 'linkPage', 'badgeType', 'badgeText'],
         ],
 
         // === CONTACT BLOCKS ===

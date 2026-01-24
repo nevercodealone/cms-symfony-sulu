@@ -211,13 +211,24 @@ final class BlockWriter
         string $nestedName,
         array $items,
         array $nestedProps,
+        ?string $defaultType = null,
     ): void {
         // Write length
         $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-length", (string) count($items), 'Long');
 
+        // Determine default type based on nested name
+        $typeDefault = $defaultType ?? match ($nestedName) {
+            'cards' => 'card',
+            'tags' => 'tag',
+            'faqs' => 'faq',
+            'rows' => 'row',
+            'flags' => 'flag',
+            default => 'items',
+        };
+
         foreach ($items as $itemIndex => $item) {
-            // Write type - default to 'items' if not specified (required by Sulu)
-            $itemType = $item['type'] ?? 'items';
+            // Write type
+            $itemType = $item['type'] ?? $typeDefault;
             $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-type#{$itemIndex}", $itemType);
 
             // Write settings
@@ -225,11 +236,74 @@ final class BlockWriter
 
             // Write all nested properties from schema
             foreach ($nestedProps as $propName) {
+                // Skip 'tags' - handled separately as nested block
+                if ($propName === 'tags') {
+                    continue;
+                }
+
                 // Map 'content' back to the original property name
                 $sourceKey = $this->mapContentToProperty($propName, $item);
                 if ($sourceKey !== null && isset($item[$sourceKey])) {
                     $value = $this->encodePropertyValue($propName, $item[$sourceKey]);
                     $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-{$propName}#{$itemIndex}", $value);
+                }
+            }
+
+            // Handle nested tags within cards (second-level nesting)
+            if (isset($item['tags']) && is_array($item['tags'])) {
+                $this->writeSecondLevelNestedItems(
+                    $xml,
+                    $rootNode,
+                    $prefix,
+                    $blockPosition,
+                    $nestedName,
+                    $itemIndex,
+                    'tags',
+                    $item['tags'],
+                    ['text'],
+                    'tag',
+                );
+            }
+        }
+    }
+
+    /**
+     * Write second-level nested items (e.g., tags within cards).
+     *
+     * @param array<int, array<string, mixed>> $items
+     * @param array<string> $nestedProps
+     */
+    private function writeSecondLevelNestedItems(
+        DOMDocument $xml,
+        DOMNode $rootNode,
+        string $prefix,
+        int $blockPosition,
+        string $parentNestedName,
+        int $parentItemIndex,
+        string $nestedName,
+        array $items,
+        array $nestedProps,
+        string $defaultType,
+    ): void {
+        // Property name format: i18n:de-blocks-cards#0-tags#0-length
+        $basePrefix = "{$prefix}-{$parentNestedName}#{$blockPosition}-{$nestedName}#{$parentItemIndex}";
+
+        // Write length
+        $this->addProperty($xml, $rootNode, "{$basePrefix}-length", (string) count($items), 'Long');
+
+        foreach ($items as $itemIndex => $item) {
+            // Write type
+            $itemType = $item['type'] ?? $defaultType;
+            $this->addProperty($xml, $rootNode, "{$basePrefix}-type#{$itemIndex}", $itemType);
+
+            // Write settings
+            $this->addProperty($xml, $rootNode, "{$basePrefix}-settings#{$itemIndex}", '[]');
+
+            // Write all nested properties
+            foreach ($nestedProps as $propName) {
+                if (isset($item[$propName])) {
+                    $value = $this->encodePropertyValue($propName, $item[$propName]);
+                    $this->addProperty($xml, $rootNode, "{$basePrefix}-{$propName}#{$itemIndex}", $value);
                 }
             }
         }
