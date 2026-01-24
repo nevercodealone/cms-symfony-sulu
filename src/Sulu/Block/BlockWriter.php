@@ -69,12 +69,26 @@ final class BlockWriter
             // Write all top-level properties from schema
             foreach ($schema['properties'] as $propName) {
                 if (isset($block[$propName])) {
-                    $value = $this->encodePropertyValue($propName, $block[$propName]);
-                    $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
+                    // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags)
+                    if (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
+                        $nestedProps = $this->registry->getNestedProperties($type);
+                        $this->writeNestedItems(
+                            $xml,
+                            $rootNode,
+                            $prefix,
+                            $position,
+                            $propName,
+                            $block[$propName],
+                            $nestedProps,
+                        );
+                    } else {
+                        $value = $this->encodePropertyValue($propName, $block[$propName]);
+                        $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
+                    }
                 }
             }
 
-            // Write nested items if block type has them
+            // Write nested items if block type has them (for blocks with single nested array)
             if ($this->registry->hasNested($type)) {
                 $nestedName = $this->registry->getNestedName($type);
                 $nestedProps = $this->registry->getNestedProperties($type);
@@ -316,19 +330,33 @@ final class BlockWriter
 
     /**
      * Map property key to PHPCR property name.
+     * Returns property name for any valid block property (schema-defined or common).
      */
     private function mapPropertyName(string $key, string $locale, int $position): ?string
     {
         $prefix = "i18n:{$locale}-blocks";
 
-        return match ($key) {
+        // Common properties and known property patterns
+        $knownProps = [
             'headline', 'description', 'subline', 'content', 'code', 'language',
             'image', 'url', 'buttonText', 'text', 'texttwo', 'urltwo',
             'buttonLink', 'buttonTextTwo', 'textone', 'texttwo',
             'columnheader1', 'columnheader2', 'columnheader3',
-            'pageurl1', 'pageurl2', 'playlistid', 'organisation', 'snippets' => "{$prefix}-{$key}#{$position}",
-            default => null,
-        };
+            'pageurl1', 'pageurl2', 'playlistid', 'organisation', 'snippets',
+            'descriptiontwo',
+        ];
+
+        // Check known properties
+        if (in_array($key, $knownProps, true)) {
+            return "{$prefix}-{$key}#{$position}";
+        }
+
+        // card-trio specific properties (card1*, card2*, card3*, footer*, showFooter)
+        if (preg_match('/^(card[123]|footer)/', $key) || $key === 'showFooter') {
+            return "{$prefix}-{$key}#{$position}";
+        }
+
+        return null;
     }
 
     /**
@@ -349,6 +377,21 @@ final class BlockWriter
         }
 
         return null;
+    }
+
+    /**
+     * Check if value is a nested array of items (e.g., tags array).
+     *
+     * @param array<mixed> $value
+     */
+    private function isNestedArray(array $value): bool
+    {
+        if (empty($value)) {
+            return false;
+        }
+        // Check if first element is an associative array (nested item)
+        $first = reset($value);
+        return is_array($first) && !array_is_list($first);
     }
 
     /**

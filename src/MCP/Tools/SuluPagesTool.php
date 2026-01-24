@@ -389,6 +389,24 @@ class SuluPagesTool implements StreamableToolInterface
             $block['urltwo'] = $arguments['urltwo'];
         }
 
+        // Pass all schema-defined properties for the block type
+        $schema = $this->blockTypeRegistry->getSchema($blockType);
+        if ($schema !== null) {
+            foreach ($schema['properties'] as $propName) {
+                if (isset($arguments[$propName]) && !isset($block[$propName])) {
+                    $value = $arguments[$propName];
+                    // Decode JSON strings for nested arrays (e.g., card1Tags)
+                    if (is_string($value) && str_starts_with($value, '[')) {
+                        $decoded = json_decode($value, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $value = $decoded;
+                        }
+                    }
+                    $block[$propName] = $value;
+                }
+            }
+        }
+
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
@@ -492,8 +510,28 @@ class SuluPagesTool implements StreamableToolInterface
             $blockData[$nestedKey] = $normalizedItems;
         }
 
+        // Pass all schema-defined properties for the block type
+        if ($blockType !== null) {
+            $schema = $this->blockTypeRegistry->getSchema($blockType);
+            if ($schema !== null) {
+                foreach ($schema['properties'] as $propName) {
+                    if (isset($arguments[$propName]) && !isset($blockData[$propName])) {
+                        $value = $arguments[$propName];
+                        // Decode JSON strings for nested arrays (e.g., card1Tags)
+                        if (is_string($value) && str_starts_with($value, '[')) {
+                            $decoded = json_decode($value, true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $value = $decoded;
+                            }
+                        }
+                        $blockData[$propName] = $value;
+                    }
+                }
+            }
+        }
+
         if (empty($blockData)) {
-            return new TextToolResult('Error: at least one of headline, content or items is required');
+            return new TextToolResult('Error: at least one of headline, content, items, or block-specific properties is required');
         }
 
         $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
