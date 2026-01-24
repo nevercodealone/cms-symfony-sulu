@@ -10,7 +10,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'nca': '#59d814'
+        'nca': '#166534'  // green-800
       },
       fontSize: {
         xl: ['1.25rem', '1.5'],
