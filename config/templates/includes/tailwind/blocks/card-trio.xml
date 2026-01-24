@@ -189,23 +189,23 @@
                         </types>
                     </block>
 
-                    <!-- Footer Section -->
-                    <section name="footerSection">
+                    <!-- CTA Section -->
+                    <section name="ctaSection">
                         <meta>
-                            <title>Footer</title>
+                            <title>CTA Section</title>
                         </meta>
                         <properties>
-                            <property name="footerText" type="text_line">
+                            <property name="ctaText" type="text_line">
                                 <meta>
-                                    <title>Footer Text</title>
+                                    <title>CTA Text</title>
                                 </meta>
                             </property>
-                            <property name="footerButtonText" type="text_line" colspan="6">
+                            <property name="ctaButtonText" type="text_line" colspan="6">
                                 <meta>
                                     <title>Button Text</title>
                                 </meta>
                             </property>
-                            <property name="footerButtonPage" type="single_page_selection" colspan="6">
+                            <property name="ctaButtonPage" type="single_page_selection" colspan="6">
                                 <meta>
                                     <title>Button Page</title>
                                 </meta>

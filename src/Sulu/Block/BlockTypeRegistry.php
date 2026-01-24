@@ -69,7 +69,7 @@ final class BlockTypeRegistry
         'excerpt-image' => 'Page excerpt with featured image.',
 
         // === CARD BLOCKS ===
-        'card-trio' => '1-3 card section with icons, badges, tags, and links. Uses cards[] array with type:"card", icon (code|users|cog|rocket|shield|heart|star|check|universal-access|microchip|bar-chart|lightbulb-o), title, description, tags[] with type:"tag" and text, linkText, linkPage (UUID), badgeType (none|urgent|warning|success|info), badgeText. Footer: showFooter, footerText, footerButtonText, footerButtonPage (UUID).',
+        'card-trio' => '1-3 card section with icons, badges, tags, and links. Header: subline, headline, description. Cards[]: type:"card", icon (code|users|cog|rocket|shield|heart|star|check|universal-access|microchip|bar-chart|lightbulb-o), title, description, tags[] with type:"tag" and text, linkText, linkPage (UUID), badgeType (none|urgent|warning|success|info), badgeText. CTA: ctaText, ctaButtonText, ctaButtonPage (UUID).',
 
         // === CONTACT BLOCKS ===
         'team' => 'Team section with headline, description, and organisation.',
@@ -308,9 +308,9 @@ final class BlockTypeRegistry
                     'badgeText' => 'New',
                 ],
             ],
-            'footerText' => 'Need help choosing?',
-            'footerButtonText' => 'Contact Us',
-            'footerButtonPage' => 'page-uuid-here',
+            'ctaText' => 'Need help choosing?',
+            'ctaButtonText' => 'Contact Us',
+            'ctaButtonPage' => 'page-uuid-here',
         ],
 
         // === CONTACT BLOCKS ===
@@ -482,7 +482,7 @@ final class BlockTypeRegistry
 
         // === CARD BLOCKS ===
         'card-trio' => [
-            'properties' => ['subline', 'headline', 'description', 'footerText', 'footerButtonText', 'footerButtonPage'],
+            'properties' => ['subline', 'headline', 'description', 'ctaText', 'ctaButtonText', 'ctaButtonPage'],
             'nested' => 'cards',
             'nestedProperties' => ['type', 'icon', 'title', 'description', 'tags', 'linkText', 'linkPage', 'badgeType', 'badgeText'],
         ],
