@@ -227,10 +227,21 @@ services:
             $httpCacheClearer: '@App\Sulu\Cache\HttpCacheClearer'
         public: true
 
+    # Sulu Snippet Service - Direct SQL for snippet operations
+    App\Sulu\Service\SnippetService:
+        public: true
+
+    # Sulu Media Service - Direct SQL for media operations
+    App\Sulu\Service\MediaService:
+        public: true
+
     # MCP Tools
     App\MCP\Tools\SuluPagesTool:
         arguments:
             $pageService: '@App\Sulu\Service\PageService'
+            $blockTypeRegistry: '@App\Sulu\Block\BlockTypeRegistry'
+            $snippetService: '@App\Sulu\Service\SnippetService'
+            $mediaService: '@App\Sulu\Service\MediaService'
         tags: ['klp_mcp_server.tool']
         public: true
 

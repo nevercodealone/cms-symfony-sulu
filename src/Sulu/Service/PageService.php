@@ -19,9 +19,39 @@ use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
+ *
+ * ARCHITECTURE DECISION - DO NOT REFACTOR TO USE DocumentManager:
+ * ===============================================================
+ * This service intentionally uses direct DBAL queries to read/write PHPCR XML
+ * instead of Sulu's DocumentManager. This is NOT legacy code to be "improved".
+ *
+ * WHY DIRECT DATABASE ACCESS:
+ * 1. MCP Server runs as long-lived process - DocumentManager has connection
+ *    timeout issues and entity manager state problems in long-running processes
+ * 2. DocumentManager requires complex event dispatching, workflows, and
+ *    subscriber chains that cause issues outside HTTP request context
+ * 3. Direct XML manipulation gives us precise control over block structure
+ *    without fighting Sulu's internal abstractions
+ * 4. Cache clearing via DocumentManager causes "MySQL server has gone away"
+ *    errors in MCP context (see commit c3657fa)
+ *
+ * WHAT NOT TO DO:
+ * - Don't try to replace Connection with DocumentManager for block operations
+ * - Don't add DocumentManager->flush() calls for block CRUD operations
+ * - Don't add DocumentManager->clear() for cache management
+ * - Don't wrap this in Sulu's PageDocument or StructureManager
+ *
+ * The only DocumentManager usage is deletePage() which requires it for proper
+ * cleanup of routes and search indexes - and even that is carefully isolated.
+ *
+ * @see BlockWriter For XML block writing logic
+ * @see BlockExtractor For XML block reading logic
  */
 class PageService
 {
+    private const WORKSPACE_DEFAULT = 'default';
+    private const WORKSPACE_LIVE = 'default_live';
+
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
     private BlockValidator $blockValidator;
@@ -84,26 +114,12 @@ class PageService
     }
 
     /**
-     * Clear DocumentManager cache to ensure Sulu Admin sees latest changes.
-     *
-     * When PageService updates phpcr_nodes directly via SQL, the DocumentManager's
-     * internal object cache becomes stale. Calling clear() forces the DocumentManager
-     * to re-read from the database on next find() call.
-     */
-    private function clearDocumentManagerCache(): void
-    {
-        if ($this->documentManager) {
-            $this->documentManager->clear();
-        }
-    }
-
-    /**
      * Get page UUID from database.
      */
     private function getPageUuid(string $path): ?string
     {
         $result = $this->connection->fetchAssociative(
-            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+            "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
             [$path]
         );
 
@@ -125,16 +141,28 @@ class PageService
     /**
      * List pages under a path prefix.
      *
-     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}>
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string}>
      */
     public function listPages(string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
     {
         $results = $this->connection->fetchAllAssociative(
             "SELECT path, props FROM phpcr_nodes
-             WHERE path LIKE ? AND workspace_name = 'default'
+             WHERE path LIKE ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'
              ORDER BY path",
             [$pathPrefix . '%']
         );
+
+        // Batch check which pages exist in live workspace
+        $livePaths = [];
+        if (!empty($results)) {
+            $paths = array_column($results, 'path');
+            $placeholders = implode(',', array_fill(0, count($paths), '?'));
+            $liveResults = $this->connection->fetchAllAssociative(
+                "SELECT path FROM phpcr_nodes WHERE path IN ({$placeholders}) AND workspace_name = ?",
+                [...$paths, self::WORKSPACE_LIVE]
+            );
+            $livePaths = array_flip(array_column($liveResults, 'path'));
+        }
 
         $pages = [];
         foreach ($results as $row) {
@@ -143,12 +171,17 @@ class PageService
             $url = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-url");
 
             if ($title !== null) {
+                $existsInLive = isset($livePaths[$row['path']]);
+                $pubMeta = $this->extractPublicationMeta($row['props'], $locale, $existsInLive);
+
                 $pages[] = [
                     'path' => $row['path'],
                     'url' => $url,
                     'fullUrl' => $url !== null ? '/' . $locale . $url : null,
                     'title' => $title,
                     'template' => $template ?? 'default',
+                    'published' => $pubMeta['published'],
+                    'state' => $pubMeta['state'],
                 ];
             }
         }
@@ -159,12 +192,12 @@ class PageService
     /**
      * Get page content including blocks.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null}|null
      */
     public function getPage(string $path, string $locale = 'de'): ?array
     {
         $result = $this->connection->fetchAssociative(
-            "SELECT path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+            "SELECT path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
             [$path]
         );
 
@@ -177,6 +210,10 @@ class PageService
         $url = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-url");
         $blocks = $this->extractBlocks($result['props'], $locale);
 
+        // Get publication metadata
+        $existsInLive = $this->isPagePublished($path);
+        $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $existsInLive);
+
         return [
             'path' => $result['path'],
             'url' => $url,
@@ -184,6 +221,11 @@ class PageService
             'title' => $title,
             'template' => $template,
             'blocks' => $blocks,
+            'published' => $pubMeta['published'],
+            'state' => $pubMeta['state'],
+            'publishedAt' => $pubMeta['publishedAt'],
+            'createdAt' => $pubMeta['createdAt'],
+            'modifiedAt' => $pubMeta['modifiedAt'],
         ];
     }
 
@@ -201,15 +243,15 @@ class PageService
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
     {
-        // Validate block data before proceeding
-        $validationError = $this->blockValidator->validateWithMessage($block);
+        // Validate block data before proceeding (includes path-based restrictions)
+        $validationError = $this->blockValidator->validateWithPath($block, $path);
         if ($validationError !== null) {
             return ['success' => false, 'message' => $validationError, 'position' => -1];
         }
 
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -218,7 +260,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -262,11 +304,11 @@ class PageService
             // Update both workspaces
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -283,8 +325,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $insertIndex];
 
@@ -358,7 +398,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -367,7 +407,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -451,11 +491,11 @@ class PageService
 
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -468,8 +508,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state (helps with caching issues)
             $updatedPage = $this->getPage($path, $locale);
@@ -496,7 +534,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -507,7 +545,7 @@ class PageService
             // Copy content to live workspace
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$result['props'], $path, 'default_live']
+                [$result['props'], $path, self::WORKSPACE_LIVE]
             );
 
             // Create route if it doesn't exist
@@ -522,8 +560,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
@@ -539,7 +575,7 @@ class PageService
     {
         // Extract UUID and URL from page props
         $xml = new \DOMDocument();
-        $xml->loadXML($pageProps);
+        $this->loadXmlSecurely($xml, $pageProps);
         $xpath = new \DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
@@ -562,7 +598,7 @@ class PageService
 
         // Check if route already exists
         $existing = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$routePath]
         );
 
@@ -573,7 +609,7 @@ class PageService
         // Get parent route node ID
         $parentPath = dirname($routePath);
         $parent = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$parentPath]
         );
 
@@ -581,7 +617,7 @@ class PageService
             // Create parent path recursively if needed
             $this->ensureRouteParentExists($parentPath, $locale);
             $parent = $this->connection->fetchAssociative(
-                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
                 [$parentPath]
             );
         }
@@ -611,7 +647,7 @@ class PageService
         // Insert route node
         $this->connection->executeStatement(
             "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
-            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            "VALUES (?, ?, ?, '', '" . self::WORKSPACE_LIVE . "', ?, 'nt:unstructured', ?, ?, ?)",
             [$routePath, $parentPath, $nodeName, $routeUuid, $routeProps, substr_count($routePath, '/'), 0]
         );
     }
@@ -622,7 +658,7 @@ class PageService
     private function ensureRouteParentExists(string $parentPath, string $locale): void
     {
         $existing = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$parentPath]
         );
 
@@ -637,7 +673,7 @@ class PageService
         }
 
         $parent = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
             [$grandparent]
         );
 
@@ -659,7 +695,7 @@ class PageService
 
         $this->connection->executeStatement(
             "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
-            "VALUES (?, ?, ?, '', 'default_live', ?, 'nt:unstructured', ?, ?, ?)",
+            "VALUES (?, ?, ?, '', '" . self::WORKSPACE_LIVE . "', ?, 'nt:unstructured', ?, ?, ?)",
             [$parentPath, $grandparent, $nodeName, $uuid, $props, substr_count($parentPath, '/'), 0]
         );
     }
@@ -709,7 +745,7 @@ class PageService
         try {
             // Get parent info from default workspace
             $parent = $this->connection->fetchAssociative(
-                "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$parentPath]
             );
 
@@ -729,7 +765,7 @@ class PageService
 
             // Check if page already exists
             $existing = $this->connection->fetchAssociative(
-                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -739,7 +775,7 @@ class PageService
 
             // Get next sort order
             $maxOrder = $this->connection->fetchOne(
-                "SELECT MAX(sort_order) FROM phpcr_nodes WHERE parent = ? AND workspace_name = 'default'",
+                "SELECT MAX(sort_order) FROM phpcr_nodes WHERE parent = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$parent['id']]
             );
             $sortOrder = ($maxOrder ?? 0) + 1;
@@ -749,7 +785,7 @@ class PageService
             $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish);
 
             // Insert into BOTH workspaces
-            foreach (['default', 'default_live'] as $workspace) {
+            foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
                 // Get parent ID for this workspace
                 $parentInWorkspace = $this->connection->fetchAssociative(
                     "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
@@ -783,8 +819,6 @@ class PageService
                 ]
             );
 
-            // Clear DocumentManager cache so Sulu Admin sees the new page
-            $this->clearDocumentManagerCache();
 
             return [
                 'success' => true,
@@ -879,7 +913,7 @@ class PageService
     {
         try {
             $xml = new DOMDocument();
-            $xml->loadXML($xmlString);
+            $this->loadXmlSecurely($xml, $xmlString);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -926,7 +960,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -935,7 +969,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -966,11 +1000,11 @@ class PageService
             // Update both workspaces for immediate visibility
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -983,8 +1017,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1074,7 +1106,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
                 [$path]
             );
 
@@ -1083,7 +1115,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -1154,11 +1186,11 @@ class PageService
             // Update both workspaces for immediate visibility
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default']
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
             );
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -1171,8 +1203,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1197,7 +1227,7 @@ class PageService
     {
         try {
             $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = 'default_live'",
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
                 [$path]
             );
 
@@ -1206,7 +1236,7 @@ class PageService
             }
 
             $xml = new DOMDocument();
-            $xml->loadXML($result['props']);
+            $this->loadXmlSecurely($xml, $result['props']);
 
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -1230,7 +1260,7 @@ class PageService
 
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, 'default_live']
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
             );
 
             $this->activityLogger->logMcpAction(
@@ -1242,8 +1272,6 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
-            // Clear DocumentManager cache so Sulu Admin sees the changes
-            $this->clearDocumentManagerCache();
 
             return ['success' => true, 'message' => 'Page unpublished successfully'];
 
@@ -1298,98 +1326,6 @@ class PageService
         }
     }
 
-    /**
-     * List available block types from template configuration.
-     *
-     * @return array<int, array{name: string, fields: array<string>}>
-     */
-    public function listBlockTypes(): array
-    {
-        // These are the common block types used in Sulu templates
-        return [
-            [
-                'name' => 'headline-paragraphs',
-                'fields' => ['headline', 'items'],
-                'description' => 'Headline with multiple paragraph items',
-            ],
-            [
-                'name' => 'hl-des',
-                'fields' => ['headline', 'description'],
-                'description' => 'Simple headline and description block',
-            ],
-            [
-                'name' => 'text',
-                'fields' => ['text'],
-                'description' => 'Rich text content block',
-            ],
-            [
-                'name' => 'image',
-                'fields' => ['image', 'alt', 'caption'],
-                'description' => 'Image with optional caption',
-            ],
-            [
-                'name' => 'code',
-                'fields' => ['code', 'language'],
-                'description' => 'Code snippet with syntax highlighting',
-            ],
-            [
-                'name' => 'quote',
-                'fields' => ['quote', 'author'],
-                'description' => 'Blockquote with attribution',
-            ],
-            [
-                'name' => 'video',
-                'fields' => ['url', 'title'],
-                'description' => 'Embedded video',
-            ],
-        ];
-    }
-
-    /**
-     * List available snippets from PHPCR.
-     *
-     * @return array<int, array{uuid: string, title: string, type: string, path: string}>
-     */
-    public function listSnippets(?string $snippetType = null, string $locale = 'de'): array
-    {
-        $pathPrefix = '/cmf/example/snippets';
-        if ($snippetType !== null) {
-            $pathPrefix .= '/' . $snippetType;
-        }
-
-        $results = $this->connection->fetchAllAssociative(
-            "SELECT path, identifier, props FROM phpcr_nodes
-             WHERE path LIKE ? AND workspace_name = 'default'
-             ORDER BY path",
-            [$pathPrefix . '%']
-        );
-
-        $snippets = [];
-        foreach ($results as $row) {
-            $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
-            $template = $this->extractPropertyFromXml($row['props'], 'template');
-
-            // Skip folder nodes (they don't have titles)
-            if ($title === null) {
-                continue;
-            }
-
-            // Extract snippet type from path: /cmf/example/snippets/contact/... -> contact
-            $pathParts = explode('/', $row['path']);
-            $type = $pathParts[4] ?? 'unknown';
-
-            $snippets[] = [
-                'uuid' => $row['identifier'],
-                'title' => $title,
-                'type' => $type,
-                'template' => $template ?? 'default',
-                'path' => $row['path'],
-            ];
-        }
-
-        return $snippets;
-    }
-
     // ==========================================================================
     // Page Discovery Methods
     // ==========================================================================
@@ -1397,7 +1333,7 @@ class PageService
     /**
      * Search pages by title (case-insensitive).
      *
-     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}>
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string}>
      */
     public function searchPages(string $query, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
     {
@@ -1412,7 +1348,7 @@ class PageService
     /**
      * Get page tree with hierarchical structure.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, children: array<mixed>}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string, children: array<mixed>}|null
      */
     public function getPageTree(string $rootPath, string $locale = 'de', int $depth = 2): ?array
     {
@@ -1482,7 +1418,7 @@ class PageService
     /**
      * Find page by frontend URL.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string}|null
      */
     public function findPageByUrl(string $url, string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): ?array
     {
@@ -1501,6 +1437,19 @@ class PageService
     }
 
     /**
+     * Load XML securely with XXE protection.
+     *
+     * Disables external entity loading to prevent XXE attacks.
+     */
+    private function loadXmlSecurely(DOMDocument $xml, string $xmlString): bool
+    {
+        $previousValue = libxml_use_internal_errors(true);
+        $result = $xml->loadXML($xmlString, LIBXML_NONET | LIBXML_NOENT);
+        libxml_use_internal_errors($previousValue);
+        return $result;
+    }
+
+    /**
      * Normalize URL by stripping locale prefix.
      */
     private function normalizeUrl(string $url, string $locale): string
@@ -1512,5 +1461,46 @@ class PageService
         }
 
         return $url;
+    }
+
+    /**
+     * Check if a page exists in the live workspace.
+     */
+    private function isPagePublished(string $path): bool
+    {
+        $result = $this->connection->fetchAssociative(
+            "SELECT 1 FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
+            [$path, self::WORKSPACE_LIVE]
+        );
+        return $result !== false;
+    }
+
+    /**
+     * Extract publication metadata from PHPCR XML properties.
+     *
+     * @return array{published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null}
+     */
+    private function extractPublicationMeta(string $props, string $locale, bool $existsInLive): array
+    {
+        $state = $this->extractPropertyFromXml($props, "i18n:{$locale}-state");
+        $publishedAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-published");
+        $createdAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-created");
+        $changedAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-changed");
+
+        // Determine state string
+        $stateValue = (int) ($state ?? 1);
+        $stateString = match (true) {
+            $stateValue === 2 && $existsInLive => 'published',
+            $publishedAt !== null => 'unpublished',  // Was published before
+            default => 'draft',
+        };
+
+        return [
+            'published' => $stateValue === 2 && $existsInLive,
+            'state' => $stateString,
+            'publishedAt' => $publishedAt,
+            'createdAt' => $createdAt,
+            'modifiedAt' => $changedAt,
+        ];
     }
 }

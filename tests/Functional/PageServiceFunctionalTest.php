@@ -103,7 +103,7 @@ class PageServiceFunctionalTest extends KernelTestCase
             'publish' => false,
         ], $this->testLocale);
 
-        $this->assertTrue($result['success'], 'Create page failed: ' . ($result['message'] ?? 'unknown error'));
+        $this->assertTrue($result['success'], 'Create page failed: ' . $result['message']);
         $this->testPagePath = $result['path'];
 
         echo "Created page at: {$this->testPagePath}\n";
@@ -459,11 +459,8 @@ class PageServiceFunctionalTest extends KernelTestCase
         // Try to find the document
         try {
             $document = $this->documentManager->find($this->testPagePath, $this->testLocale);
-            if ($document !== null) {
-                echo "✓ DocumentManager can find page after cache clear\n";
-            } else {
-                echo "✗ DocumentManager returned null\n";
-            }
+            echo "✓ DocumentManager can find page after cache clear\n";
+            $this->assertNotNull($document);
         } catch (\Exception $e) {
             echo "✗ DocumentManager error: " . $e->getMessage() . "\n";
         }

@@ -10,10 +10,370 @@ namespace App\Sulu\Block;
  * Hardcoded schemas matching XML configs in config/templates/includes/tailwind/blocks/*.xml
  * Using const array per Symfony best practices (constructor injection, no global state).
  *
+ * WHY HARDCODED SCHEMAS (NOT AUTO-GENERATED):
+ * ===========================================
+ * These schemas are intentionally hardcoded, not parsed from XML files.
+ *
+ * 1. MCP server needs instant access without file I/O on every request
+ * 2. Sulu's template XML format is complex with inheritance and includes
+ * 3. Schema rarely changes - manual sync is acceptable tradeoff
+ * 4. Allows adding MCP-specific metadata (e.g., nested key names)
+ *
+ * WHEN ADDING NEW BLOCK TYPES:
+ * - Add entry to SCHEMAS constant below
+ * - Match property names exactly from XML config
+ * - Note custom nested names: FAQ uses 'faqs', table uses 'rows', etc.
+ *
+ * DO NOT attempt to:
+ * - Auto-parse from config/templates/includes/tailwind/blocks/*.xml
+ * - Use Sulu's StructureMetadataFactory or similar
+ * - Generate at runtime from Sulu's ContentTypeManager
+ *
  * @see https://symfony.com/doc/current/best_practices.html
  */
 final class BlockTypeRegistry
 {
+    /**
+     * Human-readable descriptions of each block type for MCP documentation.
+     */
+    public const DESCRIPTIONS = [
+        // === CONTENT BLOCKS ===
+        'headline-paragraphs' => 'Primary block for tutorials with mixed text and code. Uses items[] array with type: description or code.',
+        'faq' => 'FAQ section with expandable questions/answers. Uses faqs[] array (NOT items).',
+        'code' => 'Standalone code snippet block with syntax highlighting.',
+        'introduction' => 'Page introduction with headline, two description fields, and optional items.',
+        'table' => 'Data table with 3 columns. Uses rows[] array (NOT items).',
+
+        // === HERO BLOCKS ===
+        'hero' => 'Full-width hero banner with image, headline, description, and CTA button.',
+        'hero-startpage' => 'Homepage hero with image, two text areas, description, and dual CTAs.',
+        'hero-image-right' => 'Hero with image on right side. Uses items[] for multiple CTAs.',
+        'heroslider' => 'Image slider with headline, description, and page links.',
+
+        // === CTA BLOCKS ===
+        'cta-button' => 'Call-to-action section with headline, description, and up to 2 buttons.',
+        'button' => 'Simple button with text and URL.',
+
+        // === FEATURE BLOCKS ===
+        'feature' => 'Feature showcase with subline, headline, description, and nested items.',
+        'feature-default' => 'Standard feature grid with headline, description, and items.',
+        'feature-with-icons' => 'Feature list with icons. Uses items[] with headline and text.',
+        'formats' => 'Format showcase with icons, headlines, and descriptions.',
+
+        // === IMAGE BLOCKS ===
+        'image' => 'Single image block.',
+        'image-gallery' => 'Image gallery with headline and description.',
+        'images-with-heading-and-description' => 'Image with overlay text.',
+        'image-with-flags' => 'Image with language flags. Uses flags[] array (NOT items).',
+        'logo-gallary' => 'Logo carousel/gallery. Uses items[] with headline, url, image.',
+        'excerpt-image' => 'Page excerpt with featured image.',
+
+        // === CARD BLOCKS ===
+        'card-trio' => '1-3 card section with icons, badges, tags, and links. Header: subline, headline, description. Cards[]: type:"card", icon (code|users|cog|rocket|shield|heart|star|check|universal-access|microchip|bar-chart|lightbulb-o), title, description, tags[] with type:"tag" and text, linkText, linkPage (UUID), badgeType (none|urgent|warning|success|info), badgeText. CTA: ctaText, ctaButtonText, ctaButtonPage (UUID).',
+
+        // === CONTACT BLOCKS ===
+        'team' => 'Team section with headline, description, and organisation.',
+        'consultant' => 'Consultant profile with organisation and description.',
+        'contact' => 'Contact block referencing snippets. Requires snippet UUIDs.',
+        'chat' => 'Chat/messaging CTA block.',
+
+        // === NAVIGATION BLOCKS ===
+        'highlights' => 'Content highlights referencing snippets.',
+        'related-content-by-page-tag' => 'Related content based on page tags.',
+        'subpages-overview' => 'List of child pages.',
+        'table-of-contents' => 'Auto-generated table of contents.',
+
+        // === EXTERNAL BLOCKS ===
+        'youtube-from-channel' => 'YouTube playlist embed from channel.',
+        'wordpressposts' => 'WordPress posts feed.',
+
+        // === LEGACY ===
+        'hl-des' => 'Simple headline and description block (legacy, prefer headline-paragraphs).',
+    ];
+
+    /**
+     * Example data structures for each block type.
+     * These show the correct format for creating blocks via MCP.
+     */
+    public const EXAMPLES = [
+        // === CONTENT BLOCKS ===
+        'headline-paragraphs' => [
+            'type' => 'headline-paragraphs',
+            'headline' => 'Tutorial Section',
+            'items' => [
+                ['type' => 'description', 'description' => '<p>Introduction text goes here.</p>'],
+                ['type' => 'code', 'code' => 'echo "Hello World";', 'language' => 'php'],
+                ['type' => 'description', 'description' => '<p>Explanation of the code above.</p>'],
+            ],
+        ],
+        'faq' => [
+            'type' => 'faq',
+            'faqs' => [
+                ['headline' => 'What is PHP?', 'subline' => '<p>PHP is a server-side scripting language.</p>'],
+                ['headline' => 'How do I install it?', 'subline' => '<p>Use apt-get install php on Ubuntu.</p>'],
+            ],
+        ],
+        'code' => [
+            'type' => 'code',
+            'description' => '<?php echo "Hello"; ?>',
+        ],
+        'introduction' => [
+            'type' => 'introduction',
+            'headline' => 'Welcome',
+            'description' => '<p>First paragraph.</p>',
+            'descriptiontwo' => '<p>Second paragraph.</p>',
+            'items' => [
+                ['description' => '<p>Item text.</p>'],
+            ],
+        ],
+        'table' => [
+            'type' => 'table',
+            'headline' => 'Comparison Table',
+            'description' => '<p>Overview of options.</p>',
+            'columnheader1' => 'Feature',
+            'columnheader2' => 'Option A',
+            'columnheader3' => 'Option B',
+            'rows' => [
+                ['cell1' => 'Price', 'cell2' => '$10', 'cell3' => '$20'],
+                ['cell1' => 'Support', 'cell2' => 'Email', 'cell3' => '24/7'],
+            ],
+        ],
+
+        // === HERO BLOCKS ===
+        'hero' => [
+            'type' => 'hero',
+            'image' => ['id' => 1],
+            'headline' => 'Hero Title',
+            'description' => '<p>Hero description text.</p>',
+            'buttonText' => 'Learn More',
+            'url' => '/page',
+        ],
+        'hero-startpage' => [
+            'type' => 'hero-startpage',
+            'image' => ['id' => 1],
+            'textone' => 'Main Headline',
+            'texttwo' => 'Subheadline',
+            'description' => '<p>Description</p>',
+            'buttonText' => 'Primary CTA',
+            'buttonLink' => '/primary',
+            'buttonTextTwo' => 'Secondary CTA',
+            'url' => '/secondary',
+        ],
+        'hero-image-right' => [
+            'type' => 'hero-image-right',
+            'image' => ['id' => 1],
+            'headline' => 'Feature Title',
+            'description' => '<p>Feature description.</p>',
+            'items' => [
+                ['headline' => 'CTA', 'text' => 'Description', 'buttonText' => 'Click', 'buttonLink' => '/link', 'url' => '/url'],
+            ],
+        ],
+        'heroslider' => [
+            'type' => 'heroslider',
+            'headline' => 'Slider Title',
+            'description' => '<p>Slider description.</p>',
+            'pageurl1' => '/page1',
+            'pageurl2' => '/page2',
+            'images' => [['id' => 1], ['id' => 2]],
+        ],
+
+        // === CTA BLOCKS ===
+        'cta-button' => [
+            'type' => 'cta-button',
+            'headline' => 'Ready to Start?',
+            'description' => '<p>Join us today.</p>',
+            'text' => 'Get Started',
+            'url' => '/signup',
+            'texttwo' => 'Learn More',
+            'urltwo' => '/about',
+        ],
+        'button' => [
+            'type' => 'button',
+            'buttonText' => 'Click Here',
+            'url' => '/destination',
+        ],
+
+        // === FEATURE BLOCKS ===
+        'feature' => [
+            'type' => 'feature',
+            'subline' => 'Our Features',
+            'headline' => 'Why Choose Us',
+            'description' => '<p>Feature overview.</p>',
+            'items' => [
+                ['headline' => 'Fast', 'description' => '<p>Lightning speed.</p>'],
+                ['headline' => 'Secure', 'description' => '<p>Bank-level security.</p>'],
+            ],
+        ],
+        'feature-default' => [
+            'type' => 'feature-default',
+            'headline' => 'Features',
+            'description' => '<p>What we offer.</p>',
+            'items' => [
+                ['headline' => 'Feature 1', 'description' => '<p>Description 1.</p>'],
+            ],
+        ],
+        'feature-with-icons' => [
+            'type' => 'feature-with-icons',
+            'headline' => 'Key Benefits',
+            'description' => '<p>Overview.</p>',
+            'items' => [
+                ['headline' => 'Benefit 1', 'text' => 'Description text'],
+            ],
+        ],
+        'formats' => [
+            'type' => 'formats',
+            'headline' => 'Available Formats',
+            'description' => '<p>Choose your format.</p>',
+            'items' => [
+                ['icon' => 'pdf', 'headline' => 'PDF', 'description' => '<p>Download as PDF.</p>'],
+            ],
+        ],
+
+        // === IMAGE BLOCKS ===
+        'image' => [
+            'type' => 'image',
+            'image' => ['id' => 1],
+        ],
+        'image-gallery' => [
+            'type' => 'image-gallery',
+            'headline' => 'Gallery',
+            'description' => '<p>Our work.</p>',
+            'image' => [['id' => 1], ['id' => 2], ['id' => 3]],
+        ],
+        'images-with-heading-and-description' => [
+            'type' => 'images-with-heading-and-description',
+            'image' => ['id' => 1],
+            'headline' => 'Image Title',
+            'description' => '<p>Image caption.</p>',
+        ],
+        'image-with-flags' => [
+            'type' => 'image-with-flags',
+            'headline' => 'Available Languages',
+            'image' => ['id' => 1],
+            'flags' => [
+                ['language' => 'en', 'url' => '/en'],
+                ['language' => 'de', 'url' => '/de'],
+            ],
+        ],
+        'logo-gallary' => [
+            'type' => 'logo-gallary',
+            'headline' => 'Our Partners',
+            'items' => [
+                ['headline' => 'Partner 1', 'url' => 'https://partner1.com', 'image' => ['id' => 1]],
+            ],
+        ],
+        'excerpt-image' => [
+            'type' => 'excerpt-image',
+            'headline' => 'Featured Content',
+        ],
+
+        // === CARD BLOCKS ===
+        'card-trio' => [
+            'type' => 'card-trio',
+            'subline' => 'Our Services',
+            'headline' => 'What We Offer',
+            'description' => '<p>Choose from our specialized services.</p>',
+            'cards' => [
+                [
+                    'type' => 'card',
+                    'icon' => 'code',
+                    'title' => 'Development',
+                    'description' => '<p>Custom software development.</p>',
+                    'tags' => [['type' => 'tag', 'text' => 'PHP'], ['type' => 'tag', 'text' => 'Symfony']],
+                    'linkText' => 'Learn more',
+                    'linkPage' => 'page-uuid-here',
+                    'badgeType' => 'none',
+                    'badgeText' => '',
+                ],
+                [
+                    'type' => 'card',
+                    'icon' => 'users',
+                    'title' => 'Consulting',
+                    'description' => '<p>Expert consulting services.</p>',
+                    'tags' => [['type' => 'tag', 'text' => 'Strategy']],
+                    'linkText' => 'Get started',
+                    'linkPage' => 'page-uuid-here',
+                    'badgeType' => 'success',
+                    'badgeText' => 'Popular',
+                ],
+                [
+                    'type' => 'card',
+                    'icon' => 'rocket',
+                    'title' => 'Training',
+                    'description' => '<p>Professional training courses.</p>',
+                    'tags' => [['type' => 'tag', 'text' => 'Workshop']],
+                    'linkText' => 'Book now',
+                    'linkPage' => 'page-uuid-here',
+                    'badgeType' => 'urgent',
+                    'badgeText' => 'New',
+                ],
+            ],
+            'ctaText' => 'Need help choosing?',
+            'ctaButtonText' => 'Contact Us',
+            'ctaButtonPage' => 'page-uuid-here',
+        ],
+
+        // === CONTACT BLOCKS ===
+        'team' => [
+            'type' => 'team',
+            'headline' => 'Our Team',
+            'description' => '<p>Meet the experts.</p>',
+            'organisation' => 'Example Company',
+        ],
+        'consultant' => [
+            'type' => 'consultant',
+            'organisation' => 'Consulting Firm',
+            'description' => '<p>Expert consulting services.</p>',
+        ],
+        'contact' => [
+            'type' => 'contact',
+            'snippets' => ['uuid-of-contact-snippet'],
+            'description' => '<p>Contact us.</p>',
+        ],
+        'chat' => [
+            'type' => 'chat',
+            'headline' => 'Need Help?',
+            'description' => '<p>Start a conversation.</p>',
+        ],
+
+        // === NAVIGATION BLOCKS ===
+        'highlights' => [
+            'type' => 'highlights',
+            'snippets' => ['uuid-of-highlight-snippet'],
+        ],
+        'related-content-by-page-tag' => [
+            'type' => 'related-content-by-page-tag',
+            'snippets' => ['uuid-of-tag-snippet'],
+        ],
+        'subpages-overview' => [
+            'type' => 'subpages-overview',
+            'items' => [],
+        ],
+        'table-of-contents' => [
+            'type' => 'table-of-contents',
+            'headline' => 'Contents',
+        ],
+
+        // === EXTERNAL BLOCKS ===
+        'youtube-from-channel' => [
+            'type' => 'youtube-from-channel',
+            'headline' => 'Our Videos',
+            'subline' => 'Watch and learn',
+            'playlistid' => 'PLxxxxxxxx',
+        ],
+        'wordpressposts' => [
+            'type' => 'wordpressposts',
+            'headline' => 'Latest Blog Posts',
+        ],
+
+        // === LEGACY ===
+        'hl-des' => [
+            'type' => 'hl-des',
+            'headline' => 'Section Title',
+            'description' => '<p>Section content.</p>',
+        ],
+    ];
+
     /**
      * Block type schemas with properties and nested blocks.
      *
@@ -118,6 +478,13 @@ final class BlockTypeRegistry
         ],
         'excerpt-image' => [
             'properties' => ['headline'],
+        ],
+
+        // === CARD BLOCKS ===
+        'card-trio' => [
+            'properties' => ['subline', 'headline', 'description', 'ctaText', 'ctaButtonText', 'ctaButtonPage'],
+            'nested' => 'cards',
+            'nestedProperties' => ['type', 'icon', 'title', 'description', 'tags', 'linkText', 'linkPage', 'badgeType', 'badgeText'],
         ],
 
         // === CONTACT BLOCKS ===
@@ -232,5 +599,43 @@ final class BlockTypeRegistry
     public function count(): int
     {
         return count(self::SCHEMAS);
+    }
+
+    /**
+     * Get human-readable description of a block type.
+     */
+    public function getDescription(string $type): ?string
+    {
+        return self::DESCRIPTIONS[$type] ?? null;
+    }
+
+    /**
+     * Get example data structure for a block type.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getExample(string $type): ?array
+    {
+        return self::EXAMPLES[$type] ?? null;
+    }
+
+    /**
+     * Get all descriptions.
+     *
+     * @return array<string, string>
+     */
+    public function getAllDescriptions(): array
+    {
+        return self::DESCRIPTIONS;
+    }
+
+    /**
+     * Get all examples.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getAllExamples(): array
+    {
+        return self::EXAMPLES;
     }
 }

@@ -2,28 +2,97 @@
 
 > This file helps LLMs correctly use the Sulu CMS API.
 
+---
+
+## ARCHITECTURE WARNING - READ FIRST
+
+**This MCP server uses DIRECT DATABASE ACCESS intentionally. DO NOT suggest refactoring to use Sulu's DocumentManager.**
+
+### Why Direct Database (DBAL) Instead of DocumentManager?
+
+1. **Long-running process**: MCP server runs continuously. DocumentManager causes "MySQL server has gone away" errors and entity state corruption in long-lived processes.
+
+2. **Connection timeouts**: DocumentManager's internal connection pooling doesn't handle connection drops gracefully. Direct DBAL reconnects automatically.
+
+3. **Event dispatcher conflicts**: DocumentManager triggers Sulu's event system (subscribers, workflows) which expects HTTP request context that doesn't exist in MCP.
+
+4. **Cache clearing issues**: `$documentManager->clear()` causes connection errors. We tried it, rolled it back (see commit c3657fa).
+
+### What NOT to Suggest
+
+- "Use DocumentManager instead of raw SQL" - NO, it breaks in MCP context
+- "Use PageDocument for cleaner code" - NO, same issues
+- "Flush via DocumentManager" - NO, causes connection errors
+- "Clear DocumentManager cache" - NO, causes "server gone away" errors
+- "Use StructureBridge" - NO, requires event dispatching
+
+### What IS Correct
+
+- Direct `$connection->fetchAssociative()` queries to `phpcr_nodes` table
+- XML manipulation via DOMDocument/DOMXPath for block CRUD
+- BlockWriter/BlockExtractor classes for PHPCR XML handling
+- Manual cache invalidation via HttpCacheClearer
+
+### Code Locations
+
+| File | Purpose |
+|------|---------|
+| `src/Sulu/Service/PageService.php` | Page CRUD operations - direct DB queries |
+| `src/Sulu/Service/SnippetService.php` | Snippet listing - direct DB queries |
+| `src/Sulu/Service/MediaService.php` | Media listing/search - direct DB queries |
+| `src/Sulu/Block/BlockWriter.php` | Writes blocks to PHPCR XML |
+| `src/Sulu/Block/BlockExtractor.php` | Reads blocks from PHPCR XML |
+| `src/Sulu/Block/BlockTypeRegistry.php` | Block schemas, descriptions & examples |
+| `src/Sulu/Block/BlockValidator.php` | Validates blocks before write |
+| `src/MCP/Tools/SuluPagesTool.php` | MCP tool exposing all actions |
+
+### Service Separation Architecture
+
+The MCP server follows Single Responsibility Principle with focused services:
+
+```
+src/Sulu/
+├── Service/
+│   ├── PageService.php          # Page CRUD only
+│   ├── MediaService.php         # Media listing/search
+│   └── SnippetService.php       # Snippet operations
+├── Block/
+│   ├── BlockTypeRegistry.php    # Schemas + descriptions + examples
+│   ├── BlockExtractor.php       # XML reading
+│   ├── BlockWriter.php          # XML writing
+│   └── BlockValidator.php       # Validation
+```
+
+---
+
 ## Overview
 
 The Sulu MCP Server enables managing CMS pages via these actions:
 
 ### Page Discovery
-- `sulu-page-search` - Search pages by title (case-insensitive)
-- `sulu-page-tree` - Get hierarchical page tree structure
-- `sulu-page-find-by-url` - Find page by frontend URL
-- `sulu-page-list` - List all pages under a path
+- `list` - List all pages under a path
+- `get` - Get page with all blocks
+- `search` - Search pages by title (case-insensitive)
+- `tree` - Get hierarchical page tree structure
+- `find_by_url` - Find page by frontend URL
 
 ### Page Management
-- `sulu-page-get` - Get page with all blocks
-- `sulu-page-create` - Create a new page
-- `sulu-page-publish` - Publish page
-- `sulu-page-unpublish` - Unpublish page
+- `create_page` - Create a new page
+- `publish` - Publish page
+- `unpublish` - Unpublish page
 
 ### Block Management
-- `sulu-block-add` - Add a block
-- `sulu-block-update` - Update a block
-- `sulu-block-move` - Move a block
-- `sulu-block-remove` - Remove a block
-- `sulu-block-types` - List available block types
+- `add_block` - Add a block
+- `update_block` - Update a block
+- `append_to_block` - Append items to existing block
+- `move_block` - Move a block
+- `remove_block` - Remove a block
+- `list_block_types` - List all 33 block types with descriptions & examples
+- `get_block_schema` - Get detailed schema for a specific block type
+
+### Media & Snippets
+- `list_media` - Search/list media with pagination
+- `list_snippets` - List snippets with diagnostic info
 
 ## Page Discovery
 
@@ -96,7 +165,7 @@ Create new pages under an existing parent path.
 
 ---
 
-## Block Type User Stories (32 Types)
+## Block Type User Stories (33 Types)
 
 **As a content editor**, understand what each block accomplishes:
 
@@ -125,6 +194,11 @@ Create new pages under an existing parent path.
 | **feature-with-icons** | I want features with nested icon bullet lists |
 | **formats** | I want to display format options with selectable icons (user/newsletter/github) |
 
+### Card Blocks
+| Block | User Story |
+|-------|-----------|
+| **card-trio** | I want to display 3 service/feature cards with icons, badges, tags, and internal page links |
+
 ### Contact Blocks
 | Block | User Story |
 |-------|-----------|
@@ -142,7 +216,7 @@ Create new pages under an existing parent path.
 
 ---
 
-## Complete Block Type Reference (32 Types)
+## Complete Block Type Reference (33 Types)
 
 All blocks are defined in `config/templates/includes/tailwind/blocks/*.xml` and render via `templates/includes/tailwind/blocks/*.html.twig`.
 
@@ -624,9 +698,61 @@ Displays page excerpt image with headline.
 
 ---
 
+### CARD BLOCKS
+
+#### 32. card-trio (1-3 Card Section)
+
+Card section with 1-3 cards featuring icons, badges, tags, and internal page links. Uses nested `cards[]` array.
+
+**XML:** `config/templates/includes/tailwind/blocks/card-trio.xml`
+**Twig:** `templates/includes/tailwind/blocks/card-trio.html.twig`
+
+**Top-Level Properties:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `subline` | text_line | Small text above headline (green) |
+| `headline` | text_line | Main heading |
+| `description` | text_editor | Section description |
+| `footerText` | text_line | Footer text |
+| `footerButtonText` | text_line | Footer button text |
+| `footerButtonPage` | single_page_selection | Footer button page link (UUID) |
+
+**Nested `cards[]` Properties (1-3 cards, type: "card"):**
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | string | Must be "card" |
+| `icon` | single_select | code, users, cog, bar-chart, lightbulb-o, rocket, shield, heart, star, check, universal-access, microchip |
+| `title` | text_line | Card title |
+| `description` | text_editor | Card description |
+| `tags[]` | nested block | Tags (0-5 items with `type:"tag"` and `text`) |
+| `linkText` | text_line | Link text (e.g., "Learn more") |
+| `linkPage` | single_page_selection | Internal page link (UUID) |
+| `badgeType` | single_select | none, urgent, warning, success, info |
+| `badgeText` | text_line | Badge text (e.g., "New") |
+
+**Badge Colors:**
+- `urgent` - Red
+- `warning` - Amber
+- `success` - Green
+- `info` - Blue
+
+**MCP Example:**
+```json
+{
+  "action": "add_block",
+  "path": "/cmf/example/contents/my-page",
+  "blockType": "card-trio",
+  "headline": "What We Offer",
+  "items": "[{\"type\":\"card\",\"icon\":\"code\",\"title\":\"Development\",\"description\":\"<p>Custom software.</p>\",\"tags\":[{\"type\":\"tag\",\"text\":\"PHP\"},{\"type\":\"tag\",\"text\":\"Symfony\"}],\"linkText\":\"Learn more\",\"linkPage\":\"page-uuid\",\"badgeType\":\"success\",\"badgeText\":\"Popular\"},{\"type\":\"card\",\"icon\":\"users\",\"title\":\"Consulting\",\"description\":\"<p>Expert advice.</p>\",\"tags\":[],\"linkText\":\"Get started\",\"linkPage\":\"page-uuid\",\"badgeType\":\"none\"}]",
+  "locale": "de"
+}
+```
+
+---
+
 ### CONTACT & TEAM BLOCKS
 
-#### 22. team (Team Members)
+#### 33. team (Team Members)
 
 Team member grid from contact accounts.
 
@@ -789,6 +915,7 @@ Fetches and displays WordPress posts.
 | **Hero** | hero, hero-startpage, hero-image-right, heroslider |
 | **CTA** | cta-button, button |
 | **Feature** | feature, feature-default, feature-with-icons, formats |
+| **Card** | card-trio |
 | **Image** | image, image-gallery, images-with-heading-and-description, image-with-flags, logo-gallary, excerpt-image |
 | **Contact** | team, consultant, contact, chat |
 | **Navigation** | highlights, related-content-by-page-tag, subpages-overview, table-of-contents |
@@ -826,7 +953,146 @@ Fetches and displays WordPress posts.
 
 ---
 
+## Media & Snippet Actions
+
+### list_media Action
+
+Search and list media files from Sulu's media library.
+
+```json
+{
+  "action": "list_media",
+  "search": "logo",
+  "collectionId": 1,
+  "locale": "de",
+  "limit": 50,
+  "offset": 0
+}
+```
+
+Response:
+```json
+{
+  "media": [
+    {
+      "id": 42,
+      "title": "Company Logo",
+      "filename": "logo.png",
+      "mimeType": "image/png",
+      "size": 12345,
+      "collectionId": 1
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+Use media IDs in blocks:
+```json
+{
+  "blockType": "image",
+  "image": {"id": 42}
+}
+```
+
+### list_snippets Action
+
+List snippets with diagnostic information when empty.
+
+```json
+{
+  "action": "list_snippets",
+  "snippetType": "contact",
+  "locale": "de"
+}
+```
+
+Response (with snippets):
+```json
+{
+  "snippets": [
+    {
+      "uuid": "abc-123-def",
+      "title": "Main Contact",
+      "type": "contact",
+      "template": "contact",
+      "path": "/cmf/example/snippets/contact/main"
+    }
+  ]
+}
+```
+
+Response (no snippets - with diagnostic):
+```json
+{
+  "snippets": [],
+  "diagnostic": {
+    "searched_path": "/cmf/example/snippets/contact",
+    "workspaces_checked": ["default", "default_live"],
+    "hint": "No snippets found at this path. Create snippets in Sulu admin under 'Snippets' section."
+  }
+}
+```
+
+### get_block_schema Action
+
+Get detailed schema for a specific block type including description and example.
+
+```json
+{
+  "action": "get_block_schema",
+  "blockTypeName": "faq"
+}
+```
+
+Response:
+```json
+{
+  "name": "faq",
+  "properties": [],
+  "nested": "faqs",
+  "nestedProperties": ["headline", "subline"],
+  "description": "FAQ section with expandable questions/answers. Uses faqs[] array (NOT items).",
+  "example": {
+    "type": "faq",
+    "faqs": [
+      {"headline": "What is PHP?", "subline": "<p>PHP is a server-side scripting language.</p>"}
+    ]
+  }
+}
+```
+
+### list_block_types Action
+
+List all 32 block types with full documentation.
+
+```json
+{
+  "action": "list_block_types"
+}
+```
+
+Response includes for each type:
+- `name` - Block type identifier
+- `properties` - Top-level properties
+- `nested` - Name of nested array (e.g., 'items', 'faqs', 'rows')
+- `nestedProperties` - Properties within nested items
+- `description` - Human-readable description
+- `example` - Complete example data structure
+
+---
+
 ## Common Mistakes to Avoid
+
+### Mistake 0: Using hl-des on non-training pages
+```json
+{"blockType": "hl-des", "path": "/cmf/example/contents/glossare/php"}
+```
+**Error:** `Block type 'hl-des' is only allowed on /training/* pages. Use 'headline-description' or 'headline-paragraphs' instead.`
+
+**Fix:** Use `headline-paragraphs` for glossar, blog, and other content pages. `hl-des` is restricted to `/training/*` pages only.
 
 ### Mistake 1: Using wrong nested block name for FAQ
 ```json

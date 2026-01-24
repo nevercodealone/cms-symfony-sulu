@@ -1,0 +1,219 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="card-trio">
+        <types>
+            <type name="card-trio">
+                <meta>
+                    <title>Card Trio</title>
+                </meta>
+                <properties>
+                    <!-- Header Section -->
+                    <property name="subline" type="text_line">
+                        <meta>
+                            <title>Subline</title>
+                        </meta>
+                    </property>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <property name="description" type="text_editor">
+                        <meta>
+                            <title>Description</title>
+                        </meta>
+                        <params>
+                            <param name="table" value="false"/>
+                            <param name="link" value="true"/>
+                        </params>
+                    </property>
+
+                    <!-- Cards (1-3) -->
+                    <block name="cards" default-type="card" minOccurs="1" maxOccurs="3">
+                        <meta>
+                            <title>Cards</title>
+                        </meta>
+                        <types>
+                            <type name="card">
+                                <meta>
+                                    <title>Card</title>
+                                </meta>
+                                <properties>
+                                    <property name="icon" type="single_select">
+                                        <meta>
+                                            <title>Icon</title>
+                                        </meta>
+                                        <params>
+                                            <param name="default_value" value="code"/>
+                                            <param name="values" type="collection">
+                                                <param name="code">
+                                                    <meta><title>Code</title></meta>
+                                                </param>
+                                                <param name="users">
+                                                    <meta><title>Users</title></meta>
+                                                </param>
+                                                <param name="cog">
+                                                    <meta><title>Cog</title></meta>
+                                                </param>
+                                                <param name="bar-chart">
+                                                    <meta><title>Bar Chart</title></meta>
+                                                </param>
+                                                <param name="lightbulb-o">
+                                                    <meta><title>Lightbulb</title></meta>
+                                                </param>
+                                                <param name="rocket">
+                                                    <meta><title>Rocket</title></meta>
+                                                </param>
+                                                <param name="shield">
+                                                    <meta><title>Shield</title></meta>
+                                                </param>
+                                                <param name="heart">
+                                                    <meta><title>Heart</title></meta>
+                                                </param>
+                                                <param name="star">
+                                                    <meta><title>Star</title></meta>
+                                                </param>
+                                                <param name="check">
+                                                    <meta><title>Check</title></meta>
+                                                </param>
+                                                <param name="universal-access">
+                                                    <meta><title>Accessibility</title></meta>
+                                                </param>
+                                                <param name="microchip">
+                                                    <meta><title>Microchip</title></meta>
+                                                </param>
+                                                <param name="robot">
+                                                    <meta><title>Robot</title></meta>
+                                                </param>
+                                                <param name="graduation-cap">
+                                                    <meta><title>Graduation Cap</title></meta>
+                                                </param>
+                                                <param name="shield-halved">
+                                                    <meta><title>Shield Halved</title></meta>
+                                                </param>
+                                                <param name="gears">
+                                                    <meta><title>Gears</title></meta>
+                                                </param>
+                                                <param name="wand-magic-sparkles">
+                                                    <meta><title>Magic Wand</title></meta>
+                                                </param>
+                                                <param name="pen-nib">
+                                                    <meta><title>Pen Nib</title></meta>
+                                                </param>
+                                                <param name="chart-line">
+                                                    <meta><title>Chart Line</title></meta>
+                                                </param>
+                                            </param>
+                                        </params>
+                                    </property>
+                                    <property name="title" type="text_line">
+                                        <meta>
+                                            <title>Title</title>
+                                        </meta>
+                                    </property>
+                                    <property name="description" type="text_editor">
+                                        <meta>
+                                            <title>Description</title>
+                                        </meta>
+                                        <params>
+                                            <param name="table" value="false"/>
+                                            <param name="link" value="true"/>
+                                        </params>
+                                    </property>
+                                    <block name="tags" default-type="tag" minOccurs="0" maxOccurs="5">
+                                        <meta>
+                                            <title>Tags</title>
+                                        </meta>
+                                        <types>
+                                            <type name="tag">
+                                                <meta>
+                                                    <title>Tag</title>
+                                                </meta>
+                                                <properties>
+                                                    <property name="text" type="text_line">
+                                                        <meta>
+                                                            <title>Text</title>
+                                                        </meta>
+                                                    </property>
+                                                </properties>
+                                            </type>
+                                        </types>
+                                    </block>
+                                    <property name="linkText" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Link Text</title>
+                                        </meta>
+                                    </property>
+                                    <property name="linkPage" type="single_page_selection" colspan="6">
+                                        <meta>
+                                            <title>Link Page</title>
+                                        </meta>
+                                    </property>
+                                    <property name="badgeType" type="single_select" colspan="6">
+                                        <meta>
+                                            <title>Badge Type</title>
+                                        </meta>
+                                        <params>
+                                            <param name="default_value" value="none"/>
+                                            <param name="values" type="collection">
+                                                <param name="none">
+                                                    <meta><title>None</title></meta>
+                                                </param>
+                                                <param name="urgent">
+                                                    <meta><title>Urgent (Red)</title></meta>
+                                                </param>
+                                                <param name="warning">
+                                                    <meta><title>Warning (Amber)</title></meta>
+                                                </param>
+                                                <param name="success">
+                                                    <meta><title>Success (Green)</title></meta>
+                                                </param>
+                                                <param name="info">
+                                                    <meta><title>Info (Blue)</title></meta>
+                                                </param>
+                                            </param>
+                                        </params>
+                                    </property>
+                                    <property name="badgeText" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Badge Text</title>
+                                        </meta>
+                                    </property>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
+
+                    <!-- CTA Section -->
+                    <section name="ctaSection">
+                        <meta>
+                            <title>CTA Section</title>
+                        </meta>
+                        <properties>
+                            <property name="ctaText" type="text_line">
+                                <meta>
+                                    <title>CTA Text</title>
+                                </meta>
+                            </property>
+                            <property name="ctaButtonText" type="text_line" colspan="6">
+                                <meta>
+                                    <title>Button Text</title>
+                                </meta>
+                            </property>
+                            <property name="ctaButtonPage" type="single_page_selection" colspan="6">
+                                <meta>
+                                    <title>Button Page</title>
+                                </meta>
+                            </property>
+                        </properties>
+                    </section>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
