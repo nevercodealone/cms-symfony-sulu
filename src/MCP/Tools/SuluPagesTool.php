@@ -362,6 +362,19 @@ class SuluPagesTool implements StreamableToolInterface
                 'headline' => $headline,
                 $nestedKey => $normalizedItems,
             ];
+
+            // Also merge flat properties from content parameter if provided
+            $content = $arguments['content'] ?? '';
+            if (!empty($content)) {
+                $decoded = json_decode($content, true);
+                if (is_array($decoded) && !isset($decoded[0])) {
+                    foreach ($decoded as $key => $value) {
+                        if (!isset($block[$key])) {
+                            $block[$key] = $value;
+                        }
+                    }
+                }
+            }
         } else {
             // Fallback: use simple content parameter or JSON object with flat properties
             $content = $arguments['content'] ?? '';

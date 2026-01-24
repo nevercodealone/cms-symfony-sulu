@@ -162,6 +162,29 @@ final class BlockExtractor
                 $item['settings'] = json_decode($settings, true) ?? [];
             }
 
+            // Extract second-level nested items (e.g., tags within cards)
+            $tagsLength = $this->getIntProperty($xpath, "{$prefix}-{$nestedName}#{$blockPosition}-tags#{$j}-length");
+            if ($tagsLength > 0) {
+                $tags = [];
+                for ($k = 0; $k < $tagsLength; $k++) {
+                    $tag = [];
+                    $tagType = $this->getProperty($xpath, "{$prefix}-{$nestedName}#{$blockPosition}-tags#{$j}-type#{$k}");
+                    if ($tagType !== null) {
+                        $tag['type'] = $tagType;
+                    }
+                    $tagText = $this->getProperty($xpath, "{$prefix}-{$nestedName}#{$blockPosition}-tags#{$j}-text#{$k}");
+                    if ($tagText !== null) {
+                        $tag['text'] = $tagText;
+                    }
+                    if (!empty($tag)) {
+                        $tags[] = $tag;
+                    }
+                }
+                if (!empty($tags)) {
+                    $item['tags'] = $tags;
+                }
+            }
+
             if (!empty($item)) {
                 $items[] = $item;
             }
