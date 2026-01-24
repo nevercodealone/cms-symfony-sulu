@@ -87,7 +87,7 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 - `append_to_block` - Append items to existing block
 - `move_block` - Move a block
 - `remove_block` - Remove a block
-- `list_block_types` - List all 32 block types with descriptions & examples
+- `list_block_types` - List all 33 block types with descriptions & examples
 - `get_block_schema` - Get detailed schema for a specific block type
 
 ### Media & Snippets
@@ -165,7 +165,7 @@ Create new pages under an existing parent path.
 
 ---
 
-## Block Type User Stories (32 Types)
+## Block Type User Stories (33 Types)
 
 **As a content editor**, understand what each block accomplishes:
 
@@ -194,6 +194,11 @@ Create new pages under an existing parent path.
 | **feature-with-icons** | I want features with nested icon bullet lists |
 | **formats** | I want to display format options with selectable icons (user/newsletter/github) |
 
+### Card Blocks
+| Block | User Story |
+|-------|-----------|
+| **card-trio** | I want to display 3 service/feature cards with icons, badges, tags, and internal page links |
+
 ### Contact Blocks
 | Block | User Story |
 |-------|-----------|
@@ -211,7 +216,7 @@ Create new pages under an existing parent path.
 
 ---
 
-## Complete Block Type Reference (32 Types)
+## Complete Block Type Reference (33 Types)
 
 All blocks are defined in `config/templates/includes/tailwind/blocks/*.xml` and render via `templates/includes/tailwind/blocks/*.html.twig`.
 
@@ -693,9 +698,62 @@ Displays page excerpt image with headline.
 
 ---
 
+### CARD BLOCKS
+
+#### 32. card-trio (Three-Card Section)
+
+Three-card section with icons, badges, tags, and internal page links.
+
+**XML:** `config/templates/includes/tailwind/blocks/card-trio.xml`
+**Twig:** `templates/includes/tailwind/blocks/card-trio.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `subline` | text_line | Small text above headline (green) |
+| `headline` | text_line | Main heading |
+| `description` | text_editor | Section description |
+| `card1Icon` | single_select | FA icon: code, users, cog, bar-chart, lightbulb-o, rocket, shield, heart, star, check |
+| `card1Title` | text_line | Card title |
+| `card1Description` | text_editor | Card description |
+| `card1Tags[]` | nested block | Tags (0-5 items with `text`) |
+| `card1LinkText` | text_line | Link text (e.g., "Learn more") |
+| `card1LinkPage` | single_page_selection | Internal page link |
+| `card1BadgeType` | single_select | Badge: none, urgent, warning, success, info |
+| `card1BadgeText` | text_line | Badge text (e.g., "New") |
+| `card2*`, `card3*` | ... | Same properties for cards 2 and 3 |
+| `showFooter` | checkbox | Show footer section |
+| `footerText` | text_line | Footer text |
+| `footerButtonText` | text_line | Footer button text |
+| `footerButtonPage` | single_page_selection | Footer button page link |
+
+**Badge Colors:**
+- `urgent` - Red with pulse animation
+- `warning` - Amber
+- `success` - Green
+- `info` - Blue
+
+```json
+{
+  "blockType": "card-trio",
+  "subline": "Our Services",
+  "headline": "What We Offer",
+  "description": "<p>Choose from our services.</p>",
+  "card1Icon": "code",
+  "card1Title": "Development",
+  "card1Description": "<p>Custom software.</p>",
+  "card1Tags": "[{\"text\":\"PHP\"},{\"text\":\"Symfony\"}]",
+  "card1LinkText": "Learn more",
+  "card1LinkPage": "/services/development",
+  "card1BadgeType": "success",
+  "card1BadgeText": "Popular"
+}
+```
+
+---
+
 ### CONTACT & TEAM BLOCKS
 
-#### 22. team (Team Members)
+#### 33. team (Team Members)
 
 Team member grid from contact accounts.
 
@@ -858,6 +916,7 @@ Fetches and displays WordPress posts.
 | **Hero** | hero, hero-startpage, hero-image-right, heroslider |
 | **CTA** | cta-button, button |
 | **Feature** | feature, feature-default, feature-with-icons, formats |
+| **Card** | card-trio |
 | **Image** | image, image-gallery, images-with-heading-and-description, image-with-flags, logo-gallary, excerpt-image |
 | **Contact** | team, consultant, contact, chat |
 | **Navigation** | highlights, related-content-by-page-tag, subpages-overview, table-of-contents |

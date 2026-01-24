@@ -68,6 +68,9 @@ final class BlockTypeRegistry
         'logo-gallary' => 'Logo carousel/gallery. Uses items[] with headline, url, image.',
         'excerpt-image' => 'Page excerpt with featured image.',
 
+        // === CARD BLOCKS ===
+        'card-trio' => 'Three-card section with icons, badges, tags, and internal links. Cards have icon, title, description, tags[], linkText, linkPage, badgeType, badgeText.',
+
         // === CONTACT BLOCKS ===
         'team' => 'Team section with headline, description, and organisation.',
         'consultant' => 'Consultant profile with organisation and description.',
@@ -264,6 +267,42 @@ final class BlockTypeRegistry
             'headline' => 'Featured Content',
         ],
 
+        // === CARD BLOCKS ===
+        'card-trio' => [
+            'type' => 'card-trio',
+            'subline' => 'Our Services',
+            'headline' => 'What We Offer',
+            'description' => '<p>Choose from our specialized services.</p>',
+            'card1Icon' => 'code',
+            'card1Title' => 'Development',
+            'card1Description' => '<p>Custom software development.</p>',
+            'card1Tags' => [['text' => 'PHP'], ['text' => 'Symfony']],
+            'card1LinkText' => 'Learn more',
+            'card1LinkPage' => '/services/development',
+            'card1BadgeType' => 'none',
+            'card1BadgeText' => '',
+            'card2Icon' => 'users',
+            'card2Title' => 'Consulting',
+            'card2Description' => '<p>Expert consulting services.</p>',
+            'card2Tags' => [['text' => 'Strategy']],
+            'card2LinkText' => 'Get started',
+            'card2LinkPage' => '/services/consulting',
+            'card2BadgeType' => 'success',
+            'card2BadgeText' => 'Popular',
+            'card3Icon' => 'rocket',
+            'card3Title' => 'Training',
+            'card3Description' => '<p>Professional training courses.</p>',
+            'card3Tags' => [['text' => 'Workshop']],
+            'card3LinkText' => 'Book now',
+            'card3LinkPage' => '/services/training',
+            'card3BadgeType' => 'urgent',
+            'card3BadgeText' => 'New',
+            'showFooter' => true,
+            'footerText' => 'Need help choosing?',
+            'footerButtonText' => 'Contact Us',
+            'footerButtonPage' => '/contact',
+        ],
+
         // === CONTACT BLOCKS ===
         'team' => [
             'type' => 'team',
@@ -429,6 +468,19 @@ final class BlockTypeRegistry
         ],
         'excerpt-image' => [
             'properties' => ['headline'],
+        ],
+
+        // === CARD BLOCKS ===
+        'card-trio' => [
+            'properties' => [
+                'subline', 'headline', 'description',
+                'card1Icon', 'card1Title', 'card1Description', 'card1LinkText', 'card1LinkPage', 'card1BadgeType', 'card1BadgeText',
+                'card2Icon', 'card2Title', 'card2Description', 'card2LinkText', 'card2LinkPage', 'card2BadgeType', 'card2BadgeText',
+                'card3Icon', 'card3Title', 'card3Description', 'card3LinkText', 'card3LinkPage', 'card3BadgeType', 'card3BadgeText',
+                'showFooter', 'footerText', 'footerButtonText', 'footerButtonPage',
+            ],
+            'nested' => 'card1Tags',  // Note: Also has card2Tags, card3Tags
+            'nestedProperties' => ['text'],
         ],
 
         // === CONTACT BLOCKS ===
