@@ -39,7 +39,7 @@
         <div class="grid grid-cols-1 {% if cardCount == 1 %}md:grid-cols-1 max-w-md mx-auto{% elseif cardCount == 2 %}md:grid-cols-2 max-w-3xl mx-auto{% else %}md:grid-cols-3{% endif %} gap-6">
             {% for card in content.cards %}
                 {% if card.title is defined and card.title is not empty %}
-                    {% if card.linkPage %}
+                    {% if card.linkPage is not empty %}
                         <sulu-link href="{{ card.linkPage }}" class="group relative bg-white rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-2 border-transparent hover:border-nca/30 block no-underline hover:no-underline cursor-pointer">
                     {% else %}
                         <div class="group relative bg-white rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-2 border-transparent hover:border-nca/30">
@@ -80,7 +80,7 @@
                                 </svg>
                             </span>
                         {% endif %}
-                    {% if card.linkPage %}
+                    {% if card.linkPage is not empty %}
                         </sulu-link>
                     {% else %}
                         </div>
