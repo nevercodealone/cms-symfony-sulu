@@ -372,4 +372,131 @@ class SuluPagesToolTest extends TestCase
         $this->assertArrayHasKey('snippets', $data);
         $this->assertCount(1, $data['snippets']);
     }
+
+    /**
+     * Test add_block with JSON object content spreads properties onto block.
+     * This is needed for blocks with flat properties in content parameter.
+     */
+    public function testAddBlockWithJsonObjectContentSpreadsProperties(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $jsonContent = json_encode([
+            'subline' => 'Test Subline',
+            'footerText' => 'Need help?',
+            'footerButtonText' => 'Contact',
+        ]);
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'card-trio',
+            'headline' => 'Test Headline',
+            'content' => $jsonContent,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('card-trio', $capturedBlock['type']);
+        $this->assertEquals('Test Headline', $capturedBlock['headline']);
+        $this->assertEquals('Test Subline', $capturedBlock['subline']);
+        $this->assertEquals('Need help?', $capturedBlock['footerText']);
+        $this->assertEquals('Contact', $capturedBlock['footerButtonText']);
+    }
+
+    /**
+     * Test add_block with items parameter for card-trio uses cards nested key.
+     */
+    public function testAddBlockCardTrioWithCardsItems(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $cards = json_encode([
+            ['icon' => 'code', 'title' => 'Dev', 'description' => '<p>Card 1</p>'],
+            ['icon' => 'users', 'title' => 'Team', 'description' => '<p>Card 2</p>'],
+        ]);
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'card-trio',
+            'headline' => 'Services',
+            'items' => $cards,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('card-trio', $capturedBlock['type']);
+        $this->assertEquals('Services', $capturedBlock['headline']);
+        $this->assertArrayHasKey('cards', $capturedBlock);
+        $this->assertCount(2, $capturedBlock['cards']);
+        $this->assertEquals('Dev', $capturedBlock['cards'][0]['title']);
+        $this->assertEquals('Team', $capturedBlock['cards'][1]['title']);
+    }
+
+    /**
+     * Test add_block with plain string content uses buildBlock logic.
+     */
+    public function testAddBlockWithPlainStringContentUsesDescription(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hl-des',
+            'headline' => 'Test Headline',
+            'content' => '<p>Simple HTML content</p>',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('hl-des', $capturedBlock['type']);
+        $this->assertEquals('Test Headline', $capturedBlock['headline']);
+        $this->assertEquals('<p>Simple HTML content</p>', $capturedBlock['description']);
+    }
+
+    /**
+     * Test add_block with JSON array content (not object) falls back to buildBlock.
+     */
+    public function testAddBlockWithJsonArrayContentFallsBackToBuildBlock(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        // JSON array (indexed), not object
+        $jsonArray = json_encode(['item1', 'item2']);
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hl-des',
+            'headline' => 'Test',
+            'content' => $jsonArray,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        // Should be stored as description string, not spread
+        $this->assertEquals($jsonArray, $capturedBlock['description']);
+    }
 }

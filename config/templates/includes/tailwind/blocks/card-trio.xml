@@ -33,371 +33,161 @@
                         </params>
                     </property>
 
-                    <!-- Card 1 -->
-                    <section name="card1Section">
+                    <!-- Cards (1-3) -->
+                    <block name="cards" default-type="card" minOccurs="1" maxOccurs="3">
                         <meta>
-                            <title>Card 1</title>
+                            <title>Cards</title>
                         </meta>
-                        <properties>
-                            <property name="card1Icon" type="single_select">
+                        <types>
+                            <type name="card">
                                 <meta>
-                                    <title>Icon</title>
+                                    <title>Card</title>
                                 </meta>
-                                <params>
-                                    <param name="default_value" value="code"/>
-                                    <param name="values" type="collection">
-                                        <param name="code">
-                                            <meta><title>Code</title></meta>
-                                        </param>
-                                        <param name="users">
-                                            <meta><title>Users</title></meta>
-                                        </param>
-                                        <param name="cog">
-                                            <meta><title>Cog</title></meta>
-                                        </param>
-                                        <param name="bar-chart">
-                                            <meta><title>Bar Chart</title></meta>
-                                        </param>
-                                        <param name="lightbulb-o">
-                                            <meta><title>Lightbulb</title></meta>
-                                        </param>
-                                        <param name="rocket">
-                                            <meta><title>Rocket</title></meta>
-                                        </param>
-                                        <param name="shield">
-                                            <meta><title>Shield</title></meta>
-                                        </param>
-                                        <param name="heart">
-                                            <meta><title>Heart</title></meta>
-                                        </param>
-                                        <param name="star">
-                                            <meta><title>Star</title></meta>
-                                        </param>
-                                        <param name="check">
-                                            <meta><title>Check</title></meta>
-                                        </param>
-                                    </param>
-                                </params>
-                            </property>
-                            <property name="card1Title" type="text_line">
-                                <meta>
-                                    <title>Title</title>
-                                </meta>
-                            </property>
-                            <property name="card1Description" type="text_editor">
-                                <meta>
-                                    <title>Description</title>
-                                </meta>
-                                <params>
-                                    <param name="table" value="false"/>
-                                    <param name="link" value="true"/>
-                                </params>
-                            </property>
-                            <block name="card1Tags" default-type="tag" minOccurs="0" maxOccurs="5">
-                                <meta>
-                                    <title>Tags</title>
-                                </meta>
-                                <types>
-                                    <type name="tag">
+                                <properties>
+                                    <property name="icon" type="single_select">
                                         <meta>
-                                            <title>Tag</title>
+                                            <title>Icon</title>
                                         </meta>
-                                        <properties>
-                                            <property name="text" type="text_line">
-                                                <meta>
-                                                    <title>Text</title>
-                                                </meta>
-                                            </property>
-                                        </properties>
-                                    </type>
-                                </types>
-                            </block>
-                            <property name="card1LinkText" type="text_line" colspan="6">
-                                <meta>
-                                    <title>Link Text</title>
-                                </meta>
-                            </property>
-                            <property name="card1LinkPage" type="single_page_selection" colspan="6">
-                                <meta>
-                                    <title>Link Page</title>
-                                </meta>
-                            </property>
-                            <property name="card1BadgeType" type="single_select" colspan="6">
-                                <meta>
-                                    <title>Badge Type</title>
-                                </meta>
-                                <params>
-                                    <param name="default_value" value="none"/>
-                                    <param name="values" type="collection">
-                                        <param name="none">
-                                            <meta><title>None</title></meta>
-                                        </param>
-                                        <param name="urgent">
-                                            <meta><title>Urgent (Red)</title></meta>
-                                        </param>
-                                        <param name="warning">
-                                            <meta><title>Warning (Amber)</title></meta>
-                                        </param>
-                                        <param name="success">
-                                            <meta><title>Success (Green)</title></meta>
-                                        </param>
-                                        <param name="info">
-                                            <meta><title>Info (Blue)</title></meta>
-                                        </param>
-                                    </param>
-                                </params>
-                            </property>
-                            <property name="card1BadgeText" type="text_line" colspan="6">
-                                <meta>
-                                    <title>Badge Text</title>
-                                </meta>
-                            </property>
-                        </properties>
-                    </section>
-
-                    <!-- Card 2 -->
-                    <section name="card2Section">
-                        <meta>
-                            <title>Card 2</title>
-                        </meta>
-                        <properties>
-                            <property name="card2Icon" type="single_select">
-                                <meta>
-                                    <title>Icon</title>
-                                </meta>
-                                <params>
-                                    <param name="default_value" value="users"/>
-                                    <param name="values" type="collection">
-                                        <param name="code">
-                                            <meta><title>Code</title></meta>
-                                        </param>
-                                        <param name="users">
-                                            <meta><title>Users</title></meta>
-                                        </param>
-                                        <param name="cog">
-                                            <meta><title>Cog</title></meta>
-                                        </param>
-                                        <param name="bar-chart">
-                                            <meta><title>Bar Chart</title></meta>
-                                        </param>
-                                        <param name="lightbulb-o">
-                                            <meta><title>Lightbulb</title></meta>
-                                        </param>
-                                        <param name="rocket">
-                                            <meta><title>Rocket</title></meta>
-                                        </param>
-                                        <param name="shield">
-                                            <meta><title>Shield</title></meta>
-                                        </param>
-                                        <param name="heart">
-                                            <meta><title>Heart</title></meta>
-                                        </param>
-                                        <param name="star">
-                                            <meta><title>Star</title></meta>
-                                        </param>
-                                        <param name="check">
-                                            <meta><title>Check</title></meta>
-                                        </param>
-                                    </param>
-                                </params>
-                            </property>
-                            <property name="card2Title" type="text_line">
-                                <meta>
-                                    <title>Title</title>
-                                </meta>
-                            </property>
-                            <property name="card2Description" type="text_editor">
-                                <meta>
-                                    <title>Description</title>
-                                </meta>
-                                <params>
-                                    <param name="table" value="false"/>
-                                    <param name="link" value="true"/>
-                                </params>
-                            </property>
-                            <block name="card2Tags" default-type="tag" minOccurs="0" maxOccurs="5">
-                                <meta>
-                                    <title>Tags</title>
-                                </meta>
-                                <types>
-                                    <type name="tag">
+                                        <params>
+                                            <param name="default_value" value="code"/>
+                                            <param name="values" type="collection">
+                                                <param name="code">
+                                                    <meta><title>Code</title></meta>
+                                                </param>
+                                                <param name="users">
+                                                    <meta><title>Users</title></meta>
+                                                </param>
+                                                <param name="cog">
+                                                    <meta><title>Cog</title></meta>
+                                                </param>
+                                                <param name="bar-chart">
+                                                    <meta><title>Bar Chart</title></meta>
+                                                </param>
+                                                <param name="lightbulb-o">
+                                                    <meta><title>Lightbulb</title></meta>
+                                                </param>
+                                                <param name="rocket">
+                                                    <meta><title>Rocket</title></meta>
+                                                </param>
+                                                <param name="shield">
+                                                    <meta><title>Shield</title></meta>
+                                                </param>
+                                                <param name="heart">
+                                                    <meta><title>Heart</title></meta>
+                                                </param>
+                                                <param name="star">
+                                                    <meta><title>Star</title></meta>
+                                                </param>
+                                                <param name="check">
+                                                    <meta><title>Check</title></meta>
+                                                </param>
+                                                <param name="universal-access">
+                                                    <meta><title>Accessibility</title></meta>
+                                                </param>
+                                                <param name="microchip">
+                                                    <meta><title>Microchip</title></meta>
+                                                </param>
+                                                <param name="robot">
+                                                    <meta><title>Robot</title></meta>
+                                                </param>
+                                                <param name="graduation-cap">
+                                                    <meta><title>Graduation Cap</title></meta>
+                                                </param>
+                                                <param name="shield-halved">
+                                                    <meta><title>Shield Halved</title></meta>
+                                                </param>
+                                                <param name="gears">
+                                                    <meta><title>Gears</title></meta>
+                                                </param>
+                                                <param name="wand-magic-sparkles">
+                                                    <meta><title>Magic Wand</title></meta>
+                                                </param>
+                                                <param name="pen-nib">
+                                                    <meta><title>Pen Nib</title></meta>
+                                                </param>
+                                                <param name="chart-line">
+                                                    <meta><title>Chart Line</title></meta>
+                                                </param>
+                                            </param>
+                                        </params>
+                                    </property>
+                                    <property name="title" type="text_line">
                                         <meta>
-                                            <title>Tag</title>
+                                            <title>Title</title>
                                         </meta>
-                                        <properties>
-                                            <property name="text" type="text_line">
-                                                <meta>
-                                                    <title>Text</title>
-                                                </meta>
-                                            </property>
-                                        </properties>
-                                    </type>
-                                </types>
-                            </block>
-                            <property name="card2LinkText" type="text_line" colspan="6">
-                                <meta>
-                                    <title>Link Text</title>
-                                </meta>
-                            </property>
-                            <property name="card2LinkPage" type="single_page_selection" colspan="6">
-                                <meta>
-                                    <title>Link Page</title>
-                                </meta>
-                            </property>
-                            <property name="card2BadgeType" type="single_select" colspan="6">
-                                <meta>
-                                    <title>Badge Type</title>
-                                </meta>
-                                <params>
-                                    <param name="default_value" value="none"/>
-                                    <param name="values" type="collection">
-                                        <param name="none">
-                                            <meta><title>None</title></meta>
-                                        </param>
-                                        <param name="urgent">
-                                            <meta><title>Urgent (Red)</title></meta>
-                                        </param>
-                                        <param name="warning">
-                                            <meta><title>Warning (Amber)</title></meta>
-                                        </param>
-                                        <param name="success">
-                                            <meta><title>Success (Green)</title></meta>
-                                        </param>
-                                        <param name="info">
-                                            <meta><title>Info (Blue)</title></meta>
-                                        </param>
-                                    </param>
-                                </params>
-                            </property>
-                            <property name="card2BadgeText" type="text_line" colspan="6">
-                                <meta>
-                                    <title>Badge Text</title>
-                                </meta>
-                            </property>
-                        </properties>
-                    </section>
-
-                    <!-- Card 3 -->
-                    <section name="card3Section">
-                        <meta>
-                            <title>Card 3</title>
-                        </meta>
-                        <properties>
-                            <property name="card3Icon" type="single_select">
-                                <meta>
-                                    <title>Icon</title>
-                                </meta>
-                                <params>
-                                    <param name="default_value" value="cog"/>
-                                    <param name="values" type="collection">
-                                        <param name="code">
-                                            <meta><title>Code</title></meta>
-                                        </param>
-                                        <param name="users">
-                                            <meta><title>Users</title></meta>
-                                        </param>
-                                        <param name="cog">
-                                            <meta><title>Cog</title></meta>
-                                        </param>
-                                        <param name="bar-chart">
-                                            <meta><title>Bar Chart</title></meta>
-                                        </param>
-                                        <param name="lightbulb-o">
-                                            <meta><title>Lightbulb</title></meta>
-                                        </param>
-                                        <param name="rocket">
-                                            <meta><title>Rocket</title></meta>
-                                        </param>
-                                        <param name="shield">
-                                            <meta><title>Shield</title></meta>
-                                        </param>
-                                        <param name="heart">
-                                            <meta><title>Heart</title></meta>
-                                        </param>
-                                        <param name="star">
-                                            <meta><title>Star</title></meta>
-                                        </param>
-                                        <param name="check">
-                                            <meta><title>Check</title></meta>
-                                        </param>
-                                    </param>
-                                </params>
-                            </property>
-                            <property name="card3Title" type="text_line">
-                                <meta>
-                                    <title>Title</title>
-                                </meta>
-                            </property>
-                            <property name="card3Description" type="text_editor">
-                                <meta>
-                                    <title>Description</title>
-                                </meta>
-                                <params>
-                                    <param name="table" value="false"/>
-                                    <param name="link" value="true"/>
-                                </params>
-                            </property>
-                            <block name="card3Tags" default-type="tag" minOccurs="0" maxOccurs="5">
-                                <meta>
-                                    <title>Tags</title>
-                                </meta>
-                                <types>
-                                    <type name="tag">
+                                    </property>
+                                    <property name="description" type="text_editor">
                                         <meta>
-                                            <title>Tag</title>
+                                            <title>Description</title>
                                         </meta>
-                                        <properties>
-                                            <property name="text" type="text_line">
+                                        <params>
+                                            <param name="table" value="false"/>
+                                            <param name="link" value="true"/>
+                                        </params>
+                                    </property>
+                                    <block name="tags" default-type="tag" minOccurs="0" maxOccurs="5">
+                                        <meta>
+                                            <title>Tags</title>
+                                        </meta>
+                                        <types>
+                                            <type name="tag">
                                                 <meta>
-                                                    <title>Text</title>
+                                                    <title>Tag</title>
                                                 </meta>
-                                            </property>
-                                        </properties>
-                                    </type>
-                                </types>
-                            </block>
-                            <property name="card3LinkText" type="text_line" colspan="6">
-                                <meta>
-                                    <title>Link Text</title>
-                                </meta>
-                            </property>
-                            <property name="card3LinkPage" type="single_page_selection" colspan="6">
-                                <meta>
-                                    <title>Link Page</title>
-                                </meta>
-                            </property>
-                            <property name="card3BadgeType" type="single_select" colspan="6">
-                                <meta>
-                                    <title>Badge Type</title>
-                                </meta>
-                                <params>
-                                    <param name="default_value" value="none"/>
-                                    <param name="values" type="collection">
-                                        <param name="none">
-                                            <meta><title>None</title></meta>
-                                        </param>
-                                        <param name="urgent">
-                                            <meta><title>Urgent (Red)</title></meta>
-                                        </param>
-                                        <param name="warning">
-                                            <meta><title>Warning (Amber)</title></meta>
-                                        </param>
-                                        <param name="success">
-                                            <meta><title>Success (Green)</title></meta>
-                                        </param>
-                                        <param name="info">
-                                            <meta><title>Info (Blue)</title></meta>
-                                        </param>
-                                    </param>
-                                </params>
-                            </property>
-                            <property name="card3BadgeText" type="text_line" colspan="6">
-                                <meta>
-                                    <title>Badge Text</title>
-                                </meta>
-                            </property>
-                        </properties>
-                    </section>
+                                                <properties>
+                                                    <property name="text" type="text_line">
+                                                        <meta>
+                                                            <title>Text</title>
+                                                        </meta>
+                                                    </property>
+                                                </properties>
+                                            </type>
+                                        </types>
+                                    </block>
+                                    <property name="linkText" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Link Text</title>
+                                        </meta>
+                                    </property>
+                                    <property name="linkPage" type="single_page_selection" colspan="6">
+                                        <meta>
+                                            <title>Link Page</title>
+                                        </meta>
+                                    </property>
+                                    <property name="badgeType" type="single_select" colspan="6">
+                                        <meta>
+                                            <title>Badge Type</title>
+                                        </meta>
+                                        <params>
+                                            <param name="default_value" value="none"/>
+                                            <param name="values" type="collection">
+                                                <param name="none">
+                                                    <meta><title>None</title></meta>
+                                                </param>
+                                                <param name="urgent">
+                                                    <meta><title>Urgent (Red)</title></meta>
+                                                </param>
+                                                <param name="warning">
+                                                    <meta><title>Warning (Amber)</title></meta>
+                                                </param>
+                                                <param name="success">
+                                                    <meta><title>Success (Green)</title></meta>
+                                                </param>
+                                                <param name="info">
+                                                    <meta><title>Info (Blue)</title></meta>
+                                                </param>
+                                            </param>
+                                        </params>
+                                    </property>
+                                    <property name="badgeText" type="text_line" colspan="6">
+                                        <meta>
+                                            <title>Badge Text</title>
+                                        </meta>
+                                    </property>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
 
                     <!-- Footer Section -->
                     <section name="footerSection">
@@ -405,11 +195,6 @@
                             <title>Footer</title>
                         </meta>
                         <properties>
-                            <property name="showFooter" type="checkbox">
-                                <meta>
-                                    <title>Show Footer</title>
-                                </meta>
-                            </property>
                             <property name="footerText" type="text_line">
                                 <meta>
                                     <title>Footer Text</title>

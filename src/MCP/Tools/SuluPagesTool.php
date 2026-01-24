@@ -353,6 +353,7 @@ class SuluPagesTool implements StreamableToolInterface
                 'faq' => 'faqs',
                 'table' => 'rows',
                 'image-with-flags' => 'flags',
+                'card-trio' => 'cards',
                 default => 'items',
             };
 
@@ -362,9 +363,28 @@ class SuluPagesTool implements StreamableToolInterface
                 $nestedKey => $normalizedItems,
             ];
         } else {
-            // Fallback: use simple content parameter
+            // Fallback: use simple content parameter or JSON object with flat properties
             $content = $arguments['content'] ?? '';
-            $block = $this->buildBlock($blockType, $headline, $content);
+
+            // Check if content is a JSON object with flat properties (like card-trio)
+            if (!empty($content)) {
+                $decoded = json_decode($content, true);
+                // If it's an associative array (object), spread properties onto block
+                if (is_array($decoded) && !isset($decoded[0])) {
+                    $block = [
+                        'type' => $blockType,
+                        'headline' => $headline,
+                    ];
+                    foreach ($decoded as $key => $value) {
+                        $block[$key] = $value;
+                    }
+                } else {
+                    // Regular string content or indexed array - use buildBlock
+                    $block = $this->buildBlock($blockType, $headline, $content);
+                }
+            } else {
+                $block = $this->buildBlock($blockType, $headline, $content);
+            }
         }
 
         // Handle snippets parameter for contact block
@@ -505,6 +525,7 @@ class SuluPagesTool implements StreamableToolInterface
                 'faq' => 'faqs',
                 'table' => 'rows',
                 'image-with-flags' => 'flags',
+                'card-trio' => 'cards',
                 default => 'items',
             };
             $blockData[$nestedKey] = $normalizedItems;

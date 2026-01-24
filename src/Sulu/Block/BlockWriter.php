@@ -351,8 +351,8 @@ final class BlockWriter
             return "{$prefix}-{$key}#{$position}";
         }
 
-        // card-trio specific properties (card1*, card2*, card3*, footer*, showFooter)
-        if (preg_match('/^(card[123]|footer)/', $key) || $key === 'showFooter') {
+        // card-trio footer properties
+        if (preg_match('/^footer/', $key) || $key === 'showFooter') {
             return "{$prefix}-{$key}#{$position}";
         }
 
