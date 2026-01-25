@@ -10,17 +10,10 @@
           <title>HTML Raw</title>
         </meta>
         <properties>
-          <property name="html" type="text_editor">
+          <property name="html" type="text_line">
             <meta>
-              <title>HTML Code</title>
+              <title>Text</title>
             </meta>
-
-            <params>
-              <param name="table" value="false"/>
-              <param name="link" value="true"/>
-              <param name="extra_allowed_content"
-                     value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]; video(*)[*]; source(*)[*]"/>
-            </params>
           </property>
         </properties>
       </type>
