@@ -84,6 +84,7 @@ final class BlockTypeRegistry
         'table-of-contents' => 'Auto-generated table of contents.',
 
         // === EXTERNAL BLOCKS ===
+        'html-raw' => 'Raw HTML block for embedding iframes, videos, and custom HTML content.',
         'youtube-from-channel' => 'YouTube playlist embed from channel.',
         'wordpressposts' => 'WordPress posts feed.',
 
@@ -355,6 +356,10 @@ final class BlockTypeRegistry
         ],
 
         // === EXTERNAL BLOCKS ===
+        'html-raw' => [
+            'type' => 'html-raw',
+            'html' => '<iframe src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>',
+        ],
         'youtube-from-channel' => [
             'type' => 'youtube-from-channel',
             'headline' => 'Our Videos',
@@ -528,6 +533,9 @@ final class BlockTypeRegistry
         ],
 
         // === EXTERNAL BLOCKS ===
+        'html-raw' => [
+            'properties' => ['html'],
+        ],
         'youtube-from-channel' => [
             'properties' => ['headline', 'subline', 'playlistid'],
         ],

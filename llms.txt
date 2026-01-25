@@ -133,7 +133,7 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 - `append_to_block` - Append items to existing block
 - `move_block` - Move a block
 - `remove_block` - Remove a block
-- `list_block_types` - List all 33 block types with descriptions & examples
+- `list_block_types` - List all 34 block types with descriptions & examples
 - `get_block_schema` - Get detailed schema for a specific block type
 
 ### Media & Snippets
@@ -211,7 +211,7 @@ Create new pages under an existing parent path.
 
 ---
 
-## Block Type User Stories (33 Types)
+## Block Type User Stories (34 Types)
 
 **As a content editor**, understand what each block accomplishes:
 
@@ -262,7 +262,7 @@ Create new pages under an existing parent path.
 
 ---
 
-## Complete Block Type Reference (33 Types)
+## Complete Block Type Reference (34 Types)
 
 All blocks are defined in `config/templates/includes/tailwind/blocks/*.xml` and render via `templates/includes/tailwind/blocks/*.html.twig`.
 
@@ -916,7 +916,27 @@ Auto-generated table of contents.
 
 ---
 
-#### 30. youtube-from-channel (YouTube Playlist)
+#### 30. html-raw (Raw HTML Embed)
+
+Embed raw HTML content like YouTube iframes, custom embeds, or any HTML code.
+
+**XML:** `config/templates/includes/tailwind/blocks/html-raw.xml`
+**Twig:** `templates/includes/tailwind/blocks/html-raw.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `html` | text_editor | Raw HTML content (iframes, embeds, etc.) |
+
+```json
+{
+  "blockType": "html-raw",
+  "html": "<iframe src=\"https://www.youtube.com/embed/dQw4w9WgXcQ\" frameborder=\"0\" allowfullscreen></iframe>"
+}
+```
+
+---
+
+#### 31. youtube-from-channel (YouTube Playlist)
 
 YouTube playlist embed.
 
@@ -940,7 +960,7 @@ YouTube playlist embed.
 
 ---
 
-#### 31. wordpressposts (WordPress Posts)
+#### 32. wordpressposts (WordPress Posts)
 
 Fetches and displays WordPress posts.
 
@@ -965,7 +985,7 @@ Fetches and displays WordPress posts.
 | **Image** | image, image-gallery, images-with-heading-and-description, image-with-flags, logo-gallary, excerpt-image |
 | **Contact** | team, consultant, contact, chat |
 | **Navigation** | highlights, related-content-by-page-tag, subpages-overview, table-of-contents |
-| **External** | youtube-from-channel, wordpressposts |
+| **External** | html-raw, youtube-from-channel, wordpressposts |
 
 ---
 
@@ -1115,7 +1135,7 @@ Response:
 
 ### list_block_types Action
 
-List all 32 block types with full documentation.
+List all 34 block types with full documentation.
 
 ```json
 {

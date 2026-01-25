@@ -1,0 +1,29 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+  <block name="blocks" default-type="html-raw">
+    <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+    <types>
+      <type name="html-raw">
+        <meta>
+          <title>HTML Raw</title>
+        </meta>
+        <properties>
+          <property name="html" type="text_editor">
+            <meta>
+              <title>HTML Code</title>
+            </meta>
+
+            <params>
+              <param name="table" value="false"/>
+              <param name="link" value="true"/>
+              <param name="extra_allowed_content"
+                     value="img(*)[*]; span(*)[*]; div(*)[*]; iframe(*)[*]; script(*)[*]; video(*)[*]; source(*)[*]"/>
+            </params>
+          </property>
+        </properties>
+      </type>
+    </types>
+  </block>
+</properties>
