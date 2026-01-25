@@ -149,6 +149,16 @@ Location: `templates/includes/tailwind/blocks/{block-name}.html.twig`
 
 **IMPORTANT:** Filename must match XML type name exactly!
 
+**IMPORTANT:** Every Twig template must have comment markers at the start and end:
+
+```twig
+<!-- {block-name}.html.twig -->
+... template content ...
+<!-- end {block-name}.html.twig -->
+```
+
+This convention helps with debugging and identifying blocks in rendered HTML.
+
 ### Template Skeleton
 
 ```twig
