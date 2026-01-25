@@ -109,8 +109,8 @@ final class BlockTypeRegistry
         'faq' => [
             'type' => 'faq',
             'faqs' => [
-                ['type' => 'items', 'headline' => 'What is PHP?', 'subline' => '<p>PHP is a server-side scripting language.</p>'],
-                ['type' => 'items', 'headline' => 'How do I install it?', 'subline' => '<p>Use apt-get install php on Ubuntu.</p>'],
+                ['type' => 'items', 'headline' => 'What is PHP?', 'subline' => 'PHP is a server-side scripting language.'],
+                ['type' => 'items', 'headline' => 'How do I install it?', 'subline' => 'Use apt-get install php on Ubuntu.'],
             ],
         ],
         'code' => [

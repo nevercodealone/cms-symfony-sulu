@@ -1105,7 +1105,7 @@ Response:
   "example": {
     "type": "faq",
     "faqs": [
-      {"type": "items", "headline": "What is PHP?", "subline": "<p>PHP is a server-side scripting language.</p>"}
+      {"type": "items", "headline": "What is PHP?", "subline": "PHP is a server-side scripting language."}
     ]
   }
 }
