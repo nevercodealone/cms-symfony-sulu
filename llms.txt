@@ -65,6 +65,52 @@ src/Sulu/
 
 ---
 
+## Nested Block Type Reference (CRITICAL)
+
+Blocks with nested items require the correct `type` value for each nested item. Using the wrong type prevents frontend rendering.
+
+### Complete Nested Type Mapping
+
+| Block Type | Nested Array Name | Nested Item Type | Example Item |
+|------------|-------------------|------------------|--------------|
+| `faq` | `faqs` | `items` | `{"type":"items","headline":"Q?","subline":"A"}` |
+| `card-trio` | `cards` | `card` | `{"type":"card","title":"Title","icon":"code"}` |
+| `table` | `rows` | `row` | `{"type":"row","cell1":"A","cell2":"B","cell3":"C"}` |
+| `image-with-flags` | `flags` | `flag` | `{"type":"flag","language":"en","url":"/en"}` |
+| `headline-paragraphs` | `items` | `description` or `code` | `{"type":"description","description":"<p>Text</p>"}` |
+| `feature` | `items` | `items` | `{"type":"items","headline":"Title","description":"<p>Text</p>"}` |
+| `feature-default` | `items` | `items` | `{"type":"items","headline":"Title","description":"<p>Text</p>"}` |
+| `feature-with-icons` | `items` | `items` | `{"type":"items","headline":"Title","text":"Text"}` |
+| `formats` | `items` | `items` | `{"type":"items","icon":"user","headline":"Title"}` |
+| `introduction` | `items` | `items` | `{"type":"items","description":"<p>Text</p>"}` |
+| `hero-image-right` | `items` | `items` | `{"type":"items","headline":"Title","text":"Text"}` |
+| `logo-gallary` | `items` | `items` | `{"type":"items","headline":"Alt","url":"https://..."}` |
+
+### Why This Matters
+
+Sulu's Twig templates check the `type` field when rendering nested items:
+```twig
+{% for item in content.faqs %}
+    {# Only renders if item.type matches XML default-type #}
+{% endfor %}
+```
+
+If the type is wrong (e.g., `"type":"faq"` instead of `"type":"items"`), items are stored but **not rendered**.
+
+### API Response Enhancement
+
+The `get_block_schema` and `list_block_types` actions now return `nestedType` for each block:
+```json
+{
+  "name": "faq",
+  "nested": "faqs",
+  "nestedType": "items",
+  "nestedProperties": ["headline", "subline"]
+}
+```
+
+---
+
 ## Overview
 
 The Sulu MCP Server enables managing CMS pages via these actions:
@@ -931,8 +977,8 @@ Fetches and displays WordPress posts.
 // 1. Create page
 {"tool": "sulu-page-create", "parentPath": "/cmf/example/contents/support", "title": "Häufige Fragen", "resourceSegment": "/faq"}
 
-// 2. Add FAQ block
-{"tool": "sulu-block-add", "path": "/cmf/example/contents/support/faq", "blockType": "faq", "faqs": "[{\"headline\":\"Wie kann ich bestellen?\",\"subline\":\"Besuchen Sie unseren Shop und legen Sie Produkte in den Warenkorb.\"},{\"headline\":\"Wie lange dauert die Lieferung?\",\"subline\":\"Standard-Lieferung dauert 3-5 Werktage.\"}]"}
+// 2. Add FAQ block - NOTE: nestedType is "items" (NOT "faq")
+{"tool": "sulu-block-add", "path": "/cmf/example/contents/support/faq", "blockType": "faq", "items": "[{\"type\":\"items\",\"headline\":\"Wie kann ich bestellen?\",\"subline\":\"Besuchen Sie unseren Shop und legen Sie Produkte in den Warenkorb.\"},{\"type\":\"items\",\"headline\":\"Wie lange dauert die Lieferung?\",\"subline\":\"Standard-Lieferung dauert 3-5 Werktage.\"}]"}
 
 // 3. Publish
 {"tool": "sulu-page-publish", "path": "/cmf/example/contents/support/faq"}
@@ -944,8 +990,8 @@ Fetches and displays WordPress posts.
 // 1. Create page
 {"tool": "sulu-page-create", "parentPath": "/cmf/example/contents/preise", "title": "Preisliste", "resourceSegment": "/preisliste"}
 
-// 2. Add table block
-{"tool": "sulu-block-add", "path": "/cmf/example/contents/preise/preisliste", "blockType": "table", "headline": "Unsere Tarife", "description": "<p>Wählen Sie den passenden Tarif.</p>", "columnheader1": "Tarif", "columnheader2": "Preis", "columnheader3": "Funktionen", "rows": "[{\"cell1\":\"Starter\",\"cell2\":\"9,99 €\",\"cell3\":\"5 Projekte\"},{\"cell1\":\"Professional\",\"cell2\":\"29,99 €\",\"cell3\":\"Unbegrenzt\"}]"}
+// 2. Add table block - NOTE: nestedType is "row"
+{"tool": "sulu-block-add", "path": "/cmf/example/contents/preise/preisliste", "blockType": "table", "headline": "Unsere Tarife", "description": "<p>Wählen Sie den passenden Tarif.</p>", "columnheader1": "Tarif", "columnheader2": "Preis", "columnheader3": "Funktionen", "items": "[{\"type\":\"row\",\"cell1\":\"Starter\",\"cell2\":\"9,99 €\",\"cell3\":\"5 Projekte\"},{\"type\":\"row\",\"cell1\":\"Professional\",\"cell2\":\"29,99 €\",\"cell3\":\"Unbegrenzt\"}]"}
 
 // 3. Publish
 {"tool": "sulu-page-publish", "path": "/cmf/example/contents/preise/preisliste"}
@@ -1053,16 +1099,19 @@ Response:
   "name": "faq",
   "properties": [],
   "nested": "faqs",
+  "nestedType": "items",
   "nestedProperties": ["headline", "subline"],
   "description": "FAQ section with expandable questions/answers. Uses faqs[] array (NOT items).",
   "example": {
     "type": "faq",
     "faqs": [
-      {"headline": "What is PHP?", "subline": "<p>PHP is a server-side scripting language.</p>"}
+      {"type": "items", "headline": "What is PHP?", "subline": "<p>PHP is a server-side scripting language.</p>"}
     ]
   }
 }
 ```
+
+**IMPORTANT:** The `nestedType` field tells you what `type` value to use for each nested item. For FAQ, use `"type":"items"` (NOT `"type":"faq"`).
 
 ### list_block_types Action
 
@@ -1078,9 +1127,12 @@ Response includes for each type:
 - `name` - Block type identifier
 - `properties` - Top-level properties
 - `nested` - Name of nested array (e.g., 'items', 'faqs', 'rows')
+- `nestedType` - **CRITICAL:** The `type` value required for each nested item (e.g., 'items', 'card', 'row')
 - `nestedProperties` - Properties within nested items
 - `description` - Human-readable description
 - `example` - Complete example data structure
+
+**IMPORTANT:** Always check `nestedType` before creating nested items. Using the wrong type causes items to not render in the frontend.
 
 ---
 

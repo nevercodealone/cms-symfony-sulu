@@ -102,6 +102,8 @@ final class BlockWriter
                         $nestedName,
                         $block[$nestedName],
                         $nestedProps,
+                        null,
+                        $type,  // Pass block type for registry lookup
                     );
                 }
             }
@@ -148,7 +150,7 @@ final class BlockWriter
                 if ($key === $nestedName && is_array($value)) {
                     $nestedProps = $this->registry->getNestedProperties($type);
                     $this->removeNestedItems($xpath, $prefix, $position, $nestedName);
-                    $this->writeNestedItems($xml, $rootNode, $prefix, $position, $nestedName, $value, $nestedProps);
+                    $this->writeNestedItems($xml, $rootNode, $prefix, $position, $nestedName, $value, $nestedProps, null, $type);
                     continue;
                 }
             }
@@ -212,19 +214,21 @@ final class BlockWriter
         array $items,
         array $nestedProps,
         ?string $defaultType = null,
+        ?string $blockType = null,
     ): void {
         // Write length
         $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-length", (string) count($items), 'Long');
 
-        // Determine default type based on nested name
-        $typeDefault = $defaultType ?? match ($nestedName) {
-            'cards' => 'card',
-            'tags' => 'tag',
-            'faqs' => 'faq',
-            'rows' => 'row',
-            'flags' => 'flag',
-            default => 'items',
-        };
+        // Get nested type from registry first, then fall back to naming convention
+        $typeDefault = $defaultType
+            ?? ($blockType !== null ? $this->registry->getNestedType($blockType) : null)
+            ?? match ($nestedName) {
+                'cards' => 'card',
+                'tags' => 'tag',
+                'rows' => 'row',
+                'flags' => 'flag',
+                default => 'items',
+            };
 
         foreach ($items as $itemIndex => $item) {
             // Write type
