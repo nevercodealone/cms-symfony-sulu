@@ -10,6 +10,14 @@ config/templates/includes/tailwind/
 
 templates/includes/tailwind/blocks/
 └── {block-name}.html.twig        # Block template (rendering)
+
+src/Sulu/Block/
+└── BlockTypeRegistry.php         # MCP schemas, descriptions, examples
+
+tests/Unit/Sulu/Block/
+└── BlockTypeRegistryTest.php     # Update block counts and data provider
+
+llms.txt                          # LLM documentation for MCP
 ```
 
 ## Step 1: Create XML Definition
@@ -89,7 +97,53 @@ Add inside `<types>`:
             xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
 ```
 
-## Step 3: Create Twig Template
+## Step 3: Register in BlockTypeRegistry (for MCP)
+
+Location: `src/Sulu/Block/BlockTypeRegistry.php`
+
+Add entries to three constants:
+
+### DESCRIPTIONS
+```php
+'html-raw' => 'Raw HTML block for embedding iframes, videos, and custom HTML content.',
+```
+
+### EXAMPLES
+```php
+'html-raw' => [
+    'type' => 'html-raw',
+    'html' => '<iframe src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>',
+],
+```
+
+### SCHEMAS
+```php
+'html-raw' => [
+    'properties' => ['html'],
+],
+```
+
+For blocks with nested items, add `nested`, `nestedType`, and `nestedProperties`.
+
+## Step 4: Update Tests
+
+Update block count expectations in:
+- `tests/Unit/Sulu/Block/BlockTypeRegistryTest.php`
+- `tests/Unit/MCP/Tools/SuluPagesToolTest.php`
+
+Add new block to `blockTypeProvider()` data provider.
+
+## Step 5: Update llms.txt Documentation
+
+Add block documentation to `llms.txt` including:
+- Block number and name
+- XML and Twig file paths
+- Property table
+- JSON example
+
+Update block counts throughout the file.
+
+## Step 6: Create Twig Template
 
 Location: `templates/includes/tailwind/blocks/{block-name}.html.twig`
 
