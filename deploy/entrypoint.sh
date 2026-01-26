@@ -14,6 +14,5 @@
 [ -n "$MCP_PROJECT_NAME" ] && echo "MCP_PROJECT_NAME=\"$MCP_PROJECT_NAME\"" >> .env
 [ -n "$MCP_TOKEN_LIFETIME" ] && echo "MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME" >> .env
 [ -n "$MCP_CODE_LIFETIME" ] && echo "MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME" >> .env
-[ -n "$LOCK_DSN" ] && echo "LOCK_DSN=$LOCK_DSN" >> .env
 
 exec "$@"

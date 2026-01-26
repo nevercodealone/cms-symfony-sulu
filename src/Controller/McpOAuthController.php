@@ -37,7 +37,7 @@ class McpOAuthController extends AbstractController
         return new JsonResponse([
             'resource' => $baseUrl . '/mcp',
             'authorization_servers' => [
-                $baseUrl,
+                $baseUrl . '/',
             ],
             'scopes_supported' => ['mcp:access'],
             'bearer_methods_supported' => ['header'],
@@ -66,12 +66,8 @@ class McpOAuthController extends AbstractController
 
     /**
      * Authorization endpoint - shows consent form and issues authorization codes
-     *
-     * Dual routes: /oauth/authorize (canonical) and /authorize (fallback for
-     * MCP clients like Claude.ai that request the root path directly).
      */
     #[Route('/oauth/authorize', name: 'mcp_oauth_authorize', methods: ['GET', 'POST'])]
-    #[Route('/authorize', name: 'mcp_oauth_authorize_fallback', methods: ['GET', 'POST'])]
     public function authorize(Request $request): Response
     {
         // Extract OAuth parameters
@@ -171,12 +167,8 @@ class McpOAuthController extends AbstractController
 
     /**
      * Token endpoint - exchanges authorization code for access token
-     *
-     * Dual routes: /oauth/token (canonical) and /token (fallback for
-     * MCP clients like Claude.ai that request the root path directly).
      */
     #[Route('/oauth/token', name: 'mcp_oauth_token', methods: ['POST'])]
-    #[Route('/token', name: 'mcp_oauth_token_fallback', methods: ['POST'])]
     public function token(Request $request): JsonResponse
     {
         // Support both form and JSON body
