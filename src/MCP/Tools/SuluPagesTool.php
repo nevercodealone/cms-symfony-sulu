@@ -173,6 +173,24 @@ class SuluPagesTool implements StreamableToolInterface
                 required: false
             ),
             new SchemaProperty(
+                name: 'excerptTitle',
+                type: PropertyType::STRING,
+                description: 'For create_page: Excerpt title for preview cards and listing pages',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'excerptDescription',
+                type: PropertyType::STRING,
+                description: 'For create_page: Excerpt description for preview cards and listing pages',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'excerptImage',
+                type: PropertyType::INTEGER,
+                description: 'For create_page: Media ID for excerpt image (use list_media to find IDs)',
+                required: false
+            ),
+            new SchemaProperty(
                 name: 'snippets',
                 type: PropertyType::STRING,
                 description: 'For contact block: JSON array of snippet UUIDs to reference, e.g. ["uuid1", "uuid2"]',
@@ -307,6 +325,9 @@ class SuluPagesTool implements StreamableToolInterface
             'seoTitle' => $arguments['seoTitle'] ?? null,
             'seoDescription' => $arguments['seoDescription'] ?? null,
             'publish' => ($arguments['publish'] ?? 'false') === 'true' || ($arguments['publish'] ?? false) === true,
+            'excerptTitle' => $arguments['excerptTitle'] ?? null,
+            'excerptDescription' => $arguments['excerptDescription'] ?? null,
+            'excerptImage' => isset($arguments['excerptImage']) ? (int) $arguments['excerptImage'] : null,
         ];
 
         $result = $this->pageService->createPage($data, $locale);
