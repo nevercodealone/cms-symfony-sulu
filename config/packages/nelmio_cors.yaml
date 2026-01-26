@@ -14,6 +14,30 @@ nelmio_cors:
             allow_headers: ['Content-Type']
             max_age: 3600
 
+        '^/oauth/':
+            allow_origin:
+                - 'https://claude.ai'
+                - 'https://claude.com'
+            allow_methods: ['GET', 'POST', 'OPTIONS']
+            allow_headers: ['Content-Type']
+            max_age: 3600
+
+        '^/authorize$':
+            allow_origin:
+                - 'https://claude.ai'
+                - 'https://claude.com'
+            allow_methods: ['GET', 'POST', 'OPTIONS']
+            allow_headers: ['Content-Type']
+            max_age: 3600
+
+        '^/token$':
+            allow_origin:
+                - 'https://claude.ai'
+                - 'https://claude.com'
+            allow_methods: ['POST', 'OPTIONS']
+            allow_headers: ['Content-Type']
+            max_age: 3600
+
         '^/mcp':
             allow_origin:
                 - 'https://claude.ai'

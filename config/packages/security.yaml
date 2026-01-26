@@ -15,6 +15,8 @@ security:
     access_control:
         - { path: ^/\.well-known/, roles: PUBLIC_ACCESS }
         - { path: ^/oauth/, roles: PUBLIC_ACCESS }
+        - { path: ^/authorize$, roles: PUBLIC_ACCESS }
+        - { path: ^/token$, roles: PUBLIC_ACCESS }
         - { path: ^/admin/reset, roles: PUBLIC_ACCESS }
         - { path: ^/admin/security/reset, roles: PUBLIC_ACCESS }
         - { path: ^/admin/login$, roles: PUBLIC_ACCESS }
@@ -39,6 +41,14 @@ security:
 
         oauth:
             pattern: ^/oauth/
+            security: false
+
+        oauth_fallback_authorize:
+            pattern: ^/authorize$
+            security: false
+
+        oauth_fallback_token:
+            pattern: ^/token$
             security: false
 
         mcp:

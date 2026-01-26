@@ -36,8 +36,11 @@ class McpTokenAuthenticator extends AbstractAuthenticator
             return false;
         }
 
-        // Skip OAuth endpoints
+        // Skip OAuth endpoints (canonical and fallback paths)
         if (str_starts_with($path, '/oauth/')) {
+            return false;
+        }
+        if ($path === '/authorize' || $path === '/token') {
             return false;
         }
 
