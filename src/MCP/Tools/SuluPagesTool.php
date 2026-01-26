@@ -60,6 +60,8 @@ class SuluPagesTool implements StreamableToolInterface
     public function getDescription(): string
     {
         return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media. ' .
+            'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
+            'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
@@ -181,19 +183,19 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'excerptTitle',
                 type: PropertyType::STRING,
-                description: 'For create_page: Excerpt title for preview cards and listing pages',
+                description: 'For create_page/copy_page: Excerpt title for preview cards and listing pages',
                 required: false
             ),
             new SchemaProperty(
                 name: 'excerptDescription',
                 type: PropertyType::STRING,
-                description: 'For create_page: Excerpt description for preview cards and listing pages',
+                description: 'For create_page/copy_page: Excerpt description for preview cards and listing pages',
                 required: false
             ),
             new SchemaProperty(
                 name: 'excerptImage',
                 type: PropertyType::INTEGER,
-                description: 'For create_page: Media ID for excerpt image (use list_media to find IDs)',
+                description: 'For create_page/copy_page: Media ID for excerpt image, e.g. 993 (use list_media to find IDs)',
                 required: false
             ),
             new SchemaProperty(
