@@ -10,6 +10,7 @@ use App\Sulu\Block\BlockValidator;
 use App\Sulu\Block\BlockWriter;
 use App\Sulu\Cache\HttpCacheClearer;
 use App\Sulu\Logger\McpActivityLogger;
+use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
@@ -67,6 +68,7 @@ class PageService
         ?BlockValidator $blockValidator = null,
         private ?DocumentManagerInterface $documentManager = null,
         private ?HttpCacheClearer $httpCacheClearer = null,
+        private ?SnippetService $snippetService = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -209,6 +211,12 @@ class PageService
         $template = $this->extractPropertyFromXml($result['props'], 'template') ?? 'default';
         $url = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-url");
         $blocks = $this->extractBlocks($result['props'], $locale);
+        $blocks = $this->resolveSnippetReferences($blocks, $locale);
+
+        // Extract excerpt data
+        $excerptTitle = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-title");
+        $excerptDescription = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-description");
+        $excerptImages = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-images");
 
         // Get publication metadata
         $existsInLive = $this->isPagePublished($path);
@@ -226,6 +234,11 @@ class PageService
             'publishedAt' => $pubMeta['publishedAt'],
             'createdAt' => $pubMeta['createdAt'],
             'modifiedAt' => $pubMeta['modifiedAt'],
+            'excerpt' => [
+                'title' => $excerptTitle,
+                'description' => $excerptDescription,
+                'images' => $excerptImages ? json_decode($excerptImages, true) : null,
+            ],
         ];
     }
 
@@ -712,9 +725,9 @@ class PageService
     }
 
     /**
-     * Create a new page using DocumentManager.
+     * Create a new page using direct SQL.
      *
-     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool} $data
+     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string}
      */
     public function createPage(array $data, string $locale = 'de'): array
@@ -725,6 +738,9 @@ class PageService
         $seoTitle = $data['seoTitle'] ?? null;
         $seoDescription = $data['seoDescription'] ?? null;
         $publish = $data['publish'] ?? false;
+        $excerptTitle = $data['excerptTitle'] ?? null;
+        $excerptDescription = $data['excerptDescription'] ?? null;
+        $excerptImage = $data['excerptImage'] ?? null;
 
         // Validate required fields
         if (empty($parentPath)) {
@@ -782,7 +798,7 @@ class PageService
 
             // Build XML props
             $now = (new \DateTime())->format('Y-m-d\TH:i:s.v+00:00');
-            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish);
+            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish, $excerptTitle, $excerptDescription, $excerptImage);
 
             // Insert into BOTH workspaces
             foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
@@ -844,7 +860,10 @@ class PageService
         string $now,
         ?string $seoTitle = null,
         ?string $seoDescription = null,
-        bool $published = false
+        bool $published = false,
+        ?string $excerptTitle = null,
+        ?string $excerptDescription = null,
+        ?int $excerptImage = null,
     ): string {
         $titleLen = strlen($title);
         $urlLen = strlen($url);
@@ -901,6 +920,21 @@ class PageService
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoTitleLen . '">' . htmlspecialchars($seoTitleValue, ENT_XML1) . '</sv:value></sv:property>';
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoDescLen . '">' . htmlspecialchars($seoDescValue, ENT_XML1) . '</sv:value></sv:property>';
 
+        // Excerpt extension
+        if ($excerptTitle !== null) {
+            $excerptTitleLen = strlen($excerptTitle);
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $excerptTitleLen . '">' . htmlspecialchars($excerptTitle, ENT_XML1) . '</sv:value></sv:property>';
+        }
+        if ($excerptDescription !== null) {
+            $excerptDescLen = strlen($excerptDescription);
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $excerptDescLen . '">' . htmlspecialchars($excerptDescription, ENT_XML1) . '</sv:value></sv:property>';
+        }
+        if ($excerptImage !== null) {
+            $imageJson = json_encode(['ids' => [$excerptImage]], JSON_UNESCAPED_SLASHES);
+            $imageLen = strlen($imageJson);
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-images" sv:type="String" sv:multi-valued="0"><sv:value length="' . $imageLen . '">' . $imageJson . '</sv:value></sv:property>';
+        }
+
         $xml .= '</sv:node>' . "\n";
 
         return $xml;
@@ -943,6 +977,39 @@ class PageService
     private function extractBlocks(string $xmlString, string $locale): array
     {
         return $this->blockExtractor->extractBlocks($xmlString, $locale);
+    }
+
+    /**
+     * Resolve snippet UUID references in blocks to {uuid, title} objects.
+     *
+     * @param array<mixed> $blocks
+     * @return array<mixed>
+     */
+    private function resolveSnippetReferences(array $blocks, string $locale): array
+    {
+        if (!$this->snippetService) {
+            return $blocks;
+        }
+
+        foreach ($blocks as &$block) {
+            if (!isset($block['snippets']) || !is_array($block['snippets'])) {
+                continue;
+            }
+            $resolved = [];
+            foreach ($block['snippets'] as $uuid) {
+                if (!is_string($uuid)) {
+                    $resolved[] = $uuid;
+                    continue;
+                }
+                $snippet = $this->snippetService->getSnippet($uuid, $locale);
+                $resolved[] = $snippet
+                    ? ['uuid' => $uuid, 'title' => $snippet['title']]
+                    : ['uuid' => $uuid, 'title' => null];
+            }
+            $block['snippets'] = $resolved;
+        }
+
+        return $blocks;
     }
 
     /**
