@@ -472,6 +472,59 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test create_page passes excerpt parameters to PageService.
+     */
+    public function testCreatePagePassesExcerptParams(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('createPage')
+            ->willReturnCallback(function ($data) use (&$capturedData) {
+                $capturedData = $data;
+                return ['success' => true, 'message' => 'OK'];
+            });
+
+        $this->tool->execute([
+            'action' => 'create_page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test',
+            'resourceSegment' => '/test',
+            'excerptTitle' => 'My Excerpt Title',
+            'excerptDescription' => 'My excerpt description',
+            'excerptImage' => 42,
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertEquals('My Excerpt Title', $capturedData['excerptTitle']);
+        $this->assertEquals('My excerpt description', $capturedData['excerptDescription']);
+        $this->assertEquals(42, $capturedData['excerptImage']);
+    }
+
+    /**
+     * Test create_page excerpt params default to null.
+     */
+    public function testCreatePageExcerptParamsDefaultToNull(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('createPage')
+            ->willReturnCallback(function ($data) use (&$capturedData) {
+                $capturedData = $data;
+                return ['success' => true, 'message' => 'OK'];
+            });
+
+        $this->tool->execute([
+            'action' => 'create_page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Test',
+            'resourceSegment' => '/test',
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertNull($capturedData['excerptTitle']);
+        $this->assertNull($capturedData['excerptDescription']);
+        $this->assertNull($capturedData['excerptImage']);
+    }
+
+    /**
      * Test add_block with JSON array content (not object) falls back to buildBlock.
      */
     public function testAddBlockWithJsonArrayContentFallsBackToBuildBlock(): void
