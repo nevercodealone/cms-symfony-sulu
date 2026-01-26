@@ -37,7 +37,7 @@ class McpOAuthController extends AbstractController
         return new JsonResponse([
             'resource' => $baseUrl . '/mcp',
             'authorization_servers' => [
-                $baseUrl . '/',
+                $baseUrl,
             ],
             'scopes_supported' => ['mcp:access'],
             'bearer_methods_supported' => ['header'],
