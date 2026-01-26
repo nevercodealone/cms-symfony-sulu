@@ -46,6 +46,7 @@ services:
       - MCP_PROJECT_NAME=$MCP_PROJECT_NAME
       - MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME
       - MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME
+      - LOCK_DSN=$LOCK_DSN
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
       - APP_URL=https://$URL
   chromadb:
