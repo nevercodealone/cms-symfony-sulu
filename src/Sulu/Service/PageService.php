@@ -1531,6 +1531,153 @@ class PageService
     }
 
     /**
+     * Copy a page with all its blocks to a new location.
+     *
+     * Reads the source page, creates a new page with the same excerpt data,
+     * then copies all blocks. Creates as draft first, only publishes if
+     * all blocks were successfully copied and publish=true.
+     *
+     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool} $data
+     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, blocksCopied?: int, blocksFailed?: int, errors?: array<string>}
+     */
+    public function copyPage(array $data, string $locale = 'de'): array
+    {
+        $sourcePath = $data['sourcePath'] ?? '';
+        if (empty($sourcePath)) {
+            return ['success' => false, 'message' => 'sourcePath is required'];
+        }
+
+        // Get source page
+        $sourcePage = $this->getPage($sourcePath, $locale);
+        if ($sourcePage === null) {
+            return ['success' => false, 'message' => "Source page not found: {$sourcePath}"];
+        }
+
+        $title = $data['title'] ?? '';
+        $resourceSegment = $data['resourceSegment'] ?? '';
+
+        // Build create data, inheriting excerpt from source unless overridden
+        $createData = [
+            'parentPath' => $data['parentPath'] ?? dirname($sourcePath),
+            'title' => $title,
+            'resourceSegment' => $resourceSegment,
+            'seoTitle' => $data['seoTitle'] ?? null,
+            'seoDescription' => $data['seoDescription'] ?? null,
+            'excerptTitle' => $data['excerptTitle'] ?? $sourcePage['excerpt']['title'] ?? null,
+            'excerptDescription' => $data['excerptDescription'] ?? $sourcePage['excerpt']['description'] ?? null,
+            'excerptImage' => $data['excerptImage'] ?? null,
+            'publish' => false, // Always create as draft first
+        ];
+
+        // Inherit excerpt image from source if not overridden
+        if ($createData['excerptImage'] === null && isset($sourcePage['excerpt']['images']['ids'][0])) {
+            $createData['excerptImage'] = $sourcePage['excerpt']['images']['ids'][0];
+        }
+
+        // Create the new page
+        $createResult = $this->createPage($createData, $locale);
+        if (!$createResult['success']) {
+            return $createResult;
+        }
+
+        $newPath = $createResult['path'];
+        $blocksCopied = 0;
+        $blocksFailed = 0;
+        $errors = [];
+
+        // Copy blocks from source
+        foreach ($sourcePage['blocks'] as $position => $block) {
+            $cleanBlock = $this->cleanBlockForCopy($block);
+            $addResult = $this->addBlock($newPath, $cleanBlock, $position, $locale);
+            if ($addResult['success']) {
+                $blocksCopied++;
+            } else {
+                $blocksFailed++;
+                $errors[] = "Block {$position} ({$block['type']}): {$addResult['message']}";
+            }
+        }
+
+        // Publish only if requested AND all blocks succeeded
+        $publish = $data['publish'] ?? false;
+        if ($publish && $blocksFailed === 0) {
+            $this->publishPage($newPath, $locale);
+        }
+
+        $this->activityLogger->logMcpAction(
+            'mcp_page_copied',
+            $newPath,
+            $locale,
+            [
+                'sourcePath' => $sourcePath,
+                'blocksCopied' => $blocksCopied,
+                'blocksFailed' => $blocksFailed,
+            ]
+        );
+
+        $result = [
+            'success' => true,
+            'message' => "Page copied successfully ({$blocksCopied} blocks copied" . ($blocksFailed > 0 ? ", {$blocksFailed} failed" : '') . ')',
+            'path' => $newPath,
+            'uuid' => $createResult['uuid'],
+            'url' => $createResult['url'],
+            'blocksCopied' => $blocksCopied,
+            'blocksFailed' => $blocksFailed,
+        ];
+
+        if (!empty($errors)) {
+            $result['errors'] = $errors;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Convert resolved snippet references back to raw UUID arrays.
+     *
+     * getPage() resolves snippet UUIDs to {uuid, title} objects,
+     * but addBlock() expects raw UUID arrays. This converts back.
+     *
+     * @param array<mixed> $block
+     * @return array<mixed>
+     */
+    private function unresolveSnippetReferences(array $block): array
+    {
+        if (!isset($block['snippets']) || !is_array($block['snippets'])) {
+            return $block;
+        }
+
+        $rawUuids = [];
+        foreach ($block['snippets'] as $snippet) {
+            if (is_array($snippet) && isset($snippet['uuid'])) {
+                $rawUuids[] = $snippet['uuid'];
+            } elseif (is_string($snippet)) {
+                $rawUuids[] = $snippet;
+            }
+        }
+
+        $block['snippets'] = $rawUuids;
+        return $block;
+    }
+
+    /**
+     * Clean a block for copying by removing read-only fields
+     * and converting resolved references back to raw values.
+     *
+     * @param array<mixed> $block
+     * @return array<mixed>
+     */
+    private function cleanBlockForCopy(array $block): array
+    {
+        // Remove read-only position field added by BlockExtractor
+        unset($block['position']);
+
+        // Convert resolved snippet references back to raw UUIDs
+        $block = $this->unresolveSnippetReferences($block);
+
+        return $block;
+    }
+
+    /**
      * Check if a page exists in the live workspace.
      */
     private function isPagePublished(string $path): bool

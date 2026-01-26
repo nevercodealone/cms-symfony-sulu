@@ -525,6 +525,130 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test copy_page action calls PageService::copyPage with correct data.
+     */
+    public function testCopyPageAction(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('copyPage')
+            ->willReturnCallback(function ($data) use (&$capturedData) {
+                $capturedData = $data;
+                return [
+                    'success' => true,
+                    'message' => 'Page copied successfully (2 blocks copied)',
+                    'path' => '/cmf/example/contents/copy',
+                    'uuid' => 'new-uuid',
+                    'url' => '/de/copy',
+                    'blocksCopied' => 2,
+                    'blocksFailed' => 0,
+                ];
+            });
+
+        $result = $this->tool->execute([
+            'action' => 'copy_page',
+            'sourcePath' => '/cmf/example/contents/source',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Copied Page',
+            'resourceSegment' => '/copy',
+            'publish' => 'true',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertEquals('/cmf/example/contents/source', $capturedData['sourcePath']);
+        $this->assertEquals('/cmf/example/contents', $capturedData['parentPath']);
+        $this->assertEquals('Copied Page', $capturedData['title']);
+        $this->assertEquals('/copy', $capturedData['resourceSegment']);
+        $this->assertTrue($capturedData['publish']);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('success', $sanitized['text']);
+    }
+
+    /**
+     * Test copy_page falls back to path parameter when sourcePath not provided.
+     */
+    public function testCopyPageFallsBackToPath(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('copyPage')
+            ->willReturnCallback(function ($data) use (&$capturedData) {
+                $capturedData = $data;
+                return ['success' => true, 'message' => 'OK'];
+            });
+
+        $this->tool->execute([
+            'action' => 'copy_page',
+            'path' => '/cmf/example/contents/source',
+            'title' => 'Copy',
+            'resourceSegment' => '/copy',
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertEquals('/cmf/example/contents/source', $capturedData['sourcePath']);
+    }
+
+    /**
+     * Test copy_page passes excerpt parameters.
+     */
+    public function testCopyPagePassesExcerptParams(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('copyPage')
+            ->willReturnCallback(function ($data) use (&$capturedData) {
+                $capturedData = $data;
+                return ['success' => true, 'message' => 'OK'];
+            });
+
+        $this->tool->execute([
+            'action' => 'copy_page',
+            'sourcePath' => '/cmf/example/contents/source',
+            'title' => 'Copy',
+            'resourceSegment' => '/copy',
+            'excerptTitle' => 'Custom Excerpt',
+            'excerptDescription' => 'Custom Description',
+            'excerptImage' => 42,
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertEquals('Custom Excerpt', $capturedData['excerptTitle']);
+        $this->assertEquals('Custom Description', $capturedData['excerptDescription']);
+        $this->assertEquals(42, $capturedData['excerptImage']);
+    }
+
+    /**
+     * Test copy_page publish defaults to false.
+     */
+    public function testCopyPagePublishDefaultsToFalse(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('copyPage')
+            ->willReturnCallback(function ($data) use (&$capturedData) {
+                $capturedData = $data;
+                return ['success' => true, 'message' => 'OK'];
+            });
+
+        $this->tool->execute([
+            'action' => 'copy_page',
+            'sourcePath' => '/cmf/example/contents/source',
+            'title' => 'Copy',
+            'resourceSegment' => '/copy',
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertFalse($capturedData['publish']);
+    }
+
+    /**
+     * Test description mentions copy_page action.
+     */
+    public function testDescriptionIncludesCopyPage(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('copy_page', $description);
+    }
+
+    /**
      * Test add_block with JSON array content (not object) falls back to buildBlock.
      */
     public function testAddBlockWithJsonArrayContentFallsBackToBuildBlock(): void

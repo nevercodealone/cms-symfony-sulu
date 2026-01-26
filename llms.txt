@@ -124,6 +124,7 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 
 ### Page Management
 - `create_page` - Create a new page
+- `copy_page` - Copy a page with all blocks to a new location
 - `publish` - Publish page
 - `unpublish` - Unpublish page
 
@@ -211,6 +212,68 @@ Create new pages under an existing parent path.
 | `excerptTitle` | No | Excerpt title for preview cards and listing pages |
 | `excerptDescription` | No | Excerpt description for preview cards |
 | `excerptImage` | No | Media ID for excerpt image (use `list_media` to find IDs) |
+
+### Copying Pages
+
+#### copy_page Action
+
+Copy a page with all blocks to a new location. Inherits excerpt data from source unless overridden.
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `sourcePath` | Yes | PHPCR path of source page to copy (or use `path`) |
+| `title` | Yes | Title for the new page |
+| `resourceSegment` | Yes | URL slug starting with `/` |
+| `parentPath` | No | Parent path (defaults to source's parent) |
+| `seoTitle` | No | SEO meta title |
+| `seoDescription` | No | SEO meta description |
+| `excerptTitle` | No | Excerpt title (inherits from source if not set) |
+| `excerptDescription` | No | Excerpt description (inherits from source if not set) |
+| `excerptImage` | No | Media ID for excerpt image (inherits from source if not set) |
+| `publish` | No | Publish after copy (default: `false`, only publishes if all blocks succeed) |
+
+**Behavior:**
+- Creates as **draft first**, only publishes if `publish: true` AND all blocks copied successfully
+- **Excerpt inheritance**: excerpt title, description, and image are copied from source unless explicitly overridden
+- **Shared media**: media IDs are copied as-is (references same media, no duplication)
+- **Block validation**: each block is validated for the target path (e.g., `hl-des` restriction to `/training/*` still applies)
+- **Partial failure**: if some blocks fail validation, the page is still created with successful blocks
+
+**Example:**
+```json
+{
+  "action": "copy_page",
+  "sourcePath": "/cmf/example/contents/glossare/nca-php-glossar/phpunit",
+  "parentPath": "/cmf/example/contents/glossare/nca-php-glossar",
+  "title": "PHPStan",
+  "resourceSegment": "/phpstan",
+  "seoTitle": "PHPStan - PHP Static Analysis Tool",
+  "seoDescription": "PHPStan findet Fehler in PHP-Code ohne ihn auszuführen.",
+  "publish": "true"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Page copied successfully (5 blocks copied)",
+  "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan",
+  "uuid": "abc-123-def",
+  "url": "/de/glossare/nca-php-glossar/phpstan",
+  "blocksCopied": 5,
+  "blocksFailed": 0
+}
+```
+
+**Copy and Customize Workflow:**
+```
+1. copy_page: Copy template page to new location
+2. update_block: Customize individual blocks with new content
+3. publish: Make the page live
+```
 
 ---
 
@@ -1194,6 +1257,84 @@ Response includes for each type:
 - `example` - Complete example data structure
 
 **IMPORTANT:** Always check `nestedType` before creating nested items. Using the wrong type causes items to not render in the frontend.
+
+---
+
+## Known Snippet UUIDs (Contact Snippets)
+
+These contact snippets are available for use in `contact` blocks via the `snippets` parameter:
+
+| Themenbereich | Snippet UUID | Titel |
+|---------------|-------------|-------|
+| KI Content Marketing | `cdba3044-9725-41c0-8056-0437dfae2841` | Ihr Ansprechpartner für KI Content Marketing |
+| PHP Consulting | `4499c20b-6de3-4999-9c85-cab9deeb789b` | PHP Consultant Spezialisten |
+| Barrierefreiheit | `e3175c1c-0530-43fd-9e18-b5e83794b1f1` | Spezialisten zu barrierefreiem Webdesign |
+| Frontend/Astro | `c410e179-203d-4573-a4fe-b20525797463` | Frontend 2025 mit Astro JS |
+| Accessibility Dev | `70ed51ae-641e-4908-9c82-fc893ff0fe2c` | Frontend-Entwicklung mit Accessibility |
+
+**Usage in contact block:**
+```json
+{
+  "action": "add_block",
+  "path": "/cmf/example/contents/my-page",
+  "blockType": "contact",
+  "snippets": "[\"cdba3044-9725-41c0-8056-0437dfae2841\"]",
+  "description": "<p>Kontaktieren Sie uns für KI Content Marketing.</p>"
+}
+```
+
+## Known Media IDs
+
+| Thema | Media ID | Dateiname |
+|-------|----------|-----------|
+| MCP Server | 993 | nca-mcp-php-server.jpg |
+
+**Usage in excerpt image:**
+```json
+{
+  "action": "create_page",
+  "parentPath": "/cmf/example/contents",
+  "title": "MCP Server",
+  "resourceSegment": "/mcp-server",
+  "excerptImage": 993
+}
+```
+
+---
+
+## Template Pages & Content Workflows
+
+### Template Pages by Content Area
+
+Use these pages as templates with `copy_page` to quickly create new content:
+
+| Content Area | Template Page Path | Description |
+|--------------|-------------------|-------------|
+| PHP Glossar | `/cmf/example/contents/glossare/nca-php-glossar/phpunit` | PHP glossary entry with standard structure |
+| KI Tools | `/cmf/example/contents/ki-tools` | KI/AI tool pages |
+| Accessibility | `/cmf/example/contents/barrierefreiheit` | Accessibility content pages |
+| Training | `/cmf/example/contents/training` | Training course pages (uses `hl-des` blocks) |
+
+### Standard Content Workflow
+
+1. **Find template**: `get` a template page to understand its block structure
+2. **Copy**: `copy_page` to create new page with same structure
+3. **Customize**: `update_block` to change content in individual blocks
+4. **Add content**: `add_block` / `append_to_block` for additional content
+5. **Publish**: `publish` to make page live
+
+### Copy Workflow Example
+
+```json
+// Step 1: Copy an existing glossary entry as template
+{"action": "copy_page", "sourcePath": "/cmf/example/contents/glossare/nca-php-glossar/phpunit", "parentPath": "/cmf/example/contents/glossare/nca-php-glossar", "title": "PHPStan", "resourceSegment": "/phpstan"}
+
+// Step 2: Update the first block with new content
+{"action": "update_block", "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan", "position": 0, "headline": "Was ist PHPStan?", "items": "[{\"type\":\"description\",\"description\":\"<p>PHPStan ist ein statisches Analyse-Tool für PHP.</p>\"}]"}
+
+// Step 3: Publish when ready
+{"action": "publish", "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan"}
+```
 
 ---
 
