@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Sulu\Service;
 
 use App\Sulu\Logger\McpActivityLogger;
 use App\Sulu\Service\PageService;
+use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -968,5 +969,163 @@ XML;
         $result = $this->pageService->findPageByUrl('/nonexistent-page', 'de');
 
         $this->assertNull($result);
+    }
+
+    // ==========================================================================
+    // Snippet Resolution Tests
+    // ==========================================================================
+
+    public function testGetPageResolvesSnippetUuidsToTitles(): void
+    {
+        $xmlWithSnippets = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Contact Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="38">["uuid-abc-123","uuid-def-456"]</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')
+            ->willReturnCallback(function (string $uuid) {
+                return match ($uuid) {
+                    'uuid-abc-123' => ['uuid' => 'uuid-abc-123', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
+                    'uuid-def-456' => ['uuid' => 'uuid-def-456', 'title' => 'Support Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
+                    default => null,
+                };
+            });
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            null, null, null, null, null, null, null, null,
+            $snippetService
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
+
+        $result = $pageService->getPage('/cmf/example/contents/contact', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertCount(1, $result['blocks']);
+        $this->assertArrayHasKey('snippets', $result['blocks'][0]);
+        $snippets = $result['blocks'][0]['snippets'];
+        $this->assertCount(2, $snippets);
+        $this->assertEquals('uuid-abc-123', $snippets[0]['uuid']);
+        $this->assertEquals('Main Contact', $snippets[0]['title']);
+        $this->assertEquals('uuid-def-456', $snippets[1]['uuid']);
+        $this->assertEquals('Support Contact', $snippets[1]['title']);
+    }
+
+    public function testGetPageHandlesUnresolvableSnippetUuids(): void
+    {
+        $xmlWithSnippets = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Contact Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="20">["nonexistent-uuid"]</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')->willReturn(null);
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            null, null, null, null, null, null, null, null,
+            $snippetService
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
+
+        $result = $pageService->getPage('/cmf/example/contents/contact', 'de');
+
+        $this->assertNotNull($result);
+        $snippets = $result['blocks'][0]['snippets'];
+        $this->assertCount(1, $snippets);
+        $this->assertEquals('nonexistent-uuid', $snippets[0]['uuid']);
+        $this->assertNull($snippets[0]['title']);
+    }
+
+    // ==========================================================================
+    // Excerpt Data Tests
+    // ==========================================================================
+
+    public function testGetPageReturnsExcerptData(): void
+    {
+        $xmlWithExcerpt = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="9">Test Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">default</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="13">Excerpt Title</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-description" sv:type="String" sv:multi-valued="0">
+        <sv:value length="19">Excerpt description</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-images" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">{"ids":[42]}</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/test', 'props' => $xmlWithExcerpt]);
+
+        $result = $this->pageService->getPage('/cmf/example/contents/test', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertArrayHasKey('excerpt', $result);
+        $this->assertEquals('Excerpt Title', $result['excerpt']['title']);
+        $this->assertEquals('Excerpt description', $result['excerpt']['description']);
+        $this->assertEquals(['ids' => [42]], $result['excerpt']['images']);
+    }
+
+    public function testGetPageReturnsNullExcerptWhenNotSet(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/test', 'props' => self::SAMPLE_PHPCR_XML]);
+
+        $result = $this->pageService->getPage('/cmf/example/contents/test', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertArrayHasKey('excerpt', $result);
+        $this->assertNull($result['excerpt']['title']);
+        $this->assertNull($result['excerpt']['description']);
+        $this->assertNull($result['excerpt']['images']);
     }
 }
