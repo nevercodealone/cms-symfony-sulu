@@ -208,6 +208,47 @@ Create new pages under an existing parent path.
 | `seoTitle` | No | SEO meta title |
 | `seoDescription` | No | SEO meta description |
 | `publish` | No | Publish immediately (default: `false`) |
+| `excerptTitle` | No | Excerpt title for preview cards and listing pages |
+| `excerptDescription` | No | Excerpt description for preview cards |
+| `excerptImage` | No | Media ID for excerpt image (use `list_media` to find IDs) |
+
+---
+
+## Page Response Enhancements
+
+### Excerpt Data
+
+The `get` action now returns an `excerpt` object with the page's excerpt metadata:
+
+```json
+{
+  "path": "/cmf/example/contents/my-page",
+  "title": "My Page",
+  "excerpt": {
+    "title": "Excerpt Title",
+    "description": "Excerpt description text",
+    "images": {"ids": [42]}
+  }
+}
+```
+
+Excerpt values are `null` when not set. Use `list_media` to find media IDs for `excerptImage`.
+
+### Snippet Title Resolution
+
+Contact blocks with snippet UUIDs now return resolved titles instead of raw UUIDs:
+
+```json
+{
+  "type": "contact",
+  "snippets": [
+    {"uuid": "abc-123-def", "title": "Main Contact"},
+    {"uuid": "ghi-456-jkl", "title": "Support Contact"}
+  ]
+}
+```
+
+If a snippet UUID cannot be resolved, `title` will be `null`.
 
 ---
 
