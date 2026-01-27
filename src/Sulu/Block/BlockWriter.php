@@ -67,10 +67,15 @@ final class BlockWriter
 
         if ($schema !== null) {
             // Write all top-level properties from schema
+            $jsonProps = ['image', 'images', 'snippets', 'organisation', 'settings'];
             foreach ($schema['properties'] as $propName) {
                 if (isset($block[$propName])) {
-                    // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags)
-                    if (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
+                    // JSON properties must ALWAYS be encoded as JSON strings, never as nested items
+                    if (in_array($propName, $jsonProps, true) && is_array($block[$propName])) {
+                        $value = $this->encodePropertyValue($propName, $block[$propName]);
+                        $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
+                    } elseif (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
+                        // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags)
                         $nestedProps = $this->registry->getNestedProperties($type);
                         $this->writeNestedItems(
                             $xml,

@@ -419,6 +419,41 @@ XML);
         $this->assertEquals('English Headline', $blocks[0]['headline']);
     }
 
+    // === Heroslider Images Round-Trip Test ===
+
+    public function testAddHerosliderBlockWithImages(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'heroslider',
+            'headline' => 'Slider Title',
+            'description' => '<p>Slider description.</p>',
+            'pageurl1' => '/page1',
+            'pageurl2' => '/page2',
+            'images' => ['ids' => [100, 101], 'displayOption' => 'top'],
+        ]);
+
+        // Update the length
+        $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-length"]/sv:value');
+        if ($lengthNodes !== false && $lengthNodes->length > 0) {
+            $lengthNodes->item(0)->nodeValue = '1';
+        }
+
+        // Extract and verify round-trip
+        $blocks = $this->extractor->extractBlocks($xml->saveXML(), 'de');
+
+        $this->assertCount(1, $blocks);
+        $this->assertEquals('heroslider', $blocks[0]['type']);
+        $this->assertEquals('Slider Title', $blocks[0]['headline']);
+        $this->assertArrayHasKey('images', $blocks[0]);
+        $this->assertIsArray($blocks[0]['images']);
+        $this->assertEquals([100, 101], $blocks[0]['images']['ids']);
+        $this->assertEquals('top', $blocks[0]['images']['displayOption']);
+    }
+
     // === Unknown Block Type Fallback ===
 
     public function testAddUnknownBlockTypeFallsBackToCommonProperties(): void
