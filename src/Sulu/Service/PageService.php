@@ -10,6 +10,7 @@ use App\Sulu\Block\BlockValidator;
 use App\Sulu\Block\BlockWriter;
 use App\Sulu\Cache\HttpCacheClearer;
 use App\Sulu\Logger\McpActivityLogger;
+use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
@@ -67,6 +68,7 @@ class PageService
         ?BlockValidator $blockValidator = null,
         private ?DocumentManagerInterface $documentManager = null,
         private ?HttpCacheClearer $httpCacheClearer = null,
+        private ?SnippetService $snippetService = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -192,7 +194,7 @@ class PageService
     /**
      * Get page content including blocks.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null}|null
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null, excerpt: array{title: string|null, description: string|null, images: array<mixed>|null}}|null
      */
     public function getPage(string $path, string $locale = 'de'): ?array
     {
@@ -209,6 +211,12 @@ class PageService
         $template = $this->extractPropertyFromXml($result['props'], 'template') ?? 'default';
         $url = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-url");
         $blocks = $this->extractBlocks($result['props'], $locale);
+        $blocks = $this->resolveSnippetReferences($blocks, $locale);
+
+        // Extract excerpt data
+        $excerptTitle = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-title");
+        $excerptDescription = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-description");
+        $excerptImages = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-images");
 
         // Get publication metadata
         $existsInLive = $this->isPagePublished($path);
@@ -226,6 +234,11 @@ class PageService
             'publishedAt' => $pubMeta['publishedAt'],
             'createdAt' => $pubMeta['createdAt'],
             'modifiedAt' => $pubMeta['modifiedAt'],
+            'excerpt' => [
+                'title' => $excerptTitle,
+                'description' => $excerptDescription,
+                'images' => $excerptImages ? json_decode($excerptImages, true) : null,
+            ],
         ];
     }
 
@@ -712,9 +725,9 @@ class PageService
     }
 
     /**
-     * Create a new page using DocumentManager.
+     * Create a new page using direct SQL.
      *
-     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool} $data
+     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string}
      */
     public function createPage(array $data, string $locale = 'de'): array
@@ -725,6 +738,9 @@ class PageService
         $seoTitle = $data['seoTitle'] ?? null;
         $seoDescription = $data['seoDescription'] ?? null;
         $publish = $data['publish'] ?? false;
+        $excerptTitle = $data['excerptTitle'] ?? null;
+        $excerptDescription = $data['excerptDescription'] ?? null;
+        $excerptImage = $data['excerptImage'] ?? null;
 
         // Validate required fields
         if (empty($parentPath)) {
@@ -782,7 +798,7 @@ class PageService
 
             // Build XML props
             $now = (new \DateTime())->format('Y-m-d\TH:i:s.v+00:00');
-            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish);
+            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish, $excerptTitle, $excerptDescription, $excerptImage);
 
             // Insert into BOTH workspaces
             foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
@@ -844,7 +860,10 @@ class PageService
         string $now,
         ?string $seoTitle = null,
         ?string $seoDescription = null,
-        bool $published = false
+        bool $published = false,
+        ?string $excerptTitle = null,
+        ?string $excerptDescription = null,
+        ?int $excerptImage = null,
     ): string {
         $titleLen = strlen($title);
         $urlLen = strlen($url);
@@ -901,6 +920,21 @@ class PageService
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoTitleLen . '">' . htmlspecialchars($seoTitleValue, ENT_XML1) . '</sv:value></sv:property>';
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoDescLen . '">' . htmlspecialchars($seoDescValue, ENT_XML1) . '</sv:value></sv:property>';
 
+        // Excerpt extension
+        if ($excerptTitle !== null) {
+            $excerptTitleLen = strlen($excerptTitle);
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $excerptTitleLen . '">' . htmlspecialchars($excerptTitle, ENT_XML1) . '</sv:value></sv:property>';
+        }
+        if ($excerptDescription !== null) {
+            $excerptDescLen = strlen($excerptDescription);
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $excerptDescLen . '">' . htmlspecialchars($excerptDescription, ENT_XML1) . '</sv:value></sv:property>';
+        }
+        if ($excerptImage !== null) {
+            $imageJson = json_encode(['ids' => [$excerptImage]], JSON_UNESCAPED_SLASHES);
+            $imageLen = strlen($imageJson);
+            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-images" sv:type="String" sv:multi-valued="0"><sv:value length="' . $imageLen . '">' . $imageJson . '</sv:value></sv:property>';
+        }
+
         $xml .= '</sv:node>' . "\n";
 
         return $xml;
@@ -943,6 +977,39 @@ class PageService
     private function extractBlocks(string $xmlString, string $locale): array
     {
         return $this->blockExtractor->extractBlocks($xmlString, $locale);
+    }
+
+    /**
+     * Resolve snippet UUID references in blocks to {uuid, title} objects.
+     *
+     * @param array<mixed> $blocks
+     * @return array<mixed>
+     */
+    private function resolveSnippetReferences(array $blocks, string $locale): array
+    {
+        if (!$this->snippetService) {
+            return $blocks;
+        }
+
+        foreach ($blocks as &$block) {
+            if (!isset($block['snippets']) || !is_array($block['snippets'])) {
+                continue;
+            }
+            $resolved = [];
+            foreach ($block['snippets'] as $uuid) {
+                if (!is_string($uuid)) {
+                    $resolved[] = $uuid;
+                    continue;
+                }
+                $snippet = $this->snippetService->getSnippet($uuid, $locale);
+                $resolved[] = $snippet
+                    ? ['uuid' => $uuid, 'title' => $snippet['title']]
+                    : ['uuid' => $uuid, 'title' => null];
+            }
+            $block['snippets'] = $resolved;
+        }
+
+        return $blocks;
     }
 
     /**
@@ -1025,6 +1092,136 @@ class PageService
                 'success' => true,
                 'message' => 'Block updated successfully',
                 'blocks' => $updatedPage['blocks'] ?? [],
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Update excerpt data (title, description, image) on an existing page.
+     *
+     * @param array{excerptTitle?: string|null, excerptDescription?: string|null, excerptImage?: int|null} $data
+     * @return array{success: bool, message: string, excerpt?: array{title: string|null, description: string|null, images: array<mixed>|null}}
+     */
+    public function updateExcerpt(string $path, array $data, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if (!$rootNode) {
+                return ['success' => false, 'message' => 'Invalid XML structure'];
+            }
+
+            $fieldMap = [
+                'excerptTitle' => "i18n:{$locale}-excerpt-title",
+                'excerptDescription' => "i18n:{$locale}-excerpt-description",
+                'excerptImage' => "i18n:{$locale}-excerpt-images",
+            ];
+
+            $updatedFields = [];
+
+            foreach ($fieldMap as $dataKey => $propertyName) {
+                if (!array_key_exists($dataKey, $data)) {
+                    continue;
+                }
+
+                $value = $data[$dataKey];
+
+                // Encode image as JSON
+                if ($dataKey === 'excerptImage' && $value !== null) {
+                    $value = json_encode(['ids' => [(int) $value]], JSON_UNESCAPED_SLASHES);
+                }
+
+                $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
+
+                if ($value === null) {
+                    // Remove the property if explicitly null
+                    if ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
+                        $node = $existingNodes->item(0);
+                        if ($node->parentNode) {
+                            $node->parentNode->removeChild($node);
+                        }
+                    }
+                    $updatedFields[] = $dataKey;
+                } elseif ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
+                    // Update existing property
+                    $propertyNode = $existingNodes->item(0);
+                    $valueNodes = $xpath->query('sv:value', $propertyNode);
+                    if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
+                        $valueNode = $valueNodes->item(0);
+                        $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
+                        if ($valueNode instanceof \DOMElement) {
+                            $valueNode->setAttribute('length', (string) strlen((string) $value));
+                        }
+                    }
+                    $updatedFields[] = $dataKey;
+                } else {
+                    // Create new property
+                    $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                    $property->setAttribute('sv:name', $propertyName);
+                    $property->setAttribute('sv:type', 'String');
+                    $property->setAttribute('sv:multi-valued', '0');
+
+                    $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
+                    $valueEl->setAttribute('length', (string) strlen((string) $value));
+                    $valueEl->appendChild($xml->createTextNode((string) $value));
+                    $property->appendChild($valueEl);
+
+                    $rootNode->appendChild($property);
+                    $updatedFields[] = $dataKey;
+                }
+            }
+
+            $updatedXml = $xml->saveXML();
+
+            // Update both workspaces
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_excerpt_updated',
+                $path,
+                $locale,
+                ['fields' => $updatedFields]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            // Read back the current excerpt values
+            $excerptTitle = $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-excerpt-title");
+            $excerptDescription = $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-excerpt-description");
+            $excerptImages = $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-excerpt-images");
+
+            return [
+                'success' => true,
+                'message' => 'Excerpt updated successfully',
+                'excerpt' => [
+                    'title' => $excerptTitle,
+                    'description' => $excerptDescription,
+                    'images' => $excerptImages ? json_decode($excerptImages, true) : null,
+                ],
             ];
 
         } catch (\Exception $e) {
@@ -1461,6 +1658,153 @@ class PageService
         }
 
         return $url;
+    }
+
+    /**
+     * Copy a page with all its blocks to a new location.
+     *
+     * Reads the source page, creates a new page with the same excerpt data,
+     * then copies all blocks. Creates as draft first, only publishes if
+     * all blocks were successfully copied and publish=true.
+     *
+     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool} $data
+     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, blocksCopied?: int, blocksFailed?: int, errors?: array<string>}
+     */
+    public function copyPage(array $data, string $locale = 'de'): array
+    {
+        $sourcePath = $data['sourcePath'] ?? '';
+        if (empty($sourcePath)) {
+            return ['success' => false, 'message' => 'sourcePath is required'];
+        }
+
+        // Get source page
+        $sourcePage = $this->getPage($sourcePath, $locale);
+        if ($sourcePage === null) {
+            return ['success' => false, 'message' => "Source page not found: {$sourcePath}"];
+        }
+
+        $title = $data['title'] ?? '';
+        $resourceSegment = $data['resourceSegment'] ?? '';
+
+        // Build create data, inheriting excerpt from source unless overridden
+        $createData = [
+            'parentPath' => $data['parentPath'] ?? dirname($sourcePath),
+            'title' => $title,
+            'resourceSegment' => $resourceSegment,
+            'seoTitle' => $data['seoTitle'] ?? null,
+            'seoDescription' => $data['seoDescription'] ?? null,
+            'excerptTitle' => $data['excerptTitle'] ?? $sourcePage['excerpt']['title'] ?? null,
+            'excerptDescription' => $data['excerptDescription'] ?? $sourcePage['excerpt']['description'] ?? null,
+            'excerptImage' => $data['excerptImage'] ?? null,
+            'publish' => false, // Always create as draft first
+        ];
+
+        // Inherit excerpt image from source if not overridden
+        if ($createData['excerptImage'] === null && isset($sourcePage['excerpt']['images']['ids'][0])) {
+            $createData['excerptImage'] = $sourcePage['excerpt']['images']['ids'][0];
+        }
+
+        // Create the new page
+        $createResult = $this->createPage($createData, $locale);
+        if (!$createResult['success']) {
+            return $createResult;
+        }
+
+        $newPath = $createResult['path'];
+        $blocksCopied = 0;
+        $blocksFailed = 0;
+        $errors = [];
+
+        // Copy blocks from source
+        foreach ($sourcePage['blocks'] as $position => $block) {
+            $cleanBlock = $this->cleanBlockForCopy($block);
+            $addResult = $this->addBlock($newPath, $cleanBlock, $position, $locale);
+            if ($addResult['success']) {
+                $blocksCopied++;
+            } else {
+                $blocksFailed++;
+                $errors[] = "Block {$position} ({$block['type']}): {$addResult['message']}";
+            }
+        }
+
+        // Publish only if requested AND all blocks succeeded
+        $publish = $data['publish'] ?? false;
+        if ($publish && $blocksFailed === 0) {
+            $this->publishPage($newPath, $locale);
+        }
+
+        $this->activityLogger->logMcpAction(
+            'mcp_page_copied',
+            $newPath,
+            $locale,
+            [
+                'sourcePath' => $sourcePath,
+                'blocksCopied' => $blocksCopied,
+                'blocksFailed' => $blocksFailed,
+            ]
+        );
+
+        $result = [
+            'success' => true,
+            'message' => "Page copied successfully ({$blocksCopied} blocks copied" . ($blocksFailed > 0 ? ", {$blocksFailed} failed" : '') . ')',
+            'path' => $newPath,
+            'uuid' => $createResult['uuid'],
+            'url' => $createResult['url'],
+            'blocksCopied' => $blocksCopied,
+            'blocksFailed' => $blocksFailed,
+        ];
+
+        if (!empty($errors)) {
+            $result['errors'] = $errors;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Convert resolved snippet references back to raw UUID arrays.
+     *
+     * getPage() resolves snippet UUIDs to {uuid, title} objects,
+     * but addBlock() expects raw UUID arrays. This converts back.
+     *
+     * @param array<mixed> $block
+     * @return array<mixed>
+     */
+    private function unresolveSnippetReferences(array $block): array
+    {
+        if (!isset($block['snippets']) || !is_array($block['snippets'])) {
+            return $block;
+        }
+
+        $rawUuids = [];
+        foreach ($block['snippets'] as $snippet) {
+            if (is_array($snippet) && isset($snippet['uuid'])) {
+                $rawUuids[] = $snippet['uuid'];
+            } elseif (is_string($snippet)) {
+                $rawUuids[] = $snippet;
+            }
+        }
+
+        $block['snippets'] = $rawUuids;
+        return $block;
+    }
+
+    /**
+     * Clean a block for copying by removing read-only fields
+     * and converting resolved references back to raw values.
+     *
+     * @param array<mixed> $block
+     * @return array<mixed>
+     */
+    private function cleanBlockForCopy(array $block): array
+    {
+        // Remove read-only position field added by BlockExtractor
+        unset($block['position']);
+
+        // Convert resolved snippet references back to raw UUIDs
+        $block = $this->unresolveSnippetReferences($block);
+
+        return $block;
     }
 
     /**

@@ -67,10 +67,15 @@ final class BlockWriter
 
         if ($schema !== null) {
             // Write all top-level properties from schema
+            $jsonProps = ['image', 'images', 'snippets', 'organisation', 'settings'];
             foreach ($schema['properties'] as $propName) {
                 if (isset($block[$propName])) {
-                    // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags)
-                    if (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
+                    // JSON properties must ALWAYS be encoded as JSON strings, never as nested items
+                    if (in_array($propName, $jsonProps, true) && is_array($block[$propName])) {
+                        $value = $this->encodePropertyValue($propName, $block[$propName]);
+                        $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
+                    } elseif (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
+                        // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags)
                         $nestedProps = $this->registry->getNestedProperties($type);
                         $this->writeNestedItems(
                             $xml,
@@ -102,6 +107,8 @@ final class BlockWriter
                         $nestedName,
                         $block[$nestedName],
                         $nestedProps,
+                        null,
+                        $type,  // Pass block type for registry lookup
                     );
                 }
             }
@@ -148,7 +155,7 @@ final class BlockWriter
                 if ($key === $nestedName && is_array($value)) {
                     $nestedProps = $this->registry->getNestedProperties($type);
                     $this->removeNestedItems($xpath, $prefix, $position, $nestedName);
-                    $this->writeNestedItems($xml, $rootNode, $prefix, $position, $nestedName, $value, $nestedProps);
+                    $this->writeNestedItems($xml, $rootNode, $prefix, $position, $nestedName, $value, $nestedProps, null, $type);
                     continue;
                 }
             }
@@ -212,19 +219,21 @@ final class BlockWriter
         array $items,
         array $nestedProps,
         ?string $defaultType = null,
+        ?string $blockType = null,
     ): void {
         // Write length
         $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-length", (string) count($items), 'Long');
 
-        // Determine default type based on nested name
-        $typeDefault = $defaultType ?? match ($nestedName) {
-            'cards' => 'card',
-            'tags' => 'tag',
-            'faqs' => 'faq',
-            'rows' => 'row',
-            'flags' => 'flag',
-            default => 'items',
-        };
+        // Get nested type from registry first, then fall back to naming convention
+        $typeDefault = $defaultType
+            ?? ($blockType !== null ? $this->registry->getNestedType($blockType) : null)
+            ?? match ($nestedName) {
+                'cards' => 'card',
+                'tags' => 'tag',
+                'rows' => 'row',
+                'flags' => 'flag',
+                default => 'items',
+            };
 
         foreach ($items as $itemIndex => $item) {
             // Write type

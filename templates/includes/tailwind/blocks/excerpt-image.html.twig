@@ -1,3 +1,4 @@
+<!-- excerpt-image.html.twig -->
 {% if extension.excerpt.images[0] is defined and extension.excerpt.images[0] is not empty %}
   {% set source = extension.excerpt.images[0].thumbnails['content-full.webp'] %}
   {% set sourceMeta = extension.excerpt.images[0].thumbnails['800x800.jpg']|split('?')[0] %}
@@ -16,3 +17,4 @@
     <figcaption class="pt-4 text-gray-900">{{ alt }}</figcaption>
   </figure>
 {% endif %}
+<!-- end excerpt-image.html.twig -->

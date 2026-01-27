@@ -1,0 +1,13 @@
+<!-- html-raw.html.twig -->
+{% if content.html is defined and content.html is not empty %}
+<section class="py-8 lg:py-12">
+    <div class="mx-auto max-w-screen-xl px-4 lg:px-6">
+        <div class="prose prose-lg prose-gray max-w-none">
+            <div class="video-container">
+                {{ content.html|raw }}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+<!-- end html-raw.html.twig -->

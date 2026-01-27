@@ -65,6 +65,52 @@ src/Sulu/
 
 ---
 
+## Nested Block Type Reference (CRITICAL)
+
+Blocks with nested items require the correct `type` value for each nested item. Using the wrong type prevents frontend rendering.
+
+### Complete Nested Type Mapping
+
+| Block Type | Nested Array Name | Nested Item Type | Example Item |
+|------------|-------------------|------------------|--------------|
+| `faq` | `faqs` | `items` | `{"type":"items","headline":"Q?","subline":"A"}` |
+| `card-trio` | `cards` | `card` | `{"type":"card","title":"Title","icon":"code"}` |
+| `table` | `rows` | `row` | `{"type":"row","cell1":"A","cell2":"B","cell3":"C"}` |
+| `image-with-flags` | `flags` | `flag` | `{"type":"flag","language":"en","url":"/en"}` |
+| `headline-paragraphs` | `items` | `description` or `code` | `{"type":"description","description":"<p>Text</p>"}` |
+| `feature` | `items` | `items` | `{"type":"items","headline":"Title","description":"<p>Text</p>"}` |
+| `feature-default` | `items` | `items` | `{"type":"items","headline":"Title","description":"<p>Text</p>"}` |
+| `feature-with-icons` | `items` | `items` | `{"type":"items","headline":"Title","text":"Text"}` |
+| `formats` | `items` | `items` | `{"type":"items","icon":"user","headline":"Title"}` |
+| `introduction` | `items` | `items` | `{"type":"items","description":"<p>Text</p>"}` |
+| `hero-image-right` | `items` | `items` | `{"type":"items","headline":"Title","text":"Text"}` |
+| `logo-gallary` | `items` | `items` | `{"type":"items","headline":"Alt","url":"https://..."}` |
+
+### Why This Matters
+
+Sulu's Twig templates check the `type` field when rendering nested items:
+```twig
+{% for item in content.faqs %}
+    {# Only renders if item.type matches XML default-type #}
+{% endfor %}
+```
+
+If the type is wrong (e.g., `"type":"faq"` instead of `"type":"items"`), items are stored but **not rendered**.
+
+### API Response Enhancement
+
+The `get_block_schema` and `list_block_types` actions now return `nestedType` for each block:
+```json
+{
+  "name": "faq",
+  "nested": "faqs",
+  "nestedType": "items",
+  "nestedProperties": ["headline", "subline"]
+}
+```
+
+---
+
 ## Overview
 
 The Sulu MCP Server enables managing CMS pages via these actions:
@@ -78,6 +124,8 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 
 ### Page Management
 - `create_page` - Create a new page
+- `copy_page` - Copy a page with all blocks to a new location
+- `update_excerpt` - Update excerpt (title, description, image) on an existing page
 - `publish` - Publish page
 - `unpublish` - Unpublish page
 
@@ -87,7 +135,7 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 - `append_to_block` - Append items to existing block
 - `move_block` - Move a block
 - `remove_block` - Remove a block
-- `list_block_types` - List all 33 block types with descriptions & examples
+- `list_block_types` - List all 34 block types with descriptions & examples
 - `get_block_schema` - Get detailed schema for a specific block type
 
 ### Media & Snippets
@@ -162,10 +210,176 @@ Create new pages under an existing parent path.
 | `seoTitle` | No | SEO meta title |
 | `seoDescription` | No | SEO meta description |
 | `publish` | No | Publish immediately (default: `false`) |
+| `excerptTitle` | No | Excerpt title for preview cards and listing pages |
+| `excerptDescription` | No | Excerpt description for preview cards |
+| `excerptImage` | No | Media ID for excerpt image (use `list_media` to find IDs) |
+
+### Copying Pages
+
+#### copy_page Action
+
+Copy a page with all blocks to a new location. Inherits excerpt data from source unless overridden.
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `sourcePath` | Yes | PHPCR path of source page to copy (or use `path`) |
+| `title` | Yes | Title for the new page |
+| `resourceSegment` | Yes | URL slug starting with `/` |
+| `parentPath` | No | Parent path (defaults to source's parent) |
+| `seoTitle` | No | SEO meta title |
+| `seoDescription` | No | SEO meta description |
+| `excerptTitle` | No | Excerpt title (inherits from source if not set) |
+| `excerptDescription` | No | Excerpt description (inherits from source if not set) |
+| `excerptImage` | No | Media ID for excerpt image (inherits from source if not set) |
+| `publish` | No | Publish after copy (default: `false`, only publishes if all blocks succeed) |
+
+**Behavior:**
+- Creates as **draft first**, only publishes if `publish: true` AND all blocks copied successfully
+- **Excerpt inheritance**: excerpt title, description, and image are copied from source unless explicitly overridden
+- **Shared media**: media IDs are copied as-is (references same media, no duplication)
+- **Block validation**: each block is validated for the target path (e.g., `hl-des` restriction to `/training/*` still applies)
+- **Partial failure**: if some blocks fail validation, the page is still created with successful blocks
+
+**Example:**
+```json
+{
+  "action": "copy_page",
+  "sourcePath": "/cmf/example/contents/glossare/nca-php-glossar/phpunit",
+  "parentPath": "/cmf/example/contents/glossare/nca-php-glossar",
+  "title": "PHPStan",
+  "resourceSegment": "/phpstan",
+  "seoTitle": "PHPStan - PHP Static Analysis Tool",
+  "seoDescription": "PHPStan findet Fehler in PHP-Code ohne ihn auszuführen.",
+  "publish": "true"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Page copied successfully (5 blocks copied)",
+  "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan",
+  "uuid": "abc-123-def",
+  "url": "/de/glossare/nca-php-glossar/phpstan",
+  "blocksCopied": 5,
+  "blocksFailed": 0
+}
+```
+
+**Copy and Customize Workflow:**
+```
+1. copy_page: Copy template page to new location
+2. update_block: Customize individual blocks with new content
+3. publish: Make the page live
+```
+
+### Updating Excerpts
+
+#### update_excerpt Action
+
+Update excerpt metadata (title, description, image) on an existing page. Use this to edit excerpt data after page creation.
+
+**What are excerpts?** Excerpts are teaser/preview metadata used by Sulu across the site:
+- **Listing pages**: `subpages-overview` blocks display child pages using their excerpt title, description, and image as preview cards
+- **Related content**: `related-content-by-page-tag` blocks use excerpt data for content recommendations
+- **Social sharing**: Excerpt data feeds Open Graph / social media preview cards
+- **Navigation teasers**: Any template that renders page teasers pulls from excerpt fields
+- **SEO**: Search engines may use excerpt descriptions for rich snippets
+
+Without excerpt data, pages appear with blank or fallback teasers in listings and navigation blocks.
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `path` | Yes | PHPCR path of the page to update |
+| `excerptTitle` | No | New excerpt title (set to `null` to clear) |
+| `excerptDescription` | No | New excerpt description (set to `null` to clear) |
+| `excerptImage` | No | Media ID for excerpt image (set to `null` to clear) |
+
+At least one of `excerptTitle`, `excerptDescription`, or `excerptImage` is required.
+
+**Example — update excerpt on existing page:**
+```json
+{
+  "action": "update_excerpt",
+  "path": "/cmf/example/contents/glossare/nca-php-glossar/phpunit",
+  "excerptTitle": "PHPUnit - PHP Testing Framework",
+  "excerptDescription": "PHPUnit ist das Standard-Testframework für PHP-Anwendungen.",
+  "excerptImage": 993
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Excerpt updated successfully",
+  "excerpt": {
+    "title": "PHPUnit - PHP Testing Framework",
+    "description": "PHPUnit ist das Standard-Testframework für PHP-Anwendungen.",
+    "images": {"ids": [993]}
+  }
+}
+```
+
+**Example — clear excerpt image:**
+```json
+{
+  "action": "update_excerpt",
+  "path": "/cmf/example/contents/my-page",
+  "excerptImage": null
+}
+```
 
 ---
 
-## Block Type User Stories (33 Types)
+## Page Response Enhancements
+
+### Excerpt Data
+
+The `get` action returns an `excerpt` object with the page's excerpt metadata:
+
+```json
+{
+  "path": "/cmf/example/contents/my-page",
+  "title": "My Page",
+  "excerpt": {
+    "title": "Excerpt Title",
+    "description": "Excerpt description text",
+    "images": {"ids": [42]}
+  }
+}
+```
+
+Excerpt values are `null` when not set. Use `list_media` to find media IDs for `excerptImage`.
+
+**Setting/updating excerpts:**
+- During creation: pass `excerptTitle`, `excerptDescription`, `excerptImage` to `create_page` or `copy_page`
+- After creation: use `update_excerpt` to modify excerpt data on existing pages
+
+### Snippet Title Resolution
+
+Contact blocks with snippet UUIDs now return resolved titles instead of raw UUIDs:
+
+```json
+{
+  "type": "contact",
+  "snippets": [
+    {"uuid": "abc-123-def", "title": "Main Contact"},
+    {"uuid": "ghi-456-jkl", "title": "Support Contact"}
+  ]
+}
+```
+
+If a snippet UUID cannot be resolved, `title` will be `null`.
+
+---
+
+## Block Type User Stories (34 Types)
 
 **As a content editor**, understand what each block accomplishes:
 
@@ -216,7 +430,7 @@ Create new pages under an existing parent path.
 
 ---
 
-## Complete Block Type Reference (33 Types)
+## Complete Block Type Reference (34 Types)
 
 All blocks are defined in `config/templates/includes/tailwind/blocks/*.xml` and render via `templates/includes/tailwind/blocks/*.html.twig`.
 
@@ -870,7 +1084,27 @@ Auto-generated table of contents.
 
 ---
 
-#### 30. youtube-from-channel (YouTube Playlist)
+#### 30. html-raw (Raw HTML Embed)
+
+Embed raw HTML content like YouTube iframes, custom embeds, or any HTML code.
+
+**XML:** `config/templates/includes/tailwind/blocks/html-raw.xml`
+**Twig:** `templates/includes/tailwind/blocks/html-raw.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `html` | text_editor | Raw HTML content (iframes, embeds, etc.) |
+
+```json
+{
+  "blockType": "html-raw",
+  "html": "<iframe src=\"https://www.youtube.com/embed/dQw4w9WgXcQ\" frameborder=\"0\" allowfullscreen></iframe>"
+}
+```
+
+---
+
+#### 31. youtube-from-channel (YouTube Playlist)
 
 YouTube playlist embed.
 
@@ -894,7 +1128,7 @@ YouTube playlist embed.
 
 ---
 
-#### 31. wordpressposts (WordPress Posts)
+#### 32. wordpressposts (WordPress Posts)
 
 Fetches and displays WordPress posts.
 
@@ -919,7 +1153,7 @@ Fetches and displays WordPress posts.
 | **Image** | image, image-gallery, images-with-heading-and-description, image-with-flags, logo-gallary, excerpt-image |
 | **Contact** | team, consultant, contact, chat |
 | **Navigation** | highlights, related-content-by-page-tag, subpages-overview, table-of-contents |
-| **External** | youtube-from-channel, wordpressposts |
+| **External** | html-raw, youtube-from-channel, wordpressposts |
 
 ---
 
@@ -931,8 +1165,8 @@ Fetches and displays WordPress posts.
 // 1. Create page
 {"tool": "sulu-page-create", "parentPath": "/cmf/example/contents/support", "title": "Häufige Fragen", "resourceSegment": "/faq"}
 
-// 2. Add FAQ block
-{"tool": "sulu-block-add", "path": "/cmf/example/contents/support/faq", "blockType": "faq", "faqs": "[{\"headline\":\"Wie kann ich bestellen?\",\"subline\":\"Besuchen Sie unseren Shop und legen Sie Produkte in den Warenkorb.\"},{\"headline\":\"Wie lange dauert die Lieferung?\",\"subline\":\"Standard-Lieferung dauert 3-5 Werktage.\"}]"}
+// 2. Add FAQ block - NOTE: nestedType is "items" (NOT "faq")
+{"tool": "sulu-block-add", "path": "/cmf/example/contents/support/faq", "blockType": "faq", "items": "[{\"type\":\"items\",\"headline\":\"Wie kann ich bestellen?\",\"subline\":\"Besuchen Sie unseren Shop und legen Sie Produkte in den Warenkorb.\"},{\"type\":\"items\",\"headline\":\"Wie lange dauert die Lieferung?\",\"subline\":\"Standard-Lieferung dauert 3-5 Werktage.\"}]"}
 
 // 3. Publish
 {"tool": "sulu-page-publish", "path": "/cmf/example/contents/support/faq"}
@@ -944,8 +1178,8 @@ Fetches and displays WordPress posts.
 // 1. Create page
 {"tool": "sulu-page-create", "parentPath": "/cmf/example/contents/preise", "title": "Preisliste", "resourceSegment": "/preisliste"}
 
-// 2. Add table block
-{"tool": "sulu-block-add", "path": "/cmf/example/contents/preise/preisliste", "blockType": "table", "headline": "Unsere Tarife", "description": "<p>Wählen Sie den passenden Tarif.</p>", "columnheader1": "Tarif", "columnheader2": "Preis", "columnheader3": "Funktionen", "rows": "[{\"cell1\":\"Starter\",\"cell2\":\"9,99 €\",\"cell3\":\"5 Projekte\"},{\"cell1\":\"Professional\",\"cell2\":\"29,99 €\",\"cell3\":\"Unbegrenzt\"}]"}
+// 2. Add table block - NOTE: nestedType is "row"
+{"tool": "sulu-block-add", "path": "/cmf/example/contents/preise/preisliste", "blockType": "table", "headline": "Unsere Tarife", "description": "<p>Wählen Sie den passenden Tarif.</p>", "columnheader1": "Tarif", "columnheader2": "Preis", "columnheader3": "Funktionen", "items": "[{\"type\":\"row\",\"cell1\":\"Starter\",\"cell2\":\"9,99 €\",\"cell3\":\"5 Projekte\"},{\"type\":\"row\",\"cell1\":\"Professional\",\"cell2\":\"29,99 €\",\"cell3\":\"Unbegrenzt\"}]"}
 
 // 3. Publish
 {"tool": "sulu-page-publish", "path": "/cmf/example/contents/preise/preisliste"}
@@ -1053,20 +1287,23 @@ Response:
   "name": "faq",
   "properties": [],
   "nested": "faqs",
+  "nestedType": "items",
   "nestedProperties": ["headline", "subline"],
   "description": "FAQ section with expandable questions/answers. Uses faqs[] array (NOT items).",
   "example": {
     "type": "faq",
     "faqs": [
-      {"headline": "What is PHP?", "subline": "<p>PHP is a server-side scripting language.</p>"}
+      {"type": "items", "headline": "What is PHP?", "subline": "PHP is a server-side scripting language."}
     ]
   }
 }
 ```
 
+**IMPORTANT:** The `nestedType` field tells you what `type` value to use for each nested item. For FAQ, use `"type":"items"` (NOT `"type":"faq"`).
+
 ### list_block_types Action
 
-List all 32 block types with full documentation.
+List all 34 block types with full documentation.
 
 ```json
 {
@@ -1078,9 +1315,90 @@ Response includes for each type:
 - `name` - Block type identifier
 - `properties` - Top-level properties
 - `nested` - Name of nested array (e.g., 'items', 'faqs', 'rows')
+- `nestedType` - **CRITICAL:** The `type` value required for each nested item (e.g., 'items', 'card', 'row')
 - `nestedProperties` - Properties within nested items
 - `description` - Human-readable description
 - `example` - Complete example data structure
+
+**IMPORTANT:** Always check `nestedType` before creating nested items. Using the wrong type causes items to not render in the frontend.
+
+---
+
+## Known Snippet UUIDs (Contact Snippets)
+
+These contact snippets are available for use in `contact` blocks via the `snippets` parameter:
+
+| Themenbereich | Snippet UUID | Titel |
+|---------------|-------------|-------|
+| KI Content Marketing | `cdba3044-9725-41c0-8056-0437dfae2841` | Ihr Ansprechpartner für KI Content Marketing |
+| PHP Consulting | `4499c20b-6de3-4999-9c85-cab9deeb789b` | PHP Consultant Spezialisten |
+| Barrierefreiheit | `e3175c1c-0530-43fd-9e18-b5e83794b1f1` | Spezialisten zu barrierefreiem Webdesign |
+| Frontend/Astro | `c410e179-203d-4573-a4fe-b20525797463` | Frontend 2025 mit Astro JS |
+| Accessibility Dev | `70ed51ae-641e-4908-9c82-fc893ff0fe2c` | Frontend-Entwicklung mit Accessibility |
+
+**Usage in contact block:**
+```json
+{
+  "action": "add_block",
+  "path": "/cmf/example/contents/my-page",
+  "blockType": "contact",
+  "snippets": "[\"cdba3044-9725-41c0-8056-0437dfae2841\"]",
+  "description": "<p>Kontaktieren Sie uns für KI Content Marketing.</p>"
+}
+```
+
+## Known Media IDs
+
+| Thema | Media ID | Dateiname |
+|-------|----------|-----------|
+| MCP Server | 993 | nca-mcp-php-server.jpg |
+
+**Usage in excerpt image:**
+```json
+{
+  "action": "create_page",
+  "parentPath": "/cmf/example/contents",
+  "title": "MCP Server",
+  "resourceSegment": "/mcp-server",
+  "excerptImage": 993
+}
+```
+
+---
+
+## Template Pages & Content Workflows
+
+### Template Pages by Content Area
+
+Use these pages as templates with `copy_page` to quickly create new content:
+
+| Content Area | Template Page Path | Description |
+|--------------|-------------------|-------------|
+| PHP Glossar | `/cmf/example/contents/glossare/nca-php-glossar/phpunit` | PHP glossary entry with standard structure |
+| KI Tools | `/cmf/example/contents/ki-tools` | KI/AI tool pages |
+| Accessibility | `/cmf/example/contents/barrierefreiheit` | Accessibility content pages |
+| Training | `/cmf/example/contents/training` | Training course pages (uses `hl-des` blocks) |
+
+### Standard Content Workflow
+
+1. **Find template**: `get` a template page to understand its block structure
+2. **Copy**: `copy_page` to create new page with same structure
+3. **Customize**: `update_block` to change content in individual blocks
+4. **Add content**: `add_block` / `append_to_block` for additional content
+5. **Publish**: `publish` to make page live
+
+### Copy Workflow Example
+
+```json
+// Step 1: Copy an existing glossary entry as template
+{"action": "copy_page", "sourcePath": "/cmf/example/contents/glossare/nca-php-glossar/phpunit", "parentPath": "/cmf/example/contents/glossare/nca-php-glossar", "title": "PHPStan", "resourceSegment": "/phpstan"}
+
+// Step 2: Update the first block with new content
+{"action": "update_block", "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan", "position": 0, "headline": "Was ist PHPStan?", "items": "[{\"type\":\"description\",\"description\":\"<p>PHPStan ist ein statisches Analyse-Tool für PHP.</p>\"}]"}
+
+// Step 3: Publish when ready
+{"action": "publish", "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan"}
+```
 
 ---
 

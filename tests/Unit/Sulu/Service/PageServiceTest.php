@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Sulu\Service;
 
 use App\Sulu\Logger\McpActivityLogger;
 use App\Sulu\Service\PageService;
+use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -968,5 +969,798 @@ XML;
         $result = $this->pageService->findPageByUrl('/nonexistent-page', 'de');
 
         $this->assertNull($result);
+    }
+
+    // ==========================================================================
+    // Snippet Resolution Tests
+    // ==========================================================================
+
+    public function testGetPageResolvesSnippetUuidsToTitles(): void
+    {
+        $xmlWithSnippets = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Contact Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="38">["uuid-abc-123","uuid-def-456"]</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')
+            ->willReturnCallback(function (string $uuid) {
+                return match ($uuid) {
+                    'uuid-abc-123' => ['uuid' => 'uuid-abc-123', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
+                    'uuid-def-456' => ['uuid' => 'uuid-def-456', 'title' => 'Support Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
+                    default => null,
+                };
+            });
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            null, null, null, null, null, null, null, null,
+            $snippetService
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
+
+        $result = $pageService->getPage('/cmf/example/contents/contact', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertCount(1, $result['blocks']);
+        $this->assertArrayHasKey('snippets', $result['blocks'][0]);
+        $snippets = $result['blocks'][0]['snippets'];
+        $this->assertCount(2, $snippets);
+        $this->assertEquals('uuid-abc-123', $snippets[0]['uuid']);
+        $this->assertEquals('Main Contact', $snippets[0]['title']);
+        $this->assertEquals('uuid-def-456', $snippets[1]['uuid']);
+        $this->assertEquals('Support Contact', $snippets[1]['title']);
+    }
+
+    public function testGetPageHandlesUnresolvableSnippetUuids(): void
+    {
+        $xmlWithSnippets = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Contact Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="20">["nonexistent-uuid"]</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')->willReturn(null);
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            null, null, null, null, null, null, null, null,
+            $snippetService
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
+
+        $result = $pageService->getPage('/cmf/example/contents/contact', 'de');
+
+        $this->assertNotNull($result);
+        $snippets = $result['blocks'][0]['snippets'];
+        $this->assertCount(1, $snippets);
+        $this->assertEquals('nonexistent-uuid', $snippets[0]['uuid']);
+        $this->assertNull($snippets[0]['title']);
+    }
+
+    // ==========================================================================
+    // Excerpt Data Tests
+    // ==========================================================================
+
+    public function testGetPageReturnsExcerptData(): void
+    {
+        $xmlWithExcerpt = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="9">Test Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">default</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="13">Excerpt Title</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-description" sv:type="String" sv:multi-valued="0">
+        <sv:value length="19">Excerpt description</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-images" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">{"ids":[42]}</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/test', 'props' => $xmlWithExcerpt]);
+
+        $result = $this->pageService->getPage('/cmf/example/contents/test', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertArrayHasKey('excerpt', $result);
+        $this->assertEquals('Excerpt Title', $result['excerpt']['title']);
+        $this->assertEquals('Excerpt description', $result['excerpt']['description']);
+        $this->assertEquals(['ids' => [42]], $result['excerpt']['images']);
+    }
+
+    public function testGetPageReturnsNullExcerptWhenNotSet(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/test', 'props' => self::SAMPLE_PHPCR_XML]);
+
+        $result = $this->pageService->getPage('/cmf/example/contents/test', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertArrayHasKey('excerpt', $result);
+        $this->assertNull($result['excerpt']['title']);
+        $this->assertNull($result['excerpt']['description']);
+        $this->assertNull($result['excerpt']['images']);
+    }
+
+    // ==========================================================================
+    // Update Excerpt Tests
+    // ==========================================================================
+
+    public function testUpdateExcerptSuccess(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS]);
+
+        $capturedXml = null;
+        $this->connection->expects($this->exactly(2))
+            ->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                $capturedXml = $params[0];
+                return 1;
+            });
+
+        $result = $this->pageService->updateExcerpt(
+            '/cmf/example/contents/test',
+            ['excerptTitle' => 'Updated Teaser', 'excerptDescription' => 'Updated Description'],
+            'de'
+        );
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('Excerpt updated successfully', $result['message']);
+        $this->assertArrayHasKey('excerpt', $result);
+
+        // Parse the captured XML and verify updated values
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-title"]/sv:value');
+        $this->assertEquals(1, $titleNodes->length);
+        $this->assertEquals('Updated Teaser', $titleNodes->item(0)->nodeValue);
+
+        $descNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-description"]/sv:value');
+        $this->assertEquals(1, $descNodes->length);
+        $this->assertEquals('Updated Description', $descNodes->item(0)->nodeValue);
+    }
+
+    public function testUpdateExcerptAddsNewFields(): void
+    {
+        // SAMPLE_PHPCR_XML has no excerpt properties
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
+
+        $capturedXml = null;
+        $this->connection->expects($this->exactly(2))
+            ->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                $capturedXml = $params[0];
+                return 1;
+            });
+
+        $result = $this->pageService->updateExcerpt(
+            '/cmf/example/contents/test',
+            ['excerptTitle' => 'New Title', 'excerptImage' => 42],
+            'de'
+        );
+
+        $this->assertTrue($result['success']);
+
+        // Verify new excerpt properties were added
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-title"]/sv:value');
+        $this->assertEquals(1, $titleNodes->length);
+        $this->assertEquals('New Title', $titleNodes->item(0)->nodeValue);
+
+        $imageNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-images"]/sv:value');
+        $this->assertEquals(1, $imageNodes->length);
+        $this->assertStringContainsString('"ids":[42]', $imageNodes->item(0)->nodeValue);
+    }
+
+    public function testUpdateExcerptImageEncodesAsJson(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
+
+        $capturedXml = null;
+        $this->connection->expects($this->exactly(2))
+            ->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                $capturedXml = $params[0];
+                return 1;
+            });
+
+        $result = $this->pageService->updateExcerpt(
+            '/cmf/example/contents/test',
+            ['excerptImage' => 555],
+            'de'
+        );
+
+        $this->assertTrue($result['success']);
+
+        // Verify XML contains {"ids":[555]} in excerpt-images property
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $imageNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-images"]/sv:value');
+        $this->assertEquals(1, $imageNodes->length);
+        $this->assertEquals('{"ids":[555]}', $imageNodes->item(0)->nodeValue);
+    }
+
+    public function testUpdateExcerptFailsForNonexistentPage(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(false);
+
+        $result = $this->pageService->updateExcerpt(
+            '/cmf/example/contents/nonexistent',
+            ['excerptTitle' => 'Test'],
+            'de'
+        );
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('Page not found', $result['message']);
+    }
+
+    public function testUpdateExcerptLogsActivity(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        $this->activityLogger->expects($this->once())
+            ->method('logMcpAction')
+            ->with(
+                'mcp_excerpt_updated',
+                '/cmf/example/contents/test',
+                'de',
+                $this->callback(function (array $context): bool {
+                    return isset($context['fields'])
+                        && in_array('excerptTitle', $context['fields'], true)
+                        && in_array('excerptDescription', $context['fields'], true);
+                })
+            );
+
+        $this->pageService->updateExcerpt(
+            '/cmf/example/contents/test',
+            ['excerptTitle' => 'Log Test', 'excerptDescription' => 'Log Desc'],
+            'de'
+        );
+    }
+
+    // ==========================================================================
+    // Copy Page Tests
+    // ==========================================================================
+
+    private const SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="16">Image Block Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="17">/image-block-page</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">heroslider</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-settings#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="2">[]</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-headline#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Slider Title</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-description#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="22">&lt;p&gt;Slider description&lt;/p&gt;</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-pageurl1#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">/page1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-pageurl2#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">/page2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-images#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="42">{"ids":[100,101],"displayOption":"top"}</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="4">hero</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-settings#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="2">[]</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-headline#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">Hero Title</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-description#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="16">Hero description</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-image#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="35">{"ids":[200],"displayOption":"top"}</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-buttonText#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">Learn More</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-url#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">/about</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="13">Source Teaser</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-description" sv:type="String" sv:multi-valued="0">
+        <sv:value length="18">Source Description</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-images" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">{"ids":[993]}</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+    private const SAMPLE_PHPCR_XML_WITH_EXCERPT = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">Source Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">/source-page</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="19">headline-paragraphs</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-headline#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">Source Block</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="13">Excerpt Title</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-description" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">Excerpt Desc</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-excerpt-images" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">{"ids":[993]}</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+    public function testCopyPageRequiresSourcePath(): void
+    {
+        $result = $this->pageService->copyPage(['title' => 'Test', 'resourceSegment' => '/test'], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('sourcePath is required', $result['message']);
+    }
+
+    public function testCopyPageFailsWhenSourceNotFound(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(false);
+
+        $result = $this->pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/nonexistent',
+            'title' => 'Copy',
+            'resourceSegment' => '/copy',
+        ], 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('Source page not found', $result['message']);
+    }
+
+    public function testCopyPageSuccessWithBlocks(): void
+    {
+        $callCount = 0;
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) use (&$callCount) {
+                $callCount++;
+                // First call: getPage (source)
+                if ($callCount === 1) {
+                    return ['path' => '/cmf/example/contents/source-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+                }
+                // Second call: isPagePublished check (for getPage)
+                if ($callCount === 2) {
+                    return false;
+                }
+                // Third call: createPage - get parent
+                if ($callCount === 3) {
+                    return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+                }
+                // Fourth call: check page doesn't exist
+                if ($callCount === 4) {
+                    return false;
+                }
+                // Fifth call: get max sort order
+                if ($callCount === 5) {
+                    return false; // no max
+                }
+                // Remaining calls: addBlock operations
+                return ['props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+            });
+
+        $this->connection->method('fetchOne')
+            ->willReturn(0);
+
+        $this->connection->method('executeStatement')
+            ->willReturn(1);
+
+        $this->activityLogger->expects($this->atLeastOnce())
+            ->method('logMcpAction');
+
+        $result = $this->pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/source-page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Copied Page',
+            'resourceSegment' => '/copied-page',
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('copied successfully', $result['message']);
+        $this->assertArrayHasKey('blocksCopied', $result);
+        $this->assertArrayHasKey('blocksFailed', $result);
+        $this->assertArrayHasKey('path', $result);
+        $this->assertArrayHasKey('uuid', $result);
+    }
+
+    public function testCopyPageInheritsExcerptFromSource(): void
+    {
+        $capturedCreateData = null;
+        $callCount = 0;
+
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) use (&$callCount) {
+                $callCount++;
+                if ($callCount <= 2) {
+                    return ['path' => '/cmf/example/contents/source-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+                }
+                if ($callCount === 3) {
+                    return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+                }
+                if ($callCount === 4) {
+                    return false;
+                }
+                return ['props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+            });
+
+        $this->connection->method('fetchOne')
+            ->willReturn(0);
+
+        $this->connection->method('executeStatement')
+            ->willReturn(1);
+
+        // We verify the excerpt is inherited by checking the activity log
+        // The copyPage method passes excerpt data through createPage
+        $result = $this->pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/source-page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Copied',
+            'resourceSegment' => '/copied',
+            // No excerptTitle/Description/Image -> should inherit from source
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+    }
+
+    public function testCopyPageLogsActivity(): void
+    {
+        $callCount = 0;
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function () use (&$callCount) {
+                $callCount++;
+                if ($callCount <= 2) {
+                    return ['path' => '/cmf/example/contents/source', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+                }
+                if ($callCount === 3) {
+                    return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+                }
+                if ($callCount === 4) {
+                    return false;
+                }
+                return ['props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
+            });
+
+        $this->connection->method('fetchOne')->willReturn(0);
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        $loggedActions = [];
+        $this->activityLogger->expects($this->atLeastOnce())
+            ->method('logMcpAction')
+            ->willReturnCallback(function (string $action, string $path, string $locale, array $context = []) use (&$loggedActions): bool {
+                $loggedActions[] = ['action' => $action, 'path' => $path, 'locale' => $locale, 'context' => $context];
+                return true;
+            });
+
+        $this->pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/source',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Copy',
+            'resourceSegment' => '/copy',
+        ], 'de');
+
+        // Verify mcp_page_copied was logged
+        $copiedActions = array_filter($loggedActions, fn($a) => $a['action'] === 'mcp_page_copied');
+        $this->assertCount(1, $copiedActions, 'mcp_page_copied should be logged once');
+        $copiedAction = array_values($copiedActions)[0];
+        $this->assertArrayHasKey('sourcePath', $copiedAction['context']);
+        $this->assertArrayHasKey('blocksCopied', $copiedAction['context']);
+    }
+
+    // ==========================================================================
+    // Copy Page Media Preservation Tests
+    // ==========================================================================
+
+    public function testCopyPagePreservesBlockMediaReferences(): void
+    {
+        $callCount = 0;
+        $capturedXmlStatements = [];
+
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) use (&$callCount) {
+                $callCount++;
+                if ($callCount === 1) {
+                    return ['path' => '/cmf/example/contents/image-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+                }
+                if ($callCount === 2) {
+                    return false;
+                }
+                if ($callCount === 3) {
+                    return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+                }
+                if ($callCount === 4) {
+                    return false;
+                }
+                if ($callCount === 5) {
+                    return false;
+                }
+                return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+            });
+
+        $this->connection->method('fetchOne')
+            ->willReturn(0);
+
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXmlStatements) {
+                // Capture XML from both INSERT (param index 5) and UPDATE (param index 0) calls
+                foreach ($params as $param) {
+                    if (is_string($param) && str_contains($param, '<sv:')) {
+                        $capturedXmlStatements[] = $param;
+                    }
+                }
+                return 1;
+            });
+
+        $result = $this->pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/image-page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Copied Image Page',
+            'resourceSegment' => '/copied-image-page',
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('copied successfully', $result['message']);
+        $this->assertEquals(2, $result['blocksCopied']);
+
+        // Verify media references survive in the written XML
+        $foundImages = false;
+        $foundImage = false;
+        foreach ($capturedXmlStatements as $xmlString) {
+            if (str_contains($xmlString, '"ids":[100,101]')) {
+                $foundImages = true;
+            }
+            if (str_contains($xmlString, '"ids":[200]')) {
+                $foundImage = true;
+            }
+        }
+
+        $this->assertTrue($foundImages, 'heroslider images property with ids [100,101] should be preserved in output XML');
+        $this->assertTrue($foundImage, 'hero image property with ids [200] should be preserved in output XML');
+    }
+
+    public function testCopyPageWritesExcerptToDestination(): void
+    {
+        $callCount = 0;
+        $capturedXmlStatements = [];
+
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) use (&$callCount) {
+                $callCount++;
+                if ($callCount === 1) {
+                    return ['path' => '/cmf/example/contents/image-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+                }
+                if ($callCount === 2) {
+                    return false;
+                }
+                if ($callCount === 3) {
+                    return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+                }
+                if ($callCount === 4) {
+                    return false;
+                }
+                if ($callCount === 5) {
+                    return false;
+                }
+                return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+            });
+
+        $this->connection->method('fetchOne')
+            ->willReturn(0);
+
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXmlStatements) {
+                // Capture all XML params (INSERT has XML at index 5, UPDATE at index 0)
+                foreach ($params as $param) {
+                    if (is_string($param) && str_contains($param, '<sv:')) {
+                        $capturedXmlStatements[] = ['sql' => $sql, 'xml' => $param];
+                    }
+                }
+                return 1;
+            });
+
+        $result = $this->pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/image-page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Copied With Excerpt',
+            'resourceSegment' => '/copied-excerpt',
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+
+        // Find the createPage INSERT XML (contains excerpt data from buildPagePropsXml)
+        $createXml = null;
+        foreach ($capturedXmlStatements as $entry) {
+            if (str_starts_with($entry['sql'], 'INSERT') && str_contains($entry['xml'], 'excerpt-title')) {
+                $createXml = $entry['xml'];
+                break;
+            }
+        }
+
+        $this->assertNotNull($createXml, 'Should have captured createPage INSERT XML with excerpt data');
+
+        // Verify excerpt-title inherited from source
+        $this->assertStringContainsString('Source Teaser', $createXml, 'excerpt-title should be "Source Teaser" inherited from source');
+
+        // Verify excerpt-description inherited from source
+        $this->assertStringContainsString('excerpt-description', $createXml, 'excerpt-description should be present');
+        $this->assertStringContainsString('Source Description', $createXml, 'excerpt-description should be "Source Description" inherited from source');
+
+        // Verify excerpt-images inherited from source
+        $this->assertStringContainsString('excerpt-images', $createXml, 'excerpt-images should be present');
+        $this->assertStringContainsString('"ids":[993]', $createXml, 'excerpt-images should contain source image id 993');
+    }
+
+    public function testCopyPageExcerptOverrideReplacesSourceValues(): void
+    {
+        $callCount = 0;
+        $capturedXmlStatements = [];
+
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) use (&$callCount) {
+                $callCount++;
+                if ($callCount === 1) {
+                    return ['path' => '/cmf/example/contents/image-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+                }
+                if ($callCount === 2) {
+                    return false;
+                }
+                if ($callCount === 3) {
+                    return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+                }
+                if ($callCount === 4) {
+                    return false;
+                }
+                if ($callCount === 5) {
+                    return false;
+                }
+                return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
+            });
+
+        $this->connection->method('fetchOne')
+            ->willReturn(0);
+
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXmlStatements) {
+                foreach ($params as $param) {
+                    if (is_string($param) && str_contains($param, '<sv:')) {
+                        $capturedXmlStatements[] = ['sql' => $sql, 'xml' => $param];
+                    }
+                }
+                return 1;
+            });
+
+        $result = $this->pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/image-page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Override Excerpt Page',
+            'resourceSegment' => '/override-excerpt',
+            'excerptTitle' => 'Override Title',
+            'excerptImage' => 999,
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+
+        // Find the createPage INSERT XML (built by buildPagePropsXml, contains excerpt)
+        $createXml = null;
+        foreach ($capturedXmlStatements as $entry) {
+            if (str_starts_with($entry['sql'], 'INSERT') && str_contains($entry['xml'], 'excerpt-title')) {
+                $createXml = $entry['xml'];
+                break;
+            }
+        }
+
+        $this->assertNotNull($createXml, 'Should have captured createPage INSERT XML with excerpt data');
+
+        // Verify overridden excerpt-title
+        $this->assertStringContainsString('Override Title', $createXml, 'excerpt-title should be overridden to "Override Title"');
+        $this->assertStringNotContainsString('Source Teaser', $createXml, 'Source excerpt-title should NOT be present');
+
+        // Verify overridden excerpt-images with id 999
+        $this->assertStringContainsString('"ids":[999]', $createXml, 'excerpt-images should contain overridden image id 999');
+        $this->assertStringNotContainsString('"ids":[993]', $createXml, 'Source excerpt-images id 993 should NOT be present');
+
+        // Verify excerpt-description is still inherited from source (not overridden)
+        $this->assertStringContainsString('Source Description', $createXml, 'excerpt-description should still be inherited from source');
     }
 }

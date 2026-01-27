@@ -225,6 +225,7 @@ services:
             $blockWriter: '@App\Sulu\Block\BlockWriter'
             $documentManager: '@Sulu\Component\DocumentManager\DocumentManagerInterface'
             $httpCacheClearer: '@App\Sulu\Cache\HttpCacheClearer'
+            $snippetService: '@App\Sulu\Service\SnippetService'
         public: true
 
     # Sulu Snippet Service - Direct SQL for snippet operations

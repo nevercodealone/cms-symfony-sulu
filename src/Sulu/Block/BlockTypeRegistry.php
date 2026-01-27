@@ -84,6 +84,7 @@ final class BlockTypeRegistry
         'table-of-contents' => 'Auto-generated table of contents.',
 
         // === EXTERNAL BLOCKS ===
+        'html-raw' => 'Raw HTML block for embedding iframes, videos, and custom HTML content.',
         'youtube-from-channel' => 'YouTube playlist embed from channel.',
         'wordpressposts' => 'WordPress posts feed.',
 
@@ -109,8 +110,8 @@ final class BlockTypeRegistry
         'faq' => [
             'type' => 'faq',
             'faqs' => [
-                ['headline' => 'What is PHP?', 'subline' => '<p>PHP is a server-side scripting language.</p>'],
-                ['headline' => 'How do I install it?', 'subline' => '<p>Use apt-get install php on Ubuntu.</p>'],
+                ['type' => 'items', 'headline' => 'What is PHP?', 'subline' => 'PHP is a server-side scripting language.'],
+                ['type' => 'items', 'headline' => 'How do I install it?', 'subline' => 'Use apt-get install php on Ubuntu.'],
             ],
         ],
         'code' => [
@@ -123,7 +124,7 @@ final class BlockTypeRegistry
             'description' => '<p>First paragraph.</p>',
             'descriptiontwo' => '<p>Second paragraph.</p>',
             'items' => [
-                ['description' => '<p>Item text.</p>'],
+                ['type' => 'items', 'description' => '<p>Item text.</p>'],
             ],
         ],
         'table' => [
@@ -134,8 +135,8 @@ final class BlockTypeRegistry
             'columnheader2' => 'Option A',
             'columnheader3' => 'Option B',
             'rows' => [
-                ['cell1' => 'Price', 'cell2' => '$10', 'cell3' => '$20'],
-                ['cell1' => 'Support', 'cell2' => 'Email', 'cell3' => '24/7'],
+                ['type' => 'row', 'cell1' => 'Price', 'cell2' => '$10', 'cell3' => '$20'],
+                ['type' => 'row', 'cell1' => 'Support', 'cell2' => 'Email', 'cell3' => '24/7'],
             ],
         ],
 
@@ -165,7 +166,7 @@ final class BlockTypeRegistry
             'headline' => 'Feature Title',
             'description' => '<p>Feature description.</p>',
             'items' => [
-                ['headline' => 'CTA', 'text' => 'Description', 'buttonText' => 'Click', 'buttonLink' => '/link', 'url' => '/url'],
+                ['type' => 'items', 'headline' => 'CTA', 'text' => 'Description', 'buttonText' => 'Click', 'buttonLink' => '/link', 'url' => '/url'],
             ],
         ],
         'heroslider' => [
@@ -200,8 +201,8 @@ final class BlockTypeRegistry
             'headline' => 'Why Choose Us',
             'description' => '<p>Feature overview.</p>',
             'items' => [
-                ['headline' => 'Fast', 'description' => '<p>Lightning speed.</p>'],
-                ['headline' => 'Secure', 'description' => '<p>Bank-level security.</p>'],
+                ['type' => 'items', 'headline' => 'Fast', 'description' => '<p>Lightning speed.</p>'],
+                ['type' => 'items', 'headline' => 'Secure', 'description' => '<p>Bank-level security.</p>'],
             ],
         ],
         'feature-default' => [
@@ -209,7 +210,7 @@ final class BlockTypeRegistry
             'headline' => 'Features',
             'description' => '<p>What we offer.</p>',
             'items' => [
-                ['headline' => 'Feature 1', 'description' => '<p>Description 1.</p>'],
+                ['type' => 'items', 'headline' => 'Feature 1', 'description' => '<p>Description 1.</p>'],
             ],
         ],
         'feature-with-icons' => [
@@ -217,7 +218,7 @@ final class BlockTypeRegistry
             'headline' => 'Key Benefits',
             'description' => '<p>Overview.</p>',
             'items' => [
-                ['headline' => 'Benefit 1', 'text' => 'Description text'],
+                ['type' => 'items', 'headline' => 'Benefit 1', 'text' => 'Description text'],
             ],
         ],
         'formats' => [
@@ -225,7 +226,7 @@ final class BlockTypeRegistry
             'headline' => 'Available Formats',
             'description' => '<p>Choose your format.</p>',
             'items' => [
-                ['icon' => 'pdf', 'headline' => 'PDF', 'description' => '<p>Download as PDF.</p>'],
+                ['type' => 'items', 'icon' => 'pdf', 'headline' => 'PDF', 'description' => '<p>Download as PDF.</p>'],
             ],
         ],
 
@@ -251,15 +252,15 @@ final class BlockTypeRegistry
             'headline' => 'Available Languages',
             'image' => ['id' => 1],
             'flags' => [
-                ['language' => 'en', 'url' => '/en'],
-                ['language' => 'de', 'url' => '/de'],
+                ['type' => 'flag', 'language' => 'en', 'url' => '/en'],
+                ['type' => 'flag', 'language' => 'de', 'url' => '/de'],
             ],
         ],
         'logo-gallary' => [
             'type' => 'logo-gallary',
             'headline' => 'Our Partners',
             'items' => [
-                ['headline' => 'Partner 1', 'url' => 'https://partner1.com', 'image' => ['id' => 1]],
+                ['type' => 'items', 'headline' => 'Partner 1', 'url' => 'https://partner1.com', 'image' => ['id' => 1]],
             ],
         ],
         'excerpt-image' => [
@@ -355,6 +356,10 @@ final class BlockTypeRegistry
         ],
 
         // === EXTERNAL BLOCKS ===
+        'html-raw' => [
+            'type' => 'html-raw',
+            'html' => '<iframe src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>',
+        ],
         'youtube-from-channel' => [
             'type' => 'youtube-from-channel',
             'headline' => 'Our Videos',
@@ -389,11 +394,13 @@ final class BlockTypeRegistry
         'headline-paragraphs' => [
             'properties' => ['headline'],
             'nested' => 'items',
+            'nestedType' => 'description',  // XML default-type, can also be 'code'
             'nestedProperties' => ['type', 'description', 'code', 'language'],
         ],
         'faq' => [
             'properties' => [],
             'nested' => 'faqs',  // NOT "items"!
+            'nestedType' => 'items',  // XML default-type - NOT 'faq'!
             'nestedProperties' => ['headline', 'subline'],  // NOT "description"!
         ],
         'code' => [
@@ -402,11 +409,13 @@ final class BlockTypeRegistry
         'introduction' => [
             'properties' => ['headline', 'description', 'descriptiontwo'],
             'nested' => 'items',
+            'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['description'],
         ],
         'table' => [
             'properties' => ['headline', 'description', 'columnheader1', 'columnheader2', 'columnheader3'],
             'nested' => 'rows',  // NOT "items"!
+            'nestedType' => 'row',  // XML default-type
             'nestedProperties' => ['cell1', 'cell2', 'cell3'],
         ],
 
@@ -420,6 +429,7 @@ final class BlockTypeRegistry
         'hero-image-right' => [
             'properties' => ['image', 'headline', 'description'],
             'nested' => 'items',
+            'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['headline', 'text', 'buttonText', 'buttonLink', 'url'],
         ],
         'heroslider' => [
@@ -438,21 +448,25 @@ final class BlockTypeRegistry
         'feature' => [
             'properties' => ['subline', 'headline', 'description'],
             'nested' => 'items',
+            'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['headline', 'description'],
         ],
         'feature-default' => [
             'properties' => ['headline', 'description'],
             'nested' => 'items',
+            'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['headline', 'description'],
         ],
         'feature-with-icons' => [
             'properties' => ['headline', 'description'],
             'nested' => 'items',
+            'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['headline', 'text'],
         ],
         'formats' => [
             'properties' => ['headline', 'description'],
             'nested' => 'items',
+            'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['icon', 'headline', 'description'],
         ],
 
@@ -469,11 +483,13 @@ final class BlockTypeRegistry
         'image-with-flags' => [
             'properties' => ['headline', 'image'],
             'nested' => 'flags',  // NOT "items"!
+            'nestedType' => 'flag',  // XML default-type
             'nestedProperties' => ['language', 'url'],
         ],
         'logo-gallary' => [
             'properties' => ['headline'],
             'nested' => 'items',
+            'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['headline', 'url', 'image'],
         ],
         'excerpt-image' => [
@@ -484,6 +500,7 @@ final class BlockTypeRegistry
         'card-trio' => [
             'properties' => ['subline', 'headline', 'description', 'ctaText', 'ctaButtonText', 'ctaButtonPage'],
             'nested' => 'cards',
+            'nestedType' => 'card',  // XML default-type
             'nestedProperties' => ['type', 'icon', 'title', 'description', 'tags', 'linkText', 'linkPage', 'badgeType', 'badgeText'],
         ],
 
@@ -516,6 +533,9 @@ final class BlockTypeRegistry
         ],
 
         // === EXTERNAL BLOCKS ===
+        'html-raw' => [
+            'properties' => ['html'],
+        ],
         'youtube-from-channel' => [
             'properties' => ['headline', 'subline', 'playlistid'],
         ],
@@ -553,6 +573,17 @@ final class BlockTypeRegistry
     public function getNestedName(string $type): ?string
     {
         return self::SCHEMAS[$type]['nested'] ?? null;
+    }
+
+    /**
+     * Get the type value for nested items (e.g., 'items', 'card', 'row').
+     *
+     * This matches the default-type in the XML config and is used by BlockWriter
+     * to set the correct type value when writing nested block items.
+     */
+    public function getNestedType(string $type): ?string
+    {
+        return self::SCHEMAS[$type]['nestedType'] ?? null;
     }
 
     /**
