@@ -59,7 +59,9 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media. ' .
+            'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
+            'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
@@ -73,7 +75,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media',
+                description: 'Action to perform. Values: list, get, create_page, copy_page, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media',
                 required: true
             ),
             new SchemaProperty(
@@ -86,6 +88,12 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'pathPrefix',
                 type: PropertyType::STRING,
                 description: 'For "list" action: filter pages by path prefix, e.g. /cmf/example/contents/glossare',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'sourcePath',
+                type: PropertyType::STRING,
+                description: 'For copy_page: PHPCR path of source page to copy from',
                 required: false
             ),
             new SchemaProperty(
@@ -175,19 +183,19 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'excerptTitle',
                 type: PropertyType::STRING,
-                description: 'For create_page: Excerpt title for preview cards and listing pages',
+                description: 'For create_page/copy_page: Excerpt title for preview cards and listing pages',
                 required: false
             ),
             new SchemaProperty(
                 name: 'excerptDescription',
                 type: PropertyType::STRING,
-                description: 'For create_page: Excerpt description for preview cards and listing pages',
+                description: 'For create_page/copy_page: Excerpt description for preview cards and listing pages',
                 required: false
             ),
             new SchemaProperty(
                 name: 'excerptImage',
                 type: PropertyType::INTEGER,
-                description: 'For create_page: Media ID for excerpt image (use list_media to find IDs)',
+                description: 'For create_page/copy_page: Media ID for excerpt image, e.g. 993 (use list_media to find IDs)',
                 required: false
             ),
             new SchemaProperty(
@@ -276,6 +284,7 @@ class SuluPagesTool implements StreamableToolInterface
             'list' => $this->listPages($arguments['pathPrefix'] ?? '/cmf/example/contents', $locale),
             'get' => $this->getPage($arguments['path'] ?? '', $locale),
             'create_page' => $this->createPage($arguments, $locale),
+            'copy_page' => $this->copyPageAction($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
             'append_to_block' => $this->appendToBlock($arguments, $locale),
@@ -331,6 +340,31 @@ class SuluPagesTool implements StreamableToolInterface
         ];
 
         $result = $this->pageService->createPage($data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Copy a page with all blocks to a new location.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function copyPageAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $data = [
+            'sourcePath' => $arguments['sourcePath'] ?? $arguments['path'] ?? '',
+            'parentPath' => $arguments['parentPath'] ?? null,
+            'title' => $arguments['title'] ?? '',
+            'resourceSegment' => $arguments['resourceSegment'] ?? '',
+            'seoTitle' => $arguments['seoTitle'] ?? null,
+            'seoDescription' => $arguments['seoDescription'] ?? null,
+            'excerptTitle' => $arguments['excerptTitle'] ?? null,
+            'excerptDescription' => $arguments['excerptDescription'] ?? null,
+            'excerptImage' => isset($arguments['excerptImage']) ? (int) $arguments['excerptImage'] : null,
+            'publish' => ($arguments['publish'] ?? 'false') === 'true' || ($arguments['publish'] ?? false) === true,
+        ];
+
+        $result = $this->pageService->copyPage($data, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
