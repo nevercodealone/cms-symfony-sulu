@@ -1100,6 +1100,136 @@ class PageService
     }
 
     /**
+     * Update excerpt data (title, description, image) on an existing page.
+     *
+     * @param array{excerptTitle?: string|null, excerptDescription?: string|null, excerptImage?: int|null} $data
+     * @return array{success: bool, message: string, excerpt?: array{title: string|null, description: string|null, images: array<mixed>|null}}
+     */
+    public function updateExcerpt(string $path, array $data, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if (!$rootNode) {
+                return ['success' => false, 'message' => 'Invalid XML structure'];
+            }
+
+            $fieldMap = [
+                'excerptTitle' => "i18n:{$locale}-excerpt-title",
+                'excerptDescription' => "i18n:{$locale}-excerpt-description",
+                'excerptImage' => "i18n:{$locale}-excerpt-images",
+            ];
+
+            $updatedFields = [];
+
+            foreach ($fieldMap as $dataKey => $propertyName) {
+                if (!array_key_exists($dataKey, $data)) {
+                    continue;
+                }
+
+                $value = $data[$dataKey];
+
+                // Encode image as JSON
+                if ($dataKey === 'excerptImage' && $value !== null) {
+                    $value = json_encode(['ids' => [(int) $value]], JSON_UNESCAPED_SLASHES);
+                }
+
+                $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
+
+                if ($value === null) {
+                    // Remove the property if explicitly null
+                    if ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
+                        $node = $existingNodes->item(0);
+                        if ($node->parentNode) {
+                            $node->parentNode->removeChild($node);
+                        }
+                    }
+                    $updatedFields[] = $dataKey;
+                } elseif ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
+                    // Update existing property
+                    $propertyNode = $existingNodes->item(0);
+                    $valueNodes = $xpath->query('sv:value', $propertyNode);
+                    if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
+                        $valueNode = $valueNodes->item(0);
+                        $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
+                        if ($valueNode instanceof \DOMElement) {
+                            $valueNode->setAttribute('length', (string) strlen((string) $value));
+                        }
+                    }
+                    $updatedFields[] = $dataKey;
+                } else {
+                    // Create new property
+                    $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                    $property->setAttribute('sv:name', $propertyName);
+                    $property->setAttribute('sv:type', 'String');
+                    $property->setAttribute('sv:multi-valued', '0');
+
+                    $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
+                    $valueEl->setAttribute('length', (string) strlen((string) $value));
+                    $valueEl->appendChild($xml->createTextNode((string) $value));
+                    $property->appendChild($valueEl);
+
+                    $rootNode->appendChild($property);
+                    $updatedFields[] = $dataKey;
+                }
+            }
+
+            $updatedXml = $xml->saveXML();
+
+            // Update both workspaces
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_excerpt_updated',
+                $path,
+                $locale,
+                ['fields' => $updatedFields]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            // Read back the current excerpt values
+            $excerptTitle = $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-excerpt-title");
+            $excerptDescription = $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-excerpt-description");
+            $excerptImages = $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-excerpt-images");
+
+            return [
+                'success' => true,
+                'message' => 'Excerpt updated successfully',
+                'excerpt' => [
+                    'title' => $excerptTitle,
+                    'description' => $excerptDescription,
+                    'images' => $excerptImages ? json_decode($excerptImages, true) : null,
+                ],
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Append items to an existing block without replacing existing content.
      *
      * Useful for adding new FAQ entries, table rows, or feature items

@@ -125,6 +125,7 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 ### Page Management
 - `create_page` - Create a new page
 - `copy_page` - Copy a page with all blocks to a new location
+- `update_excerpt` - Update excerpt (title, description, image) on an existing page
 - `publish` - Publish page
 - `unpublish` - Unpublish page
 
@@ -275,13 +276,72 @@ Copy a page with all blocks to a new location. Inherits excerpt data from source
 3. publish: Make the page live
 ```
 
+### Updating Excerpts
+
+#### update_excerpt Action
+
+Update excerpt metadata (title, description, image) on an existing page. Use this to edit excerpt data after page creation.
+
+**What are excerpts?** Excerpts are teaser/preview metadata used by Sulu across the site:
+- **Listing pages**: `subpages-overview` blocks display child pages using their excerpt title, description, and image as preview cards
+- **Related content**: `related-content-by-page-tag` blocks use excerpt data for content recommendations
+- **Social sharing**: Excerpt data feeds Open Graph / social media preview cards
+- **Navigation teasers**: Any template that renders page teasers pulls from excerpt fields
+- **SEO**: Search engines may use excerpt descriptions for rich snippets
+
+Without excerpt data, pages appear with blank or fallback teasers in listings and navigation blocks.
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `path` | Yes | PHPCR path of the page to update |
+| `excerptTitle` | No | New excerpt title (set to `null` to clear) |
+| `excerptDescription` | No | New excerpt description (set to `null` to clear) |
+| `excerptImage` | No | Media ID for excerpt image (set to `null` to clear) |
+
+At least one of `excerptTitle`, `excerptDescription`, or `excerptImage` is required.
+
+**Example — update excerpt on existing page:**
+```json
+{
+  "action": "update_excerpt",
+  "path": "/cmf/example/contents/glossare/nca-php-glossar/phpunit",
+  "excerptTitle": "PHPUnit - PHP Testing Framework",
+  "excerptDescription": "PHPUnit ist das Standard-Testframework für PHP-Anwendungen.",
+  "excerptImage": 993
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Excerpt updated successfully",
+  "excerpt": {
+    "title": "PHPUnit - PHP Testing Framework",
+    "description": "PHPUnit ist das Standard-Testframework für PHP-Anwendungen.",
+    "images": {"ids": [993]}
+  }
+}
+```
+
+**Example — clear excerpt image:**
+```json
+{
+  "action": "update_excerpt",
+  "path": "/cmf/example/contents/my-page",
+  "excerptImage": null
+}
+```
+
 ---
 
 ## Page Response Enhancements
 
 ### Excerpt Data
 
-The `get` action now returns an `excerpt` object with the page's excerpt metadata:
+The `get` action returns an `excerpt` object with the page's excerpt metadata:
 
 ```json
 {
@@ -296,6 +356,10 @@ The `get` action now returns an `excerpt` object with the page's excerpt metadat
 ```
 
 Excerpt values are `null` when not set. Use `list_media` to find media IDs for `excerptImage`.
+
+**Setting/updating excerpts:**
+- During creation: pass `excerptTitle`, `excerptDescription`, `excerptImage` to `create_page` or `copy_page`
+- After creation: use `update_excerpt` to modify excerpt data on existing pages
 
 ### Snippet Title Resolution
 
