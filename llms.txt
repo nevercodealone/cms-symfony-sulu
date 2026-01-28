@@ -111,6 +111,36 @@ The `get_block_schema` and `list_block_types` actions now return `nestedType` fo
 
 ---
 
+## IMPORTANT: Rich Text vs Plain Text Fields
+
+Sulu has two field types. Using the wrong format breaks frontend rendering.
+
+### Rich-text fields (HTML required)
+These fields MUST contain HTML tags like `<p>`, `<strong>`, `<a>`:
+- `description` — in 25+ block types
+- `descriptiontwo` — in introduction block
+- `code` — in headline-paragraphs nested code items
+- `html` — in html-raw block (iframes, embeds)
+
+Correct: `"description": "<p>This is a paragraph with <strong>bold</strong> text.</p>"`
+
+### Plain-text fields (NO HTML — ever)
+ALL other fields are plain text. Never wrap them in HTML tags:
+- `headline`, `subline`, `text`, `title`, `buttonText`, `linkText`, `badgeText`
+- `columnheader1/2/3`, `cell1/2/3`, `language`, `playlistid`
+- `seoTitle`, `seoDescription`, `excerptTitle`, `excerptDescription`
+- `url`, `urltwo`, `textone`, `texttwo`, `buttonTextTwo`
+- FAQ `subline` (this is plain text, NOT HTML)
+
+Correct: `"headline": "Meine Überschrift"`
+WRONG: `"headline": "<p>Meine Überschrift</p>"` — tags render as visible text
+
+### Why this matters
+All 33 Twig block templates render plain-text fields auto-escaped (no |raw filter).
+HTML tags in plain-text fields appear literally as `<p>...</p>` on the website.
+
+---
+
 ## Overview
 
 The Sulu MCP Server enables managing CMS pages via these actions:
@@ -240,6 +270,8 @@ Copy a page with all blocks to a new location. Inherits excerpt data from source
 - **Excerpt inheritance**: excerpt title, description, and image are copied from source unless explicitly overridden
 - **Shared media**: media IDs are copied as-is (references same media, no duplication)
 - **Block validation**: each block is validated for the target path (e.g., `hl-des` restriction to `/training/*` still applies)
+- **Block media**: All media references (images, image) in blocks are preserved with their IDs and displayOption
+- **Full fidelity**: Every block field (text, URLs, settings, nested items, media) is copied 1:1 from source
 - **Partial failure**: if some blocks fail validation, the page is still created with successful blocks
 
 **Example:**
