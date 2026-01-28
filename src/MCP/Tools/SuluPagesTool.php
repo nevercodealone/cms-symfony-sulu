@@ -266,6 +266,18 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For list_media action: pagination offset (default: 0)',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'image',
+                type: PropertyType::STRING,
+                description: 'For hero/image blocks: media ID or JSON, e.g. "42" or "{\"ids\":[42]}"',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'images',
+                type: PropertyType::STRING,
+                description: 'For heroslider block: JSON array of media IDs, e.g. "[100, 101, 102]"',
+                required: false
+            ),
         );
     }
 
@@ -530,6 +542,13 @@ class SuluPagesTool implements StreamableToolInterface
             }
         }
 
+        // Normalize media fields to {"ids": [...]} format for BlockWriter
+        foreach (['image', 'images'] as $mediaField) {
+            if (isset($block[$mediaField])) {
+                $block[$mediaField] = $this->normalizeMediaValue($block[$mediaField]);
+            }
+        }
+
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
@@ -651,6 +670,20 @@ class SuluPagesTool implements StreamableToolInterface
                         $blockData[$propName] = $value;
                     }
                 }
+            }
+        }
+
+        // Pick up image/images from top-level arguments if not already in blockData
+        foreach (['image', 'images'] as $mediaField) {
+            if (isset($arguments[$mediaField]) && !isset($blockData[$mediaField])) {
+                $blockData[$mediaField] = $arguments[$mediaField];
+            }
+        }
+
+        // Normalize media fields to {"ids": [...]} format for BlockWriter
+        foreach (['image', 'images'] as $mediaField) {
+            if (isset($blockData[$mediaField])) {
+                $blockData[$mediaField] = $this->normalizeMediaValue($blockData[$mediaField]);
             }
         }
 
@@ -808,6 +841,77 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->mediaService->listMedia($search, $collectionId, $locale, $limit, $offset);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Normalize media values from MCP input to BlockWriter-compatible format.
+     *
+     * Accepts various formats and converts to {"ids": [int, ...]}:
+     * - "42" or 42 → {"ids": [42]}
+     * - "[100, 101]" or [100, 101] → {"ids": [100, 101]}
+     * - {"id": 42} or '{"id":42}' → {"ids": [42]}
+     * - {"ids": [42]} → returned as-is
+     *
+     * @param mixed $value Raw media value from MCP arguments
+     * @return array{ids: list<int>} Normalized format for BlockWriter
+     */
+    private function normalizeMediaValue(mixed $value): array
+    {
+        // Already in correct format
+        if (is_array($value) && isset($value['ids'])) {
+            return ['ids' => array_map('intval', $value['ids'])];
+        }
+
+        // {"id": 42} format (single media object)
+        if (is_array($value) && isset($value['id'])) {
+            return ['ids' => [(int) $value['id']]];
+        }
+
+        // Plain array of integers [100, 101]
+        if (is_array($value) && isset($value[0])) {
+            return ['ids' => array_map('intval', $value)];
+        }
+
+        // String input — try to decode
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            // Try JSON decode first
+            $decoded = json_decode($trimmed, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                if (is_array($decoded)) {
+                    // {"ids": [...]} already correct
+                    if (isset($decoded['ids'])) {
+                        return ['ids' => array_map('intval', $decoded['ids'])];
+                    }
+                    // {"id": 42} single media
+                    if (isset($decoded['id'])) {
+                        return ['ids' => [(int) $decoded['id']]];
+                    }
+                    // [100, 101] plain array
+                    if (isset($decoded[0])) {
+                        return ['ids' => array_map('intval', $decoded)];
+                    }
+                }
+                // Single integer decoded from string
+                if (is_int($decoded)) {
+                    return ['ids' => [$decoded]];
+                }
+            }
+
+            // Plain numeric string "42"
+            if (is_numeric($trimmed)) {
+                return ['ids' => [(int) $trimmed]];
+            }
+        }
+
+        // Integer input
+        if (is_int($value)) {
+            return ['ids' => [$value]];
+        }
+
+        // Fallback: empty
+        return ['ids' => []];
     }
 
     /**
