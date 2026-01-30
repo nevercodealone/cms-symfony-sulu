@@ -1077,6 +1077,120 @@ XML;
     }
 
     // ==========================================================================
+    // Multi-Valued Snippet Preservation Tests
+    // ==========================================================================
+
+    public function testGetPageResolvesMultiValuedSnippets(): void
+    {
+        $xmlWithMultiValuedSnippets = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Contact Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="true">
+        <sv:value>uuid-abc-123</sv:value>
+        <sv:value>uuid-def-456</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')
+            ->willReturnCallback(function (string $uuid) {
+                return match ($uuid) {
+                    'uuid-abc-123' => ['uuid' => 'uuid-abc-123', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
+                    'uuid-def-456' => ['uuid' => 'uuid-def-456', 'title' => 'Support Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
+                    default => null,
+                };
+            });
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            null, null, null, null, null, null, null, null,
+            $snippetService
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithMultiValuedSnippets]);
+
+        $result = $pageService->getPage('/cmf/example/contents/contact', 'de');
+
+        $this->assertNotNull($result);
+        $this->assertCount(1, $result['blocks']);
+        $snippets = $result['blocks'][0]['snippets'];
+        $this->assertCount(2, $snippets);
+        $this->assertEquals('uuid-abc-123', $snippets[0]['uuid']);
+        $this->assertEquals('Main Contact', $snippets[0]['title']);
+        $this->assertEquals('uuid-def-456', $snippets[1]['uuid']);
+        $this->assertEquals('Support Contact', $snippets[1]['title']);
+    }
+
+    public function testResolveSnippetReferencesHandlesStringSnippets(): void
+    {
+        // Simulates edge case: snippets stored as a single plain string UUID
+        // (could happen if getProperty returned just one value as string)
+        $xmlWithStringSnippet = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Contact Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="true">
+        <sv:value>uuid-single-only</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')
+            ->willReturnCallback(function (string $uuid) {
+                return match ($uuid) {
+                    'uuid-single-only' => ['uuid' => 'uuid-single-only', 'title' => 'Single Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/single'],
+                    default => null,
+                };
+            });
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            null, null, null, null, null, null, null, null,
+            $snippetService
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithStringSnippet]);
+
+        $result = $pageService->getPage('/cmf/example/contents/contact', 'de');
+
+        $this->assertNotNull($result);
+        $snippets = $result['blocks'][0]['snippets'];
+        $this->assertIsArray($snippets);
+        $this->assertCount(1, $snippets);
+        $this->assertEquals('uuid-single-only', $snippets[0]['uuid']);
+        $this->assertEquals('Single Contact', $snippets[0]['title']);
+    }
+
+    // ==========================================================================
     // Excerpt Data Tests
     // ==========================================================================
 
@@ -1762,5 +1876,116 @@ XML;
 
         // Verify excerpt-description is still inherited from source (not overridden)
         $this->assertStringContainsString('Source Description', $createXml, 'excerpt-description should still be inherited from source');
+    }
+
+    // ==========================================================================
+    // Copy Page Snippet Preservation Tests
+    // ==========================================================================
+
+    private const SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="12">Contact Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">tailwind</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">
+        <sv:value length="13">/contact-page</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="true">
+        <sv:value>uuid-contact-111</sv:value>
+        <sv:value>uuid-contact-222</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-description#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">Contact us</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+    public function testCopyPagePreservesMultiValuedSnippets(): void
+    {
+        $callCount = 0;
+        $capturedXmlStatements = [];
+
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')
+            ->willReturnCallback(function (string $uuid) {
+                return match ($uuid) {
+                    'uuid-contact-111' => ['uuid' => 'uuid-contact-111', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
+                    'uuid-contact-222' => ['uuid' => 'uuid-contact-222', 'title' => 'Support', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
+                    default => null,
+                };
+            });
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            null, null, null, null, null, null, null, null,
+            $snippetService
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) use (&$callCount) {
+                $callCount++;
+                if ($callCount === 1) {
+                    return ['path' => '/cmf/example/contents/contact-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS];
+                }
+                if ($callCount === 2) {
+                    return false; // isPagePublished
+                }
+                if ($callCount === 3) {
+                    return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS];
+                }
+                if ($callCount === 4) {
+                    return false; // page doesn't exist
+                }
+                if ($callCount === 5) {
+                    return false; // max sort order
+                }
+                return ['props' => self::SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS];
+            });
+
+        $this->connection->method('fetchOne')
+            ->willReturn(0);
+
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXmlStatements) {
+                foreach ($params as $param) {
+                    if (is_string($param) && str_contains($param, '<sv:')) {
+                        $capturedXmlStatements[] = $param;
+                    }
+                }
+                return 1;
+            });
+
+        $result = $pageService->copyPage([
+            'sourcePath' => '/cmf/example/contents/contact-page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'Copied Contact',
+            'resourceSegment' => '/copied-contact',
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals(1, $result['blocksCopied']);
+
+        // Verify both snippet UUIDs survive in the written XML
+        $foundBothSnippets = false;
+        foreach ($capturedXmlStatements as $xmlString) {
+            // BlockWriter encodes snippets as JSON array
+            if (str_contains($xmlString, 'uuid-contact-111') && str_contains($xmlString, 'uuid-contact-222')) {
+                $foundBothSnippets = true;
+                break;
+            }
+        }
+
+        $this->assertTrue($foundBothSnippets, 'Both snippet UUIDs (uuid-contact-111, uuid-contact-222) should be preserved in the copied page XML');
     }
 }

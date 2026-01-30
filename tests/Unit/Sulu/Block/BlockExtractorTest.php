@@ -445,6 +445,153 @@ XML;
         $this->assertEquals('top', $result[0]['image']['displayOption']);
     }
 
+    // === Multi-Valued Property Handling (snippet_selection, contact_account_selection) ===
+
+    public function testExtractBlockWithMultiValuedSnippets(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="true">
+        <sv:value>uuid-abc-123</sv:value>
+        <sv:value>uuid-def-456</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-description#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="16">Contact section</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $result = $this->extractor->extractBlocks($xml, 'de');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('contact', $result[0]['type']);
+        $this->assertArrayHasKey('snippets', $result[0]);
+        $this->assertIsArray($result[0]['snippets']);
+        $this->assertCount(2, $result[0]['snippets']);
+        $this->assertEquals('uuid-abc-123', $result[0]['snippets'][0]);
+        $this->assertEquals('uuid-def-456', $result[0]['snippets'][1]);
+    }
+
+    public function testExtractBlockWithJsonEncodedSnippets(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="38">["uuid-abc-123","uuid-def-456"]</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $result = $this->extractor->extractBlocks($xml, 'de');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('contact', $result[0]['type']);
+        $this->assertIsArray($result[0]['snippets']);
+        $this->assertCount(2, $result[0]['snippets']);
+        $this->assertEquals('uuid-abc-123', $result[0]['snippets'][0]);
+        $this->assertEquals('uuid-def-456', $result[0]['snippets'][1]);
+    }
+
+    public function testExtractBlockWithSingleSnippetValue(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="true">
+        <sv:value>uuid-single-123</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $result = $this->extractor->extractBlocks($xml, 'de');
+
+        $this->assertCount(1, $result);
+        $this->assertIsArray($result[0]['snippets']);
+        $this->assertCount(1, $result[0]['snippets']);
+        $this->assertEquals('uuid-single-123', $result[0]['snippets'][0]);
+    }
+
+    public function testExtractBlockWithMultiValuedOrganisation(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">consultant</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-organisation#0" sv:type="String" sv:multi-valued="true">
+        <sv:value>org-uuid-111</sv:value>
+        <sv:value>org-uuid-222</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-description#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="11">Consultant</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $result = $this->extractor->extractBlocks($xml, 'de');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('consultant', $result[0]['type']);
+        $this->assertIsArray($result[0]['organisation']);
+        $this->assertCount(2, $result[0]['organisation']);
+        $this->assertEquals('org-uuid-111', $result[0]['organisation'][0]);
+        $this->assertEquals('org-uuid-222', $result[0]['organisation'][1]);
+    }
+
+    public function testExtractHighlightsBlockWithMultiValuedSnippets(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="10">highlights</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="true">
+        <sv:value>highlight-uuid-1</sv:value>
+        <sv:value>highlight-uuid-2</sv:value>
+        <sv:value>highlight-uuid-3</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $result = $this->extractor->extractBlocks($xml, 'de');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('highlights', $result[0]['type']);
+        $this->assertIsArray($result[0]['snippets']);
+        $this->assertCount(3, $result[0]['snippets']);
+        $this->assertEquals('highlight-uuid-1', $result[0]['snippets'][0]);
+        $this->assertEquals('highlight-uuid-2', $result[0]['snippets'][1]);
+        $this->assertEquals('highlight-uuid-3', $result[0]['snippets'][2]);
+    }
+
     // === Unknown Block Type Fallback ===
 
     public function testExtractUnknownBlockTypeFallsBackToCommonProperties(): void

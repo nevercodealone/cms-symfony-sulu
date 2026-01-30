@@ -992,11 +992,23 @@ class PageService
         }
 
         foreach ($blocks as &$block) {
-            if (!isset($block['snippets']) || !is_array($block['snippets'])) {
+            if (!isset($block['snippets'])) {
                 continue;
             }
+
+            // Normalize string snippet to array (defensive: handles edge case
+            // where a single UUID was stored as plain string instead of array)
+            $snippets = $block['snippets'];
+            if (is_string($snippets)) {
+                $snippets = [$snippets];
+            }
+
+            if (!is_array($snippets)) {
+                continue;
+            }
+
             $resolved = [];
-            foreach ($block['snippets'] as $uuid) {
+            foreach ($snippets as $uuid) {
                 if (!is_string($uuid)) {
                     $resolved[] = $uuid;
                     continue;
@@ -1772,12 +1784,23 @@ class PageService
      */
     private function unresolveSnippetReferences(array $block): array
     {
-        if (!isset($block['snippets']) || !is_array($block['snippets'])) {
+        if (!isset($block['snippets'])) {
+            return $block;
+        }
+
+        // Normalize string snippet to array (handles edge case where
+        // BlockExtractor returned a single UUID as plain string)
+        $snippets = $block['snippets'];
+        if (is_string($snippets)) {
+            $snippets = [$snippets];
+        }
+
+        if (!is_array($snippets)) {
             return $block;
         }
 
         $rawUuids = [];
-        foreach ($block['snippets'] as $snippet) {
+        foreach ($snippets as $snippet) {
             if (is_array($snippet) && isset($snippet['uuid'])) {
                 $rawUuids[] = $snippet['uuid'];
             } elseif (is_string($snippet)) {
