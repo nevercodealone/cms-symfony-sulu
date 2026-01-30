@@ -232,8 +232,10 @@ services:
     App\Sulu\Service\SnippetService:
         public: true
 
-    # Sulu Media Service - Direct SQL for media operations
+    # Sulu Media Service - Direct SQL for media operations + MediaManager for uploads
     App\Sulu\Service\MediaService:
+        arguments:
+            $mediaManager: '@sulu_media.media_manager'
         public: true
 
     # MCP Tools

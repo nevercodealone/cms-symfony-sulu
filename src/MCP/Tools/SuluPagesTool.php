@@ -59,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections. ' .
             'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
@@ -68,7 +68,9 @@ class SuluPagesTool implements StreamableToolInterface
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
             'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. ' .
-            'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags.';
+            'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
+            'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1). Returns media ID for use in blocks/excerpts. ' .
+            'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
     }
 
     public function getInputSchema(): StructuredSchema
@@ -77,7 +79,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media',
+                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections',
                 required: true
             ),
             new SchemaProperty(
@@ -278,6 +280,18 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For heroslider block: JSON array of media IDs, e.g. "[100, 101, 102]"',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'sourceUrl',
+                type: PropertyType::STRING,
+                description: 'For upload_media action: URL to download image from (http/https only)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'filePath',
+                type: PropertyType::STRING,
+                description: 'For upload_media action: local server path to image file',
+                required: false
+            ),
         );
     }
 
@@ -311,6 +325,8 @@ class SuluPagesTool implements StreamableToolInterface
             'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? ''),
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
             'list_media' => $this->listMedia($arguments, $locale),
+            'upload_media' => $this->uploadMedia($arguments, $locale),
+            'list_collections' => $this->listCollections($locale),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -841,6 +857,70 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->mediaService->listMedia($search, $collectionId, $locale, $limit, $offset);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Upload media to Sulu's media library from URL or local file path.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function uploadMedia(array $arguments, string $locale): ToolResultInterface
+    {
+        $title = $arguments['title'] ?? '';
+        $sourceUrl = $arguments['sourceUrl'] ?? null;
+        $filePath = $arguments['filePath'] ?? null;
+        $collectionId = isset($arguments['collectionId']) ? (int) $arguments['collectionId'] : 1;
+
+        if (empty($title)) {
+            return new TextToolResult('Error: title is required for upload_media');
+        }
+
+        if (empty($sourceUrl) && empty($filePath)) {
+            return new TextToolResult('Error: either sourceUrl or filePath is required for upload_media');
+        }
+
+        try {
+            if (!empty($sourceUrl)) {
+                $result = $this->mediaService->uploadMediaFromUrl($sourceUrl, $title, $collectionId, $locale);
+            } else {
+                $result = $this->mediaService->uploadMediaFromPath($filePath, $title, $collectionId, $locale);
+            }
+
+            return new TextToolResult(json_encode([
+                'success' => true,
+                'message' => "Media uploaded successfully with ID {$result['id']}",
+                'id' => $result['id'],
+                'title' => $result['title'],
+                'filename' => $result['filename'],
+                'mimeType' => $result['mimeType'],
+                'size' => $result['size'],
+                'collectionId' => $result['collectionId'],
+                'usage_hint' => "Use media ID {$result['id']} in add_block image/images parameter or excerptImage",
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+        } catch (\RuntimeException $e) {
+            return new TextToolResult(json_encode([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], JSON_PRETTY_PRINT) ?: '{}');
+        } catch (\Exception $e) {
+            return new TextToolResult(json_encode([
+                'success' => false,
+                'error' => 'Upload failed: ' . $e->getMessage(),
+            ], JSON_PRETTY_PRINT) ?: '{}');
+        }
+    }
+
+    /**
+     * List all media collections.
+     */
+    private function listCollections(string $locale): ToolResultInterface
+    {
+        $collections = $this->mediaService->listCollections($locale);
+
+        return new TextToolResult(json_encode([
+            'collections' => $collections,
+            'total' => count($collections),
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**

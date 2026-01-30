@@ -32,6 +32,8 @@
 - XML manipulation via DOMDocument/DOMXPath for block CRUD
 - BlockWriter/BlockExtractor classes for PHPCR XML handling
 - Manual cache invalidation via HttpCacheClearer
+- `MediaManagerInterface::save()` for media uploads (handles storage, thumbnails, versioning)
+- Retry-once on `ConnectionException` for stale DBAL in long-lived MCP process
 
 ### Code Locations
 
@@ -39,7 +41,7 @@
 |------|---------|
 | `src/Sulu/Service/PageService.php` | Page CRUD operations - direct DB queries |
 | `src/Sulu/Service/SnippetService.php` | Snippet listing - direct DB queries |
-| `src/Sulu/Service/MediaService.php` | Media listing/search - direct DB queries |
+| `src/Sulu/Service/MediaService.php` | Media listing/search/upload - DB queries + MediaManager |
 | `src/Sulu/Block/BlockWriter.php` | Writes blocks to PHPCR XML |
 | `src/Sulu/Block/BlockExtractor.php` | Reads blocks from PHPCR XML |
 | `src/Sulu/Block/BlockTypeRegistry.php` | Block schemas, descriptions & examples |
@@ -54,7 +56,7 @@ The MCP server follows Single Responsibility Principle with focused services:
 src/Sulu/
 ├── Service/
 │   ├── PageService.php          # Page CRUD only
-│   ├── MediaService.php         # Media listing/search
+│   ├── MediaService.php         # Media listing/search/upload (MediaManager)
 │   └── SnippetService.php       # Snippet operations
 ├── Block/
 │   ├── BlockTypeRegistry.php    # Schemas + descriptions + examples
@@ -170,6 +172,8 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 
 ### Media & Snippets
 - `list_media` - Search/list media with pagination
+- `upload_media` - Upload image from URL or local file path into a collection
+- `list_collections` - List all media collections with titles, hierarchy, and media counts
 - `list_snippets` - List snippets with diagnostic info
 
 ## Page Discovery
@@ -1221,6 +1225,132 @@ Fetches and displays WordPress posts.
 
 ## Media & Snippet Actions
 
+### list_collections Action
+
+List all media collections with titles, hierarchy depth, and media counts. Use this to discover the right `collectionId` before uploading.
+
+```json
+{
+  "action": "list_collections",
+  "locale": "de"
+}
+```
+
+Response:
+```json
+{
+  "collections": [
+    {"id": 1, "title": "System", "key": "system_collections", "parent_id": null, "depth": 0, "media_count": 0},
+    {"id": 48, "title": "Glossar", "key": null, "parent_id": null, "depth": 0, "media_count": 19},
+    {"id": 52, "title": "PHP Glossar", "key": null, "parent_id": 48, "depth": 1, "media_count": 252}
+  ],
+  "total": 50
+}
+```
+
+**Title resolution:** If no German title exists, the English title is used as fallback. All collections will have a usable title.
+
+### Media Collection Reference
+
+**IMPORTANT:** Always upload into the correct collection. Do NOT dump images into collection 1 (System).
+
+| ID | Name | Purpose | Use for |
+|----|------|---------|---------|
+| **1** | System | Sulu internal (previews, contacts, forms) | Never use for content uploads |
+| **48** | Glossar | Glossary images (parent) | General glossary images |
+| **51** | Glossar barrierefreies Webdesign | Accessibility glossary | A11y glossary page images |
+| **52** | PHP Glossar | PHP glossary | PHP glossary page images |
+| **54** | Accessibility Tools | Accessibility tool images | A11y tool page images |
+| **60** | KI Content | AI-generated content | AI/KI content page images |
+| **57** | NCA KI Tools | AI tool images | KI tools section images |
+| **59** | NCA AI CMS | AI CMS images | MCP/AI CMS page images |
+| **32** | Office | Office photos | Team/office content |
+| **34** | Logos | Logo assets | Brand logos |
+| **55** | Header | Header images | Page header/hero images |
+| **56** | Astro JS | Astro JS images | Frontend/Astro content |
+| **53** | PHP Refactoring | PHP refactoring images | Refactoring content |
+| **8** | NCAEvents | Event images (parent) | Event sub-collections |
+
+**Choosing a collection:** Match by content area. PHP glossary pages → collection 52. AI content → collection 60. When unsure, use `list_collections` to check.
+
+### upload_media Action
+
+Upload an image to Sulu's media library from a URL or local file path. Returns the media ID for immediate use in blocks and excerpts.
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `title` | Yes | Media title (shown in Sulu admin) |
+| `sourceUrl` | One of these | URL to download image from (http/https only) |
+| `filePath` | required | Local server path to image file |
+| `collectionId` | No | Target collection ID (default: 1 — **use list_collections to pick the right one!**) |
+| `locale` | No | Language code: `de` or `en` (default: `de`) |
+
+**Example — upload from URL into PHP Glossar collection:**
+```json
+{
+  "action": "upload_media",
+  "title": "PHPStan Logo",
+  "sourceUrl": "https://example.com/phpstan-logo.png",
+  "collectionId": 52,
+  "locale": "de"
+}
+```
+
+**Example — upload from local file:**
+```json
+{
+  "action": "upload_media",
+  "title": "Office Photo 2024",
+  "filePath": "/var/www/html/var/uploads/office-photo.jpg",
+  "collectionId": 32
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Media uploaded successfully with ID 995",
+  "id": 995,
+  "title": "PHPStan Logo",
+  "filename": "phpstan-logo.png",
+  "mimeType": "image/png",
+  "size": 24531,
+  "collectionId": 52,
+  "usage_hint": "Use media ID 995 in add_block image/images parameter or excerptImage"
+}
+```
+
+**Security:**
+- Only `http://` and `https://` URLs allowed
+- Internal network IPs blocked (127.x, 10.x, 172.16.x, 192.168.x) — SSRF protection
+- Max file size: 10 MB
+- Sulu's built-in FileValidator handles MIME type validation
+
+**Error response:**
+```json
+{
+  "success": false,
+  "error": "Only http and https URLs are allowed"
+}
+```
+
+### Upload → Use in Content Workflow
+
+```
+1. list_collections → find correct collection ID
+2. upload_media(sourceUrl="https://...", title="Hero Image", collectionId=60) → returns {"id": 995, ...}
+3. add_block(path="...", blockType="hero", headline="Title", image="995") → uses the uploaded image
+```
+
+Or for excerpts:
+```
+1. upload_media(sourceUrl="https://...", title="Page Preview", collectionId=52) → returns {"id": 996, ...}
+2. update_excerpt(path="...", excerptImage=996) → sets as page preview image
+```
+
 ### list_media Action
 
 Search and list media files from Sulu's media library.
@@ -1229,7 +1359,7 @@ Search and list media files from Sulu's media library.
 {
   "action": "list_media",
   "search": "logo",
-  "collectionId": 1,
+  "collectionId": 34,
   "locale": "de",
   "limit": 50,
   "offset": 0
@@ -1246,7 +1376,7 @@ Response:
       "filename": "logo.png",
       "mimeType": "image/png",
       "size": 12345,
-      "collectionId": 1
+      "collectionId": 34
     }
   ],
   "total": 1,
@@ -1259,7 +1389,7 @@ Use media IDs in blocks:
 ```json
 {
   "blockType": "image",
-  "image": {"id": 42}
+  "image": "42"
 }
 ```
 
@@ -1381,9 +1511,9 @@ These contact snippets are available for use in `contact` blocks via the `snippe
 
 ## Known Media IDs
 
-| Thema | Media ID | Dateiname |
-|-------|----------|-----------|
-| MCP Server | 993 | nca-mcp-php-server.jpg |
+| Thema | Media ID | Dateiname | Collection |
+|-------|----------|-----------|------------|
+| MCP Server | 993 | nca-mcp-php-server.jpg | NCA AI CMS (59) |
 
 **Usage in excerpt image:**
 ```json
@@ -1395,6 +1525,8 @@ These contact snippets are available for use in `contact` blocks via the `snippe
   "excerptImage": 993
 }
 ```
+
+**To add new media:** Use `upload_media` with the correct `collectionId` (see Media Collection Reference above), then use the returned ID.
 
 ---
 
