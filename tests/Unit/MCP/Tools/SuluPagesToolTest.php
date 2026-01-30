@@ -649,6 +649,128 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test add_block for heroslider with images as JSON string of IDs.
+     */
+    public function testAddBlockHerosliderWithImagesJsonString(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'heroslider',
+            'headline' => 'Slider Title',
+            'images' => '[100, 101]',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('heroslider', $capturedBlock['type']);
+        $this->assertEquals('Slider Title', $capturedBlock['headline']);
+        $this->assertArrayHasKey('images', $capturedBlock);
+        $this->assertEquals(['ids' => [100, 101]], $capturedBlock['images']);
+    }
+
+    /**
+     * Test add_block for hero with image as string ID.
+     */
+    public function testAddBlockHeroWithImageId(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hero',
+            'headline' => 'Hero Title',
+            'image' => '42',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('hero', $capturedBlock['type']);
+        $this->assertEquals('Hero Title', $capturedBlock['headline']);
+        $this->assertArrayHasKey('image', $capturedBlock);
+        $this->assertEquals(['ids' => [42]], $capturedBlock['image']);
+    }
+
+    /**
+     * Test update_block with images as JSON string of IDs.
+     */
+    public function testUpdateBlockWithImages(): void
+    {
+        $capturedBlockData = null;
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'blocks' => [
+                    ['type' => 'heroslider', 'headline' => 'Old'],
+                ],
+            ]);
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function ($path, $position, $blockData) use (&$capturedBlockData) {
+                $capturedBlockData = $blockData;
+                return ['success' => true, 'message' => 'Block updated'];
+            });
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 0,
+            'headline' => 'Updated Slider',
+            'images' => '[200, 201]',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlockData);
+        $this->assertEquals('Updated Slider', $capturedBlockData['headline']);
+        $this->assertArrayHasKey('images', $capturedBlockData);
+        $this->assertEquals(['ids' => [200, 201]], $capturedBlockData['images']);
+    }
+
+    /**
+     * Test update_block with image as string ID.
+     */
+    public function testUpdateBlockWithImageId(): void
+    {
+        $capturedBlockData = null;
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'blocks' => [
+                    ['type' => 'hero', 'headline' => 'Old Hero'],
+                ],
+            ]);
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function ($path, $position, $blockData) use (&$capturedBlockData) {
+                $capturedBlockData = $blockData;
+                return ['success' => true, 'message' => 'Block updated'];
+            });
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 0,
+            'headline' => 'Updated Hero',
+            'image' => '42',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlockData);
+        $this->assertEquals('Updated Hero', $capturedBlockData['headline']);
+        $this->assertArrayHasKey('image', $capturedBlockData);
+        $this->assertEquals(['ids' => [42]], $capturedBlockData['image']);
+    }
+
+    /**
      * Test add_block with JSON array content (not object) falls back to buildBlock.
      */
     public function testAddBlockWithJsonArrayContentFallsBackToBuildBlock(): void

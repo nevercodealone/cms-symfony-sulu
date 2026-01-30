@@ -59,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections. ' .
             'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
@@ -67,7 +67,10 @@ class SuluPagesTool implements StreamableToolInterface
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
-            'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags.';
+            'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. ' .
+            'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
+            'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
+            'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
     }
 
     public function getInputSchema(): StructuredSchema
@@ -76,7 +79,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media',
+                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections',
                 required: true
             ),
             new SchemaProperty(
@@ -265,6 +268,36 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For list_media action: pagination offset (default: 0)',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'image',
+                type: PropertyType::STRING,
+                description: 'For hero/image blocks: media ID or JSON, e.g. "42" or "{\"ids\":[42]}"',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'images',
+                type: PropertyType::STRING,
+                description: 'For heroslider block: JSON array of media IDs, e.g. "[100, 101, 102]"',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'sourceUrl',
+                type: PropertyType::STRING,
+                description: 'For upload_media action: URL to download image from (http/https only)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'filePath',
+                type: PropertyType::STRING,
+                description: 'For upload_media action: local server path to image file',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'filename',
+                type: PropertyType::STRING,
+                description: 'For upload_media action: custom filename for SEO, e.g. "php-glossar-phpunit-2026.png". Include extension. If omitted, derived from URL or file path',
+                required: false
+            ),
         );
     }
 
@@ -298,6 +331,8 @@ class SuluPagesTool implements StreamableToolInterface
             'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? ''),
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
             'list_media' => $this->listMedia($arguments, $locale),
+            'upload_media' => $this->uploadMedia($arguments, $locale),
+            'list_collections' => $this->listCollections($locale),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -529,6 +564,13 @@ class SuluPagesTool implements StreamableToolInterface
             }
         }
 
+        // Normalize media fields to {"ids": [...]} format for BlockWriter
+        foreach (['image', 'images'] as $mediaField) {
+            if (isset($block[$mediaField])) {
+                $block[$mediaField] = $this->normalizeMediaValue($block[$mediaField]);
+            }
+        }
+
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
@@ -650,6 +692,20 @@ class SuluPagesTool implements StreamableToolInterface
                         $blockData[$propName] = $value;
                     }
                 }
+            }
+        }
+
+        // Pick up image/images from top-level arguments if not already in blockData
+        foreach (['image', 'images'] as $mediaField) {
+            if (isset($arguments[$mediaField]) && !isset($blockData[$mediaField])) {
+                $blockData[$mediaField] = $arguments[$mediaField];
+            }
+        }
+
+        // Normalize media fields to {"ids": [...]} format for BlockWriter
+        foreach (['image', 'images'] as $mediaField) {
+            if (isset($blockData[$mediaField])) {
+                $blockData[$mediaField] = $this->normalizeMediaValue($blockData[$mediaField]);
             }
         }
 
@@ -807,6 +863,142 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->mediaService->listMedia($search, $collectionId, $locale, $limit, $offset);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Upload media to Sulu's media library from URL or local file path.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function uploadMedia(array $arguments, string $locale): ToolResultInterface
+    {
+        $title = $arguments['title'] ?? '';
+        $sourceUrl = $arguments['sourceUrl'] ?? null;
+        $filePath = $arguments['filePath'] ?? null;
+        $collectionId = isset($arguments['collectionId']) ? (int) $arguments['collectionId'] : 1;
+        $filename = !empty($arguments['filename']) ? $arguments['filename'] : null;
+
+        if (empty($title)) {
+            return new TextToolResult('Error: title is required for upload_media');
+        }
+
+        if (empty($sourceUrl) && empty($filePath)) {
+            return new TextToolResult('Error: either sourceUrl or filePath is required for upload_media');
+        }
+
+        try {
+            if (!empty($sourceUrl)) {
+                $result = $this->mediaService->uploadMediaFromUrl($sourceUrl, $title, $collectionId, $locale, $filename);
+            } else {
+                $result = $this->mediaService->uploadMediaFromPath($filePath, $title, $collectionId, $locale, $filename);
+            }
+
+            return new TextToolResult(json_encode([
+                'success' => true,
+                'message' => "Media uploaded successfully with ID {$result['id']}",
+                'id' => $result['id'],
+                'title' => $result['title'],
+                'filename' => $result['filename'],
+                'mimeType' => $result['mimeType'],
+                'size' => $result['size'],
+                'collectionId' => $result['collectionId'],
+                'usage_hint' => "Use media ID {$result['id']} in add_block image/images parameter or excerptImage",
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+        } catch (\RuntimeException $e) {
+            return new TextToolResult(json_encode([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], JSON_PRETTY_PRINT) ?: '{}');
+        } catch (\Exception $e) {
+            return new TextToolResult(json_encode([
+                'success' => false,
+                'error' => 'Upload failed: ' . $e->getMessage(),
+            ], JSON_PRETTY_PRINT) ?: '{}');
+        }
+    }
+
+    /**
+     * List all media collections.
+     */
+    private function listCollections(string $locale): ToolResultInterface
+    {
+        $collections = $this->mediaService->listCollections($locale);
+
+        return new TextToolResult(json_encode([
+            'collections' => $collections,
+            'total' => count($collections),
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Normalize media values from MCP input to BlockWriter-compatible format.
+     *
+     * Accepts various formats and converts to {"ids": [int, ...]}:
+     * - "42" or 42 → {"ids": [42]}
+     * - "[100, 101]" or [100, 101] → {"ids": [100, 101]}
+     * - {"id": 42} or '{"id":42}' → {"ids": [42]}
+     * - {"ids": [42]} → returned as-is
+     *
+     * @param mixed $value Raw media value from MCP arguments
+     * @return array{ids: list<int>} Normalized format for BlockWriter
+     */
+    private function normalizeMediaValue(mixed $value): array
+    {
+        // Already in correct format
+        if (is_array($value) && isset($value['ids'])) {
+            return ['ids' => array_map('intval', $value['ids'])];
+        }
+
+        // {"id": 42} format (single media object)
+        if (is_array($value) && isset($value['id'])) {
+            return ['ids' => [(int) $value['id']]];
+        }
+
+        // Plain array of integers [100, 101]
+        if (is_array($value) && isset($value[0])) {
+            return ['ids' => array_map('intval', $value)];
+        }
+
+        // String input — try to decode
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            // Try JSON decode first
+            $decoded = json_decode($trimmed, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                if (is_array($decoded)) {
+                    // {"ids": [...]} already correct
+                    if (isset($decoded['ids'])) {
+                        return ['ids' => array_map('intval', $decoded['ids'])];
+                    }
+                    // {"id": 42} single media
+                    if (isset($decoded['id'])) {
+                        return ['ids' => [(int) $decoded['id']]];
+                    }
+                    // [100, 101] plain array
+                    if (isset($decoded[0])) {
+                        return ['ids' => array_map('intval', $decoded)];
+                    }
+                }
+                // Single integer decoded from string
+                if (is_int($decoded)) {
+                    return ['ids' => [$decoded]];
+                }
+            }
+
+            // Plain numeric string "42"
+            if (is_numeric($trimmed)) {
+                return ['ids' => [(int) $trimmed]];
+            }
+        }
+
+        // Integer input
+        if (is_int($value)) {
+            return ['ids' => [$value]];
+        }
+
+        // Fallback: empty
+        return ['ids' => []];
     }
 
     /**

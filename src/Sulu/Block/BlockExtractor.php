@@ -98,12 +98,23 @@ final class BlockExtractor
         $schema = $this->registry->getSchema($type);
 
         if ($schema !== null) {
+            // Properties that may be stored as multi-valued PHPCR properties
+            // (Sulu admin creates these with separate <sv:value> per UUID)
+            $multiValueProps = ['snippets', 'organisation'];
+
             // Extract all properties defined in schema
             foreach ($schema['properties'] as $propName) {
-                $value = $this->getProperty($xpath, "{$prefix}-{$propName}#{$position}");
-                if ($value !== null) {
-                    // Handle JSON-encoded properties (image, snippets, etc.)
-                    $block[$propName] = $this->decodePropertyValue($propName, $value);
+                if (in_array($propName, $multiValueProps, true)) {
+                    $allValues = $this->getPropertyValues($xpath, "{$prefix}-{$propName}#{$position}");
+                    if (!empty($allValues)) {
+                        $block[$propName] = $this->decodeMultiValueProperty($propName, $allValues);
+                    }
+                } else {
+                    $value = $this->getProperty($xpath, "{$prefix}-{$propName}#{$position}");
+                    if ($value !== null) {
+                        // Handle JSON-encoded properties (image, etc.)
+                        $block[$propName] = $this->decodePropertyValue($propName, $value);
+                    }
                 }
             }
 
@@ -246,6 +257,27 @@ final class BlockExtractor
     }
 
     /**
+     * Get ALL values from a multi-valued PHPCR property.
+     *
+     * Sulu's snippet_selection and contact_account_selection store data as
+     * multi-valued properties with separate <sv:value> elements per UUID.
+     * MCP stores them as a single JSON array string in one <sv:value>.
+     *
+     * @return array<string>
+     */
+    private function getPropertyValues(DOMXPath $xpath, string $name): array
+    {
+        $nodes = $xpath->query('//sv:property[@sv:name="' . $name . '"]/sv:value');
+        $values = [];
+        if ($nodes !== false) {
+            for ($i = 0; $i < $nodes->length; $i++) {
+                $values[] = $nodes->item($i)->nodeValue;
+            }
+        }
+        return $values;
+    }
+
+    /**
      * Get an integer property value from XPath.
      */
     private function getIntProperty(DOMXPath $xpath, string $name): int
@@ -270,5 +302,33 @@ final class BlockExtractor
         }
 
         return $value;
+    }
+
+    /**
+     * Decode a multi-valued PHPCR property into an array.
+     *
+     * Handles two storage formats:
+     * 1. MCP format: single <sv:value> containing JSON array '["uuid-1","uuid-2"]'
+     * 2. Sulu native: multiple <sv:value> elements, one UUID per element
+     *
+     * Always returns an array for consistent downstream processing.
+     *
+     * @param array<string> $values All <sv:value> contents
+     * @return array<mixed>
+     */
+    private function decodeMultiValueProperty(string $propName, array $values): array
+    {
+        // Single value: try JSON decode first (MCP format)
+        if (count($values) === 1) {
+            $decoded = json_decode($values[0], true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+            // Single non-JSON value: wrap in array for consistent return type
+            return [$values[0]];
+        }
+
+        // Multiple values: Sulu multi-valued property (one UUID per <sv:value>)
+        return $values;
     }
 }
