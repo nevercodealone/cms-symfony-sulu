@@ -1284,26 +1284,29 @@ Upload an image to Sulu's media library from a URL or local file path. Returns t
 | `title` | Yes | Media title (shown in Sulu admin) |
 | `sourceUrl` | One of these | URL to download image from (http/https only) |
 | `filePath` | required | Local server path to image file |
+| `filename` | No | Custom filename for SEO (include extension, e.g. `php-glossar-phpunit-2026.png`). If omitted, derived from URL path or local file name |
 | `collectionId` | No | Target collection ID (default: 1 — **use list_collections to pick the right one!**) |
 | `locale` | No | Language code: `de` or `en` (default: `de`) |
 
-**Example — upload from URL into PHP Glossar collection:**
+**Example — upload with custom SEO filename:**
 ```json
 {
   "action": "upload_media",
-  "title": "PHPStan Logo",
-  "sourceUrl": "https://example.com/phpstan-logo.png",
+  "title": "PHPStan - Statische PHP Analyse",
+  "sourceUrl": "https://example.com/images/logo.png",
+  "filename": "phpstan-statische-php-analyse-glossar-2026.png",
   "collectionId": 52,
   "locale": "de"
 }
 ```
 
-**Example — upload from local file:**
+**Example — upload from local file with custom filename:**
 ```json
 {
   "action": "upload_media",
   "title": "Office Photo 2024",
   "filePath": "/var/www/html/var/uploads/office-photo.jpg",
+  "filename": "nca-office-duisburg-2024.jpg",
   "collectionId": 32
 }
 ```
@@ -1314,13 +1317,20 @@ Upload an image to Sulu's media library from a URL or local file path. Returns t
   "success": true,
   "message": "Media uploaded successfully with ID 995",
   "id": 995,
-  "title": "PHPStan Logo",
-  "filename": "phpstan-logo.png",
+  "title": "PHPStan - Statische PHP Analyse",
+  "filename": "phpstan-statische-php-analyse-glossar-2026.png",
   "mimeType": "image/png",
   "size": 24531,
   "collectionId": 52,
   "usage_hint": "Use media ID 995 in add_block image/images parameter or excerptImage"
 }
+```
+
+**Filename best practices (SEO):**
+- Use lowercase, hyphens between words: `php-glossar-phpunit-2026.png`
+- Include topic keywords: `google-antigravity-ai-ide-agent-2026.png`
+- Include year for freshness signals
+- Always include file extension matching the actual content type
 ```
 
 **Security:**

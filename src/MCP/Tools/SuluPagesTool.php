@@ -69,7 +69,7 @@ class SuluPagesTool implements StreamableToolInterface
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
             'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
-            'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1). Returns media ID for use in blocks/excerpts. ' .
+            'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
             'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
     }
 
@@ -290,6 +290,12 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'filePath',
                 type: PropertyType::STRING,
                 description: 'For upload_media action: local server path to image file',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'filename',
+                type: PropertyType::STRING,
+                description: 'For upload_media action: custom filename for SEO, e.g. "php-glossar-phpunit-2026.png". Include extension. If omitted, derived from URL or file path',
                 required: false
             ),
         );
@@ -870,6 +876,7 @@ class SuluPagesTool implements StreamableToolInterface
         $sourceUrl = $arguments['sourceUrl'] ?? null;
         $filePath = $arguments['filePath'] ?? null;
         $collectionId = isset($arguments['collectionId']) ? (int) $arguments['collectionId'] : 1;
+        $filename = !empty($arguments['filename']) ? $arguments['filename'] : null;
 
         if (empty($title)) {
             return new TextToolResult('Error: title is required for upload_media');
@@ -881,9 +888,9 @@ class SuluPagesTool implements StreamableToolInterface
 
         try {
             if (!empty($sourceUrl)) {
-                $result = $this->mediaService->uploadMediaFromUrl($sourceUrl, $title, $collectionId, $locale);
+                $result = $this->mediaService->uploadMediaFromUrl($sourceUrl, $title, $collectionId, $locale, $filename);
             } else {
-                $result = $this->mediaService->uploadMediaFromPath($filePath, $title, $collectionId, $locale);
+                $result = $this->mediaService->uploadMediaFromPath($filePath, $title, $collectionId, $locale, $filename);
             }
 
             return new TextToolResult(json_encode([

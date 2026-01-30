@@ -252,6 +252,7 @@ class MediaService
         string $title,
         int $collectionId = 1,
         string $locale = 'de',
+        ?string $filename = null,
     ): array {
         $this->validateUrl($url);
 
@@ -259,9 +260,9 @@ class MediaService
 
         try {
             $this->downloadFile($url, $tempPath);
-            $filename = $this->extractFilenameFromUrl($url);
+            $resolvedFilename = $filename ?? $this->extractFilenameFromUrl($url);
 
-            return $this->saveViaMediaManager($tempPath, $filename, $title, $collectionId, $locale);
+            return $this->saveViaMediaManager($tempPath, $resolvedFilename, $title, $collectionId, $locale);
         } finally {
             if (file_exists($tempPath)) {
                 unlink($tempPath);
@@ -281,6 +282,7 @@ class MediaService
         string $title,
         int $collectionId = 1,
         string $locale = 'de',
+        ?string $filename = null,
     ): array {
         if (!file_exists($filePath)) {
             throw new \RuntimeException("File not found: {$filePath}");
@@ -297,9 +299,9 @@ class MediaService
             );
         }
 
-        $filename = basename($filePath);
+        $resolvedFilename = $filename ?? basename($filePath);
 
-        return $this->saveViaMediaManager($filePath, $filename, $title, $collectionId, $locale);
+        return $this->saveViaMediaManager($filePath, $resolvedFilename, $title, $collectionId, $locale);
     }
 
     /**
