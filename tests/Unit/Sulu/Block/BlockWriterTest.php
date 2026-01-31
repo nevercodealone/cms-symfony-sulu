@@ -454,6 +454,207 @@ XML);
         $this->assertEquals('top', $blocks[0]['images']['displayOption']);
     }
 
+    // === PHPCR Reference Property Tests ===
+
+    public function testAddContactBlockWritesSnippetsAsReference(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'contact',
+            'snippets' => ['cdba3044-9725-41c0-8056-0437dfae2841'],
+            'description' => '<p>Contact us.</p>',
+        ]);
+
+        // Verify raw XML structure: sv:type="Reference", sv:multi-valued="1"
+        $propNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-snippets#0"]');
+        $this->assertSame(1, $propNodes->length, 'snippets property should exist');
+
+        $prop = $propNodes->item(0);
+        $this->assertSame('Reference', $prop->getAttribute('sv:type'));
+        $this->assertSame('1', $prop->getAttribute('sv:multi-valued'));
+
+        // Verify single <sv:value> with UUID (not JSON)
+        $valueNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-snippets#0"]/sv:value');
+        $this->assertSame(1, $valueNodes->length);
+        $this->assertSame('cdba3044-9725-41c0-8056-0437dfae2841', $valueNodes->item(0)->nodeValue);
+
+        // Round-trip: extractor should read it back correctly
+        $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-length"]/sv:value');
+        $lengthNodes->item(0)->nodeValue = '1';
+        $blocks = $this->extractor->extractBlocks($xml->saveXML(), 'de');
+
+        $this->assertCount(1, $blocks);
+        $this->assertSame('contact', $blocks[0]['type']);
+        $this->assertSame(['cdba3044-9725-41c0-8056-0437dfae2841'], $blocks[0]['snippets']);
+    }
+
+    public function testAddHighlightsBlockWritesSnippetsAsReference(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $uuids = [
+            'cdba3044-9725-41c0-8056-0437dfae2841',
+            '4499c20b-6de3-4999-9c85-cab9deeb789b',
+            'e3175c1c-0530-43fd-9e18-b5e83794b1f1',
+        ];
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'highlights',
+            'snippets' => $uuids,
+        ]);
+
+        // Verify raw XML: Reference type, multi-valued
+        $prop = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-snippets#0"]')->item(0);
+        $this->assertSame('Reference', $prop->getAttribute('sv:type'));
+        $this->assertSame('1', $prop->getAttribute('sv:multi-valued'));
+
+        // Verify 3 separate <sv:value> nodes
+        $valueNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-snippets#0"]/sv:value');
+        $this->assertSame(3, $valueNodes->length);
+        $this->assertSame($uuids[0], $valueNodes->item(0)->nodeValue);
+        $this->assertSame($uuids[1], $valueNodes->item(1)->nodeValue);
+        $this->assertSame($uuids[2], $valueNodes->item(2)->nodeValue);
+    }
+
+    public function testAddConsultantBlockWritesOrganisationAsReference(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'consultant',
+            'organisation' => ['a1b2c3d4-e5f6-7890-abcd-ef1234567890'],
+            'description' => '<p>Our consultant.</p>',
+        ]);
+
+        // Verify raw XML: Reference type
+        $prop = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]')->item(0);
+        $this->assertSame('Reference', $prop->getAttribute('sv:type'));
+        $this->assertSame('1', $prop->getAttribute('sv:multi-valued'));
+
+        $valueNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]/sv:value');
+        $this->assertSame(1, $valueNodes->length);
+        $this->assertSame('a1b2c3d4-e5f6-7890-abcd-ef1234567890', $valueNodes->item(0)->nodeValue);
+    }
+
+    public function testAddTeamBlockWritesOrganisationAsReference(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $orgUuids = [
+            'aaaa1111-bbbb-2222-cccc-333344445555',
+            'ffff6666-eeee-7777-dddd-888899990000',
+        ];
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'team',
+            'headline' => 'Our Team',
+            'description' => '<p>Meet the team.</p>',
+            'organisation' => $orgUuids,
+        ]);
+
+        // Verify Reference type with 2 values
+        $prop = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]')->item(0);
+        $this->assertSame('Reference', $prop->getAttribute('sv:type'));
+        $this->assertSame('1', $prop->getAttribute('sv:multi-valued'));
+
+        $valueNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]/sv:value');
+        $this->assertSame(2, $valueNodes->length);
+        $this->assertSame($orgUuids[0], $valueNodes->item(0)->nodeValue);
+        $this->assertSame($orgUuids[1], $valueNodes->item(1)->nodeValue);
+    }
+
+    public function testUpdateBlockUpdatesSnippetsAsReference(): void
+    {
+        // Start with a contact block that has old String-format snippets
+        $xml = new DOMDocument();
+        $xml->loadXML(<<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="7">contact</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-snippets#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="38">["cdba3044-9725-41c0-8056-0437dfae2841"]</sv:value>
+    </sv:property>
+</sv:node>
+XML);
+
+        $xpath = $this->getXpath($xml);
+
+        $newUuid = '4499c20b-6de3-4999-9c85-cab9deeb789b';
+        $this->writer->updateBlock($xml, $xpath, 'de', 0, 'contact', [
+            'snippets' => [$newUuid],
+        ]);
+
+        // Verify old String property was replaced with Reference
+        $prop = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-snippets#0"]')->item(0);
+        $this->assertSame('Reference', $prop->getAttribute('sv:type'));
+        $this->assertSame('1', $prop->getAttribute('sv:multi-valued'));
+
+        $valueNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-snippets#0"]/sv:value');
+        $this->assertSame(1, $valueNodes->length);
+        $this->assertSame($newUuid, $valueNodes->item(0)->nodeValue);
+    }
+
+    public function testAddContactBlockWithEmptySnippetsSkipsProperty(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'contact',
+            'snippets' => [],
+            'description' => '<p>No snippets here.</p>',
+        ]);
+
+        // Verify no snippets property was created
+        $propNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-snippets#0"]');
+        $this->assertSame(0, $propNodes->length, 'Empty snippets array should not create a property node');
+    }
+
+    public function testRoundTripContactBlockSnippetsPreserved(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $uuids = [
+            'cdba3044-9725-41c0-8056-0437dfae2841',
+            '4499c20b-6de3-4999-9c85-cab9deeb789b',
+        ];
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'contact',
+            'snippets' => $uuids,
+            'description' => '<p>Full round-trip test.</p>',
+        ]);
+
+        // Update length for extraction
+        $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-length"]/sv:value');
+        $lengthNodes->item(0)->nodeValue = '1';
+
+        // Extract and verify full round-trip
+        $blocks = $this->extractor->extractBlocks($xml->saveXML(), 'de');
+
+        $this->assertCount(1, $blocks);
+        $this->assertSame('contact', $blocks[0]['type']);
+        $this->assertSame($uuids, $blocks[0]['snippets']);
+        $this->assertSame('<p>Full round-trip test.</p>', $blocks[0]['description']);
+    }
+
     // === Unknown Block Type Fallback ===
 
     public function testAddUnknownBlockTypeFallsBackToCommonProperties(): void
