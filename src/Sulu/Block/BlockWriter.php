@@ -33,6 +33,8 @@ use DOMXPath;
  */
 final class BlockWriter
 {
+    private const REFERENCE_PROPERTIES = ['snippets', 'organisation'];
+
     public function __construct(
         private readonly BlockTypeRegistry $registry,
     ) {
@@ -67,11 +69,16 @@ final class BlockWriter
 
         if ($schema !== null) {
             // Write all top-level properties from schema
-            $jsonProps = ['image', 'images', 'snippets', 'organisation', 'settings'];
+            $jsonProps = ['image', 'images', 'settings'];
             foreach ($schema['properties'] as $propName) {
                 if (isset($block[$propName])) {
-                    // JSON properties must ALWAYS be encoded as JSON strings, never as nested items
-                    if (in_array($propName, $jsonProps, true) && is_array($block[$propName])) {
+                    // Reference properties: snippets, organisation → sv:type="Reference"
+                    if (in_array($propName, self::REFERENCE_PROPERTIES, true) && is_array($block[$propName])) {
+                        if (!empty($block[$propName])) {
+                            $this->addReferenceProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $block[$propName]);
+                        }
+                    } elseif (in_array($propName, $jsonProps, true) && is_array($block[$propName])) {
+                        // JSON properties must ALWAYS be encoded as JSON strings, never as nested items
                         $value = $this->encodePropertyValue($propName, $block[$propName]);
                         $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
                     } elseif (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
@@ -164,6 +171,15 @@ final class BlockWriter
             if ($key === 'items' && is_array($value)) {
                 $this->removeNestedItems($xpath, $prefix, $position, 'items');
                 $this->writeNestedItems($xml, $rootNode, $prefix, $position, 'items', $value, ['type', 'description', 'code', 'language']);
+                continue;
+            }
+
+            // Reference properties: snippets, organisation → sv:type="Reference"
+            if (in_array($key, self::REFERENCE_PROPERTIES, true) && is_array($value)) {
+                $propName = $this->mapPropertyName($key, $locale, $position);
+                if ($propName !== null) {
+                    $this->updateOrAddReferenceProperty($xml, $xpath, $rootNode, $propName, $value);
+                }
                 continue;
             }
 
@@ -394,6 +410,66 @@ final class BlockWriter
     }
 
     /**
+     * Add a PHPCR Reference property with multi-valued UUIDs.
+     *
+     * Used for snippet_selection and contact_account_selection fields
+     * which Sulu expects as sv:type="Reference" with sv:multi-valued="1".
+     *
+     * @param array<string> $uuids
+     */
+    public function addReferenceProperty(
+        DOMDocument $xml,
+        DOMNode $rootNode,
+        string $name,
+        array $uuids,
+    ): void {
+        $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+        $property->setAttribute('sv:name', $name);
+        $property->setAttribute('sv:type', 'Reference');
+        $property->setAttribute('sv:multi-valued', '1');
+
+        foreach ($uuids as $uuid) {
+            $valueNode = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
+            $valueNode->setAttribute('length', (string) strlen((string) $uuid));
+            $valueNode->appendChild($xml->createTextNode((string) $uuid));
+            $property->appendChild($valueNode);
+        }
+
+        $rootNode->appendChild($property);
+    }
+
+    /**
+     * Update existing Reference property or add new one.
+     *
+     * Removes any existing property (regardless of old type) and writes
+     * a fresh Reference property. Handles migration from old String format.
+     *
+     * @param array<string> $uuids
+     */
+    private function updateOrAddReferenceProperty(
+        DOMDocument $xml,
+        DOMXPath $xpath,
+        DOMNode $rootNode,
+        string $name,
+        array $uuids,
+    ): void {
+        // Remove existing property node (regardless of old type: String or Reference)
+        $existingProps = $xpath->query('//sv:property[@sv:name="' . $name . '"]');
+        if ($existingProps !== false) {
+            foreach ($existingProps as $prop) {
+                if ($prop->parentNode) {
+                    $prop->parentNode->removeChild($prop);
+                }
+            }
+        }
+
+        // Write fresh Reference property (skip if empty)
+        if (!empty($uuids)) {
+            $this->addReferenceProperty($xml, $rootNode, $name, $uuids);
+        }
+    }
+
+    /**
      * Update existing property or add new one.
      */
     private function updateOrAddProperty(
@@ -483,7 +559,8 @@ final class BlockWriter
     private function encodePropertyValue(string $propName, mixed $value): string
     {
         // Properties that should be JSON-encoded
-        $jsonProps = ['image', 'images', 'snippets', 'organisation', 'settings'];
+        // Note: snippets and organisation use PHPCR Reference type, not JSON
+        $jsonProps = ['image', 'images', 'settings'];
 
         if (in_array($propName, $jsonProps, true) && is_array($value)) {
             return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
