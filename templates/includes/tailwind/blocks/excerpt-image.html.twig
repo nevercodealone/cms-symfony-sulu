@@ -4,7 +4,7 @@
   {% set sourceMeta = extension.excerpt.images[0].thumbnails['800x800.jpg']|split('?')[0] %}
   {% set sourcePinterest = extension.excerpt.images[0].thumbnails['pinterest.jpg']|split('?')[0] %}
   {% set sourceMastrodon = extension.excerpt.images[0].thumbnails['mastrodon.jpg']|split('?')[0] %}
-  {% set alt = extension.excerpt.images[0].description %}
+  {% set alt = extension.excerpt.title ?? extension.excerpt.images[0].description %}
   <figure class="text-center">
     <img
       class="h-auto max-w-full mx-auto"
