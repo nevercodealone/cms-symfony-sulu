@@ -113,6 +113,28 @@ The `get_block_schema` and `list_block_types` actions now return `nestedType` fo
 
 ---
 
+## PHPCR Reference Properties
+
+`snippets` and `organisation` use PHPCR Reference type (`sv:type="Reference"`,
+`sv:multi-valued="1"`). BlockWriter writes each UUID as a separate `<sv:value>`.
+This matches Sulu's native format for `snippet_selection` and `contact_account_selection`.
+
+Affected block types:
+- `contact`, `highlights`, `related-content-by-page-tag` — use `snippets`
+- `team`, `consultant` — use `organisation`
+
+**Correct format:**
+```xml
+<sv:property sv:name="blocks-snippets#0" sv:type="Reference" sv:multi-valued="1">
+  <sv:value>cdba3044-9725-41c0-8056-0437dfae2841</sv:value>
+  <sv:value>4499c20b-6de3-4999-9c85-cab9deeb789b</sv:value>
+</sv:property>
+```
+
+BlockExtractor reads both the correct Reference format and the legacy JSON String format for backwards compatibility.
+
+---
+
 ## IMPORTANT: Rich Text vs Plain Text Fields
 
 Sulu has two field types. Using the wrong format breaks frontend rendering.
