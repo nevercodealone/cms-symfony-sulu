@@ -566,6 +566,38 @@ final class BlockWriter
             return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
         }
 
+        // Code fields need HTML entity encoding for text_editor rendering
+        if ($propName === 'code' && is_string($value)) {
+            return $this->encodeCodeValue($value);
+        }
+
         return (string) $value;
+    }
+
+    /**
+     * Encode code content for Sulu text_editor storage.
+     *
+     * Sulu admin stores code as HTML-escaped content wrapped in <p> tags:
+     *   <p>echo &lt;strong&gt;&quot;hello&quot;&lt;/strong&gt;;<br>&nbsp;&nbsp;return true;</p>
+     *
+     * The MCP API accepts plain text, so we convert it to match Sulu's format.
+     */
+    private function encodeCodeValue(string $value): string
+    {
+        // Already encoded (from Sulu admin or previous MCP write)
+        if (str_starts_with(trim($value), '<p>')) {
+            return $value;
+        }
+
+        // 1. Escape HTML entities: < > & "
+        $encoded = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // 2. Convert newlines to <br>
+        $encoded = str_replace("\n", '<br>', $encoded);
+        // 3. Convert leading spaces per line to &nbsp;
+        $encoded = preg_replace_callback('/(?<=<br>|^)( +)/', function ($m) {
+            return str_repeat('&nbsp;', strlen($m[1]));
+        }, $encoded);
+        // 4. Wrap in <p>
+        return '<p>' . $encoded . '</p>';
     }
 }
