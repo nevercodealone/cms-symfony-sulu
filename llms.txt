@@ -143,7 +143,7 @@ Sulu has two field types. Using the wrong format breaks frontend rendering.
 These fields MUST contain HTML tags like `<p>`, `<strong>`, `<a>`:
 - `description` — in 25+ block types
 - `descriptiontwo` — in introduction block
-- `code` — in headline-paragraphs nested code items
+- `code` — in headline-paragraphs nested code items (auto-escaped: pass plain text, MCP wraps in `<p>` and escapes HTML entities)
 - `html` — in html-raw block (iframes, embeds)
 
 Correct: `"description": "<p>This is a paragraph with <strong>bold</strong> text.</p>"`
@@ -512,7 +512,7 @@ Primary block for tutorials, guides, documentation with alternating text and cod
 | Item Type | Properties | Description |
 |-----------|------------|-------------|
 | `description` | `description` (text_editor) | Rich text paragraph |
-| `code` | `code` (text_editor) | Code snippet |
+| `code` | `code` (text_editor) | Code snippet (pass plain text — auto-escaped to `<p>`-wrapped HTML) |
 
 ```json
 {

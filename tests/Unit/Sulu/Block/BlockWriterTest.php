@@ -655,6 +655,95 @@ XML);
         $this->assertSame('<p>Full round-trip test.</p>', $blocks[0]['description']);
     }
 
+    // === Code Value Encoding Tests ===
+
+    /**
+     * Helper: call private encodeCodeValue via reflection.
+     */
+    private function callEncodeCodeValue(string $value): string
+    {
+        $method = new \ReflectionMethod(BlockWriter::class, 'encodeCodeValue');
+
+        return $method->invoke($this->writer, $value);
+    }
+
+    public function testEncodeCodeValueEscapesHtmlTags(): void
+    {
+        $result = $this->callEncodeCodeValue('<div class="foo">');
+
+        $this->assertStringContainsString('&lt;div class=&quot;foo&quot;&gt;', $result);
+    }
+
+    public function testEncodeCodeValueConvertsNewlines(): void
+    {
+        $result = $this->callEncodeCodeValue("line1\nline2");
+
+        $this->assertStringContainsString('line1<br>line2', $result);
+    }
+
+    public function testEncodeCodeValueConvertsLeadingSpaces(): void
+    {
+        $result = $this->callEncodeCodeValue("  indented");
+
+        $this->assertStringContainsString('&nbsp;&nbsp;indented', $result);
+    }
+
+    public function testEncodeCodeValueWrapsInParagraph(): void
+    {
+        $result = $this->callEncodeCodeValue('echo "hello";');
+
+        $this->assertStringStartsWith('<p>', $result);
+        $this->assertStringEndsWith('</p>', $result);
+    }
+
+    public function testEncodeCodeValueSkipsAlreadyEncoded(): void
+    {
+        $input = '<p>echo &lt;strong&gt;&quot;hello&quot;&lt;/strong&gt;;</p>';
+
+        $result = $this->callEncodeCodeValue($input);
+
+        $this->assertSame($input, $result);
+    }
+
+    public function testAddHeadlineParagraphsCodeBlockRoundTrip(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'headline-paragraphs',
+            'headline' => 'HTML Tutorial',
+            'items' => [
+                [
+                    'type' => 'code',
+                    'code' => '<div class="container"><p>Hello</p></div>',
+                    'language' => 'html',
+                ],
+            ],
+        ]);
+
+        // Update the length
+        $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-length"]/sv:value');
+        if ($lengthNodes !== false && $lengthNodes->length > 0) {
+            $lengthNodes->item(0)->nodeValue = '1';
+        }
+
+        // Extract and verify
+        $blocks = $this->extractor->extractBlocks($xml->saveXML(), 'de');
+
+        $this->assertCount(1, $blocks);
+        $this->assertEquals('headline-paragraphs', $blocks[0]['type']);
+        $this->assertCount(1, $blocks[0]['items']);
+        $this->assertEquals('code', $blocks[0]['items'][0]['type']);
+
+        // The code should be HTML-escaped and wrapped in <p>
+        $code = $blocks[0]['items'][0]['code'];
+        $this->assertStringStartsWith('<p>', $code);
+        $this->assertStringContainsString('&lt;div', $code);
+        $this->assertStringContainsString('&lt;p&gt;', $code);
+    }
+
     // === Unknown Block Type Fallback ===
 
     public function testAddUnknownBlockTypeFallsBackToCommonProperties(): void
