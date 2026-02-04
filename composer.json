@@ -40,6 +40,7 @@
         "robole/sulu-ai-translator-bundle": "^1.1",
         "stof/doctrine-extensions-bundle": "^1.7",
         "sulu/headless-bundle": "^0.10.0",
+        "sulu/redirect-bundle": "2.2.x-dev",
         "sulu/sulu": "2.6.3",
         "symfony/ai-bundle": "@dev",
         "symfony/config": "^6.0",

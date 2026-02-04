@@ -446,6 +446,18 @@
             "config/routes/sulu_headless_website.yaml"
         ]
     },
+    "sulu/redirect-bundle": {
+        "version": "2.2",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "2.0",
+            "ref": "166e0df09e1903b610e2d6de48357afd52fb79b3"
+        },
+        "files": [
+            "config/routes/sulu_redirect_admin.yaml"
+        ]
+    },
     "sulu/sulu": {
         "version": "2.3.3"
     },
