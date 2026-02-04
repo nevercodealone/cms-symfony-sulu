@@ -51,6 +51,22 @@
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
         </svg>
       </a>
+      {# Language Switcher #}
+      <div class="hidden md:flex items-center ml-auto gap-x-1">
+        {% set baseClasses = "text-black bg-gray-100 border-2 border-green-900 font-medium rounded-lg text-xs px-2 py-0.5 transition-all duration-300" %}
+        {% set activeClasses = "text-white bg-green-900" %}
+        {% set hoverClasses = "hover:text-white hover:bg-green-900" %}
+        {% set focusClasses = "focus:text-white focus:bg-green-900 focus:outline-none focus:ring-2 focus:ring-white" %}
+        {% for localization in localizations %}
+          <a
+            href="{{ localization.url }}"
+            title="{{ localization.locale }}"
+            class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}"
+          >
+            {{ localization.locale|upper }}
+          </a>
+        {% endfor %}
+      </div>
   </div>
 </div>
 <header class="relative bg-white z-40">
@@ -129,24 +145,6 @@
           {% endif %}
         {% endfor %}
       </nav>
-      <div class="flex items-center space-x-5">
-        <div class="flex flex-wrap justify-center items-center -mx-1">
-          {% set baseClasses = "text-black bg-gray-100 border-2 border-green-900 font-medium rounded-lg text-sm px-3 py-1.5 transition-all duration-300 m-1" %}
-          {% set activeClasses = "text-white bg-green-900" %}
-          {% set hoverClasses = "hover:text-white hover:bg-green-900" %}
-          {% set focusClasses = "focus:text-white focus:bg-green-900 focus:outline-none focus:ring-2 focus:ring-white" %}
-
-          {% for localization in localizations %}
-            <a
-              href="{{ localization.url }}"
-              title="{{ localization.locale }}"
-              class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}"
-            >
-              {{ localization.locale|upper }}
-            </a>
-          {% endfor %}
-        </div>
-      </div>
     </div>
   </div>
   <div class="absolute inset-x-0 top-0 origin-top-right transform p-2 transition md:hidden">
