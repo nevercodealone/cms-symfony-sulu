@@ -594,7 +594,7 @@ final class BlockTypeRegistry
     /**
      * Get full schema for a block type.
      *
-     * @return array{properties: array<string>, nested?: string, nestedProperties?: array<string>}|null
+     * @return array{properties: array<string>, nested?: string, nestedType?: string, nestedProperties?: array<string>, encoding?: array<string, string>, nestedEncoding?: array<string, string>}|null
      */
     public function getSchema(string $type): ?array
     {
