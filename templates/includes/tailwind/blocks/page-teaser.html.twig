@@ -1,0 +1,42 @@
+<!-- page-teaser.html.twig -->
+{% if content.page is not empty %}
+  {% set targetPage = sulu_content_load(content.page) %}
+  {% set excerpt = targetPage.extension.excerpt %}
+  {% set title = excerpt.title|default(targetPage.content.title) %}
+  {% set seo = targetPage.extension.seo|default([]) %}
+  {% set description = seo.description|default(excerpt.description|default('')) %}
+  {% set showImage = content.showImage|default(true) %}
+  {% set hasImage = showImage and excerpt.images[0] is defined %}
+  {% set buttonText = content.buttonText|default('Mehr erfahren') %}
+
+  <article class="group relative bg-gray-50 rounded-2xl overflow-hidden border-2 border-transparent hover:border-nca/30 hover:shadow-lg">
+    <sulu-link href="{{ content.page }}" class="flex flex-col md:flex-row items-stretch no-underline hover:no-underline cursor-pointer block">
+      {% if hasImage %}
+        {% set source = excerpt.images[0].thumbnails['content-full.webp']|default('') %}
+        <div class="md:w-72 lg:w-80 flex-shrink-0 overflow-hidden bg-gray-200">
+          <img src="{{ source }}"
+               class="w-full h-48 md:h-full object-cover"
+               alt="">
+        </div>
+      {% endif %}
+
+      <div class="flex flex-col justify-center p-6 md:p-8 flex-1 min-w-0">
+        <h3 class="text-xl md:text-2xl font-bold text-gray-900 group-hover:text-nca leading-tight mb-3">
+          {{ title }}
+        </h3>
+
+        {% if description %}
+          <p class="text-gray-600 leading-relaxed line-clamp-3 mb-4">{{ description }}</p>
+        {% endif %}
+
+        <span class="inline-flex items-center text-nca font-semibold text-sm mt-auto">
+          {{ buttonText }}
+          <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </span>
+      </div>
+    </sulu-link>
+  </article>
+{% endif %}
+<!-- end page-teaser.html.twig -->

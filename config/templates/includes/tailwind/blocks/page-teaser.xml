@@ -1,0 +1,27 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="page-teaser">
+        <types>
+            <type name="page-teaser">
+                <meta>
+                    <title>Page Teaser</title>
+                </meta>
+                <properties>
+                    <property name="page" type="single_page_selection" mandatory="true">
+                        <meta><title>Zielseite</title></meta>
+                    </property>
+                    <property name="buttonText" type="text_line">
+                        <meta><title>Button-Text (Standard: "Mehr erfahren")</title></meta>
+                    </property>
+                    <property name="showImage" type="checkbox">
+                        <meta><title>Bild anzeigen</title></meta>
+                        <params>
+                            <param name="default_value" value="true"/>
+                        </params>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

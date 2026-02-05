@@ -33,8 +33,6 @@ use DOMXPath;
  */
 final class BlockWriter
 {
-    private const REFERENCE_PROPERTIES = ['snippets', 'organisation'];
-
     public function __construct(
         private readonly BlockTypeRegistry $registry,
     ) {
@@ -68,18 +66,19 @@ final class BlockWriter
         $schema = $this->registry->getSchema($type);
 
         if ($schema !== null) {
-            // Write all top-level properties from schema
-            $jsonProps = ['image', 'images', 'settings'];
+            // Write all top-level properties from schema using encoding metadata
             foreach ($schema['properties'] as $propName) {
                 if (isset($block[$propName])) {
+                    $encoding = $this->registry->getPropertyEncoding($type, $propName);
+
                     // Reference properties: snippets, organisation → sv:type="Reference"
-                    if (in_array($propName, self::REFERENCE_PROPERTIES, true) && is_array($block[$propName])) {
+                    if ($encoding === 'reference' && is_array($block[$propName])) {
                         if (!empty($block[$propName])) {
                             $this->addReferenceProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $block[$propName]);
                         }
-                    } elseif (in_array($propName, $jsonProps, true) && is_array($block[$propName])) {
+                    } elseif ($encoding === 'json' && is_array($block[$propName])) {
                         // JSON properties must ALWAYS be encoded as JSON strings, never as nested items
-                        $value = $this->encodePropertyValue($propName, $block[$propName]);
+                        $value = $this->encodePropertyValueByType($encoding, $block[$propName]);
                         $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
                     } elseif (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
                         // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags)
@@ -94,7 +93,7 @@ final class BlockWriter
                             $nestedProps,
                         );
                     } else {
-                        $value = $this->encodePropertyValue($propName, $block[$propName]);
+                        $value = $this->encodePropertyValueByType($encoding, $block[$propName]);
                         $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
                     }
                 }
@@ -129,6 +128,8 @@ final class BlockWriter
 
     /**
      * Update an existing block in PHPCR XML.
+     *
+     * Uses schema-driven property validation and encoding - properties not in schema are ignored.
      *
      * @param array<string, mixed> $blockData Properties to update
      */
@@ -167,29 +168,32 @@ final class BlockWriter
                 }
             }
 
-            // Handle 'items' for backwards compatibility
-            if ($key === 'items' && is_array($value)) {
+            // Handle 'items' for backwards compatibility (unknown block types)
+            if ($schema === null && $key === 'items' && is_array($value)) {
                 $this->removeNestedItems($xpath, $prefix, $position, 'items');
                 $this->writeNestedItems($xml, $rootNode, $prefix, $position, 'items', $value, ['type', 'description', 'code', 'language']);
                 continue;
             }
 
+            // Schema-driven property handling: skip unknown properties
+            if ($schema !== null && !$this->registry->isValidProperty($type, $key)) {
+                continue;
+            }
+
+            // Build property name
+            $propName = "{$prefix}-{$key}#{$position}";
+
+            // Get encoding from schema (defaults to 'string' for unknown types)
+            $encoding = $schema !== null ? $this->registry->getPropertyEncoding($type, $key) : 'string';
+
             // Reference properties: snippets, organisation → sv:type="Reference"
-            if (in_array($key, self::REFERENCE_PROPERTIES, true) && is_array($value)) {
-                $propName = $this->mapPropertyName($key, $locale, $position);
-                if ($propName !== null) {
-                    $this->updateOrAddReferenceProperty($xml, $xpath, $rootNode, $propName, $value);
-                }
+            if ($encoding === 'reference' && is_array($value)) {
+                $this->updateOrAddReferenceProperty($xml, $xpath, $rootNode, $propName, $value);
                 continue;
             }
 
-            // Regular property update
-            $propName = $this->mapPropertyName($key, $locale, $position);
-            if ($propName === null) {
-                continue;
-            }
-
-            $encodedValue = $this->encodePropertyValue($key, $value);
+            // Regular property update with schema-driven encoding
+            $encodedValue = $this->encodePropertyValueByType($encoding, $value);
             $this->updateOrAddProperty($xml, $xpath, $rootNode, $propName, $encodedValue);
         }
     }
@@ -259,7 +263,7 @@ final class BlockWriter
             // Write settings
             $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-settings#{$itemIndex}", '[]');
 
-            // Write all nested properties from schema
+            // Write all nested properties from schema with encoding metadata
             foreach ($nestedProps as $propName) {
                 // Skip 'tags' - handled separately as nested block
                 if ($propName === 'tags') {
@@ -269,7 +273,11 @@ final class BlockWriter
                 // Map 'content' back to the original property name
                 $sourceKey = $this->mapContentToProperty($propName, $item);
                 if ($sourceKey !== null && isset($item[$sourceKey])) {
-                    $value = $this->encodePropertyValue($propName, $item[$sourceKey]);
+                    // Get nested encoding if available
+                    $encoding = $blockType !== null
+                        ? $this->registry->getNestedPropertyEncoding($blockType, $propName)
+                        : 'string';
+                    $value = $this->encodePropertyValueByType($encoding, $item[$sourceKey]);
                     $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-{$propName}#{$itemIndex}", $value);
                 }
             }
@@ -488,37 +496,6 @@ final class BlockWriter
     }
 
     /**
-     * Map property key to PHPCR property name.
-     * Returns property name for any valid block property (schema-defined or common).
-     */
-    private function mapPropertyName(string $key, string $locale, int $position): ?string
-    {
-        $prefix = "i18n:{$locale}-blocks";
-
-        // Common properties and known property patterns
-        $knownProps = [
-            'headline', 'description', 'subline', 'content', 'code', 'language',
-            'image', 'url', 'buttonText', 'text', 'texttwo', 'urltwo',
-            'buttonLink', 'buttonTextTwo', 'textone', 'texttwo',
-            'columnheader1', 'columnheader2', 'columnheader3',
-            'pageurl1', 'pageurl2', 'playlistid', 'organisation', 'snippets',
-            'descriptiontwo',
-        ];
-
-        // Check known properties
-        if (in_array($key, $knownProps, true)) {
-            return "{$prefix}-{$key}#{$position}";
-        }
-
-        // card-trio footer properties
-        if (preg_match('/^footer/', $key) || $key === 'showFooter') {
-            return "{$prefix}-{$key}#{$position}";
-        }
-
-        return null;
-    }
-
-    /**
      * Map 'content' back to original property name (description, subline, etc.).
      *
      * @param array<string, mixed> $item
@@ -554,7 +531,26 @@ final class BlockWriter
     }
 
     /**
+     * Encode property value based on encoding type.
+     *
+     * @param string $encoding One of: 'string', 'json', 'code', 'raw'
+     */
+    private function encodePropertyValueByType(string $encoding, mixed $value): string
+    {
+        return match ($encoding) {
+            'json' => is_array($value)
+                ? (json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]')
+                : (string) $value,
+            'code' => is_string($value) ? $this->encodeCodeValue($value) : (string) $value,
+            'raw' => (string) $value,
+            default => (string) $value,  // 'string' and any unknown encoding
+        };
+    }
+
+    /**
      * Encode property value (handles JSON-encoded properties).
+     *
+     * @deprecated Use encodePropertyValueByType() with schema-driven encoding
      */
     private function encodePropertyValue(string $propName, mixed $value): string
     {
