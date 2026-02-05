@@ -380,14 +380,23 @@ final class BlockTypeRegistry
     ];
 
     /**
-     * Block type schemas with properties and nested blocks.
+     * Block type schemas with properties, nested blocks, and encoding metadata.
      *
      * Format:
      * 'type' => [
      *     'properties' => [...],           // Top-level property names
      *     'nested' => 'nestedBlockName',   // Name of nested block array (e.g., 'items', 'faqs', 'rows')
      *     'nestedProperties' => [...],     // Property names within nested items
+     *     'encoding' => [...],             // Property encoding: 'json', 'reference', 'raw', 'code' (default: 'string')
+     *     'nestedEncoding' => [...],       // Nested property encoding (same types)
      * ]
+     *
+     * Encoding types:
+     * - 'string' (default): Plain string storage
+     * - 'json': JSON-encoded array (image, images, settings)
+     * - 'reference': PHPCR multi-valued Reference (snippets, organisation)
+     * - 'code': HTML entity encoded for text_editor (code fields)
+     * - 'raw': Store as-is without transformation (html)
      */
     public const SCHEMAS = [
         // === CONTENT BLOCKS ===
@@ -396,6 +405,7 @@ final class BlockTypeRegistry
             'nested' => 'items',
             'nestedType' => 'description',  // XML default-type, can also be 'code'
             'nestedProperties' => ['type', 'description', 'code', 'language'],
+            'nestedEncoding' => ['code' => 'code'],
         ],
         'faq' => [
             'properties' => [],
@@ -422,18 +432,22 @@ final class BlockTypeRegistry
         // === HERO BLOCKS ===
         'hero' => [
             'properties' => ['image', 'headline', 'description', 'buttonText', 'url'],
+            'encoding' => ['image' => 'json'],
         ],
         'hero-startpage' => [
             'properties' => ['image', 'textone', 'texttwo', 'description', 'buttonText', 'buttonLink', 'buttonTextTwo', 'url'],
+            'encoding' => ['image' => 'json'],
         ],
         'hero-image-right' => [
             'properties' => ['image', 'headline', 'description'],
+            'encoding' => ['image' => 'json'],
             'nested' => 'items',
             'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['headline', 'text', 'buttonText', 'buttonLink', 'url'],
         ],
         'heroslider' => [
             'properties' => ['headline', 'description', 'pageurl1', 'pageurl2', 'images'],
+            'encoding' => ['images' => 'json'],
         ],
 
         // === CTA BLOCKS ===
@@ -473,15 +487,19 @@ final class BlockTypeRegistry
         // === IMAGE BLOCKS ===
         'image' => [
             'properties' => ['image'],
+            'encoding' => ['image' => 'json'],
         ],
         'image-gallery' => [
             'properties' => ['headline', 'description', 'image'],
+            'encoding' => ['image' => 'json'],
         ],
         'images-with-heading-and-description' => [
             'properties' => ['image', 'headline', 'description'],
+            'encoding' => ['image' => 'json'],
         ],
         'image-with-flags' => [
             'properties' => ['headline', 'image'],
+            'encoding' => ['image' => 'json'],
             'nested' => 'flags',  // NOT "items"!
             'nestedType' => 'flag',  // XML default-type
             'nestedProperties' => ['language', 'url'],
@@ -491,6 +509,7 @@ final class BlockTypeRegistry
             'nested' => 'items',
             'nestedType' => 'items',  // XML default-type
             'nestedProperties' => ['headline', 'url', 'image'],
+            'nestedEncoding' => ['image' => 'json'],
         ],
         'excerpt-image' => [
             'properties' => ['headline'],
@@ -507,12 +526,15 @@ final class BlockTypeRegistry
         // === CONTACT BLOCKS ===
         'team' => [
             'properties' => ['headline', 'description', 'organisation'],
+            'encoding' => ['organisation' => 'reference'],
         ],
         'consultant' => [
             'properties' => ['organisation', 'description'],
+            'encoding' => ['organisation' => 'reference'],
         ],
         'contact' => [
             'properties' => ['snippets', 'description'],
+            'encoding' => ['snippets' => 'reference'],
         ],
         'chat' => [
             'properties' => ['headline', 'description'],
@@ -521,9 +543,11 @@ final class BlockTypeRegistry
         // === NAVIGATION BLOCKS ===
         'highlights' => [
             'properties' => ['snippets'],
+            'encoding' => ['snippets' => 'reference'],
         ],
         'related-content-by-page-tag' => [
             'properties' => ['snippets'],
+            'encoding' => ['snippets' => 'reference'],
         ],
         'subpages-overview' => [
             'properties' => ['items'],
@@ -535,6 +559,7 @@ final class BlockTypeRegistry
         // === EXTERNAL BLOCKS ===
         'html-raw' => [
             'properties' => ['html'],
+            'encoding' => ['html' => 'raw'],
         ],
         'youtube-from-channel' => [
             'properties' => ['headline', 'subline', 'playlistid'],
@@ -668,5 +693,62 @@ final class BlockTypeRegistry
     public function getAllExamples(): array
     {
         return self::EXAMPLES;
+    }
+
+    /**
+     * Get encoding type for a top-level property.
+     *
+     * @return string One of: 'string' (default), 'json', 'reference', 'code', 'raw'
+     */
+    public function getPropertyEncoding(string $type, string $property): string
+    {
+        return self::SCHEMAS[$type]['encoding'][$property] ?? 'string';
+    }
+
+    /**
+     * Get encoding type for a nested property.
+     *
+     * @return string One of: 'string' (default), 'json', 'reference', 'code', 'raw'
+     */
+    public function getNestedPropertyEncoding(string $type, string $property): string
+    {
+        return self::SCHEMAS[$type]['nestedEncoding'][$property] ?? 'string';
+    }
+
+    /**
+     * Check if a top-level property uses PHPCR Reference type.
+     */
+    public function isReferenceProperty(string $type, string $property): bool
+    {
+        return $this->getPropertyEncoding($type, $property) === 'reference';
+    }
+
+    /**
+     * Check if a top-level property should be JSON-encoded.
+     */
+    public function isJsonProperty(string $type, string $property): bool
+    {
+        return $this->getPropertyEncoding($type, $property) === 'json';
+    }
+
+    /**
+     * Check if a top-level property should be stored raw (no transformation).
+     */
+    public function isRawProperty(string $type, string $property): bool
+    {
+        return $this->getPropertyEncoding($type, $property) === 'raw';
+    }
+
+    /**
+     * Check if a top-level property is valid for a block type.
+     * Returns true if the property is in the schema's properties list.
+     */
+    public function isValidProperty(string $type, string $property): bool
+    {
+        $schema = self::SCHEMAS[$type] ?? null;
+        if ($schema === null) {
+            return false;
+        }
+        return in_array($property, $schema['properties'], true);
     }
 }

@@ -403,4 +403,156 @@ class BlockTypeRegistryTest extends TestCase
 
         $this->assertCount(34, $examples);
     }
+
+    // === Property Encoding Tests ===
+
+    public function testGetPropertyEncodingReturnsJsonForImageProperties(): void
+    {
+        $this->assertEquals('json', $this->registry->getPropertyEncoding('hero', 'image'));
+        $this->assertEquals('json', $this->registry->getPropertyEncoding('image', 'image'));
+        $this->assertEquals('json', $this->registry->getPropertyEncoding('heroslider', 'images'));
+    }
+
+    public function testGetPropertyEncodingReturnsReferenceForSnippets(): void
+    {
+        $this->assertEquals('reference', $this->registry->getPropertyEncoding('contact', 'snippets'));
+        $this->assertEquals('reference', $this->registry->getPropertyEncoding('highlights', 'snippets'));
+        $this->assertEquals('reference', $this->registry->getPropertyEncoding('related-content-by-page-tag', 'snippets'));
+    }
+
+    public function testGetPropertyEncodingReturnsReferenceForOrganisation(): void
+    {
+        $this->assertEquals('reference', $this->registry->getPropertyEncoding('team', 'organisation'));
+        $this->assertEquals('reference', $this->registry->getPropertyEncoding('consultant', 'organisation'));
+    }
+
+    public function testGetPropertyEncodingReturnsRawForHtmlRaw(): void
+    {
+        $this->assertEquals('raw', $this->registry->getPropertyEncoding('html-raw', 'html'));
+    }
+
+    public function testGetPropertyEncodingDefaultsToString(): void
+    {
+        $this->assertEquals('string', $this->registry->getPropertyEncoding('hero', 'headline'));
+        $this->assertEquals('string', $this->registry->getPropertyEncoding('hero', 'description'));
+        $this->assertEquals('string', $this->registry->getPropertyEncoding('faq', 'headline'));
+        $this->assertEquals('string', $this->registry->getPropertyEncoding('unknown-type', 'anything'));
+    }
+
+    public function testGetNestedPropertyEncodingReturnsCodeForHeadlineParagraphs(): void
+    {
+        $this->assertEquals('code', $this->registry->getNestedPropertyEncoding('headline-paragraphs', 'code'));
+    }
+
+    public function testGetNestedPropertyEncodingReturnsJsonForLogoGalleryImage(): void
+    {
+        $this->assertEquals('json', $this->registry->getNestedPropertyEncoding('logo-gallary', 'image'));
+    }
+
+    public function testGetNestedPropertyEncodingDefaultsToString(): void
+    {
+        $this->assertEquals('string', $this->registry->getNestedPropertyEncoding('headline-paragraphs', 'description'));
+        $this->assertEquals('string', $this->registry->getNestedPropertyEncoding('faq', 'headline'));
+    }
+
+    public function testIsReferencePropertyReturnsTrueForSnippets(): void
+    {
+        $this->assertTrue($this->registry->isReferenceProperty('contact', 'snippets'));
+        $this->assertTrue($this->registry->isReferenceProperty('highlights', 'snippets'));
+    }
+
+    public function testIsReferencePropertyReturnsTrueForOrganisation(): void
+    {
+        $this->assertTrue($this->registry->isReferenceProperty('team', 'organisation'));
+        $this->assertTrue($this->registry->isReferenceProperty('consultant', 'organisation'));
+    }
+
+    public function testIsReferencePropertyReturnsFalseForOtherProperties(): void
+    {
+        $this->assertFalse($this->registry->isReferenceProperty('hero', 'headline'));
+        $this->assertFalse($this->registry->isReferenceProperty('hero', 'image'));
+    }
+
+    public function testIsJsonPropertyReturnsTrueForImageProperties(): void
+    {
+        $this->assertTrue($this->registry->isJsonProperty('hero', 'image'));
+        $this->assertTrue($this->registry->isJsonProperty('heroslider', 'images'));
+    }
+
+    public function testIsJsonPropertyReturnsFalseForOtherProperties(): void
+    {
+        $this->assertFalse($this->registry->isJsonProperty('hero', 'headline'));
+        $this->assertFalse($this->registry->isJsonProperty('contact', 'snippets'));
+    }
+
+    public function testIsRawPropertyReturnsTrueForHtmlRaw(): void
+    {
+        $this->assertTrue($this->registry->isRawProperty('html-raw', 'html'));
+    }
+
+    public function testIsRawPropertyReturnsFalseForOtherProperties(): void
+    {
+        $this->assertFalse($this->registry->isRawProperty('hero', 'headline'));
+        $this->assertFalse($this->registry->isRawProperty('hero', 'image'));
+    }
+
+    public function testIsValidPropertyReturnsTrueForSchemaProperties(): void
+    {
+        $this->assertTrue($this->registry->isValidProperty('hero', 'headline'));
+        $this->assertTrue($this->registry->isValidProperty('hero', 'image'));
+        $this->assertTrue($this->registry->isValidProperty('html-raw', 'html'));
+    }
+
+    public function testIsValidPropertyReturnsFalseForUnknownProperties(): void
+    {
+        $this->assertFalse($this->registry->isValidProperty('hero', 'nonexistent'));
+        $this->assertFalse($this->registry->isValidProperty('html-raw', 'headline'));
+    }
+
+    public function testIsValidPropertyReturnsFalseForUnknownBlockType(): void
+    {
+        $this->assertFalse($this->registry->isValidProperty('unknown-type', 'headline'));
+    }
+
+    /**
+     * @dataProvider blockTypeProvider
+     */
+    public function testAllBlockTypesWithEncodingHaveValidSchema(string $blockType): void
+    {
+        $schema = $this->registry->getSchema($blockType);
+        $this->assertNotNull($schema);
+
+        // If encoding is defined, verify all encoded properties exist in properties array
+        if (isset($schema['encoding'])) {
+            foreach (array_keys($schema['encoding']) as $prop) {
+                $this->assertContains(
+                    $prop,
+                    $schema['properties'],
+                    "Block type '{$blockType}' has encoding for '{$prop}' but it's not in properties"
+                );
+            }
+        }
+
+        // If nestedEncoding is defined, verify nested exists and properties are valid
+        if (isset($schema['nestedEncoding'])) {
+            $this->assertArrayHasKey(
+                'nested',
+                $schema,
+                "Block type '{$blockType}' has nestedEncoding but no nested key"
+            );
+            $this->assertArrayHasKey(
+                'nestedProperties',
+                $schema,
+                "Block type '{$blockType}' has nestedEncoding but no nestedProperties"
+            );
+
+            foreach (array_keys($schema['nestedEncoding']) as $prop) {
+                $this->assertContains(
+                    $prop,
+                    $schema['nestedProperties'],
+                    "Block type '{$blockType}' has nestedEncoding for '{$prop}' but it's not in nestedProperties"
+                );
+            }
+        }
+    }
 }
