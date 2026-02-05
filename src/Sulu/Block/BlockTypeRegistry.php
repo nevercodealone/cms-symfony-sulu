@@ -90,6 +90,9 @@ final class BlockTypeRegistry
 
         // === LEGACY ===
         'hl-des' => 'Simple headline and description block (legacy, prefer headline-paragraphs).',
+
+        // === PAGE REFERENCE ===
+        'page-teaser' => 'Internal page teaser displaying SEO/excerpt data (title, description, image) from a referenced page. Description uses SEO description with excerpt fallback. Params: page (UUID, required), buttonText (default: "Mehr erfahren"), showImage (default: true).',
     ];
 
     /**
@@ -377,6 +380,14 @@ final class BlockTypeRegistry
             'headline' => 'Section Title',
             'description' => '<p>Section content.</p>',
         ],
+
+        // === PAGE REFERENCE ===
+        'page-teaser' => [
+            'type' => 'page-teaser',
+            'page' => 'uuid-of-target-page',
+            'buttonText' => 'Mehr erfahren',
+            'showImage' => true,
+        ],
     ];
 
     /**
@@ -571,6 +582,12 @@ final class BlockTypeRegistry
         // === LEGACY ===
         'hl-des' => [
             'properties' => ['headline', 'description'],
+        ],
+
+        // === PAGE REFERENCE ===
+        'page-teaser' => [
+            'properties' => ['page', 'buttonText', 'showImage'],
+            'encoding' => ['page' => 'reference'],
         ],
     ];
 
