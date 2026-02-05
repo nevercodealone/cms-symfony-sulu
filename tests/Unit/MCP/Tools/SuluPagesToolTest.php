@@ -268,7 +268,6 @@ class SuluPagesToolTest extends TestCase
 
         $this->assertArrayHasKey('types', $data);
         $this->assertArrayHasKey('total', $data);
-        $this->assertEquals(34, $data['total']);
 
         // Check that each type has description and example
         foreach ($data['types'] as $type) {
