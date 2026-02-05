@@ -1,24 +1,32 @@
-{# Breadcrumb Navigation — only shown from Level 3 onwards #}
+{# Breadcrumb Navigation — Preline-Style mit Border-Akzent, ab Level 2 #}
 {% set breadcrumb = sulu_breadcrumb(uuid) %}
-{% if breadcrumb|length > 2 %}
-  {% set parents = breadcrumb|slice(1, breadcrumb|length - 2) %}
-  <nav aria-label="Breadcrumb" class="px-4 sm:px-6 pt-4 pb-2">
-    <ol class="flex flex-wrap items-center gap-x-1 text-sm text-gray-600">
-      {% for item in parents %}
+{% if breadcrumb|length > 1 %}
+  {% set items = breadcrumb|slice(1) %}
+  <nav aria-label="Breadcrumb" class="border-t border-b border-gray-200 py-3 px-4 sm:px-6">
+    <ol class="flex items-center text-sm">
+      {% for item in items %}
         {% if not loop.first %}
           <li aria-hidden="true" class="flex items-center">
-            <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+            <svg class="shrink-0 w-4 h-4 text-gray-400 mx-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </li>
         {% endif %}
-        <li>
-          <a href="{{ sulu_content_path(item.url) }}"
-             title="{{ item.title }}"
-             class="no-underline text-gray-600 hover:text-green-900 hover:underline font-medium">
-            {{ item.title }}
-          </a>
-        </li>
+        {% if loop.last %}
+          <li>
+            <span aria-current="page" class="text-sm text-gray-900 font-semibold truncate">
+              {{ item.title }}
+            </span>
+          </li>
+        {% else %}
+          <li>
+            <a href="{{ sulu_content_path(item.url) }}"
+               title="{{ item.title }}"
+               class="text-sm text-green-900 font-medium no-underline hover:underline whitespace-nowrap">
+              {{ item.title }}
+            </a>
+          </li>
+        {% endif %}
       {% endfor %}
     </ol>
   </nav>
@@ -27,12 +35,13 @@
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       "itemListElement": [
-        {% for item in parents %}
+        {% for item in items %}
         {
           "@type": "ListItem",
           "position": {{ loop.index }},
-          "name": "{{ item.title|e('js') }}",
-          "item": "{{ sulu_content_path(item.url) }}"
+          "name": "{{ item.title|e('js') }}"{% if not loop.last %},
+          "item": "{{ sulu_content_path(item.url) }}"{% endif %}
+
         }{% if not loop.last %},{% endif %}
 
         {% endfor %}
