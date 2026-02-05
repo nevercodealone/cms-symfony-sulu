@@ -1,0 +1,42 @@
+{# Breadcrumb Navigation — only shown from Level 3 onwards #}
+{% set breadcrumb = sulu_breadcrumb(uuid) %}
+{% if breadcrumb|length > 2 %}
+  {% set parents = breadcrumb|slice(1, breadcrumb|length - 2) %}
+  <nav aria-label="Breadcrumb" class="px-4 sm:px-6 pt-4 pb-2">
+    <ol class="flex flex-wrap items-center gap-x-1 text-sm text-gray-600">
+      {% for item in parents %}
+        {% if not loop.first %}
+          <li aria-hidden="true" class="flex items-center">
+            <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </li>
+        {% endif %}
+        <li>
+          <a href="{{ sulu_content_path(item.url) }}"
+             title="{{ item.title }}"
+             class="no-underline text-gray-600 hover:text-green-900 hover:underline font-medium">
+            {{ item.title }}
+          </a>
+        </li>
+      {% endfor %}
+    </ol>
+  </nav>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {% for item in parents %}
+        {
+          "@type": "ListItem",
+          "position": {{ loop.index }},
+          "name": "{{ item.title|e('js') }}",
+          "item": "{{ sulu_content_path(item.url) }}"
+        }{% if not loop.last %},{% endif %}
+
+        {% endfor %}
+      ]
+    }
+  </script>
+{% endif %}
