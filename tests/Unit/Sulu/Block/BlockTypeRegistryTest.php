@@ -16,9 +16,9 @@ class BlockTypeRegistryTest extends TestCase
         $this->registry = new BlockTypeRegistry();
     }
 
-    public function testRegistryContains34BlockTypes(): void
+    public function testRegistryContains35BlockTypes(): void
     {
-        $this->assertEquals(34, $this->registry->count());
+        $this->assertEquals(35, $this->registry->count());
     }
 
     public function testGetSchemaReturnsArrayForKnownType(): void
@@ -211,7 +211,7 @@ class BlockTypeRegistryTest extends TestCase
     {
         $types = $this->registry->getAllTypes();
 
-        $this->assertCount(34, $types);
+        $this->assertCount(35, $types);
         $this->assertContains('faq', $types);
         $this->assertContains('table', $types);
         $this->assertContains('hero', $types);
@@ -306,6 +306,7 @@ class BlockTypeRegistryTest extends TestCase
             'wordpressposts' => ['wordpressposts'],
             'hl-des' => ['hl-des'],
             'card-trio' => ['card-trio'],
+            'page-teaser' => ['page-teaser'],
         ];
     }
 
@@ -390,18 +391,18 @@ class BlockTypeRegistryTest extends TestCase
 
     // === getAllDescriptions / getAllExamples Tests ===
 
-    public function testGetAllDescriptionsReturns34Entries(): void
+    public function testGetAllDescriptionsReturns35Entries(): void
     {
         $descriptions = $this->registry->getAllDescriptions();
 
-        $this->assertCount(34, $descriptions);
+        $this->assertCount(35, $descriptions);
     }
 
-    public function testGetAllExamplesReturns34Entries(): void
+    public function testGetAllExamplesReturns35Entries(): void
     {
         $examples = $this->registry->getAllExamples();
 
-        $this->assertCount(34, $examples);
+        $this->assertCount(35, $examples);
     }
 
     // === Property Encoding Tests ===
