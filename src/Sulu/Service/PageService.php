@@ -251,7 +251,7 @@ class PageService
      * - Image-with-flags: use 'flags' array with items having 'language' and 'url'
      * - Feature: use 'items' array with items having 'headline' and 'content'
      *
-     * @param array{type: string, headline?: string, description?: string, items?: array<mixed>, faqs?: array<mixed>, rows?: array<mixed>, flags?: array<mixed>} $block
+     * @param array{type: string, headline?: string, description?: string, items?: array<mixed>|string, faqs?: array<mixed>, rows?: array<mixed>, flags?: array<mixed>} $block
      * @return array{success: bool, message: string, position: int}
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
