@@ -67,6 +67,7 @@ class SuluPagesTool implements StreamableToolInterface
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
+            'SUBPAGES-OVERVIEW: requires dataSource (UUID of source page). Optional: includeSubFolders (default true). ' .
             'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
@@ -298,6 +299,18 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For upload_media action: custom filename for SEO, e.g. "php-glossar-phpunit-2026.png". Include extension. If omitted, derived from URL or file path',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'dataSource',
+                type: PropertyType::STRING,
+                description: 'For subpages-overview block: UUID of the source page whose subpages to display',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'includeSubFolders',
+                type: PropertyType::STRING,
+                description: 'For subpages-overview block: include nested subfolders - "true" (default) or "false"',
+                required: false
+            ),
         );
     }
 
@@ -450,6 +463,40 @@ class SuluPagesTool implements StreamableToolInterface
 
         if (empty($path)) {
             return new TextToolResult('Error: path is required');
+        }
+
+        // Handle subpages-overview: build smart_content JSON config
+        if ($blockType === 'subpages-overview') {
+            $dataSource = $arguments['dataSource'] ?? null;
+            if (empty($dataSource)) {
+                return new TextToolResult('Error: subpages-overview block requires dataSource parameter (UUID of source page)');
+            }
+
+            $includeSubFolders = ($arguments['includeSubFolders'] ?? 'true') !== 'false';
+
+            $smartContentConfig = json_encode([
+                'audienceTargeting' => null,
+                'categories' => null,
+                'categoryOperator' => null,
+                'dataSource' => $dataSource,
+                'includeSubFolders' => $includeSubFolders,
+                'limitResult' => null,
+                'sortBy' => null,
+                'sortMethod' => null,
+                'tagOperator' => null,
+                'tags' => null,
+                'types' => null,
+                'presentAs' => null,
+            ]) ?: '{}';
+
+            $block = [
+                'type' => 'subpages-overview',
+                'items' => $smartContentConfig,
+            ];
+
+            $result = $this->pageService->addBlock($path, $block, $position, $locale);
+
+            return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
         }
 
         // Check if items parameter is provided (for structured blocks)
