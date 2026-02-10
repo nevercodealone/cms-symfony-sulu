@@ -6,16 +6,16 @@
     <div class="p-4 py-6 mx-auto max-w-screen-xl md:p-8 lg:-10">
       <div class="grid grid-cols-2 gap-8 lg:grid-cols-6">
         <div class="col-span-2">
-          <h2 class="flex items-center mb-2 text-2xl font-semibold sm:mb-0">
+          <span class="flex items-center mb-2 text-2xl font-semibold sm:mb-0">
             {{ snippet.headline }}
-          </h2>
+          </span>
           <div class="my-4">{{ snippet.description|raw }}</div>
         </div>
         {% if snippet.columns is defined and snippet.columns is not empty %}
 
             {% for column in snippet.columns %}
               <div class="lg:mx-auto">
-                <h2 class="mb-6 text-sm font-semibold">{{ column.headline }}</h2>
+                <span class="mb-6 text-sm font-semibold">{{ column.headline }}</span>
                 {% if column.links is defined and column.links is not empty %}
                   <ul class="text-gray-800">
                     {% for link in column.links %}
