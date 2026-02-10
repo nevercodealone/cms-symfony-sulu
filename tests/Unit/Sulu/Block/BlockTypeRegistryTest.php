@@ -486,6 +486,11 @@ class BlockTypeRegistryTest extends TestCase
         $this->assertFalse($this->registry->isJsonProperty('contact', 'snippets'));
     }
 
+    public function testGetPropertyEncodingReturnsJsonForSubpagesOverviewItems(): void
+    {
+        $this->assertEquals('json', $this->registry->getPropertyEncoding('subpages-overview', 'items'));
+    }
+
     public function testIsRawPropertyReturnsTrueForHtmlRaw(): void
     {
         $this->assertTrue($this->registry->isRawProperty('html-raw', 'html'));

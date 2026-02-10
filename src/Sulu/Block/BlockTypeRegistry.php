@@ -351,7 +351,7 @@ final class BlockTypeRegistry
         ],
         'subpages-overview' => [
             'type' => 'subpages-overview',
-            'items' => [],
+            'items' => '{"dataSource":"uuid-of-source-page","includeSubFolders":true}',
         ],
         'table-of-contents' => [
             'type' => 'table-of-contents',
@@ -562,6 +562,7 @@ final class BlockTypeRegistry
         ],
         'subpages-overview' => [
             'properties' => ['items'],
+            'encoding' => ['items' => 'json'],
         ],
         'table-of-contents' => [
             'properties' => ['headline'],
