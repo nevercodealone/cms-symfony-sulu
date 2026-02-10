@@ -1,0 +1,13 @@
+<!-- quote.html.twig -->
+<figure class="border-l-4 border-green-600 pl-6 py-4">
+    <blockquote{% if content.url %} cite="{{ content.url }}"{% endif %}>
+        <p class="text-xl italic text-gray-800">{{ content.text }}</p>
+    </blockquote>
+    <figcaption class="mt-3 text-base text-gray-600">
+        <strong>{{ content.author }}</strong>
+        {%- if content.role %}<span>, {{ content.role }}</span>{% endif %}
+        {%- if content.source %}<span> &ndash; {{ content.source }}</span>{% endif %}
+        {%- if content.date %}<time class="text-gray-500"> ({{ content.date }})</time>{% endif %}
+    </figcaption>
+</figure>
+<!-- end quote.html.twig -->
