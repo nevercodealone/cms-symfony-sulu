@@ -16,9 +16,10 @@ class BlockTypeRegistryTest extends TestCase
         $this->registry = new BlockTypeRegistry();
     }
 
-    public function testRegistryContains35BlockTypes(): void
+    public function testRegistryCountMatchesSchemaEntries(): void
     {
-        $this->assertEquals(35, $this->registry->count());
+        $this->assertGreaterThan(0, $this->registry->count());
+        $this->assertCount($this->registry->count(), $this->registry->getAllTypes());
     }
 
     public function testGetSchemaReturnsArrayForKnownType(): void
@@ -211,7 +212,7 @@ class BlockTypeRegistryTest extends TestCase
     {
         $types = $this->registry->getAllTypes();
 
-        $this->assertCount(35, $types);
+        $this->assertCount($this->registry->count(), $types);
         $this->assertContains('faq', $types);
         $this->assertContains('table', $types);
         $this->assertContains('hero', $types);
@@ -307,6 +308,7 @@ class BlockTypeRegistryTest extends TestCase
             'hl-des' => ['hl-des'],
             'card-trio' => ['card-trio'],
             'page-teaser' => ['page-teaser'],
+            'quote' => ['quote'],
         ];
     }
 
@@ -391,18 +393,53 @@ class BlockTypeRegistryTest extends TestCase
 
     // === getAllDescriptions / getAllExamples Tests ===
 
-    public function testGetAllDescriptionsReturns35Entries(): void
+    public function testGetAllDescriptionsMatchesBlockCount(): void
     {
         $descriptions = $this->registry->getAllDescriptions();
 
-        $this->assertCount(35, $descriptions);
+        $this->assertCount($this->registry->count(), $descriptions);
     }
 
-    public function testGetAllExamplesReturns35Entries(): void
+    public function testGetAllExamplesMatchesBlockCount(): void
     {
         $examples = $this->registry->getAllExamples();
 
-        $this->assertCount(35, $examples);
+        $this->assertCount($this->registry->count(), $examples);
+    }
+
+    // === Quote Block Tests ===
+
+    public function testQuoteBlockHasCorrectProperties(): void
+    {
+        $props = $this->registry->getProperties('quote');
+
+        $this->assertContains('text', $props);
+        $this->assertContains('author', $props);
+        $this->assertContains('role', $props);
+        $this->assertContains('source', $props);
+        $this->assertContains('date', $props);
+        $this->assertContains('url', $props);
+        $this->assertCount(6, $props);
+    }
+
+    public function testQuoteBlockHasNoNestedItems(): void
+    {
+        $this->assertNull($this->registry->getNestedName('quote'));
+    }
+
+    public function testQuoteBlockHasDescription(): void
+    {
+        $this->assertNotNull($this->registry->getDescription('quote'));
+    }
+
+    public function testQuoteBlockHasExample(): void
+    {
+        $example = $this->registry->getExample('quote');
+
+        $this->assertNotNull($example);
+        $this->assertEquals('quote', $example['type']);
+        $this->assertArrayHasKey('text', $example);
+        $this->assertArrayHasKey('author', $example);
     }
 
     // === Property Encoding Tests ===

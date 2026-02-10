@@ -43,6 +43,7 @@ final class BlockTypeRegistry
         'code' => 'Standalone code snippet block with syntax highlighting.',
         'introduction' => 'Page introduction with headline, two description fields, and optional items.',
         'table' => 'Data table with 3 columns. Uses rows[] array (NOT items).',
+        'quote' => 'Standalone quote block with structured attribution (author, role, source, date, URL). Renders as <blockquote> with <figcaption>.',
 
         // === HERO BLOCKS ===
         'hero' => 'Full-width hero banner with image, headline, description, and CTA button.',
@@ -141,6 +142,15 @@ final class BlockTypeRegistry
                 ['type' => 'row', 'cell1' => 'Price', 'cell2' => '$10', 'cell3' => '$20'],
                 ['type' => 'row', 'cell1' => 'Support', 'cell2' => 'Email', 'cell3' => '24/7'],
             ],
+        ],
+        'quote' => [
+            'type' => 'quote',
+            'text' => 'KI wird die Arbeitswelt nicht sanft transformieren.',
+            'author' => 'Dario Amodei',
+            'role' => 'CEO Anthropic',
+            'source' => 'via Business Punk',
+            'date' => '28. Januar 2026',
+            'url' => 'https://example.com/article',
         ],
 
         // === HERO BLOCKS ===
@@ -438,6 +448,9 @@ final class BlockTypeRegistry
             'nested' => 'rows',  // NOT "items"!
             'nestedType' => 'row',  // XML default-type
             'nestedProperties' => ['cell1', 'cell2', 'cell3'],
+        ],
+        'quote' => [
+            'properties' => ['text', 'author', 'role', 'source', 'date', 'url'],
         ],
 
         // === HERO BLOCKS ===

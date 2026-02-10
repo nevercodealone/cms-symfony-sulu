@@ -1,0 +1,46 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="quote">
+        <types>
+            <type name="quote">
+                <meta>
+                    <title>Quote</title>
+                </meta>
+                <properties>
+                    <property name="text" type="text_area" mandatory="true">
+                        <meta>
+                            <title>Text</title>
+                        </meta>
+                    </property>
+                    <property name="author" type="text_line" mandatory="true" colspan="6">
+                        <meta>
+                            <title>Author</title>
+                        </meta>
+                    </property>
+                    <property name="role" type="text_line" colspan="6">
+                        <meta>
+                            <title>Role / Company</title>
+                        </meta>
+                    </property>
+                    <property name="source" type="text_line" mandatory="true" colspan="6">
+                        <meta>
+                            <title>Source / Platform</title>
+                        </meta>
+                    </property>
+                    <property name="date" type="text_line" colspan="6">
+                        <meta>
+                            <title>Date</title>
+                        </meta>
+                    </property>
+                    <property name="url" type="url">
+                        <meta>
+                            <title>Url</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
