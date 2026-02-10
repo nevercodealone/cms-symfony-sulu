@@ -1,0 +1,47 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xi="http://www.w3.org/2001/XInclude"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="quote">
+        <types>
+            <type name="quote">
+                <meta>
+                    <title lang="de">Zitat</title>
+                    <title lang="en">Quote</title>
+                </meta>
+                <properties>
+                    <property name="text" type="text_area" mandatory="true">
+                        <meta>
+                            <title lang="de">Zitattext</title>
+                        </meta>
+                    </property>
+                    <property name="author" type="text_line" mandatory="true" colspan="6">
+                        <meta>
+                            <title lang="de">Autor</title>
+                        </meta>
+                    </property>
+                    <property name="role" type="text_line" colspan="6">
+                        <meta>
+                            <title lang="de">Rolle / Firma</title>
+                        </meta>
+                    </property>
+                    <property name="source" type="text_line" mandatory="true" colspan="6">
+                        <meta>
+                            <title lang="de">Quelle / Plattform</title>
+                        </meta>
+                    </property>
+                    <property name="date" type="text_line" colspan="6">
+                        <meta>
+                            <title lang="de">Datum</title>
+                        </meta>
+                    </property>
+                    <property name="url" type="url">
+                        <meta>
+                            <title lang="de">Link zur Quelle</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
