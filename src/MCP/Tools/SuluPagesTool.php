@@ -1097,6 +1097,15 @@ class SuluPagesTool implements StreamableToolInterface
             ];
         }
 
+        // Quote block: content → text, headline → author
+        if ($type === 'quote') {
+            return [
+                'type' => $type,
+                'text' => $content,
+                'author' => $headline,
+            ];
+        }
+
         // For all other block types, preserve the type and use common properties
         return [
             'type' => $type,
