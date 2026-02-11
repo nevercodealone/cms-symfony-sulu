@@ -859,4 +859,23 @@ class SuluPagesToolTest extends TestCase
         $this->assertEquals('28. Januar 2026', $capturedBlock['date']);
         $this->assertEquals('https://example.com/article', $capturedBlock['url']);
     }
+
+    /**
+     * Test MCP input schema includes quote-specific parameters (role, source, date).
+     * Without these SchemaProperty definitions, MCP clients cannot send these parameters.
+     */
+    public function testInputSchemaIncludesQuoteParameters(): void
+    {
+        $schema = $this->tool->getInputSchema();
+        $properties = $schema->getProperties();
+
+        $propertyNames = array_map(
+            fn($prop) => $prop->getName(),
+            $properties
+        );
+
+        $this->assertContains('role', $propertyNames, 'Schema must include "role" parameter for quote blocks');
+        $this->assertContains('source', $propertyNames, 'Schema must include "source" parameter for quote blocks');
+        $this->assertContains('date', $propertyNames, 'Schema must include "date" parameter for quote blocks');
+    }
 }
