@@ -5,3 +5,5 @@ Disallow: /nevercodealone.projects.nevercodealone.de/*/
 
 Disallow: /admin/
 
+Sitemap: https://nevercodealone.de/sitemap.xml
+

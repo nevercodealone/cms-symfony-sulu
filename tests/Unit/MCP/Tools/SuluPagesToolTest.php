@@ -797,4 +797,85 @@ class SuluPagesToolTest extends TestCase
         // Should be stored as description string, not spread
         $this->assertEquals($jsonArray, $capturedBlock['description']);
     }
+
+    /**
+     * Test add_block for quote maps content to text and headline to author.
+     */
+    public function testAddBlockQuoteMapsContentToTextAndHeadlineToAuthor(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'quote',
+            'headline' => 'Dario Amodei',
+            'content' => 'KI wird die Arbeitswelt nicht sanft transformieren.',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('quote', $capturedBlock['type']);
+        $this->assertEquals('KI wird die Arbeitswelt nicht sanft transformieren.', $capturedBlock['text']);
+        $this->assertEquals('Dario Amodei', $capturedBlock['author']);
+    }
+
+    /**
+     * Test add_block for quote passes schema properties from arguments.
+     */
+    public function testAddBlockQuotePassesSchemaProperties(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'quote',
+            'headline' => 'Dario Amodei',
+            'content' => 'KI wird die Arbeitswelt nicht sanft transformieren.',
+            'role' => 'CEO Anthropic',
+            'source' => 'via Business Punk',
+            'date' => '28. Januar 2026',
+            'url' => 'https://example.com/article',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('quote', $capturedBlock['type']);
+        $this->assertEquals('KI wird die Arbeitswelt nicht sanft transformieren.', $capturedBlock['text']);
+        $this->assertEquals('Dario Amodei', $capturedBlock['author']);
+        $this->assertEquals('CEO Anthropic', $capturedBlock['role']);
+        $this->assertEquals('via Business Punk', $capturedBlock['source']);
+        $this->assertEquals('28. Januar 2026', $capturedBlock['date']);
+        $this->assertEquals('https://example.com/article', $capturedBlock['url']);
+    }
+
+    /**
+     * Test MCP input schema includes quote-specific parameters (role, source, date).
+     * Without these SchemaProperty definitions, MCP clients cannot send these parameters.
+     */
+    public function testInputSchemaIncludesQuoteParameters(): void
+    {
+        $schema = $this->tool->getInputSchema();
+        $properties = $schema->getProperties();
+
+        $propertyNames = array_map(
+            fn($prop) => $prop->getName(),
+            $properties
+        );
+
+        $this->assertContains('role', $propertyNames, 'Schema must include "role" parameter for quote blocks');
+        $this->assertContains('source', $propertyNames, 'Schema must include "source" parameter for quote blocks');
+        $this->assertContains('date', $propertyNames, 'Schema must include "date" parameter for quote blocks');
+    }
 }

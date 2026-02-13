@@ -218,7 +218,25 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'url',
                 type: PropertyType::STRING,
-                description: 'For cta-button block: Primary button URL',
+                description: 'For cta-button/quote block: Primary button URL or quote source URL',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'role',
+                type: PropertyType::STRING,
+                description: 'For quote block: Author role/title, e.g. "CEO Anthropic"',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'source',
+                type: PropertyType::STRING,
+                description: 'For quote block: Publication source, e.g. "via Business Punk"',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'date',
+                type: PropertyType::STRING,
+                description: 'For quote block: Publication date, e.g. "28. Januar 2026"',
                 required: false
             ),
             new SchemaProperty(
@@ -1094,6 +1112,15 @@ class SuluPagesTool implements StreamableToolInterface
                 'faqs' => [
                     ['headline' => $headline, 'subline' => $content],
                 ],
+            ];
+        }
+
+        // Quote block: content → text, headline → author
+        if ($type === 'quote') {
+            return [
+                'type' => $type,
+                'text' => $content,
+                'author' => $headline,
             ];
         }
 
