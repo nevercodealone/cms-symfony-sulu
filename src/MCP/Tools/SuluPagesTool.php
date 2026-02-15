@@ -329,6 +329,30 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For subpages-overview block: include nested subfolders - "true" (default) or "false"',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'columnheader1',
+                type: PropertyType::STRING,
+                description: 'For table block: First column header text',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'columnheader2',
+                type: PropertyType::STRING,
+                description: 'For table block: Second column header text',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'columnheader3',
+                type: PropertyType::STRING,
+                description: 'For table block: Third column header text',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'author',
+                type: PropertyType::STRING,
+                description: 'For quote block: Author name, e.g. "Dario Amodei"',
+                required: false
+            ),
         );
     }
 
@@ -519,9 +543,15 @@ class SuluPagesTool implements StreamableToolInterface
 
         // Check if items parameter is provided (for structured blocks)
         if (isset($arguments['items'])) {
-            $items = json_decode($arguments['items'], true);
+            // Ensure valid UTF-8 before JSON parsing
+            $itemsRaw = mb_convert_encoding($arguments['items'], 'UTF-8', 'UTF-8');
+            $items = json_decode($itemsRaw, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return new TextToolResult('Error: items must be valid JSON array');
+                // Retry with invalid UTF-8 substitution
+                $items = json_decode($itemsRaw, true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
+                }
             }
             // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
@@ -629,6 +659,11 @@ class SuluPagesTool implements StreamableToolInterface
             }
         }
 
+        // Override quote author from explicit argument (takes priority over headline mapping)
+        if ($blockType === 'quote' && isset($arguments['author'])) {
+            $block['author'] = $arguments['author'];
+        }
+
         // Normalize media fields to {"ids": [...]} format for BlockWriter
         foreach (['image', 'images'] as $mediaField) {
             if (isset($block[$mediaField])) {
@@ -711,9 +746,15 @@ class SuluPagesTool implements StreamableToolInterface
 
         // Handle items parameter for complete items replacement
         if (isset($arguments['items'])) {
-            $items = json_decode($arguments['items'], true);
+            // Ensure valid UTF-8 before JSON parsing
+            $itemsRaw = mb_convert_encoding($arguments['items'], 'UTF-8', 'UTF-8');
+            $items = json_decode($itemsRaw, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return new TextToolResult('Error: items must be valid JSON array');
+                // Retry with invalid UTF-8 substitution
+                $items = json_decode($itemsRaw, true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
+                }
             }
             // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
@@ -760,6 +801,11 @@ class SuluPagesTool implements StreamableToolInterface
             }
         }
 
+        // Override quote author from explicit argument (takes priority over headline mapping)
+        if ($blockType === 'quote' && isset($arguments['author'])) {
+            $blockData['author'] = $arguments['author'];
+        }
+
         // Pick up image/images from top-level arguments if not already in blockData
         foreach (['image', 'images'] as $mediaField) {
             if (isset($arguments[$mediaField]) && !isset($blockData[$mediaField])) {
@@ -802,9 +848,15 @@ class SuluPagesTool implements StreamableToolInterface
             return new TextToolResult('Error: items is required for append_to_block action');
         }
 
-        $items = json_decode($arguments['items'], true);
+        // Ensure valid UTF-8 before JSON parsing
+        $itemsRaw = mb_convert_encoding($arguments['items'], 'UTF-8', 'UTF-8');
+        $items = json_decode($itemsRaw, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return new TextToolResult('Error: items must be valid JSON array');
+            // Retry with invalid UTF-8 substitution
+            $items = json_decode($itemsRaw, true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
+            }
         }
 
         // Normalize items: content -> description for Sulu storage (except for code items)
