@@ -861,6 +861,60 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test get_structure action returns compact page metadata.
+     */
+    public function testGetStructureAction(): void
+    {
+        $this->pageService->method('getPageStructure')
+            ->willReturn([
+                'success' => true,
+                'title' => 'Test Page',
+                'uuid' => 'test-uuid',
+                'url' => '/de/test',
+                'seoTitle' => 'SEO Title',
+                'seoDescription' => 'SEO Desc',
+                'excerptTitle' => 'Excerpt',
+                'excerptDescription' => 'Excerpt Desc',
+                'excerptImage' => 42,
+                'blocks_count' => 2,
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                    ['position' => 1, 'type' => 'faq', 'faqs_count' => 3],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'get_structure',
+            'path' => '/cmf/example/contents/test',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals('Test Page', $data['title']);
+        $this->assertEquals(2, $data['blocks_count']);
+        $this->assertArrayNotHasKey('description', $data['blocks'][0]);
+        $this->assertEquals('hero', $data['blocks'][0]['type']);
+        $this->assertEquals(3, $data['blocks'][1]['faqs_count']);
+    }
+
+    /**
+     * Test get_structure requires path parameter.
+     */
+    public function testGetStructureRequiresPath(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'get_structure',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('path is required', $sanitized['text']);
+    }
+
+    /**
      * Test MCP input schema includes quote-specific parameters (role, source, date).
      * Without these SchemaProperty definitions, MCP clients cannot send these parameters.
      */
