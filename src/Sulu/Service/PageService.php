@@ -118,7 +118,7 @@ class PageService
     /**
      * Get page UUID from database.
      */
-    private function getPageUuid(string $path): ?string
+    public function getPageUuid(string $path): ?string
     {
         $result = $this->connection->fetchAssociative(
             "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
@@ -530,7 +530,7 @@ class PageService
                 'success' => true,
                 'message' => 'Block removed successfully',
                 'blocks_remaining' => $blockCount,
-                'blocks' => $updatedPage['blocks'] ?? [],
+                'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
         } catch (\Exception $e) {
@@ -1103,7 +1103,7 @@ class PageService
             return [
                 'success' => true,
                 'message' => 'Block updated successfully',
-                'blocks' => $updatedPage['blocks'] ?? [],
+                'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
         } catch (\Exception $e) {
@@ -1295,7 +1295,7 @@ class PageService
                     'message' => 'Items appended successfully',
                     'items_added' => count($newItems),
                     'total_items' => count($mergedItems),
-                    'blocks' => $result['blocks'] ?? [],
+                    'blocks' => $this->formatCompactBlocks($result['blocks'] ?? []),
                 ];
             }
 
@@ -1419,7 +1419,7 @@ class PageService
             return [
                 'success' => true,
                 'message' => "Block moved from position {$fromPosition} to {$toPosition}",
-                'blocks' => $updatedPage['blocks'] ?? [],
+                'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
         } catch (\Exception $e) {
@@ -1869,5 +1869,36 @@ class PageService
             'createdAt' => $createdAt,
             'modifiedAt' => $changedAt,
         ];
+    }
+
+    /**
+     * Format blocks as compact metadata (position + type + headline only).
+     *
+     * @param array<mixed> $blocks Full block data from getPage()
+     * @return array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int}>
+     */
+    public function formatCompactBlocks(array $blocks): array
+    {
+        $compact = [];
+        foreach ($blocks as $index => $block) {
+            $entry = [
+                'position' => $block['position'] ?? $index,
+                'type' => $block['type'] ?? 'unknown',
+            ];
+            if (!empty($block['headline'])) {
+                $entry['headline'] = $block['headline'];
+            }
+            if (isset($block['faqs']) && is_array($block['faqs'])) {
+                $entry['faqs_count'] = count($block['faqs']);
+            }
+            if (isset($block['rows']) && is_array($block['rows'])) {
+                $entry['rows_count'] = count($block['rows']);
+            }
+            if (isset($block['items']) && is_array($block['items'])) {
+                $entry['items_count'] = count($block['items']);
+            }
+            $compact[] = $entry;
+        }
+        return $compact;
     }
 }
