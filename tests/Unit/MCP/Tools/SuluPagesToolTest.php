@@ -1004,4 +1004,50 @@ class SuluPagesToolTest extends TestCase
         $sanitized = $result->getSanitizedResult();
         $this->assertStringContainsString('path is required', $sanitized['text']);
     }
+
+    /**
+     * Test remove_blocks batch action removes multiple blocks.
+     */
+    public function testRemoveBlocksAction(): void
+    {
+        $this->pageService->method('removeBlocks')
+            ->willReturn([
+                'success' => true,
+                'message' => '3 blocks removed successfully',
+                'blocks_remaining' => 5,
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                    ['position' => 1, 'type' => 'faq', 'faqs_count' => 3],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'remove_blocks',
+            'path' => '/cmf/example/contents/test',
+            'positions' => '[7, 5, 3]',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('3 blocks removed', $data['message']);
+        $this->assertEquals(5, $data['blocks_remaining']);
+    }
+
+    /**
+     * Test remove_blocks requires positions parameter.
+     */
+    public function testRemoveBlocksRequiresPositions(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'remove_blocks',
+            'path' => '/cmf/example/contents/test',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('positions must be', $sanitized['text']);
+    }
 }
