@@ -373,6 +373,7 @@ class SuluPagesTool implements StreamableToolInterface
             'list' => $this->listPages($arguments['pathPrefix'] ?? '/cmf/example/contents', $locale),
             'get' => $this->getPage($arguments['path'] ?? '', $locale),
             'get_structure' => $this->getPageStructure($arguments['path'] ?? '', $locale),
+            'get_block' => $this->getBlock($arguments, $locale),
             'create_page' => $this->createPage($arguments, $locale),
             'copy_page' => $this->copyPageAction($arguments, $locale),
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
@@ -427,6 +428,37 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         return new TextToolResult(json_encode($structure, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function getBlock(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $position = (int) ($arguments['position'] ?? -1);
+        if ($position < 0) {
+            return new TextToolResult('Error: position is required');
+        }
+
+        $page = $this->pageService->getPage($path, $locale);
+        if ($page === null) {
+            return new TextToolResult('Page not found');
+        }
+
+        $blocks = $page['blocks'];
+        if ($position >= count($blocks)) {
+            return new TextToolResult("Error: Block position {$position} out of range (0-" . (count($blocks) - 1) . ")");
+        }
+
+        return new TextToolResult(json_encode([
+            'success' => true,
+            'block' => $blocks[$position],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
