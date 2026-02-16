@@ -59,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections. ' .
             'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
@@ -80,7 +80,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections',
+                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections',
                 required: true
             ),
             new SchemaProperty(
@@ -359,6 +359,12 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For remove_blocks: JSON array of positions to remove, e.g. [7, 5, 3]. Auto-sorted highest-first.',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'updates',
+                type: PropertyType::STRING,
+                description: 'For update_blocks: JSON array of update objects with position, headline, items. Max 10 per call.',
+                required: false
+            ),
         );
     }
 
@@ -389,6 +395,7 @@ class SuluPagesTool implements StreamableToolInterface
             'move_block' => $this->moveBlock($arguments, $locale),
             'remove_block' => $this->removeBlock($arguments, $locale),
             'remove_blocks' => $this->removeBlocksBatch($arguments, $locale),
+            'update_blocks' => $this->updateBlocksBatch($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
             'list_block_types' => $this->listBlockTypes(),
@@ -767,6 +774,96 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->pageService->removeBlocks($path, $positions, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateBlocksBatch(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $updatesRaw = $arguments['updates'] ?? '[]';
+        $updates = json_decode($updatesRaw, true);
+        if (!is_array($updates) || empty($updates)) {
+            return new TextToolResult('Error: updates must be a non-empty JSON array');
+        }
+        if (count($updates) > 10) {
+            return new TextToolResult('Error: maximum 10 updates per call');
+        }
+
+        $updatedPositions = [];
+        foreach ($updates as $update) {
+            $position = (int) ($update['position'] ?? -1);
+            if ($position < 0) {
+                return new TextToolResult(json_encode([
+                    'success' => false,
+                    'message' => 'Each update must have a valid position',
+                ], JSON_PRETTY_PRINT) ?: '{}');
+            }
+
+            $blockData = [];
+            if (isset($update['headline'])) {
+                $blockData['headline'] = $update['headline'];
+            }
+            if (isset($update['content'])) {
+                $blockData['content'] = $update['content'];
+            }
+
+            // Handle nested arrays by block type key
+            foreach (['items', 'faqs', 'rows', 'flags', 'cards'] as $nestedKey) {
+                if (isset($update[$nestedKey])) {
+                    $items = $update[$nestedKey];
+                    // Normalize items: content -> description (except code items)
+                    if (is_array($items)) {
+                        $items = array_map(function ($item) {
+                            if (($item['type'] ?? '') === 'code') {
+                                return $item;
+                            }
+                            if (isset($item['content']) && !isset($item['description'])) {
+                                $item['description'] = $item['content'];
+                                unset($item['content']);
+                            }
+                            return $item;
+                        }, $items);
+                    }
+                    $blockData[$nestedKey] = $items;
+                }
+            }
+
+            if (empty($blockData)) {
+                return new TextToolResult(json_encode([
+                    'success' => false,
+                    'message' => "Update at position {$position} has no data",
+                ], JSON_PRETTY_PRINT) ?: '{}');
+            }
+
+            $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
+            if (!$result['success']) {
+                return new TextToolResult(json_encode([
+                    'success' => false,
+                    'message' => "Failed at position {$position}: {$result['message']}",
+                ], JSON_PRETTY_PRINT) ?: '{}');
+            }
+
+            $updatedPositions[] = $position;
+        }
+
+        // Re-read final state
+        $updatedPage = $this->pageService->getPage($path, $locale);
+
+        $response = [
+            'success' => true,
+            'message' => count($updates) . ' blocks updated successfully',
+            'updated_positions' => $updatedPositions,
+            'blocks_remaining' => $updatedPage ? count($updatedPage['blocks']) : 0,
+            'blocks' => $this->pageService->formatCompactBlocks($updatedPage['blocks'] ?? []),
+        ];
+
+        return new TextToolResult(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     private function publishPage(string $path, string $locale): ToolResultInterface
