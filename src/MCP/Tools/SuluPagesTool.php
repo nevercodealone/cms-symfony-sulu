@@ -372,6 +372,7 @@ class SuluPagesTool implements StreamableToolInterface
         return match ($action) {
             'list' => $this->listPages($arguments['pathPrefix'] ?? '/cmf/example/contents', $locale),
             'get' => $this->getPage($arguments['path'] ?? '', $locale),
+            'get_structure' => $this->getPageStructure($arguments['path'] ?? '', $locale),
             'create_page' => $this->createPage($arguments, $locale),
             'copy_page' => $this->copyPageAction($arguments, $locale),
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
@@ -412,6 +413,20 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         return new TextToolResult(json_encode($page, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    private function getPageStructure(string $path, string $locale): ToolResultInterface
+    {
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $structure = $this->pageService->getPageStructure($path, $locale);
+        if ($structure === null) {
+            return new TextToolResult('Page not found');
+        }
+
+        return new TextToolResult(json_encode($structure, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
