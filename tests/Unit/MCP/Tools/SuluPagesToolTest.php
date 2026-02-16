@@ -1050,4 +1050,80 @@ class SuluPagesToolTest extends TestCase
         $sanitized = $result->getSanitizedResult();
         $this->assertStringContainsString('positions must be', $sanitized['text']);
     }
+
+    /**
+     * Test update_blocks batch action updates multiple blocks.
+     */
+    public function testUpdateBlocksAction(): void
+    {
+        $this->pageService->method('updateBlock')
+            ->willReturn(['success' => true, 'message' => 'Block updated successfully', 'blocks' => []]);
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'path' => '/cmf/example/contents/test',
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                    ['position' => 1, 'type' => 'headline-paragraphs', 'headline' => 'New1'],
+                    ['position' => 2, 'type' => 'headline-paragraphs', 'headline' => 'New2'],
+                ],
+            ]);
+        $this->pageService->method('formatCompactBlocks')
+            ->willReturn([
+                ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                ['position' => 1, 'type' => 'headline-paragraphs', 'headline' => 'New1'],
+                ['position' => 2, 'type' => 'headline-paragraphs', 'headline' => 'New2'],
+            ]);
+
+        $updates = json_encode([
+            ['position' => 1, 'headline' => 'New1', 'items' => [['type' => 'description', 'description' => '<p>Updated</p>']]],
+            ['position' => 2, 'headline' => 'New2', 'items' => [['type' => 'description', 'description' => '<p>Updated 2</p>']]],
+        ]);
+
+        $result = $this->tool->execute([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'updates' => $updates,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('2 blocks updated', $data['message']);
+        $this->assertEquals([1, 2], $data['updated_positions']);
+    }
+
+    /**
+     * Test update_blocks enforces maximum 10 updates per call.
+     */
+    public function testUpdateBlocksMaxTenLimit(): void
+    {
+        $updates = array_fill(0, 11, ['position' => 0, 'headline' => 'X']);
+
+        $result = $this->tool->execute([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'updates' => json_encode($updates),
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('maximum 10', $sanitized['text']);
+    }
+
+    /**
+     * Test update_blocks requires updates parameter.
+     */
+    public function testUpdateBlocksRequiresUpdates(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('updates must be', $sanitized['text']);
+    }
 }
