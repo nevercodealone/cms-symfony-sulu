@@ -1113,6 +1113,20 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test description includes new actions and efficiency guidelines.
+     */
+    public function testDescriptionIncludesNewActions(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('get_structure', $description);
+        $this->assertStringContainsString('get_block', $description);
+        $this->assertStringContainsString('remove_blocks', $description);
+        $this->assertStringContainsString('update_blocks', $description);
+        $this->assertStringContainsString('EFFICIENCY', $description);
+        $this->assertStringContainsString('RESPONSE CONTROL', $description);
+    }
+
+    /**
      * Test update_blocks requires updates parameter.
      */
     public function testUpdateBlocksRequiresUpdates(): void
