@@ -243,6 +243,40 @@ class PageService
     }
 
     /**
+     * Get lightweight page structure without full block content.
+     *
+     * @return array{success: bool, title: string, uuid: string|null, url: string|null, seoTitle: string|null, seoDescription: string|null, excerptTitle: string|null, excerptDescription: string|null, excerptImage: int|null, blocks_count: int, blocks: array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int}>}|null
+     */
+    public function getPageStructure(string $path, string $locale = 'de'): ?array
+    {
+        $page = $this->getPage($path, $locale);
+        if ($page === null) {
+            return null;
+        }
+
+        $result = $this->connection->fetchAssociative(
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$path]
+        );
+        $seoTitle = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-title") : null;
+        $seoDescription = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-description") : null;
+
+        return [
+            'success' => true,
+            'title' => $page['title'],
+            'uuid' => $this->getPageUuid($path),
+            'url' => $page['fullUrl'],
+            'seoTitle' => $seoTitle,
+            'seoDescription' => $seoDescription,
+            'excerptTitle' => $page['excerpt']['title'] ?? null,
+            'excerptDescription' => $page['excerpt']['description'] ?? null,
+            'excerptImage' => $page['excerpt']['images']['ids'][0] ?? null,
+            'blocks_count' => count($page['blocks']),
+            'blocks' => $this->formatCompactBlocks($page['blocks']),
+        ];
+    }
+
+    /**
      * Add a content block to a page using BlockWriter.
      *
      * Supports all 32 block types including:
