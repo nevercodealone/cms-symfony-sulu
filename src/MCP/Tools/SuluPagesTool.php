@@ -59,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections. ' .
+        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections. ' .
             'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
@@ -80,7 +80,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections',
+                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections',
                 required: true
             ),
             new SchemaProperty(
@@ -353,6 +353,12 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For quote block: Author name, e.g. "Dario Amodei"',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'positions',
+                type: PropertyType::STRING,
+                description: 'For remove_blocks: JSON array of positions to remove, e.g. [7, 5, 3]. Auto-sorted highest-first.',
+                required: false
+            ),
         );
     }
 
@@ -382,6 +388,7 @@ class SuluPagesTool implements StreamableToolInterface
             'append_to_block' => $this->appendToBlock($arguments, $locale),
             'move_block' => $this->moveBlock($arguments, $locale),
             'remove_block' => $this->removeBlock($arguments, $locale),
+            'remove_blocks' => $this->removeBlocksBatch($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
             'list_block_types' => $this->listBlockTypes(),
@@ -736,6 +743,28 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->removeBlock($path, $position, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function removeBlocksBatch(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $positionsRaw = $arguments['positions'] ?? '[]';
+        $positions = json_decode($positionsRaw, true);
+        if (!is_array($positions) || empty($positions)) {
+            return new TextToolResult('Error: positions must be a non-empty JSON array of integers');
+        }
+
+        $positions = array_map('intval', $positions);
+        $result = $this->pageService->removeBlocks($path, $positions, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
