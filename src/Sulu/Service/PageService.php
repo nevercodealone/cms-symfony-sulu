@@ -573,6 +573,39 @@ class PageService
     }
 
     /**
+     * Remove multiple blocks at once. Positions auto-sorted highest-first.
+     *
+     * @param array<int> $positions Block positions to remove
+     * @return array{success: bool, message: string, blocks_remaining?: int, blocks?: array<int, array{position: int, type: string, headline?: string}>}
+     */
+    public function removeBlocks(string $path, array $positions, string $locale = 'de'): array
+    {
+        // Sort highest-first to avoid index shifting
+        rsort($positions);
+
+        foreach ($positions as $position) {
+            $result = $this->removeBlock($path, $position, $locale);
+            if (!$result['success']) {
+                return [
+                    'success' => false,
+                    'message' => "Failed at position {$position}: {$result['message']}",
+                ];
+            }
+        }
+
+        // Re-read final state
+        $updatedPage = $this->getPage($path, $locale);
+        $blockCount = $updatedPage ? count($updatedPage['blocks']) : 0;
+
+        return [
+            'success' => true,
+            'message' => count($positions) . ' blocks removed successfully',
+            'blocks_remaining' => $blockCount,
+            'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
+        ];
+    }
+
+    /**
      * Publish page to live workspace.
      *
      * @return array{success: bool, message: string}
