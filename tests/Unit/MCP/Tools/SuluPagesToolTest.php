@@ -932,4 +932,76 @@ class SuluPagesToolTest extends TestCase
         $this->assertContains('source', $propertyNames, 'Schema must include "source" parameter for quote blocks');
         $this->assertContains('date', $propertyNames, 'Schema must include "date" parameter for quote blocks');
     }
+
+    /**
+     * Test get_block action returns a single block at the given position.
+     */
+    public function testGetBlockAction(): void
+    {
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'path' => '/cmf/example/contents/test',
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero', 'description' => '<p>Hero content</p>'],
+                    ['position' => 1, 'type' => 'headline-paragraphs', 'headline' => 'Section', 'items' => [
+                        ['type' => 'description', 'description' => '<p>Full text</p>'],
+                    ]],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'get_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 1,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals(1, $data['block']['position']);
+        $this->assertEquals('headline-paragraphs', $data['block']['type']);
+        $this->assertEquals('Section', $data['block']['headline']);
+        $this->assertArrayHasKey('items', $data['block']);
+    }
+
+    /**
+     * Test get_block action returns error when position is out of range.
+     */
+    public function testGetBlockActionOutOfRange(): void
+    {
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'path' => '/cmf/example/contents/test',
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'get_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 5,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('out of range', $sanitized['text']);
+    }
+
+    /**
+     * Test get_block action requires path parameter.
+     */
+    public function testGetBlockRequiresPath(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'get_block',
+            'position' => 0,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('path is required', $sanitized['text']);
+    }
 }
