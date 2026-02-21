@@ -59,7 +59,10 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache. ' .
+            'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
+            'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
+            'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
             'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
@@ -67,8 +70,9 @@ class SuluPagesTool implements StreamableToolInterface
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
+            'BATCH OPERATIONS: remove_blocks with positions JSON array (auto-sorted highest-first). update_blocks with updates JSON array (max 10, each with position + data). ' .
             'SUBPAGES-OVERVIEW: requires dataSource (UUID of source page). Optional: includeSubFolders (default true). ' .
-            'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. ' .
+            'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. description fields MUST be wrapped in <p> tags (e.g. "<p>Your text here</p>"). Without <p> tags, content will not render correctly in the frontend. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
             'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
@@ -80,7 +84,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, create_page, copy_page, update_excerpt, add_block, update_block, append_to_block, move_block, remove_block, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -353,6 +357,18 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For quote block: Author name, e.g. "Dario Amodei"',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'positions',
+                type: PropertyType::STRING,
+                description: 'For remove_blocks: JSON array of positions to remove, e.g. [7, 5, 3]. Auto-sorted highest-first.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'updates',
+                type: PropertyType::STRING,
+                description: 'For update_blocks: JSON array of update objects with position, headline, items. Max 10 per call.',
+                required: false
+            ),
         );
     }
 
@@ -372,6 +388,8 @@ class SuluPagesTool implements StreamableToolInterface
         return match ($action) {
             'list' => $this->listPages($arguments['pathPrefix'] ?? '/cmf/example/contents', $locale),
             'get' => $this->getPage($arguments['path'] ?? '', $locale),
+            'get_structure' => $this->getPageStructure($arguments['path'] ?? '', $locale),
+            'get_block' => $this->getBlock($arguments, $locale),
             'create_page' => $this->createPage($arguments, $locale),
             'copy_page' => $this->copyPageAction($arguments, $locale),
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
@@ -380,6 +398,8 @@ class SuluPagesTool implements StreamableToolInterface
             'append_to_block' => $this->appendToBlock($arguments, $locale),
             'move_block' => $this->moveBlock($arguments, $locale),
             'remove_block' => $this->removeBlock($arguments, $locale),
+            'remove_blocks' => $this->removeBlocksBatch($arguments, $locale),
+            'update_blocks' => $this->updateBlocksBatch($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
             'list_block_types' => $this->listBlockTypes(),
@@ -388,6 +408,7 @@ class SuluPagesTool implements StreamableToolInterface
             'list_media' => $this->listMedia($arguments, $locale),
             'upload_media' => $this->uploadMedia($arguments, $locale),
             'list_collections' => $this->listCollections($locale),
+            'clear_cache' => $this->clearCache(),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -412,6 +433,51 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         return new TextToolResult(json_encode($page, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    private function getPageStructure(string $path, string $locale): ToolResultInterface
+    {
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $structure = $this->pageService->getPageStructure($path, $locale);
+        if ($structure === null) {
+            return new TextToolResult('Page not found');
+        }
+
+        return new TextToolResult(json_encode($structure, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function getBlock(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $position = (int) ($arguments['position'] ?? -1);
+        if ($position < 0) {
+            return new TextToolResult('Error: position is required');
+        }
+
+        $page = $this->pageService->getPage($path, $locale);
+        if ($page === null) {
+            return new TextToolResult('Page not found');
+        }
+
+        $blocks = $page['blocks'];
+        if ($position >= count($blocks)) {
+            return new TextToolResult("Error: Block position {$position} out of range (0-" . (count($blocks) - 1) . ")");
+        }
+
+        return new TextToolResult(json_encode([
+            'success' => true,
+            'block' => $blocks[$position],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
@@ -500,7 +566,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $path = $arguments['path'] ?? '';
         $blockType = $arguments['blockType'] ?? 'headline-paragraphs';
-        $headline = $arguments['headline'] ?? '';
+        $headline = $this->unescapeUnicode($arguments['headline'] ?? '');
         $position = (int) ($arguments['position'] ?? 0);
 
         if (empty($path)) {
@@ -543,15 +609,9 @@ class SuluPagesTool implements StreamableToolInterface
 
         // Check if items parameter is provided (for structured blocks)
         if (isset($arguments['items'])) {
-            // Ensure valid UTF-8 before JSON parsing
-            $itemsRaw = mb_convert_encoding($arguments['items'], 'UTF-8', 'UTF-8');
-            $items = json_decode($itemsRaw, true);
+            $items = json_decode($arguments['items'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                // Retry with invalid UTF-8 substitution
-                $items = json_decode($itemsRaw, true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
-                }
+                return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
             }
             // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
@@ -629,13 +689,13 @@ class SuluPagesTool implements StreamableToolInterface
 
         // Handle CTA-button fields
         if (isset($arguments['text'])) {
-            $block['text'] = $arguments['text'];
+            $block['text'] = $this->unescapeUnicode($arguments['text']);
         }
         if (isset($arguments['url'])) {
             $block['url'] = $arguments['url'];
         }
         if (isset($arguments['texttwo'])) {
-            $block['texttwo'] = $arguments['texttwo'];
+            $block['texttwo'] = $this->unescapeUnicode($arguments['texttwo']);
         }
         if (isset($arguments['urltwo'])) {
             $block['urltwo'] = $arguments['urltwo'];
@@ -654,14 +714,14 @@ class SuluPagesTool implements StreamableToolInterface
                             $value = $decoded;
                         }
                     }
-                    $block[$propName] = $value;
+                    $block[$propName] = is_string($value) ? $this->unescapeUnicode($value) : $value;
                 }
             }
         }
 
         // Override quote author from explicit argument (takes priority over headline mapping)
         if ($blockType === 'quote' && isset($arguments['author'])) {
-            $block['author'] = $arguments['author'];
+            $block['author'] = $this->unescapeUnicode($arguments['author']);
         }
 
         // Normalize media fields to {"ids": [...]} format for BlockWriter
@@ -691,6 +751,118 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->pageService->removeBlock($path, $position, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function removeBlocksBatch(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $positionsRaw = $arguments['positions'] ?? '[]';
+        $positions = json_decode($positionsRaw, true);
+        if (!is_array($positions) || empty($positions)) {
+            return new TextToolResult('Error: positions must be a non-empty JSON array of integers');
+        }
+
+        $positions = array_map('intval', $positions);
+        $result = $this->pageService->removeBlocks($path, $positions, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateBlocksBatch(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $updatesRaw = $arguments['updates'] ?? '[]';
+        $updates = json_decode($updatesRaw, true);
+        if (!is_array($updates) || empty($updates)) {
+            return new TextToolResult('Error: updates must be a non-empty JSON array');
+        }
+        if (count($updates) > 10) {
+            return new TextToolResult('Error: maximum 10 updates per call');
+        }
+
+        $updatedPositions = [];
+        foreach ($updates as $update) {
+            $position = (int) ($update['position'] ?? -1);
+            if ($position < 0) {
+                return new TextToolResult(json_encode([
+                    'success' => false,
+                    'message' => 'Each update must have a valid position',
+                ], JSON_PRETTY_PRINT) ?: '{}');
+            }
+
+            $blockData = [];
+            if (isset($update['headline'])) {
+                $blockData['headline'] = $update['headline'];
+            }
+            if (isset($update['content'])) {
+                $blockData['content'] = $update['content'];
+            }
+
+            // Handle nested arrays by block type key
+            foreach (['items', 'faqs', 'rows', 'flags', 'cards'] as $nestedKey) {
+                if (isset($update[$nestedKey])) {
+                    $items = $update[$nestedKey];
+                    // Normalize items: content -> description (except code items)
+                    if (is_array($items)) {
+                        $items = array_map(function ($item) {
+                            if (($item['type'] ?? '') === 'code') {
+                                return $item;
+                            }
+                            if (isset($item['content']) && !isset($item['description'])) {
+                                $item['description'] = $item['content'];
+                                unset($item['content']);
+                            }
+                            return $item;
+                        }, $items);
+                    }
+                    $blockData[$nestedKey] = $items;
+                }
+            }
+
+            if (empty($blockData)) {
+                return new TextToolResult(json_encode([
+                    'success' => false,
+                    'message' => "Update at position {$position} has no data",
+                ], JSON_PRETTY_PRINT) ?: '{}');
+            }
+
+            $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
+            if (!$result['success']) {
+                return new TextToolResult(json_encode([
+                    'success' => false,
+                    'message' => "Failed at position {$position}: {$result['message']}",
+                ], JSON_PRETTY_PRINT) ?: '{}');
+            }
+
+            $updatedPositions[] = $position;
+        }
+
+        // Re-read final state
+        $updatedPage = $this->pageService->getPage($path, $locale);
+
+        $response = [
+            'success' => true,
+            'message' => count($updates) . ' blocks updated successfully',
+            'updated_positions' => $updatedPositions,
+            'blocks_remaining' => $updatedPage ? count($updatedPage['blocks']) : 0,
+            'blocks' => $this->pageService->formatCompactBlocks($updatedPage['blocks'] ?? []),
+        ];
+
+        return new TextToolResult(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     private function publishPage(string $path, string $locale): ToolResultInterface
@@ -738,7 +910,7 @@ class SuluPagesTool implements StreamableToolInterface
 
         $blockData = [];
         if (isset($arguments['headline'])) {
-            $blockData['headline'] = $arguments['headline'];
+            $blockData['headline'] = $this->unescapeUnicode($arguments['headline']);
         }
         if (isset($arguments['content'])) {
             $blockData['content'] = $arguments['content'];
@@ -746,15 +918,9 @@ class SuluPagesTool implements StreamableToolInterface
 
         // Handle items parameter for complete items replacement
         if (isset($arguments['items'])) {
-            // Ensure valid UTF-8 before JSON parsing
-            $itemsRaw = mb_convert_encoding($arguments['items'], 'UTF-8', 'UTF-8');
-            $items = json_decode($itemsRaw, true);
+            $items = json_decode($arguments['items'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                // Retry with invalid UTF-8 substitution
-                $items = json_decode($itemsRaw, true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
-                }
+                return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
             }
             // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
@@ -848,15 +1014,9 @@ class SuluPagesTool implements StreamableToolInterface
             return new TextToolResult('Error: items is required for append_to_block action');
         }
 
-        // Ensure valid UTF-8 before JSON parsing
-        $itemsRaw = mb_convert_encoding($arguments['items'], 'UTF-8', 'UTF-8');
-        $items = json_decode($itemsRaw, true);
+        $items = json_decode($arguments['items'], true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            // Retry with invalid UTF-8 substitution
-            $items = json_decode($itemsRaw, true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
-            }
+            return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
         }
 
         // Normalize items: content -> description for Sulu storage (except for code items)
@@ -1048,6 +1208,16 @@ class SuluPagesTool implements StreamableToolInterface
     }
 
     /**
+     * Clear all Symfony/Sulu caches.
+     */
+    private function clearCache(): ToolResultInterface
+    {
+        $result = $this->pageService->clearCache();
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
      * Normalize media values from MCP input to BlockWriter-compatible format.
      *
      * Accepts various formats and converts to {"ids": [int, ...]}:
@@ -1182,5 +1352,29 @@ class SuluPagesTool implements StreamableToolInterface
             'headline' => $headline,
             'description' => $content,
         ];
+    }
+
+    /**
+     * Resolve literal unicode escapes (\uXXXX) in a string to actual UTF-8 characters.
+     *
+     * MCP transport may deliver top-level string parameters with literal \uXXXX sequences
+     * instead of resolved unicode characters. Items go through json_decode() which handles
+     * this automatically, but top-level params like headline, author, etc. do not.
+     */
+    private function unescapeUnicode(string $value): string
+    {
+        if (!str_contains($value, '\\u')) {
+            return $value;
+        }
+
+        $decoded = json_decode('"' . str_replace('"', '\\"', $value) . '"');
+
+        if (!is_string($decoded)) {
+            throw new \InvalidArgumentException(
+                'Failed to decode unicode escapes in: ' . mb_substr($value, 0, 100)
+            );
+        }
+
+        return $decoded;
     }
 }

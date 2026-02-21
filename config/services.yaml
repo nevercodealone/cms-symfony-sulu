@@ -226,6 +226,7 @@ services:
             $documentManager: '@Sulu\Component\DocumentManager\DocumentManagerInterface'
             $httpCacheClearer: '@App\Sulu\Cache\HttpCacheClearer'
             $snippetService: '@App\Sulu\Service\SnippetService'
+            $projectDir: '%kernel.project_dir%'
         public: true
 
     # Sulu Snippet Service - Direct SQL for snippet operations

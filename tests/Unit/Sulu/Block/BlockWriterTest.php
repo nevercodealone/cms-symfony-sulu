@@ -1085,4 +1085,37 @@ XML);
         $this->assertSame($uuids[0], $valueNodes->item(0)->nodeValue);
         $this->assertSame($uuids[1], $valueNodes->item(1)->nodeValue);
     }
+
+    // === Code Block HTML Escaping Tests ===
+
+    /**
+     * Bug 4: Code items with HTML tags must be escaped so they display as text, not render as HTML.
+     */
+    public function testHeadlineParagraphsCodeItemEscapesHtmlTags(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, [
+            'type' => 'headline-paragraphs',
+            'headline' => 'HTML Example',
+            'items' => [
+                ['type' => 'code', 'code' => "<main>\n  <h1>Laufschuhe kaufen</h1>\n</main>", 'language' => 'html'],
+            ],
+        ]);
+
+        // Update the length
+        $lengthNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-length"]/sv:value');
+        $lengthNodes->item(0)->nodeValue = '1';
+
+        // Check the raw XML — the code property must contain escaped HTML
+        $codeNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-items#0-code#0"]/sv:value');
+        $this->assertSame(1, $codeNodes->length);
+
+        $storedCode = $codeNodes->item(0)->nodeValue;
+        $this->assertStringContainsString('&lt;main&gt;', $storedCode, 'HTML tags in code must be escaped');
+        $this->assertStringContainsString('&lt;h1&gt;', $storedCode, 'HTML tags in code must be escaped');
+        $this->assertStringNotContainsString('<main>', $storedCode, 'Raw HTML must not be stored unescaped');
+    }
 }

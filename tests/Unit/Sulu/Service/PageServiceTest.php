@@ -388,7 +388,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->once())
+        $this->connection->expects($this->exactly(2))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -1987,5 +1987,168 @@ XML;
         }
 
         $this->assertTrue($foundBothSnippets, 'Both snippet UUIDs (uuid-contact-111, uuid-contact-222) should be preserved in the copied page XML');
+    }
+
+    // === Publish Tests ===
+
+    private const DRAFT_PAGE_XML = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0">
+    <sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>
+    <sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="9">sulu:page</sv:value></sv:property>
+    <sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">b381e0d7-ffcc-4e3f-84b8-d28fd9a47fb1</sv:value></sv:property>
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0"><sv:value length="9">Test Page</sv:value></sv:property>
+    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0"><sv:value length="10">/test-page</sv:value></sv:property>
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0"><sv:value length="1">0</sv:value></sv:property>
+</sv:node>
+XML;
+
+    /**
+     * Bug 1: Publish must set state to 2 (published) in the XML before copying to live.
+     */
+    public function testPublishPageSetsStateTo2InXml(): void
+    {
+        $capturedXml = null;
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) {
+                // Default workspace: return draft page
+                if (str_contains($sql, 'workspace_name') && isset($params[0]) && $params[0] === '/cmf/example/contents/test') {
+                    return ['props' => self::DRAFT_PAGE_XML];
+                }
+                // Route check: no existing route
+                return false;
+            });
+
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                // Capture the XML written to live workspace
+                if (str_contains($sql, 'UPDATE') && isset($params[2]) && $params[2] === 'default_live') {
+                    $capturedXml = $params[0];
+                }
+                return 1;
+            });
+
+        $result = $this->pageService->publishPage('/cmf/example/contents/test', 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertNotNull($capturedXml, 'XML should be written to live workspace');
+
+        // Parse the XML and verify state is 2
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $stateNodes = $xpath->query('//sv:property[@sv:name="i18n:de-state"]/sv:value');
+        $this->assertSame(1, $stateNodes->length);
+        $this->assertSame('2', $stateNodes->item(0)->nodeValue, 'State must be 2 (published) after publish');
+    }
+
+    /**
+     * Bug 1: Publish must set i18n:{locale}-published date.
+     */
+    public function testPublishPageSetsPublishedDate(): void
+    {
+        $capturedXml = null;
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function ($sql, $params) {
+                if (str_contains($sql, 'workspace_name') && isset($params[0]) && $params[0] === '/cmf/example/contents/test') {
+                    return ['props' => self::DRAFT_PAGE_XML];
+                }
+                return false;
+            });
+
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                if (str_contains($sql, 'UPDATE') && isset($params[2]) && $params[2] === 'default_live') {
+                    $capturedXml = $params[0];
+                }
+                return 1;
+            });
+
+        $this->pageService->publishPage('/cmf/example/contents/test', 'de');
+
+        $this->assertNotNull($capturedXml);
+
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:de-published"]/sv:value');
+        $this->assertSame(1, $publishedNodes->length, 'Published date must be set');
+        $this->assertNotEmpty($publishedNodes->item(0)->nodeValue, 'Published date must have a value');
+    }
+
+    // ==========================================================================
+    // Cache Clear Tests
+    // ==========================================================================
+
+    public function testClearCacheReturnsSuccessArray(): void
+    {
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            projectDir: '/tmp/test-project',
+        );
+
+        $result = $pageService->clearCache();
+
+        $this->assertArrayHasKey('success', $result);
+        $this->assertArrayHasKey('message', $result);
+        $this->assertIsBool($result['success']);
+        $this->assertIsString($result['message']);
+    }
+
+    public function testClearCacheLogsActivity(): void
+    {
+        $this->activityLogger->expects($this->once())
+            ->method('logMcpAction')
+            ->with('mcp_cache_cleared', $this->anything(), $this->anything(), $this->anything());
+
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            projectDir: '/tmp/test-project',
+        );
+
+        $pageService->clearCache();
+    }
+
+    public function testClearCacheWithoutProjectDirReturnsFalse(): void
+    {
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+        );
+
+        $result = $pageService->clearCache();
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('projectDir', $result['message']);
+    }
+
+    public function testPublishPageCallsClearCache(): void
+    {
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            projectDir: '/tmp/test-project',
+        );
+
+        $this->connection->method('fetchAssociative')
+            ->willReturn([
+                'props' => self::SAMPLE_PHPCR_XML,
+                'identifier' => 'test-uuid',
+            ]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        // clearCache logs 'mcp_cache_cleared', publishPage logs 'mcp_page_published'
+        $this->activityLogger->expects($this->exactly(2))
+            ->method('logMcpAction');
+
+        $pageService->publishPage('/cmf/example/contents/test', 'de');
     }
 }

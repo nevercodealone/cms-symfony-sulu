@@ -861,6 +861,60 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test get_structure action returns compact page metadata.
+     */
+    public function testGetStructureAction(): void
+    {
+        $this->pageService->method('getPageStructure')
+            ->willReturn([
+                'success' => true,
+                'title' => 'Test Page',
+                'uuid' => 'test-uuid',
+                'url' => '/de/test',
+                'seoTitle' => 'SEO Title',
+                'seoDescription' => 'SEO Desc',
+                'excerptTitle' => 'Excerpt',
+                'excerptDescription' => 'Excerpt Desc',
+                'excerptImage' => 42,
+                'blocks_count' => 2,
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                    ['position' => 1, 'type' => 'faq', 'faqs_count' => 3],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'get_structure',
+            'path' => '/cmf/example/contents/test',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals('Test Page', $data['title']);
+        $this->assertEquals(2, $data['blocks_count']);
+        $this->assertArrayNotHasKey('description', $data['blocks'][0]);
+        $this->assertEquals('hero', $data['blocks'][0]['type']);
+        $this->assertEquals(3, $data['blocks'][1]['faqs_count']);
+    }
+
+    /**
+     * Test get_structure requires path parameter.
+     */
+    public function testGetStructureRequiresPath(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'get_structure',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('path is required', $sanitized['text']);
+    }
+
+    /**
      * Test MCP input schema includes quote-specific parameters (role, source, date).
      * Without these SchemaProperty definitions, MCP clients cannot send these parameters.
      */
@@ -877,5 +931,390 @@ class SuluPagesToolTest extends TestCase
         $this->assertContains('role', $propertyNames, 'Schema must include "role" parameter for quote blocks');
         $this->assertContains('source', $propertyNames, 'Schema must include "source" parameter for quote blocks');
         $this->assertContains('date', $propertyNames, 'Schema must include "date" parameter for quote blocks');
+    }
+
+    /**
+     * Test get_block action returns a single block at the given position.
+     */
+    public function testGetBlockAction(): void
+    {
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'path' => '/cmf/example/contents/test',
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero', 'description' => '<p>Hero content</p>'],
+                    ['position' => 1, 'type' => 'headline-paragraphs', 'headline' => 'Section', 'items' => [
+                        ['type' => 'description', 'description' => '<p>Full text</p>'],
+                    ]],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'get_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 1,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals(1, $data['block']['position']);
+        $this->assertEquals('headline-paragraphs', $data['block']['type']);
+        $this->assertEquals('Section', $data['block']['headline']);
+        $this->assertArrayHasKey('items', $data['block']);
+    }
+
+    /**
+     * Test get_block action returns error when position is out of range.
+     */
+    public function testGetBlockActionOutOfRange(): void
+    {
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'path' => '/cmf/example/contents/test',
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'get_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 5,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('out of range', $sanitized['text']);
+    }
+
+    /**
+     * Test get_block action requires path parameter.
+     */
+    public function testGetBlockRequiresPath(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'get_block',
+            'position' => 0,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('path is required', $sanitized['text']);
+    }
+
+    /**
+     * Test remove_blocks batch action removes multiple blocks.
+     */
+    public function testRemoveBlocksAction(): void
+    {
+        $this->pageService->method('removeBlocks')
+            ->willReturn([
+                'success' => true,
+                'message' => '3 blocks removed successfully',
+                'blocks_remaining' => 5,
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                    ['position' => 1, 'type' => 'faq', 'faqs_count' => 3],
+                ],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'remove_blocks',
+            'path' => '/cmf/example/contents/test',
+            'positions' => '[7, 5, 3]',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('3 blocks removed', $data['message']);
+        $this->assertEquals(5, $data['blocks_remaining']);
+    }
+
+    /**
+     * Test remove_blocks requires positions parameter.
+     */
+    public function testRemoveBlocksRequiresPositions(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'remove_blocks',
+            'path' => '/cmf/example/contents/test',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('positions must be', $sanitized['text']);
+    }
+
+    /**
+     * Test update_blocks batch action updates multiple blocks.
+     */
+    public function testUpdateBlocksAction(): void
+    {
+        $this->pageService->method('updateBlock')
+            ->willReturn(['success' => true, 'message' => 'Block updated successfully', 'blocks' => []]);
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'path' => '/cmf/example/contents/test',
+                'blocks' => [
+                    ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                    ['position' => 1, 'type' => 'headline-paragraphs', 'headline' => 'New1'],
+                    ['position' => 2, 'type' => 'headline-paragraphs', 'headline' => 'New2'],
+                ],
+            ]);
+        $this->pageService->method('formatCompactBlocks')
+            ->willReturn([
+                ['position' => 0, 'type' => 'hero', 'headline' => 'Hero'],
+                ['position' => 1, 'type' => 'headline-paragraphs', 'headline' => 'New1'],
+                ['position' => 2, 'type' => 'headline-paragraphs', 'headline' => 'New2'],
+            ]);
+
+        $updates = json_encode([
+            ['position' => 1, 'headline' => 'New1', 'items' => [['type' => 'description', 'description' => '<p>Updated</p>']]],
+            ['position' => 2, 'headline' => 'New2', 'items' => [['type' => 'description', 'description' => '<p>Updated 2</p>']]],
+        ]);
+
+        $result = $this->tool->execute([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'updates' => $updates,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('2 blocks updated', $data['message']);
+        $this->assertEquals([1, 2], $data['updated_positions']);
+    }
+
+    /**
+     * Test update_blocks enforces maximum 10 updates per call.
+     */
+    public function testUpdateBlocksMaxTenLimit(): void
+    {
+        $updates = array_fill(0, 11, ['position' => 0, 'headline' => 'X']);
+
+        $result = $this->tool->execute([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'updates' => json_encode($updates),
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('maximum 10', $sanitized['text']);
+    }
+
+    /**
+     * Test description includes new actions and efficiency guidelines.
+     */
+    public function testDescriptionIncludesNewActions(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('get_structure', $description);
+        $this->assertStringContainsString('get_block', $description);
+        $this->assertStringContainsString('remove_blocks', $description);
+        $this->assertStringContainsString('update_blocks', $description);
+        $this->assertStringContainsString('EFFICIENCY', $description);
+        $this->assertStringContainsString('RESPONSE CONTROL', $description);
+        $this->assertStringContainsString('MUST be wrapped in <p> tags', $description);
+    }
+
+    /**
+     * Test add_block resolves unicode escapes in headline field.
+     * Bug 2: \u2013 should become – not literal \u2013.
+     */
+    public function testAddBlockResolvesUnicodeEscapesInHeadline(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hl-des',
+            'headline' => 'WordPress KI \u2013 Vergleich',
+            'content' => '<p>Test</p>',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('WordPress KI – Vergleich', $capturedBlock['headline']);
+    }
+
+    /**
+     * Test update_block resolves unicode escapes in headline field.
+     */
+    public function testUpdateBlockResolvesUnicodeEscapesInHeadline(): void
+    {
+        $capturedBlockData = null;
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'blocks' => [
+                    ['type' => 'hl-des', 'headline' => 'Old'],
+                ],
+            ]);
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function ($path, $position, $blockData) use (&$capturedBlockData) {
+                $capturedBlockData = $blockData;
+                return ['success' => true, 'message' => 'Block updated'];
+            });
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 0,
+            'headline' => 'WordPress KI \u2013 Vergleich',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlockData);
+        $this->assertEquals('WordPress KI – Vergleich', $capturedBlockData['headline']);
+    }
+
+    /**
+     * Test add_block with German Umlauts and typographic quotes in items JSON.
+     * Bug 3: mb_convert_encoding corrupts valid UTF-8 multibyte sequences.
+     */
+    public function testAddBlockWithUmlautsAndTypographicQuotesInItems(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $items = '[{"type":"description","description":"<p>Andreessen Horowitz beschreibt dieses Phänomen als das \u201eLocalhost-Meme\u201c: Vibe Coder können beeindruckende Prototypen bauen.</p>"}]';
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'headline-paragraphs',
+            'headline' => 'Test',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock, 'Block should be created, not rejected as invalid JSON');
+        $this->assertArrayHasKey('items', $capturedBlock);
+        $this->assertStringContainsString('Phänomen', $capturedBlock['items'][0]['description']);
+    }
+
+    /**
+     * Test add_block with direct UTF-8 special characters in items JSON.
+     * Bug 3: typographic quotes + Umlauts together must work.
+     */
+    public function testAddBlockWithDirectUtf8SpecialCharsInItems(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $leftQuote = "\xE2\x80\x9E"; // „ U+201E
+        $rightQuote = "\xE2\x80\x9C"; // " U+201C
+        $items = '[{"type":"description","description":"<p>Das ' . $leftQuote . 'Localhost-Meme' . $rightQuote . ' zeigt: Ärger mit Übersetzungen führt zu Ärger.</p>"}]';
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'headline-paragraphs',
+            'headline' => 'Test',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock, 'Block with direct UTF-8 special chars should work');
+        $this->assertArrayHasKey('items', $capturedBlock);
+        $this->assertStringContainsString('Ärger', $capturedBlock['items'][0]['description']);
+    }
+
+    /**
+     * Test add_block with code items passes code field unchanged for BlockWriter to escape.
+     * Bug 4: HTML in code items must arrive at PageService for proper escaping.
+     */
+    public function testAddBlockCodeItemPassesHtmlCodeToPageService(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $items = json_encode([
+            ['type' => 'code', 'code' => "<main>\n  <h1>Title</h1>\n</main>", 'language' => 'html'],
+        ]);
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'headline-paragraphs',
+            'headline' => 'Code Example',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertArrayHasKey('items', $capturedBlock);
+        $this->assertEquals('code', $capturedBlock['items'][0]['type']);
+        $this->assertStringContainsString('<main>', $capturedBlock['items'][0]['code'], 'Raw HTML code must be passed to PageService — BlockWriter handles escaping');
+    }
+
+    /**
+     * Test clear_cache action calls PageService::clearCache and returns result.
+     */
+    public function testClearCacheAction(): void
+    {
+        $this->pageService->method('clearCache')
+            ->willReturn(['success' => true, 'message' => 'Cache cleared successfully']);
+
+        $result = $this->tool->execute([
+            'action' => 'clear_cache',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('Cache cleared', $data['message']);
+    }
+
+    /**
+     * Test description includes clear_cache action.
+     */
+    public function testDescriptionIncludesClearCache(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('clear_cache', $description);
+    }
+
+    /**
+     * Test update_blocks requires updates parameter.
+     */
+    public function testUpdateBlocksRequiresUpdates(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('updates must be', $sanitized['text']);
     }
 }

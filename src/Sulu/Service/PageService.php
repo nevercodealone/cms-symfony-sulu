@@ -16,6 +16,7 @@ use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Symfony\Component\Process\Process;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
@@ -69,6 +70,7 @@ class PageService
         private ?DocumentManagerInterface $documentManager = null,
         private ?HttpCacheClearer $httpCacheClearer = null,
         private ?SnippetService $snippetService = null,
+        private ?string $projectDir = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -116,9 +118,58 @@ class PageService
     }
 
     /**
+     * Clear all Symfony/Sulu caches via console commands.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function clearCache(): array
+    {
+        if ($this->projectDir === null) {
+            return ['success' => false, 'message' => 'projectDir not configured'];
+        }
+
+        $output = [];
+
+        $commands = [
+            [$this->projectDir . '/bin/console', 'cache:clear'],
+            [$this->projectDir . '/bin/websiteconsole', 'cache:clear'],
+        ];
+
+        foreach ($commands as $cmd) {
+            $cmdName = basename($cmd[0]) . ' ' . $cmd[1];
+            try {
+                $process = new Process($cmd, $this->projectDir);
+                $process->setTimeout(120);
+                $process->run();
+
+                if ($process->isSuccessful()) {
+                    $output[] = "{$cmdName}: OK";
+                } else {
+                    $output[] = "{$cmdName}: FAILED - " . $process->getErrorOutput();
+                }
+            } catch (\Exception $e) {
+                $output[] = "{$cmdName}: ERROR - " . $e->getMessage();
+            }
+        }
+
+        $this->activityLogger->logMcpAction(
+            'mcp_cache_cleared',
+            'system',
+            'de',
+            ['commands' => $output]
+        );
+
+        return [
+            'success' => true,
+            'message' => 'Cache cleared successfully',
+            'details' => $output,
+        ];
+    }
+
+    /**
      * Get page UUID from database.
      */
-    private function getPageUuid(string $path): ?string
+    public function getPageUuid(string $path): ?string
     {
         $result = $this->connection->fetchAssociative(
             "SELECT identifier FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
@@ -239,6 +290,40 @@ class PageService
                 'description' => $excerptDescription,
                 'images' => $excerptImages ? json_decode($excerptImages, true) : null,
             ],
+        ];
+    }
+
+    /**
+     * Get lightweight page structure without full block content.
+     *
+     * @return array{success: bool, title: string, uuid: string|null, url: string|null, seoTitle: string|null, seoDescription: string|null, excerptTitle: string|null, excerptDescription: string|null, excerptImage: int|null, blocks_count: int, blocks: array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int}>}|null
+     */
+    public function getPageStructure(string $path, string $locale = 'de'): ?array
+    {
+        $page = $this->getPage($path, $locale);
+        if ($page === null) {
+            return null;
+        }
+
+        $result = $this->connection->fetchAssociative(
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$path]
+        );
+        $seoTitle = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-title") : null;
+        $seoDescription = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-description") : null;
+
+        return [
+            'success' => true,
+            'title' => $page['title'],
+            'uuid' => $this->getPageUuid($path),
+            'url' => $page['fullUrl'],
+            'seoTitle' => $seoTitle,
+            'seoDescription' => $seoDescription,
+            'excerptTitle' => $page['excerpt']['title'] ?? null,
+            'excerptDescription' => $page['excerpt']['description'] ?? null,
+            'excerptImage' => $page['excerpt']['images']['ids'][0] ?? null,
+            'blocks_count' => count($page['blocks']),
+            'blocks' => $this->formatCompactBlocks($page['blocks']),
         ];
     }
 
@@ -530,12 +615,45 @@ class PageService
                 'success' => true,
                 'message' => 'Block removed successfully',
                 'blocks_remaining' => $blockCount,
-                'blocks' => $updatedPage['blocks'] ?? [],
+                'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Remove multiple blocks at once. Positions auto-sorted highest-first.
+     *
+     * @param array<int> $positions Block positions to remove
+     * @return array{success: bool, message: string, blocks_remaining?: int, blocks?: array<int, array{position: int, type: string, headline?: string}>}
+     */
+    public function removeBlocks(string $path, array $positions, string $locale = 'de'): array
+    {
+        // Sort highest-first to avoid index shifting
+        rsort($positions);
+
+        foreach ($positions as $position) {
+            $result = $this->removeBlock($path, $position, $locale);
+            if (!$result['success']) {
+                return [
+                    'success' => false,
+                    'message' => "Failed at position {$position}: {$result['message']}",
+                ];
+            }
+        }
+
+        // Re-read final state
+        $updatedPage = $this->getPage($path, $locale);
+        $blockCount = $updatedPage ? count($updatedPage['blocks']) : 0;
+
+        return [
+            'success' => true,
+            'message' => count($positions) . ' blocks removed successfully',
+            'blocks_remaining' => $blockCount,
+            'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
+        ];
     }
 
     /**
@@ -555,14 +673,23 @@ class PageService
                 return ['success' => false, 'message' => 'Page not found'];
             }
 
+            // Update state to published (2) and set published date in XML
+            $publishedProps = $this->setPublishStateInXml($result['props'], $locale);
+
+            // Update default workspace with published state
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$publishedProps, $path, self::WORKSPACE_DEFAULT]
+            );
+
             // Copy content to live workspace
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$result['props'], $path, self::WORKSPACE_LIVE]
+                [$publishedProps, $path, self::WORKSPACE_LIVE]
             );
 
             // Create route if it doesn't exist
-            $this->createRouteForPage($path, $result['props'], $locale);
+            $this->createRouteForPage($path, $publishedProps, $locale);
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_published',
@@ -573,12 +700,55 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Full cache clear after publish to ensure all pages reflect updated state
+            $this->clearCache();
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Set workflow state to published (2) and add published date in PHPCR XML.
+     */
+    private function setPublishStateInXml(string $xmlString, string $locale): string
+    {
+        $xml = new DOMDocument();
+        $this->loadXmlSecurely($xml, $xmlString);
+
+        $xpath = new DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        // Set state to 2 (published)
+        $stateNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-state"]/sv:value');
+        if ($stateNodes !== false && $stateNodes->length > 0 && $stateNodes->item(0)) {
+            $stateNodes->item(0)->nodeValue = '2';
+        }
+
+        // Set published date if not already set
+        $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-published"]/sv:value');
+        $now = (new \DateTime())->format('Y-m-d\TH:i:s.vP');
+
+        if ($publishedNodes !== false && $publishedNodes->length > 0 && $publishedNodes->item(0)) {
+            $publishedNodes->item(0)->nodeValue = $now;
+        } else {
+            // Add published date property
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if ($rootNode) {
+                $prop = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                $prop->setAttribute('sv:name', 'i18n:' . $locale . '-published');
+                $prop->setAttribute('sv:type', 'Date');
+                $prop->setAttribute('sv:multi-valued', '0');
+                $value = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value', $now);
+                $value->setAttribute('length', (string) strlen($now));
+                $prop->appendChild($value);
+                $rootNode->appendChild($prop);
+            }
+        }
+
+        return $xml->saveXML() ?: $xmlString;
     }
 
     /**
@@ -1103,7 +1273,7 @@ class PageService
             return [
                 'success' => true,
                 'message' => 'Block updated successfully',
-                'blocks' => $updatedPage['blocks'] ?? [],
+                'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
         } catch (\Exception $e) {
@@ -1295,7 +1465,7 @@ class PageService
                     'message' => 'Items appended successfully',
                     'items_added' => count($newItems),
                     'total_items' => count($mergedItems),
-                    'blocks' => $result['blocks'] ?? [],
+                    'blocks' => $this->formatCompactBlocks($result['blocks'] ?? []),
                 ];
             }
 
@@ -1419,7 +1589,7 @@ class PageService
             return [
                 'success' => true,
                 'message' => "Block moved from position {$fromPosition} to {$toPosition}",
-                'blocks' => $updatedPage['blocks'] ?? [],
+                'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
         } catch (\Exception $e) {
@@ -1869,5 +2039,36 @@ class PageService
             'createdAt' => $createdAt,
             'modifiedAt' => $changedAt,
         ];
+    }
+
+    /**
+     * Format blocks as compact metadata (position + type + headline only).
+     *
+     * @param array<mixed> $blocks Full block data from getPage()
+     * @return array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int}>
+     */
+    public function formatCompactBlocks(array $blocks): array
+    {
+        $compact = [];
+        foreach ($blocks as $index => $block) {
+            $entry = [
+                'position' => $block['position'] ?? $index,
+                'type' => $block['type'] ?? 'unknown',
+            ];
+            if (!empty($block['headline'])) {
+                $entry['headline'] = $block['headline'];
+            }
+            if (isset($block['faqs']) && is_array($block['faqs'])) {
+                $entry['faqs_count'] = count($block['faqs']);
+            }
+            if (isset($block['rows']) && is_array($block['rows'])) {
+                $entry['rows_count'] = count($block['rows']);
+            }
+            if (isset($block['items']) && is_array($block['items'])) {
+                $entry['items_count'] = count($block['items']);
+            }
+            $compact[] = $entry;
+        }
+        return $compact;
     }
 }
