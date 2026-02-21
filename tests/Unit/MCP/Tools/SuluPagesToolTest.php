@@ -1124,6 +1124,183 @@ class SuluPagesToolTest extends TestCase
         $this->assertStringContainsString('update_blocks', $description);
         $this->assertStringContainsString('EFFICIENCY', $description);
         $this->assertStringContainsString('RESPONSE CONTROL', $description);
+        $this->assertStringContainsString('MUST be wrapped in <p> tags', $description);
+    }
+
+    /**
+     * Test add_block resolves unicode escapes in headline field.
+     * Bug 2: \u2013 should become – not literal \u2013.
+     */
+    public function testAddBlockResolvesUnicodeEscapesInHeadline(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hl-des',
+            'headline' => 'WordPress KI \u2013 Vergleich',
+            'content' => '<p>Test</p>',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('WordPress KI – Vergleich', $capturedBlock['headline']);
+    }
+
+    /**
+     * Test update_block resolves unicode escapes in headline field.
+     */
+    public function testUpdateBlockResolvesUnicodeEscapesInHeadline(): void
+    {
+        $capturedBlockData = null;
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'blocks' => [
+                    ['type' => 'hl-des', 'headline' => 'Old'],
+                ],
+            ]);
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function ($path, $position, $blockData) use (&$capturedBlockData) {
+                $capturedBlockData = $blockData;
+                return ['success' => true, 'message' => 'Block updated'];
+            });
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 0,
+            'headline' => 'WordPress KI \u2013 Vergleich',
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlockData);
+        $this->assertEquals('WordPress KI – Vergleich', $capturedBlockData['headline']);
+    }
+
+    /**
+     * Test add_block with German Umlauts and typographic quotes in items JSON.
+     * Bug 3: mb_convert_encoding corrupts valid UTF-8 multibyte sequences.
+     */
+    public function testAddBlockWithUmlautsAndTypographicQuotesInItems(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $items = '[{"type":"description","description":"<p>Andreessen Horowitz beschreibt dieses Phänomen als das \u201eLocalhost-Meme\u201c: Vibe Coder können beeindruckende Prototypen bauen.</p>"}]';
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'headline-paragraphs',
+            'headline' => 'Test',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock, 'Block should be created, not rejected as invalid JSON');
+        $this->assertArrayHasKey('items', $capturedBlock);
+        $this->assertStringContainsString('Phänomen', $capturedBlock['items'][0]['description']);
+    }
+
+    /**
+     * Test add_block with direct UTF-8 special characters in items JSON.
+     * Bug 3: typographic quotes + Umlauts together must work.
+     */
+    public function testAddBlockWithDirectUtf8SpecialCharsInItems(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $leftQuote = "\xE2\x80\x9E"; // „ U+201E
+        $rightQuote = "\xE2\x80\x9C"; // " U+201C
+        $items = '[{"type":"description","description":"<p>Das ' . $leftQuote . 'Localhost-Meme' . $rightQuote . ' zeigt: Ärger mit Übersetzungen führt zu Ärger.</p>"}]';
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'headline-paragraphs',
+            'headline' => 'Test',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock, 'Block with direct UTF-8 special chars should work');
+        $this->assertArrayHasKey('items', $capturedBlock);
+        $this->assertStringContainsString('Ärger', $capturedBlock['items'][0]['description']);
+    }
+
+    /**
+     * Test add_block with code items passes code field unchanged for BlockWriter to escape.
+     * Bug 4: HTML in code items must arrive at PageService for proper escaping.
+     */
+    public function testAddBlockCodeItemPassesHtmlCodeToPageService(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $items = json_encode([
+            ['type' => 'code', 'code' => "<main>\n  <h1>Title</h1>\n</main>", 'language' => 'html'],
+        ]);
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'headline-paragraphs',
+            'headline' => 'Code Example',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertArrayHasKey('items', $capturedBlock);
+        $this->assertEquals('code', $capturedBlock['items'][0]['type']);
+        $this->assertStringContainsString('<main>', $capturedBlock['items'][0]['code'], 'Raw HTML code must be passed to PageService — BlockWriter handles escaping');
+    }
+
+    /**
+     * Test clear_cache action calls PageService::clearCache and returns result.
+     */
+    public function testClearCacheAction(): void
+    {
+        $this->pageService->method('clearCache')
+            ->willReturn(['success' => true, 'message' => 'Cache cleared successfully']);
+
+        $result = $this->tool->execute([
+            'action' => 'clear_cache',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('Cache cleared', $data['message']);
+    }
+
+    /**
+     * Test description includes clear_cache action.
+     */
+    public function testDescriptionIncludesClearCache(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('clear_cache', $description);
     }
 
     /**
