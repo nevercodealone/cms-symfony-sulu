@@ -16,6 +16,7 @@ use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Symfony\Component\Process\Process;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
@@ -69,6 +70,7 @@ class PageService
         private ?DocumentManagerInterface $documentManager = null,
         private ?HttpCacheClearer $httpCacheClearer = null,
         private ?SnippetService $snippetService = null,
+        private ?string $projectDir = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -113,6 +115,55 @@ class PageService
         if ($this->httpCacheClearer) {
             $this->httpCacheClearer->clear();
         }
+    }
+
+    /**
+     * Clear all Symfony/Sulu caches via console commands.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function clearCache(): array
+    {
+        if ($this->projectDir === null) {
+            return ['success' => false, 'message' => 'projectDir not configured'];
+        }
+
+        $output = [];
+
+        $commands = [
+            [$this->projectDir . '/bin/console', 'cache:clear'],
+            [$this->projectDir . '/bin/websiteconsole', 'cache:clear'],
+        ];
+
+        foreach ($commands as $cmd) {
+            $cmdName = basename($cmd[0]) . ' ' . $cmd[1];
+            try {
+                $process = new Process($cmd, $this->projectDir);
+                $process->setTimeout(120);
+                $process->run();
+
+                if ($process->isSuccessful()) {
+                    $output[] = "{$cmdName}: OK";
+                } else {
+                    $output[] = "{$cmdName}: FAILED - " . $process->getErrorOutput();
+                }
+            } catch (\Exception $e) {
+                $output[] = "{$cmdName}: ERROR - " . $e->getMessage();
+            }
+        }
+
+        $this->activityLogger->logMcpAction(
+            'mcp_cache_cleared',
+            'system',
+            'de',
+            ['commands' => $output]
+        );
+
+        return [
+            'success' => true,
+            'message' => 'Cache cleared successfully',
+            'details' => $output,
+        ];
     }
 
     /**
@@ -622,14 +673,23 @@ class PageService
                 return ['success' => false, 'message' => 'Page not found'];
             }
 
+            // Update state to published (2) and set published date in XML
+            $publishedProps = $this->setPublishStateInXml($result['props'], $locale);
+
+            // Update default workspace with published state
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$publishedProps, $path, self::WORKSPACE_DEFAULT]
+            );
+
             // Copy content to live workspace
             $this->connection->executeStatement(
                 "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$result['props'], $path, self::WORKSPACE_LIVE]
+                [$publishedProps, $path, self::WORKSPACE_LIVE]
             );
 
             // Create route if it doesn't exist
-            $this->createRouteForPage($path, $result['props'], $locale);
+            $this->createRouteForPage($path, $publishedProps, $locale);
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_published',
@@ -640,12 +700,55 @@ class PageService
             // Invalidate HTTP cache for this page
             $this->invalidatePageCache($path, $locale);
 
+            // Full cache clear after publish to ensure all pages reflect updated state
+            $this->clearCache();
 
             return ['success' => true, 'message' => 'Page published successfully'];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Set workflow state to published (2) and add published date in PHPCR XML.
+     */
+    private function setPublishStateInXml(string $xmlString, string $locale): string
+    {
+        $xml = new DOMDocument();
+        $this->loadXmlSecurely($xml, $xmlString);
+
+        $xpath = new DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        // Set state to 2 (published)
+        $stateNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-state"]/sv:value');
+        if ($stateNodes !== false && $stateNodes->length > 0 && $stateNodes->item(0)) {
+            $stateNodes->item(0)->nodeValue = '2';
+        }
+
+        // Set published date if not already set
+        $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-published"]/sv:value');
+        $now = (new \DateTime())->format('Y-m-d\TH:i:s.vP');
+
+        if ($publishedNodes !== false && $publishedNodes->length > 0 && $publishedNodes->item(0)) {
+            $publishedNodes->item(0)->nodeValue = $now;
+        } else {
+            // Add published date property
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if ($rootNode) {
+                $prop = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                $prop->setAttribute('sv:name', 'i18n:' . $locale . '-published');
+                $prop->setAttribute('sv:type', 'Date');
+                $prop->setAttribute('sv:multi-valued', '0');
+                $value = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value', $now);
+                $value->setAttribute('length', (string) strlen($now));
+                $prop->appendChild($value);
+                $rootNode->appendChild($prop);
+            }
+        }
+
+        return $xml->saveXML() ?: $xmlString;
     }
 
     /**
