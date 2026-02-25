@@ -1317,4 +1317,72 @@ class SuluPagesToolTest extends TestCase
         $sanitized = $result->getSanitizedResult();
         $this->assertStringContainsString('updates must be', $sanitized['text']);
     }
+
+    // ==========================================================================
+    // Subpages-overview auto-detect dataSource tests
+    // ==========================================================================
+
+    public function testSubpagesOverviewAutoDetectsDataSourceFromParent(): void
+    {
+        $this->pageService->method('getPageUuid')
+            ->with('/cmf/example/contents/glossare')
+            ->willReturn('parent-uuid-auto');
+
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function (string $path, array $block, int $position, string $locale) {
+                // Verify the block was built with auto-detected dataSource
+                $items = json_decode($block['items'], true);
+                $this->assertEquals('parent-uuid-auto', $items['dataSource']);
+                return ['success' => true, 'message' => 'Block added successfully', 'position' => 0, 'blocks' => []];
+            });
+
+        $result = $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/glossare/test-page',
+            'blockType' => 'subpages-overview',
+            'position' => 0,
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $decoded = json_decode($sanitized['text'], true);
+        $this->assertTrue($decoded['success']);
+    }
+
+    public function testSubpagesOverviewAutoDetectFailsWhenParentNotFound(): void
+    {
+        $this->pageService->method('getPageUuid')
+            ->willReturn(null);
+
+        $result = $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/glossare/test-page',
+            'blockType' => 'subpages-overview',
+            'position' => 0,
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Auto-detection failed', $sanitized['text']);
+    }
+
+    public function testSubpagesOverviewUsesExplicitDataSourceWhenProvided(): void
+    {
+        // getPageUuid should NOT be called when dataSource is explicitly provided
+        $this->pageService->expects($this->never())
+            ->method('getPageUuid');
+
+        $this->pageService->method('addBlock')
+            ->willReturn(['success' => true, 'message' => 'Block added successfully', 'position' => 0, 'blocks' => []]);
+
+        $result = $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/glossare/test-page',
+            'blockType' => 'subpages-overview',
+            'dataSource' => 'explicit-uuid-123',
+            'position' => 0,
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $decoded = json_decode($sanitized['text'], true);
+        $this->assertTrue($decoded['success']);
+    }
 }
