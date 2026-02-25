@@ -898,7 +898,7 @@ class PageService
      * Create a new page using direct SQL.
      *
      * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int} $data
-     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string}
+     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, full_url?: string, published?: bool}
      */
     public function createPage(array $data, string $locale = 'de'): array
     {
