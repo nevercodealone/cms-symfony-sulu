@@ -2151,4 +2151,109 @@ XML;
 
         $pageService->publishPage('/cmf/example/contents/test', 'de');
     }
+
+    // ==========================================================================
+    // formatCompactBlocks UUID Enrichment Tests
+    // ==========================================================================
+
+    public function testFormatCompactBlocksIncludesPageTeaserUuid(): void
+    {
+        $blocks = [
+            [
+                'position' => 0,
+                'type' => 'page-teaser',
+                'headline' => 'Related Page',
+                'page' => 'abc-123-uuid',
+            ],
+        ];
+
+        $compact = $this->pageService->formatCompactBlocks($blocks);
+
+        $this->assertCount(1, $compact);
+        $this->assertEquals('abc-123-uuid', $compact[0]['linked_page_uuid']);
+    }
+
+    public function testFormatCompactBlocksIncludesContactSnippetUuid(): void
+    {
+        $blocks = [
+            [
+                'position' => 0,
+                'type' => 'contact',
+                'headline' => 'Contact Us',
+                'snippets' => ['snippet-uuid-1', 'snippet-uuid-2'],
+            ],
+        ];
+
+        $compact = $this->pageService->formatCompactBlocks($blocks);
+
+        $this->assertCount(1, $compact);
+        $this->assertEquals('snippet-uuid-1', $compact[0]['snippet_uuid']);
+    }
+
+    public function testFormatCompactBlocksIncludesSubpagesOverviewDatasourceUuid(): void
+    {
+        $blocks = [
+            [
+                'position' => 0,
+                'type' => 'subpages-overview',
+                'items' => json_encode(['dataSource' => 'parent-uuid-456']),
+            ],
+        ];
+
+        $compact = $this->pageService->formatCompactBlocks($blocks);
+
+        $this->assertCount(1, $compact);
+        $this->assertEquals('parent-uuid-456', $compact[0]['datasource_uuid']);
+    }
+
+    public function testFormatCompactBlocksHandlesSubpagesOverviewWithArrayItems(): void
+    {
+        $blocks = [
+            [
+                'position' => 0,
+                'type' => 'subpages-overview',
+                'items' => ['dataSource' => 'parent-uuid-789'],
+            ],
+        ];
+
+        $compact = $this->pageService->formatCompactBlocks($blocks);
+
+        $this->assertCount(1, $compact);
+        $this->assertEquals('parent-uuid-789', $compact[0]['datasource_uuid']);
+    }
+
+    public function testFormatCompactBlocksOmitsUuidFieldsForRegularBlocks(): void
+    {
+        $blocks = [
+            [
+                'position' => 0,
+                'type' => 'headline-paragraphs',
+                'headline' => 'Normal Block',
+            ],
+        ];
+
+        $compact = $this->pageService->formatCompactBlocks($blocks);
+
+        $this->assertCount(1, $compact);
+        $this->assertArrayNotHasKey('linked_page_uuid', $compact[0]);
+        $this->assertArrayNotHasKey('snippet_uuid', $compact[0]);
+        $this->assertArrayNotHasKey('datasource_uuid', $compact[0]);
+    }
+
+    public function testFormatCompactBlocksHandlesContactWithEmptySnippets(): void
+    {
+        $blocks = [
+            [
+                'position' => 0,
+                'type' => 'contact',
+                'headline' => 'Contact',
+                'snippets' => [],
+            ],
+        ];
+
+        $compact = $this->pageService->formatCompactBlocks($blocks);
+
+        $this->assertCount(1, $compact);
+        $this->assertNull($compact[0]['snippet_uuid']);
+    }
 }
