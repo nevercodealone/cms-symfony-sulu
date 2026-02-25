@@ -68,6 +68,8 @@ class PageServiceCreateTest extends TestCase
         $this->assertNotEmpty($result['uuid']);
         $this->assertEquals('/cmf/example/contents/glossare/test-page', $result['path']);
         $this->assertEquals('/de/glossare/test-page', $result['url']);
+        $this->assertEquals('https://nevercodealone.de/de/glossare/test-page', $result['full_url']);
+        $this->assertFalse($result['published']);
     }
 
     public function testCreatePageValidatesResourceSegment(): void
