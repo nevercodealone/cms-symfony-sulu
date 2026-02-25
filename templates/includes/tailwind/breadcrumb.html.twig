@@ -3,18 +3,18 @@
 {% if breadcrumb|length > 1 %}
   {% set items = breadcrumb|slice(1) %}
   <nav aria-label="Breadcrumb" class="border-t border-b border-gray-200 py-3 px-4 sm:px-6">
-    <ol class="flex items-center text-sm">
+    <ol class="flex flex-wrap items-center gap-y-1 text-sm">
       {% for item in items %}
         {% if not loop.first %}
-          <li aria-hidden="true" class="flex items-center">
-            <svg class="shrink-0 w-4 h-4 text-gray-400 mx-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+          <li aria-hidden="true" class="flex items-center shrink-0">
+            <svg class="shrink-0 w-4 h-4 text-gray-400 mx-1.5 sm:mx-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </li>
         {% endif %}
         {% if loop.last %}
           <li>
-            <span aria-current="page" class="text-sm text-gray-900 font-semibold truncate">
+            <span aria-current="page" class="text-sm text-gray-900 font-semibold">
               {{ item.title }}
             </span>
           </li>
@@ -22,7 +22,7 @@
           <li>
             <a href="{{ sulu_content_path(item.url) }}"
                title="{{ item.title }}"
-               class="text-sm text-green-900 font-medium no-underline hover:underline whitespace-nowrap">
+               class="text-sm text-green-900 font-medium no-underline hover:underline">
               {{ item.title }}
             </a>
           </li>
