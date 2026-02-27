@@ -71,10 +71,11 @@ final class BlockWriter
                 if (isset($block[$propName])) {
                     $encoding = $this->registry->getPropertyEncoding($type, $propName);
 
-                    // Reference properties: snippets, organisation → sv:type="Reference"
-                    if ($encoding === 'reference' && is_array($block[$propName])) {
-                        if (!empty($block[$propName])) {
-                            $this->addReferenceProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $block[$propName]);
+                    // Reference properties: snippets, organisation, page → sv:type="Reference"
+                    if ($encoding === 'reference') {
+                        $refValue = is_array($block[$propName]) ? $block[$propName] : [$block[$propName]];
+                        if (!empty($refValue)) {
+                            $this->addReferenceProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $refValue);
                         }
                     } elseif ($encoding === 'json' && is_array($block[$propName])) {
                         // JSON properties must ALWAYS be encoded as JSON strings, never as nested items

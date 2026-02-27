@@ -1118,4 +1118,32 @@ XML);
         $this->assertStringContainsString('&lt;h1&gt;', $storedCode, 'HTML tags in code must be escaped');
         $this->assertStringNotContainsString('<main>', $storedCode, 'Raw HTML must not be stored unescaped');
     }
+
+    public function testAddBlockWritesPageTeaserWithSingleReference(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $block = [
+            'type' => 'page-teaser',
+            'page' => 'd5ee50ef-365a-4c84-8ceb-cd275808803e',
+            'buttonText' => 'Mehr erfahren',
+            'showImage' => '1',
+        ];
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, $block);
+
+        // Verify page reference was written as PHPCR Reference type
+        $pageProps = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-page#0"]');
+        $this->assertSame(1, $pageProps->length, 'page property should exist');
+
+        $pageProp = $pageProps->item(0);
+        $this->assertSame('Reference', $pageProp->getAttribute('sv:type'));
+        $this->assertSame('1', $pageProp->getAttribute('sv:multi-valued'));
+
+        $values = $xpath->query('sv:value', $pageProp);
+        $this->assertSame(1, $values->length);
+        $this->assertSame('d5ee50ef-365a-4c84-8ceb-cd275808803e', $values->item(0)->textContent);
+    }
 }
