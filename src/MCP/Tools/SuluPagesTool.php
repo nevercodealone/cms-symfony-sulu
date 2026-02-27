@@ -68,7 +68,8 @@ class SuluPagesTool implements StreamableToolInterface
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
-            'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
+            'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
+            'PAGE-TEASER: page (UUID of target page, required), headline maps to buttonText, content maps to showImage ("1" or "0"). Example: blockType "page-teaser", page "uuid-of-target-page". ' .
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
             'BATCH OPERATIONS: remove_blocks with positions JSON array (auto-sorted highest-first). update_blocks with updates JSON array (max 10, each with position + data). ' .
             'SUBPAGES-OVERVIEW: dataSource (UUID of source page) is auto-detected from parent page if omitted. Optional: includeSubFolders (default true). ' .
