@@ -214,6 +214,12 @@ class SuluPagesTool implements StreamableToolInterface
                 required: false
             ),
             new SchemaProperty(
+                name: 'page',
+                type: PropertyType::STRING,
+                description: 'For page-teaser block: UUID of the target page to link to',
+                required: false
+            ),
+            new SchemaProperty(
                 name: 'text',
                 type: PropertyType::STRING,
                 description: 'For cta-button block: Primary button text',
