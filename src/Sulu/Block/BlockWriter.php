@@ -187,9 +187,10 @@ final class BlockWriter
             // Get encoding from schema (defaults to 'string' for unknown types)
             $encoding = $schema !== null ? $this->registry->getPropertyEncoding($type, $key) : 'string';
 
-            // Reference properties: snippets, organisation → sv:type="Reference"
-            if ($encoding === 'reference' && is_array($value)) {
-                $this->updateOrAddReferenceProperty($xml, $xpath, $rootNode, $propName, $value);
+            // Reference properties: snippets, organisation, page → sv:type="Reference"
+            if ($encoding === 'reference') {
+                $refValue = is_array($value) ? $value : [$value];
+                $this->updateOrAddReferenceProperty($xml, $xpath, $rootNode, $propName, $refValue);
                 continue;
             }
 
