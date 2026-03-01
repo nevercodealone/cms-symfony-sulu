@@ -601,7 +601,6 @@ final class BlockTypeRegistry
         // === PAGE REFERENCE ===
         'page-teaser' => [
             'properties' => ['page', 'buttonText', 'showImage'],
-            'encoding' => ['page' => 'reference'],
         ],
     ];
 
