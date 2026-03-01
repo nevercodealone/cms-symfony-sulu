@@ -68,10 +68,11 @@ class SuluPagesTool implements StreamableToolInterface
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
-            'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery. ' .
+            'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
+            'PAGE-TEASER: page (UUID of target page, required), headline maps to buttonText, content maps to showImage ("1" or "0"). Example: blockType "page-teaser", page "uuid-of-target-page". ' .
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
             'BATCH OPERATIONS: remove_blocks with positions JSON array (auto-sorted highest-first). update_blocks with updates JSON array (max 10, each with position + data). ' .
-            'SUBPAGES-OVERVIEW: requires dataSource (UUID of source page). Optional: includeSubFolders (default true). ' .
+            'SUBPAGES-OVERVIEW: dataSource (UUID of source page) is auto-detected from parent page if omitted. Optional: includeSubFolders (default true). ' .
             'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. description fields MUST be wrapped in <p> tags (e.g. "<p>Your text here</p>"). Without <p> tags, content will not render correctly in the frontend. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
@@ -211,6 +212,12 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'snippets',
                 type: PropertyType::STRING,
                 description: 'For contact block: JSON array of snippet UUIDs to reference, e.g. ["uuid1", "uuid2"]',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'page',
+                type: PropertyType::STRING,
+                description: 'For page-teaser block: UUID of the target page to link to',
                 required: false
             ),
             new SchemaProperty(
@@ -577,7 +584,13 @@ class SuluPagesTool implements StreamableToolInterface
         if ($blockType === 'subpages-overview') {
             $dataSource = $arguments['dataSource'] ?? null;
             if (empty($dataSource)) {
-                return new TextToolResult('Error: subpages-overview block requires dataSource parameter (UUID of source page)');
+                // Auto-detect: use parent page UUID as dataSource
+                $parentPath = dirname($path);
+                $parentUuid = $this->pageService->getPageUuid($parentPath);
+                if ($parentUuid === null) {
+                    return new TextToolResult('Error: subpages-overview block requires dataSource parameter (UUID of source page). Auto-detection failed: parent page not found at ' . $parentPath);
+                }
+                $dataSource = $parentUuid;
             }
 
             $includeSubFolders = ($arguments['includeSubFolders'] ?? 'true') !== 'false';

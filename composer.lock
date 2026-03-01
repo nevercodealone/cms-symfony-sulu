@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ccfde37120a68bc0ed57bc57a3fc0a08",
+    "content-hash": "39153d59b94c7bc53f932281fd4892b5",
     "packages": [
         {
             "name": "behat/transliterator",
@@ -372,69 +372,6 @@
                 }
             ],
             "time": "2024-10-02T10:47:33+00:00"
-        },
-        {
-            "name": "deeplcom/deepl-php",
-            "version": "v1.12.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/DeepLcom/deepl-php.git",
-                "reference": "b9a7e0385d27a99b7756ebf95e953785b90e8161"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/DeepLcom/deepl-php/zipball/b9a7e0385d27a99b7756ebf95e953785b90e8161",
-                "reference": "b9a7e0385d27a99b7756ebf95e953785b90e8161",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": ">=7.3.0",
-                "php-http/discovery": "^1.18",
-                "php-http/multipart-stream-builder": "^1.3",
-                "psr/http-client": "^1.0",
-                "psr/http-client-implementation": "*",
-                "psr/http-factory-implementation": "*",
-                "psr/log": "^1.1 || ^2.0 || ^3.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3",
-                "guzzlehttp/guzzle": "^7.7.0",
-                "php-mock/php-mock-phpunit": "^2.6",
-                "phpunit/phpunit": "^9",
-                "ramsey/uuid": "^4.2",
-                "squizlabs/php_codesniffer": "^3.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "DeepL\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "DeepL SE",
-                    "email": "open-source@deepl.com"
-                }
-            ],
-            "description": "Official DeepL API Client Library",
-            "keywords": [
-                "api",
-                "deepl",
-                "translation",
-                "translator"
-            ],
-            "support": {
-                "issues": "https://github.com/DeepLcom/deepl-php/issues",
-                "source": "https://github.com/DeepLcom/deepl-php/tree/v1.12.0"
-            },
-            "time": "2025-04-25T20:00:25+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -6660,57 +6597,6 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.0"
             },
             "time": "2025-06-25T14:20:11+00:00"
-        },
-        {
-            "name": "robole/sulu-ai-translator-bundle",
-            "version": "v1.1.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/robole-dev/sulu-ai-translator-bundle.git",
-                "reference": "2515cab9d933869206b7eeadd8d7ff11216a49c7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/robole-dev/sulu-ai-translator-bundle/zipball/2515cab9d933869206b7eeadd8d7ff11216a49c7",
-                "reference": "2515cab9d933869206b7eeadd8d7ff11216a49c7",
-                "shasum": ""
-            },
-            "require": {
-                "deeplcom/deepl-php": "^1.7",
-                "php": "^8.2",
-                "sulu/sulu": "^2.5",
-                "symfony/config": "^6.2 | ^7.0",
-                "symfony/dependency-injection": "^6.2 | ^7.0",
-                "symfony/framework-bundle": "^6.2 | ^7.0",
-                "symfony/http-foundation": "^6.2 | ^7.0",
-                "symfony/http-kernel": "^6.2 | ^7.0",
-                "symfony/intl": "^6.2 | ^7.0",
-                "symfony/security-core": "^6.3 | ^7.0",
-                "symfony/translation": "^6.2 | ^7.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "Robole\\SuluAITranslatorBundle\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "falbroscheit",
-                    "email": "felix.albroscheit@robole.de"
-                }
-            ],
-            "description": "Translate any type of content using DeepL",
-            "homepage": "https://github.com/robole-dev/sulu-ai-translator-bundle",
-            "support": {
-                "issues": "https://github.com/robole-dev/sulu-ai-translator-bundle/issues",
-                "source": "https://github.com/robole-dev/sulu-ai-translator-bundle/tree/v1.1.1"
-            },
-            "time": "2025-04-24T13:38:27+00:00"
         },
         {
             "name": "stof/doctrine-extensions-bundle",

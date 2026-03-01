@@ -1118,4 +1118,65 @@ XML);
         $this->assertStringContainsString('&lt;h1&gt;', $storedCode, 'HTML tags in code must be escaped');
         $this->assertStringNotContainsString('<main>', $storedCode, 'Raw HTML must not be stored unescaped');
     }
+
+    public function testAddBlockWritesPageTeaserAsString(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        $block = [
+            'type' => 'page-teaser',
+            'page' => 'd5ee50ef-365a-4c84-8ceb-cd275808803e',
+            'buttonText' => 'Mehr erfahren',
+            'showImage' => '1',
+        ];
+
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, $block);
+
+        // Verify page UUID was written as plain String (not Reference)
+        $pageProps = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-page#0"]');
+        $this->assertSame(1, $pageProps->length, 'page property should exist');
+
+        $pageProp = $pageProps->item(0);
+        $this->assertSame('String', $pageProp->getAttribute('sv:type'));
+
+        $values = $xpath->query('sv:value', $pageProp);
+        $this->assertSame(1, $values->length);
+        $this->assertSame('d5ee50ef-365a-4c84-8ceb-cd275808803e', $values->item(0)->textContent);
+    }
+
+    public function testUpdateBlockWritesPageTeaserAsString(): void
+    {
+        $xml = $this->createEmptyBlocksXml();
+        $xpath = $this->getXpath($xml);
+        $rootNode = $xpath->query('/sv:node')->item(0);
+
+        // First add a page-teaser block
+        $block = [
+            'type' => 'page-teaser',
+            'page' => 'd5ee50ef-365a-4c84-8ceb-cd275808803e',
+            'buttonText' => 'Mehr erfahren',
+            'showImage' => '1',
+        ];
+        $this->writer->addBlock($xml, $rootNode, 'de', 0, $block);
+
+        // Update the page UUID
+        $xpath = $this->getXpath($xml);
+        $this->writer->updateBlock($xml, $xpath, 'de', 0, 'page-teaser', [
+            'page' => 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
+        ]);
+
+        // Verify updated page UUID is still a plain String
+        $xpath = $this->getXpath($xml);
+        $pageProps = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-page#0"]');
+        $this->assertSame(1, $pageProps->length);
+
+        $pageProp = $pageProps->item(0);
+        $this->assertSame('String', $pageProp->getAttribute('sv:type'));
+
+        $values = $xpath->query('sv:value', $pageProp);
+        $this->assertSame(1, $values->length);
+        $this->assertSame('a1b2c3d4-5678-90ab-cdef-1234567890ab', $values->item(0)->textContent);
+    }
 }

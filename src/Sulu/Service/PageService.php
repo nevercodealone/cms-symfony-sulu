@@ -898,7 +898,7 @@ class PageService
      * Create a new page using direct SQL.
      *
      * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int} $data
-     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string}
+     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, full_url?: string, published?: bool}
      */
     public function createPage(array $data, string $locale = 'de'): array
     {
@@ -1012,6 +1012,8 @@ class PageService
                 'path' => $path,
                 'uuid' => $uuid,
                 'url' => '/' . $locale . $fullUrl,
+                'full_url' => 'https://nevercodealone.de/' . $locale . $fullUrl,
+                'published' => (bool) $publish,
             ];
 
         } catch (\Exception $e) {
@@ -2045,7 +2047,7 @@ class PageService
      * Format blocks as compact metadata (position + type + headline only).
      *
      * @param array<mixed> $blocks Full block data from getPage()
-     * @return array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int}>
+     * @return array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int, linked_page_uuid?: string, snippet_uuid?: string, datasource_uuid?: string}>
      */
     public function formatCompactBlocks(array $blocks): array
     {
@@ -2067,6 +2069,23 @@ class PageService
             if (isset($block['items']) && is_array($block['items'])) {
                 $entry['items_count'] = count($block['items']);
             }
+
+            // page-teaser: include linked page UUID
+            if ($block['type'] === 'page-teaser' && isset($block['page'])) {
+                $entry['linked_page_uuid'] = $block['page'];
+            }
+
+            // contact: include first snippet UUID
+            if ($block['type'] === 'contact' && isset($block['snippets']) && is_array($block['snippets'])) {
+                $entry['snippet_uuid'] = $block['snippets'][0] ?? null;
+            }
+
+            // subpages-overview: extract dataSource UUID from items
+            if ($block['type'] === 'subpages-overview' && isset($block['items'])) {
+                $items = is_string($block['items']) ? json_decode($block['items'], true) : $block['items'];
+                $entry['datasource_uuid'] = $items['dataSource'] ?? null;
+            }
+
             $compact[] = $entry;
         }
         return $compact;

@@ -48,6 +48,10 @@ class NcaTwigExtension extends AbstractExtension
    */
   public function getWordpressPosts(): array
   {
-    return $this->wordpressService->getItemsFromBlog();
+    try {
+      return $this->wordpressService->getItemsFromBlog();
+    } catch (\Throwable $e) {
+      return [];
+    }
   }
 }

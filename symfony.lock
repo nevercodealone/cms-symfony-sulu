@@ -395,9 +395,6 @@
     "ramsey/uuid": {
         "version": "4.2.1"
     },
-    "robole/sulu-ai-translator-bundle": {
-        "version": "dev-main"
-    },
     "sebastian/resource-operations": {
         "version": "3.0.3"
     },
