@@ -37,7 +37,6 @@
         "nyholm/psr7": "*",
         "openai-php/client": "dev-main",
         "phpcr/phpcr-migrations-bundle": "^1.2",
-        "robole/sulu-ai-translator-bundle": "^1.1",
         "stof/doctrine-extensions-bundle": "^1.7",
         "sulu/headless-bundle": "^0.10.0",
         "sulu/redirect-bundle": "2.2.x-dev",
