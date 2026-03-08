@@ -1397,6 +1397,120 @@ XML;
     }
 
     // ==========================================================================
+    // Update SEO Tests
+    // ==========================================================================
+
+    public function testUpdateSeoSuccess(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS]);
+
+        $capturedXml = null;
+        $this->connection->expects($this->exactly(2))
+            ->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                $capturedXml = $params[0];
+                return 1;
+            });
+
+        $result = $this->pageService->updateSeo(
+            '/cmf/example/contents/test',
+            ['seoTitle' => 'Updated SEO Title', 'seoDescription' => 'Updated SEO Description'],
+            'de'
+        );
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('SEO metadata updated successfully', $result['message']);
+        $this->assertArrayHasKey('seo', $result);
+
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-seo-title"]/sv:value');
+        $this->assertEquals(1, $titleNodes->length);
+        $this->assertEquals('Updated SEO Title', $titleNodes->item(0)->nodeValue);
+
+        $descNodes = $xpath->query('//sv:property[@sv:name="i18n:de-seo-description"]/sv:value');
+        $this->assertEquals(1, $descNodes->length);
+        $this->assertEquals('Updated SEO Description', $descNodes->item(0)->nodeValue);
+    }
+
+    public function testUpdateSeoAddsNewKeywordsField(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
+
+        $capturedXml = null;
+        $this->connection->expects($this->exactly(2))
+            ->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                $capturedXml = $params[0];
+                return 1;
+            });
+
+        $result = $this->pageService->updateSeo(
+            '/cmf/example/contents/test',
+            ['seoKeywords' => 'vibe coding, ki modelle, terminal agent'],
+            'de'
+        );
+
+        $this->assertTrue($result['success']);
+
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $keywordNodes = $xpath->query('//sv:property[@sv:name="i18n:de-seo-keywords"]/sv:value');
+        $this->assertEquals(1, $keywordNodes->length);
+        $this->assertEquals('vibe coding, ki modelle, terminal agent', $keywordNodes->item(0)->nodeValue);
+    }
+
+    public function testUpdateSeoFailsForNonexistentPage(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(false);
+
+        $result = $this->pageService->updateSeo(
+            '/cmf/example/contents/nonexistent',
+            ['seoTitle' => 'Test'],
+            'de'
+        );
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('Page not found', $result['message']);
+    }
+
+    public function testUpdateSeoLogsActivity(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        $this->activityLogger->expects($this->once())
+            ->method('logMcpAction')
+            ->with(
+                'mcp_seo_updated',
+                '/cmf/example/contents/test',
+                'de',
+                $this->callback(function (array $context): bool {
+                    return isset($context['fields'])
+                        && in_array('seoTitle', $context['fields'], true)
+                        && in_array('seoDescription', $context['fields'], true);
+                })
+            );
+
+        $this->pageService->updateSeo(
+            '/cmf/example/contents/test',
+            ['seoTitle' => 'Log Test', 'seoDescription' => 'Log Desc'],
+            'de'
+        );
+    }
+
+    // ==========================================================================
     // Copy Page Tests
     // ==========================================================================
 
