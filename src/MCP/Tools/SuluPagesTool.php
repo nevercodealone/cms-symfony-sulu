@@ -59,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -85,7 +85,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -175,13 +175,19 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'seoTitle',
                 type: PropertyType::STRING,
-                description: 'For create_page: SEO meta title (defaults to page title if not set)',
+                description: 'For create_page/update_seo: SEO meta title (max 60 chars recommended)',
                 required: false
             ),
             new SchemaProperty(
                 name: 'seoDescription',
                 type: PropertyType::STRING,
-                description: 'For create_page: SEO meta description',
+                description: 'For create_page/update_seo: SEO meta description (max 155 chars recommended)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'seoKeywords',
+                type: PropertyType::STRING,
+                description: 'For update_seo: Comma-separated SEO keywords',
                 required: false
             ),
             new SchemaProperty(
@@ -400,6 +406,7 @@ class SuluPagesTool implements StreamableToolInterface
             'create_page' => $this->createPage($arguments, $locale),
             'copy_page' => $this->copyPageAction($arguments, $locale),
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
+            'update_seo' => $this->updateSeoAction($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
             'append_to_block' => $this->appendToBlock($arguments, $locale),
@@ -562,6 +569,36 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updateExcerpt($path, $data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateSeoAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $data = [];
+        if (array_key_exists('seoTitle', $arguments)) {
+            $data['seoTitle'] = $arguments['seoTitle'];
+        }
+        if (array_key_exists('seoDescription', $arguments)) {
+            $data['seoDescription'] = $arguments['seoDescription'];
+        }
+        if (array_key_exists('seoKeywords', $arguments)) {
+            $data['seoKeywords'] = $arguments['seoKeywords'];
+        }
+
+        if (empty($data)) {
+            return new TextToolResult('Error: at least one of seoTitle, seoDescription, seoKeywords is required');
+        }
+
+        $result = $this->pageService->updateSeo($path, $data, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }

@@ -1414,6 +1414,120 @@ class PageService
     }
 
     /**
+     * @param array<string, string|null> $data
+     *
+     * @return array{success: bool, message: string, seo?: array{title: string|null, description: string|null, keywords: string|null}}
+     */
+    public function updateSeo(string $path, array $data, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if (!$rootNode) {
+                return ['success' => false, 'message' => 'Invalid XML structure'];
+            }
+
+            $fieldMap = [
+                'seoTitle' => "i18n:{$locale}-seo-title",
+                'seoDescription' => "i18n:{$locale}-seo-description",
+                'seoKeywords' => "i18n:{$locale}-seo-keywords",
+            ];
+
+            $updatedFields = [];
+
+            foreach ($fieldMap as $dataKey => $propertyName) {
+                if (!array_key_exists($dataKey, $data)) {
+                    continue;
+                }
+
+                $value = $data[$dataKey];
+                $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
+
+                if ($value === null) {
+                    if ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
+                        $node = $existingNodes->item(0);
+                        if ($node->parentNode) {
+                            $node->parentNode->removeChild($node);
+                        }
+                    }
+                    $updatedFields[] = $dataKey;
+                } elseif ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
+                    $propertyNode = $existingNodes->item(0);
+                    $valueNodes = $xpath->query('sv:value', $propertyNode);
+                    if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
+                        $valueNode = $valueNodes->item(0);
+                        $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
+                        if ($valueNode instanceof \DOMElement) {
+                            $valueNode->setAttribute('length', (string) strlen((string) $value));
+                        }
+                    }
+                    $updatedFields[] = $dataKey;
+                } else {
+                    $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                    $property->setAttribute('sv:name', $propertyName);
+                    $property->setAttribute('sv:type', 'String');
+                    $property->setAttribute('sv:multi-valued', '0');
+
+                    $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
+                    $valueEl->setAttribute('length', (string) strlen((string) $value));
+                    $valueEl->appendChild($xml->createTextNode((string) $value));
+                    $property->appendChild($valueEl);
+
+                    $rootNode->appendChild($property);
+                    $updatedFields[] = $dataKey;
+                }
+            }
+
+            $updatedXml = $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_seo_updated',
+                $path,
+                $locale,
+                ['fields' => $updatedFields]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => 'SEO metadata updated successfully',
+                'seo' => [
+                    'title' => $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-seo-title"),
+                    'description' => $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-seo-description"),
+                    'keywords' => $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-seo-keywords"),
+                ],
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Append items to an existing block without replacing existing content.
      *
      * Useful for adding new FAQ entries, table rows, or feature items
