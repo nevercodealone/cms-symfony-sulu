@@ -1,12 +1,14 @@
 <!-- navigation.html.twig -->
+{% set navItems = sulu_navigation_root_tree('main', 2, true) %}
+
 {# Social Media Top-Bar #}
-<div class="text-black text-sm">
+<div class="text-green-900 text-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center gap-x-5 gap-y-1">
-    <span class="font-medium text-black text-xs sm:text-sm tracking-wide basis-full sm:basis-auto">NCA Social Media</span>
+    <span class="font-medium text-green-900 text-xs sm:text-sm tracking-wide basis-full sm:basis-auto">NCA Social Media</span>
       {# YouTube #}
       <a href="https://www.youtube.com/c/NeverCodeAlone" target="_blank" rel="noopener"
          aria-label="YouTube" title="Never Code Alone auf YouTube"
-         class="text-red-600 hover:text-red-700 transition-colors">
+         class="text-red-600 hover:text-red-700 transition-colors no-underline">
         <svg class="w-5 h-5" viewBox="0 0 576 512" fill="currentColor" aria-hidden="true">
           <path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"/>
         </svg>
@@ -14,7 +16,7 @@
       {# TikTok #}
       <a href="https://www.tiktok.com/@never.code.alone" target="_blank" rel="noopener"
          aria-label="TikTok" title="Never Code Alone auf TikTok"
-         class="text-black hover:text-gray-700 transition-colors">
+         class="text-green-900 hover:text-green-800 transition-colors no-underline">
         <svg class="w-5 h-5" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true">
           <path d="M448 209.91a210.06 210.06 0 01-122.77-39.25v178.72A162.55 162.55 0 11185 188.31v89.89a74.62 74.62 0 1052.23 71.18V0h88a121.18 121.18 0 00122.77 121.33z"/>
         </svg>
@@ -22,7 +24,7 @@
       {# LinkedIn #}
       <a href="https://www.linkedin.com/company/never-code-alone/" target="_blank" rel="noopener"
          aria-label="LinkedIn" title="Never Code Alone auf LinkedIn"
-         class="text-blue-700 hover:text-blue-800 transition-colors">
+         class="text-blue-700 hover:text-blue-800 transition-colors no-underline">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
         </svg>
@@ -30,7 +32,7 @@
       {# Facebook #}
       <a href="https://www.facebook.com/nevercodealone" target="_blank" rel="noopener"
          aria-label="Facebook" title="Never Code Alone auf Facebook"
-         class="text-blue-600 hover:text-blue-700 transition-colors">
+         class="text-blue-600 hover:text-blue-700 transition-colors no-underline">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
         </svg>
@@ -38,7 +40,7 @@
       {# Instagram #}
       <a href="https://www.instagram.com/nevercodealone/" target="_blank" rel="noopener"
          aria-label="Instagram" title="Never Code Alone auf Instagram"
-         class="text-pink-600 hover:text-pink-700 transition-colors">
+         class="text-pink-600 hover:text-pink-700 transition-colors no-underline">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"/>
         </svg>
@@ -46,158 +48,178 @@
       {# X (Twitter) #}
       <a href="https://x.com/nevercodealone" target="_blank" rel="noopener"
          aria-label="X" title="Never Code Alone auf X"
-         class="text-black hover:text-gray-700 transition-colors">
+         class="text-green-900 hover:text-green-800 transition-colors no-underline">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
         </svg>
       </a>
-      {# Language Switcher #}
-      <div class="hidden md:flex items-center ml-auto gap-x-1">
-        {% set baseClasses = "text-black bg-gray-100 border-2 border-green-900 font-medium rounded-lg text-xs px-2 py-0.5 transition-all duration-300" %}
-        {% set activeClasses = "text-white bg-green-900" %}
-        {% set hoverClasses = "hover:text-white hover:bg-green-900" %}
-        {% set focusClasses = "focus:text-white focus:bg-green-900 focus:outline-none focus:ring-2 focus:ring-white" %}
-        {% for localization in localizations %}
-          <a
-            href="{{ localization.url }}"
-            title="{{ localization.locale }}"
-            class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}"
-          >
-            {{ localization.locale|upper }}
-          </a>
-        {% endfor %}
-      </div>
   </div>
 </div>
-<header class="relative bg-white z-40">
-  <div class="flex items-center justify-between px-4 py-6 sm:px-6 md:justify-start md:space-x-10">
-    <div>
-      <a href="{{ sulu_content_root_path() }}" class="flex" aria-label="Zur Startseite auf NCA Logo" title="Link zur Startseite auf dem Logo">
-        <img aria-hidden="true" class="h-20 w-auto" src="/img/logo.png" alt="Logo Never Code Alone">
-      </a>
-    </div>
-    <div class="-my-2 -mr-2 md:hidden">
-      <button type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-green-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-expanded="false">
-        <span class="sr-only">Open menu</span>
-        <!-- Heroicon name: outline/bars-3 -->
-        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
+
+<header class="relative bg-white z-40"
+        x-data="{ menuOpen: false }"
+        itemscope itemtype="https://schema.org/SiteNavigationElement">
+
+  {# ══ LOGO + HAMBURGER ══ #}
+  <div class="bg-white border-b-2 border-green-900 px-4 py-3 flex items-center justify-between max-w-7xl mx-auto">
+    <a href="{{ sulu_content_root_path() }}"
+       aria-label="Zur Startseite – Never Code Alone"
+       title="Link zur Startseite auf dem Logo"
+       class="flex no-underline"
+       itemprop="url">
+      <img aria-hidden="true" class="h-16 md:h-20 w-auto" src="/img/logo.png" alt="Logo Never Code Alone" itemprop="name">
+    </a>
+
+    <button
+      type="button"
+      x-on:click="menuOpen = !menuOpen"
+      :aria-expanded="menuOpen"
+      aria-controls="nca-main-menu"
+      aria-label="Hauptmenü öffnen"
+      :class="menuOpen ? 'bg-white text-green-900 border-green-900' : 'bg-green-900 text-white border-green-900'"
+      class="flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 transition-colors duration-200">
+
+      <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1 flex-shrink-0">
+        <span class="nav-bar block h-0.5 w-4 bg-current"
+          :style="menuOpen ? 'transform:translateY(5px) rotate(45deg)' : ''"></span>
+        <span class="nav-bar block h-0.5 w-4 bg-current"
+          :style="menuOpen ? 'opacity:0' : ''"></span>
+        <span class="nav-bar block h-0.5 w-4 bg-current"
+          :style="menuOpen ? 'transform:translateY(-5px) rotate(-45deg)' : ''"></span>
+      </span>
+
+      <span x-text="menuOpen ? 'CLOSE' : 'MENU'"></span>
+    </button>
+  </div>
+
+  {# ══ CHIP NAVIGATION (flat main topics, hidden below 1200px) ══ #}
+  <nav aria-label="Schnellnavigation nach Bereich" class="hidden nav-chips-visible">
+    <ul role="list"
+        class="bg-white border-b-2 border-green-900 px-4 py-2 flex justify-center gap-2 nav-chips-scroll overflow-x-auto max-w-7xl mx-auto">
+      {% for item in navItems %}
+        {% set url = sulu_content_path(item.url) %}
+        <li class="flex-shrink-0" style="padding:0;margin:0">
+          <a href="{{ url }}"
+             title="{{ item.title }}"
+             class="border-2 border-green-900 text-xs font-black tracking-wide uppercase px-3 py-1.5 whitespace-nowrap transition-colors duration-150 inline-block no-underline
+               {{ app.request.uri starts with url ? 'bg-green-900 text-white' : 'bg-white text-green-900 hover:bg-green-900 hover:text-white' }}">
+            {{ item.title }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  {# ══ BACKDROP (click to close) ══ #}
+  <div x-show="menuOpen"
+       x-on:click="menuOpen = false"
+       class="fixed inset-0 z-40 bg-green-900/50"
+       x-cloak></div>
+
+  {# ══ MAIN MENU OVERLAY ══ #}
+  <nav id="nca-main-menu"
+       aria-label="Hauptnavigation"
+       class="fixed right-0 top-0 bottom-0 z-50 bg-green-900 nav-overlay overflow-y-auto w-full max-w-md"
+       :class="menuOpen ? '' : 'nav-overlay-hidden'"
+       :aria-hidden="!menuOpen"
+       style="scrollbar-width: none;"
+       x-cloak>
+
+    {# Overlay header with close button #}
+    <div class="bg-green-900 border-b-2 border-white px-4 py-3 flex items-center justify-end">
+      <button
+        type="button"
+        x-on:click="menuOpen = false"
+        aria-label="Menü schließen"
+        class="flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 border-white bg-green-900 text-white hover:bg-white hover:text-green-900 transition-colors duration-200">
+
+        <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1 flex-shrink-0">
+          <span class="nav-bar block h-0.5 w-4 bg-current" style="transform:translateY(5px) rotate(45deg)"></span>
+          <span class="nav-bar block h-0.5 w-4 bg-current" style="opacity:0"></span>
+          <span class="nav-bar block h-0.5 w-4 bg-current" style="transform:translateY(-5px) rotate(-45deg)"></span>
+        </span>
+
+        <span>CLOSE</span>
       </button>
     </div>
-    <div class="hidden md:flex md:flex-1 md:items-center md:justify-between">
-      <nav class="flex space-x-6"> <!-- Changed from space-x-10 to space-x-6 -->
-        {% for item in sulu_navigation_root_tree('main', 2, true) %}
-          {% if item.children|length > 0 %}
-            <div class="relative" x-data="{ dropdown: false }" x-on:click.outside="dropdown = false" x-on:keydown.escape="dropdown = false">
-              <button aria-label="Dropdown öffnen für {{ item.title }}" x-on:click="dropdown = ! dropdown" type="button" class="text-gray-700 group inline-flex items-center rounded-md bg-white text-base font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <span>{{ item.title }}</span>
-                <svg class="text-gray-400 ml-2 h-5 w-5 group-hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-              </button>
 
-              <div x-show="dropdown" x-cloak x-transition.duration.700ms class="absolute z-10 -ml-4 mt-3 w-screen max-w-md transform lg:max-w-3xl">
-                <div class="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
-                  <div class="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8 lg:grid-cols-2">
-                    {% for child in item.children %}
-                      <a href="{{ sulu_content_path(child.url) }}"
-                         title="{{ child.title }}"
-                         class="-m-3 flex items-start rounded-lg p-3 hover:bg-gray-50">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-green-500 text-gray-100 sm:h-12 sm:w-12">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z" />
-                          </svg>
-                        </div>
-                        <div class="ml-4">
-                          <p class="text-base font-medium text-gray-900">{{ child.title }}</p>
-                          <p class="mt-1 text-sm text-gray-700 line-clamp-2">
-                            {% set description = child.excerpt.description != '' ? child.excerpt.description|striptags : 'Alle Details' %}
-                            {{ description }}
-                          </p>
-                        </div>
-                      </a>
-                    {% endfor %}
-                  </div>
-                  <div class="bg-gray-50 p-5 sm:p-8">
-                    <a href="/de/nca-glossar-barrierefreiheit"
-                       title="Glossar für Barrierefreiheit"
-                       class="-m-3 flow-root rounded-md p-3 hover:bg-gray-100">
-                      <div class="flex items-center">
-                        <div class="text-base font-medium text-gray-900">Glossar für Barrierefreiheit</div>
-                        <span class="ml-3 inline-flex items-center rounded-full bg-green-500 px-3 py-0.5 text-xs font-medium leading-5 text-gray-900">
-                                                    NEU
-                                                </span>
-                      </div>
-                      <p class="mt-1 text-sm text-gray-700">Wir sind Spezialisten für barrierefreies Webdesign</p>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          {% else %}
-            {% set url = sulu_content_path(item.url)  %}
-            <a href="{{ url }}"
-               title="{{ item.title }}"
-               class="text-base font-medium {{ app.request.uri starts with url ? 'text-green-900' : 'text-gray-700' }} hover:text-gray-900">
-              {{ item.title }}
-            </a>
-          {% endif %}
-        {% endfor %}
-      </nav>
+    {# CTA #}
+    <div class="px-4 py-4 border-b-2 border-white">
+      <a href="tel:+4917624747727"
+         aria-label="Roland Golla direkt anrufen"
+         class="inline-flex items-center gap-2 bg-white text-green-900 text-sm font-black tracking-widest uppercase px-4 py-3 border-2 border-white hover:bg-green-900 hover:text-white hover:border-white transition-colors duration-200 no-underline">
+        <svg class="w-4 h-4 flex-shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+        </svg>
+        ROLAND ANRUFEN
+      </a>
     </div>
-  </div>
-  <div class="absolute inset-x-0 top-0 origin-top-right transform p-2 transition md:hidden">
-    <div class="divide-y-2 divide-gray-50 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-      <div class="px-5 pt-5 pb-6" x-data="{ dropdownmobile: false }">
-        <div class="flex items-center justify-between">
-          <div>
-            <a href="{{ sulu_content_root_path() }}" aria-label="Zur Startseite auf NCA Logo" class="flex" title="Link zur Startseite auf dem Logo">
-              <img class="h-16 w-auto" aria-hidden="true" src="/img/logo.png" alt="Logo Never Code Alone">
-            </a>
-          </div>
-          <div>
-            <a href="tel:+4917624747727"
-               title="Roland Golla anrufen"
-               class="flex w-full items-center justify-center rounded-md border border-transparent bg-green-500 px-4 py-2 text-base font-medium text-gray-800 shadow-sm hover:bg-indigo-700">
-              Roland Golla anrufen
-            </a>
-          </div>
-          <div class="-mr-2">
-            <div class="flex flex-wrap justify-center items-center -mx-1">
-              {% for localization in localizations %}
-                <a href="{{ localization.url }}"
-                   title="{{ localization.locale }}"
-                   class="{{ baseClasses }} {{ hoverClasses }} {{ focusClasses }} {{ localization.locale == app.request.locale ? activeClasses }}">
-                  {{ localization.locale|upper }}
-                </a>
-              {% endfor %}
-            </div>
-            <button x-on:click="dropdownmobile = ! dropdownmobile" type="button" class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-              <span class="sr-only">Menu schließen</span>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z" />
+
+    {# NAV LIST #}
+    <ul role="list">
+
+      {% for item in navItems %}
+        {% if item.children|length > 0 %}
+          {# Accordion item with children #}
+          <li class="border-b-2 border-white" x-data="{ open: false }" style="margin:0;padding:0">
+            <button
+              type="button"
+              x-on:click="open = !open"
+              :aria-expanded="open"
+              aria-controls="submenu-{{ loop.index }}"
+              class="w-full flex items-center justify-between px-4 py-5 text-left group transition-colors duration-150"
+              :class="open ? 'bg-white' : 'hover:bg-white hover:text-green-900'">
+              <span class="text-xl font-black tracking-tight uppercase transition-colors duration-150"
+                :class="open ? 'text-green-900' : 'text-white group-hover:text-green-900'">
+                {{ item.title }}
+              </span>
+              <svg aria-hidden="true"
+                class="w-5 h-5 flex-shrink-0 nav-chevron transition-colors duration-150"
+                :class="[open ? 'open text-green-900' : 'text-white group-hover:text-green-900']"
+                fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="square" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
               </svg>
             </button>
-          </div>
-        </div>
-        <div class="mt-6" x-show="dropdownmobile" x-cloak x-transition.duration.100ms>
-          <nav class="grid gap-6">
-            {% for item in sulu_navigation_root_tree('main', 2, true) %}
-              {% set url = sulu_content_path(item.url)  %}
-              <a href="{{ url }}" title="{{ item.title }}" class="-m-3 flex items-center rounded-lg p-3 hover:bg-gray-50">
-                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-green-500 text-gray-100">
-                  <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                  </svg>
-                </div>
-                <div class="ml-4 text-base font-medium text-gray-900">{{ item.title }}</div>
-              </a>
-            {% endfor %}
-          </nav>
-        </div>
-      </div>
-    </div>
-  </div>
+            <div class="nav-acc-wrap" :class="open ? 'open' : ''">
+              <ul id="submenu-{{ loop.index }}" role="list" class="nav-acc-inner bg-white">
+                {# Link to overview page first #}
+                <li style="margin:0;padding:0">
+                  <a href="{{ sulu_content_path(item.url) }}"
+                     x-on:click="menuOpen = false"
+                     class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 hover:bg-green-900 hover:text-white transition-colors duration-150 group no-underline">
+                    <span aria-hidden="true" class="text-green-700 font-black text-xs group-hover:text-white">→</span>
+                    <span class="text-sm font-black uppercase tracking-wide text-green-900 group-hover:text-white">Übersicht {{ item.title }}</span>
+                  </a>
+                </li>
+                {% for child in item.children %}
+                  <li style="margin:0;padding:0">
+                    <a href="{{ sulu_content_path(child.url) }}"
+                       x-on:click="menuOpen = false"
+                       class="flex items-center gap-3 px-4 py-3 {{ not loop.last ? 'border-b border-gray-200' }} hover:bg-green-900 hover:text-white transition-colors duration-150 group no-underline">
+                      <span aria-hidden="true" class="text-green-700 font-black text-xs group-hover:text-white">→</span>
+                      <span class="text-sm font-black uppercase tracking-wide text-green-900 group-hover:text-white">{{ child.title }}</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </li>
+        {% else %}
+          {# Simple link without children #}
+          <li class="border-b-2 border-white" style="margin:0;padding:0">
+            <a href="{{ sulu_content_path(item.url) }}"
+               x-on:click="menuOpen = false"
+               class="flex items-center px-4 py-5 hover:bg-white transition-colors duration-150 group no-underline">
+              <span class="text-xl font-black tracking-tight uppercase text-white group-hover:text-green-900 transition-colors duration-150">
+                {{ item.title }}
+              </span>
+            </a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+    </ul>
+  </nav>
+
 </header>
 <!-- end navigation.html.twig -->

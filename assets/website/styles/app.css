@@ -81,3 +81,55 @@ li {
     display: none;
 }
 
+/* Navigation: hamburger bar animation */
+.nav-bar {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+    transform-origin: center;
+}
+
+/* Navigation: accordion via grid for smooth open/close */
+.nav-acc-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-acc-wrap.open {
+    grid-template-rows: 1fr;
+}
+.nav-acc-inner {
+    overflow: hidden;
+}
+
+/* Navigation: chevron rotation */
+.nav-chevron {
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-chevron.open {
+    transform: rotate(90deg);
+}
+
+/* Navigation: overlay slide+fade */
+.nav-overlay {
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease;
+}
+.nav-overlay-hidden {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Navigation: show chip nav only above 1200px */
+@media (min-width: 1200px) {
+    .nav-chips-visible {
+        display: block;
+    }
+}
+
+/* Navigation: chip scroll without scrollbar */
+.nav-chips-scroll {
+    scrollbar-width: none;
+}
+.nav-chips-scroll::-webkit-scrollbar {
+    display: none;
+}
+
