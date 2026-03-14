@@ -77,7 +77,7 @@
       aria-controls="nca-main-menu"
       aria-label="Hauptmenü öffnen"
       :class="menuOpen ? 'bg-white text-green-900 border-green-900' : 'bg-green-900 text-white border-green-900'"
-      class="flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 transition-colors duration-200">
+      class="flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 bg-green-900 text-white border-green-900 transition-colors duration-200">
 
       <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1 flex-shrink-0">
         <span class="nav-bar block h-0.5 w-4 bg-current"
@@ -88,7 +88,7 @@
           :style="menuOpen ? 'transform:translateY(-5px) rotate(-45deg)' : ''"></span>
       </span>
 
-      <span x-text="menuOpen ? 'CLOSE' : 'MENU'"></span>
+      <span x-text="menuOpen ? 'CLOSE' : 'MENU'">MENU</span>
     </button>
   </div>
 
@@ -122,6 +122,7 @@
        class="fixed right-0 top-0 bottom-0 z-50 bg-green-900 nav-overlay overflow-y-auto w-full max-w-md"
        :class="menuOpen ? '' : 'nav-overlay-hidden'"
        :aria-hidden="!menuOpen"
+       x-init="$watch('menuOpen', val => $el.inert = !val); $el.inert = true"
        style="scrollbar-width: none;"
        x-cloak>
 
