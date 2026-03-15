@@ -250,6 +250,15 @@ services:
         public: true
 
     # MCP OAuth Security
+    # Sitemap: Fix lastmod dates (Sulu bug: ContentRepository returns empty changed dates)
+    App\Sulu\Sitemap\FixedDatePagesSitemapProvider:
+        decorates: sulu_page.pages_sitemap_provider
+        arguments:
+            $inner: '@.inner'
+            $connection: '@doctrine.dbal.default_connection'
+            $webspaceManager: '@sulu_core.webspace.webspace_manager'
+            $environment: '%kernel.environment%'
+
     App\Security\McpTokenAuthenticator:
         autoconfigure: true
 
