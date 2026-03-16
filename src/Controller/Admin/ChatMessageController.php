@@ -28,6 +28,7 @@ use Symfony\Component\Routing\Annotation\Route;
  *     inputTokens: int|null,
  *     outputTokens: int|null,
  *     totalTokens: int|null,
+ *     blockedReason: string|null,
  * }
  */
 class ChatMessageController extends AbstractController implements SecuredControllerInterface
@@ -105,6 +106,7 @@ class ChatMessageController extends AbstractController implements SecuredControl
             'inputTokens' => $entity->getInputTokens(),
             'outputTokens' => $entity->getOutputTokens(),
             'totalTokens' => $entity->getTotalTokens(),
+            'blockedReason' => $entity->getBlockedReason(),
         ];
     }
 

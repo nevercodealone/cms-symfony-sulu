@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Website;
 
 use App\Chat\Chat;
+use App\Chat\PromptInjectionDetector;
 use App\Entity\ChatMessage;
 use App\Repository\ChatMessageRepository;
 use Psr\Log\LoggerInterface;
@@ -22,21 +23,48 @@ class ChatApiController extends AbstractController
 
     #[Route('/api/chat/submit', name: 'app_chat_submit', methods: ['POST'])]
     public function submitMessage(
-        Request $request, 
+        Request $request,
         Chat $chat,
-        ChatMessageRepository $chatMessageRepository
+        ChatMessageRepository $chatMessageRepository,
+        PromptInjectionDetector $injectionDetector,
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $message = $data['message'] ?? '';
-        
+
         if (empty($message)) {
             return new JsonResponse(['error' => 'Message is required'], 400);
         }
-        
+
         // Get user IP address
         $userIp = $this->getUserIp($request);
+
         $sessionId = $request->getSession()->getId();
         $locale = $request->getLocale();
+
+        $detection = $injectionDetector->detect($message);
+        if (!$detection['safe']) {
+            $this->logger->warning('Prompt injection blocked', [
+                'reason' => $detection['reason'],
+                'user_ip' => $userIp,
+                'message' => mb_substr($message, 0, 200),
+            ]);
+
+            $blockedMessage = new ChatMessage();
+            $blockedMessage->setUserIp($userIp);
+            $blockedMessage->setSessionId($sessionId);
+            $blockedMessage->setQuestion($message);
+            $blockedMessage->setAnswer(PromptInjectionDetector::getFallbackResponse());
+            $blockedMessage->setResponseTime(0);
+            $blockedMessage->setLocale($locale);
+            $blockedMessage->setBlockedReason($detection['reason']);
+
+            $chatMessageRepository->save($blockedMessage, true);
+
+            return new JsonResponse([
+                'success' => true,
+                'response' => PromptInjectionDetector::getFallbackResponse(),
+            ]);
+        }
         
         // Check rate limiting (5 messages per 24 hours)
         $messageCount = $chatMessageRepository->countMessagesFromIpInLast24Hours($userIp);
