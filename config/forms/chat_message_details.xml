@@ -46,6 +46,15 @@
                         <param name="readonly" value="true"/>
                     </params>
                 </property>
+
+                <property name="blockedReason" type="text_line">
+                    <meta>
+                        <title>app.chat_message.blocked_reason</title>
+                    </meta>
+                    <params>
+                        <param name="readonly" value="true"/>
+                    </params>
+                </property>
             </properties>
         </section>
 

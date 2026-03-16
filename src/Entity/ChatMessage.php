@@ -53,6 +53,9 @@ class ChatMessage
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $totalTokens = null;
 
+    #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
+    private ?string $blockedReason = null;
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
@@ -171,6 +174,17 @@ class ChatMessage
     public function setTotalTokens(?int $totalTokens): self
     {
         $this->totalTokens = $totalTokens;
+        return $this;
+    }
+
+    public function getBlockedReason(): ?string
+    {
+        return $this->blockedReason;
+    }
+
+    public function setBlockedReason(?string $blockedReason): self
+    {
+        $this->blockedReason = $blockedReason;
         return $this;
     }
 }

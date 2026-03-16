@@ -38,6 +38,11 @@
             <entity-name>App\Entity\ChatMessage</entity-name>
         </property>
 
+        <property name="blockedReason" visibility="always" translation="app.chat_message.blocked_reason">
+            <field-name>blockedReason</field-name>
+            <entity-name>App\Entity\ChatMessage</entity-name>
+        </property>
+
         <property name="createdAt" visibility="always" translation="app.chat_message.created_at">
             <field-name>createdAt</field-name>
             <entity-name>App\Entity\ChatMessage</entity-name>
