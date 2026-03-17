@@ -24,28 +24,38 @@ services:
               arguments:
                 - 'default_tenant'
 
+    ai.platform.huggingface:
+        class: Symfony\AI\Platform\Platform
+        factory: ['Symfony\AI\Platform\Bridge\HuggingFace\PlatformFactory', 'create']
+        arguments:
+            $apiKey: '%env(HUGGINGFACE_KEY)%'
+            $provider: 'hf-inference'
+
     Symfony\AI\Agent\Toolbox\Tool\SimilaritySearch:
         $store: '@ai.store.chroma_db.video'
-        $vectorizer: '@ai.vectorizer.openai_embeddings'
+        $vectorizer: '@ai.vectorizer.huggingface_embeddings'
     Symfony\AI\Store\Document\Transformer\TextSplitTransformer: ~
 
 ai:
     platform:
-        openai:
-            api_key: '%env(OPENAI_API_KEY)%'
+        anthropic:
+            api_key: '%env(ANTHROPIC_API_KEY)%'
 
     vectorizer:
-        openai_embeddings:
-            platform: 'ai.platform.openai'
+        huggingface_embeddings:
+            platform: 'ai.platform.huggingface'
             model:
-                class: 'Symfony\AI\Platform\Bridge\OpenAi\Embeddings'
-                name: 'text-embedding-3-small'
+                class: 'Symfony\AI\Platform\Model'
+                name: 'voyageai/voyage-3-m-exp'
+                options:
+                    task: 'feature-extraction'
 
     agent:
         youtube_bot:
+            platform: 'ai.platform.anthropic'
             model:
-                class: 'Symfony\AI\Platform\Bridge\OpenAi\Gpt'
-                name: 'gpt-4o-mini'
+                class: 'Symfony\AI\Platform\Bridge\Anthropic\Claude'
+                name: 'claude-sonnet-4-6'
                 options:
                     temperature: 0.3
                     max_tokens: 1000
@@ -87,7 +97,7 @@ ai:
     indexer:
         default:
             store: 'ai.store.chroma_db.video'
-            vectorizer: 'ai.vectorizer.openai_embeddings'
+            vectorizer: 'ai.vectorizer.huggingface_embeddings'
         sulu:
             store: 'ai.store.chroma_db.sulu_content'
-            vectorizer: 'ai.vectorizer.openai_embeddings'
+            vectorizer: 'ai.vectorizer.huggingface_embeddings'

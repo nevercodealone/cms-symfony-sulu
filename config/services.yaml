@@ -192,7 +192,7 @@ services:
     App\Store\SuluContentSearch:
         arguments:
             $store: '@ai.store.chroma_db.sulu_content'
-            $vectorizer: '@ai.vectorizer.openai_embeddings'
+            $vectorizer: '@ai.vectorizer.huggingface_embeddings'
         public: true
 
     # Sulu Block Services (supports all 32 block types)
