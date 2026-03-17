@@ -35,7 +35,6 @@
         "mrmysql/youtube-transcript": "*",
         "nelmio/cors-bundle": "^2.0@dev",
         "nyholm/psr7": "*",
-        "openai-php/client": "dev-main",
         "phpcr/phpcr-migrations-bundle": "^1.2",
         "stof/doctrine-extensions-bundle": "^1.7",
         "sulu/headless-bundle": "^0.10.0",
