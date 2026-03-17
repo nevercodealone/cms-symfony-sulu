@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Command;
 
 use Codewithkyrian\ChromaDB\Client;
-use Symfony\AI\Platform\Bridge\OpenAi\Embeddings;
+use Symfony\AI\Platform\Model;
 use Symfony\AI\Platform\PlatformInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -39,7 +39,7 @@ final class VideoQueryCommand extends Command
         $io->comment(sprintf('Converting "%s" to vector & searching in Chroma DB ...', $search));
         $io->comment('Results are limited to 4 most similar documents.');
 
-        $result = $this->platform->invoke(new Embeddings(), $search);
+        $result = $this->platform->invoke(new Model('voyageai/voyage-3-m-exp', [], ['task' => 'feature-extraction']), $search);
         $queryResponse = $collection->query(
             queryEmbeddings: [$result->asVectors()[0]->getData()],
             nResults: 4,
