@@ -39,7 +39,7 @@ final class VideoQueryCommand extends Command
         $io->comment(sprintf('Converting "%s" to vector & searching in Chroma DB ...', $search));
         $io->comment('Results are limited to 4 most similar documents.');
 
-        $result = $this->platform->invoke(new Model('voyageai/voyage-3-m-exp', [], ['task' => 'feature-extraction']), $search);
+        $result = $this->platform->invoke(new Model('intfloat/multilingual-e5-large'), $search);
         $queryResponse = $collection->query(
             queryEmbeddings: [$result->asVectors()[0]->getData()],
             nResults: 4,

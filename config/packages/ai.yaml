@@ -46,9 +46,7 @@ ai:
             platform: 'ai.platform.huggingface'
             model:
                 class: 'Symfony\AI\Platform\Model'
-                name: 'voyageai/voyage-3-m-exp'
-                options:
-                    task: 'feature-extraction'
+                name: 'intfloat/multilingual-e5-large'
 
     agent:
         youtube_bot:
