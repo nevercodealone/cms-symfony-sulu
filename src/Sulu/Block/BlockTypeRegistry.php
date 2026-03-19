@@ -94,6 +94,9 @@ final class BlockTypeRegistry
 
         // === PAGE REFERENCE ===
         'page-teaser' => 'Internal page teaser displaying SEO/excerpt data (title, description, image) from a referenced page. Description uses SEO description with excerpt fallback. Params: page (UUID, required), buttonText (default: "Mehr erfahren"), showImage (default: true).',
+
+        // === QUALIFIED CONTACT ===
+        'qualified-contact' => 'Tabbed contact form with AI-assistant-style decision tree for lead qualification. 3 tabs: Vibe Coding Consulting, PHP Refactoring, AI Content Marketing. Rendered via LiveComponent.',
     ];
 
     /**
@@ -398,6 +401,11 @@ final class BlockTypeRegistry
             'buttonText' => 'Mehr erfahren',
             'showImage' => true,
         ],
+        'qualified-contact' => [
+            'type' => 'qualified-contact',
+            'headline' => 'Lass uns sprechen',
+            'subline' => 'Finde das passende Angebot für dein Projekt',
+        ],
     ];
 
     /**
@@ -601,6 +609,9 @@ final class BlockTypeRegistry
         // === PAGE REFERENCE ===
         'page-teaser' => [
             'properties' => ['page', 'buttonText', 'showImage'],
+        ],
+        'qualified-contact' => [
+            'properties' => ['headline', 'subline'],
         ],
     ];
 
