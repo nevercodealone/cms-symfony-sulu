@@ -24,6 +24,7 @@ final class QualifiedContactComponent
     #[LiveProp(writable: true)]
     public int $currentStep = 0;
 
+    /** @var array<string, string> */
     #[LiveProp(writable: true)]
     public array $answers = [];
 
@@ -45,6 +46,7 @@ final class QualifiedContactComponent
     #[LiveProp(writable: true)]
     public string $textAnswer = '';
 
+    /** @var array<int, string> */
     #[LiveProp(writable: true)]
     public array $checkboxSelections = [];
 
@@ -59,16 +61,19 @@ final class QualifiedContactComponent
     ) {
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function getTabs(): array
     {
         return $this->questionTree->getTabs();
     }
 
+    /** @return array<string, mixed>|null */
     public function getCurrentQuestion(): ?array
     {
         return $this->questionTree->getQuestion($this->activeTab, $this->currentStep);
     }
 
+    /** @return array<string, string> */
     public function getAssistant(): array
     {
         foreach ($this->questionTree->getTabs() as $tab) {

@@ -23,6 +23,7 @@ class ContactLead
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $product;
 
+    /** @var array<string, string> */
     #[ORM\Column(type: Types::JSON)]
     private array $answers = [];
 
@@ -64,11 +65,13 @@ class ContactLead
         return $this;
     }
 
+    /** @return array<string, string> */
     public function getAnswers(): array
     {
         return $this->answers;
     }
 
+    /** @param array<string, string> $answers */
     public function setAnswers(array $answers): self
     {
         $this->answers = $answers;
