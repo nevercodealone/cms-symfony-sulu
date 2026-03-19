@@ -3,7 +3,9 @@
 # Render msmtp config from template with env var defaults
 export SMTP_HOST="${SMTP_HOST:-host.docker.internal}"
 export SMTP_PORT="${SMTP_PORT:-25}"
-envsubst < /etc/msmtprc.template > /etc/msmtprc
+if command -v envsubst &> /dev/null && [ -f /etc/msmtprc.template ]; then
+  envsubst < /etc/msmtprc.template > /etc/msmtprc
+fi
 
 # Write .env from environment variables
 [ -n "$APP_ENV" ] && echo "APP_ENV=$APP_ENV" > .env

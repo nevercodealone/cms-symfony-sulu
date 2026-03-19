@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
         openssl \
         git \
         msmtp \
+        gettext-base \
         unzip \
         libzip-dev \
         libicu-dev \
