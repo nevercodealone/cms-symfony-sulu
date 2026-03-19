@@ -36,4 +36,14 @@ fi
 echo "MAILER_DSN=${MAILER_DSN:-sendmail://default}" >> .env
 echo "CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}" >> .env
 
+# Fix .env ownership (just written as root)
+chown www-data:www-data /var/www/html/.env 2>/dev/null || true
+
+# Fix ownership on persistent volume and upload dirs
+chown -R www-data:www-data /var/www/html/var/ 2>/dev/null || true
+chown -R www-data:www-data /var/www/html/public/uploads/ 2>/dev/null || true
+
+# Clear stale cache — Symfony rebuilds lazily on first request as www-data
+rm -rf /var/www/html/var/cache/*
+
 exec "$@"
