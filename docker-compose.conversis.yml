@@ -50,8 +50,10 @@ services:
       - MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME
       - MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME
       - LOCK_DSN=$LOCK_DSN
-      - SMTP_HOST=${SMTP_HOST:-host.docker.internal}
-      - SMTP_PORT=${SMTP_PORT:-25}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
       - MAILER_DSN=${MAILER_DSN:-sendmail://default}
       - CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$

@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # Render msmtp config from template with env var defaults
-export SMTP_HOST="${SMTP_HOST:-host.docker.internal}"
-export SMTP_PORT="${SMTP_PORT:-25}"
+export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
+export SMTP_PORT="${SMTP_PORT:-587}"
+export SMTP_USER="${SMTP_USER}"
+export SMTP_PASSWORD="${SMTP_PASSWORD}"
 if command -v envsubst &> /dev/null && [ -f /etc/msmtprc.template ]; then
   envsubst < /etc/msmtprc.template > /etc/msmtprc
 fi
