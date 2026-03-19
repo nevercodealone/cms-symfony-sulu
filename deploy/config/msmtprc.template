@@ -1,0 +1,7 @@
+defaults
+port ${SMTP_PORT}
+tls off
+syslog on
+
+account default
+host ${SMTP_HOST}

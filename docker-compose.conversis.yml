@@ -4,6 +4,8 @@ services:
     container_name: $SHORTCODE1-web
     image: $IMAGE
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - proxy
       - db
@@ -48,6 +50,10 @@ services:
       - MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME
       - MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME
       - LOCK_DSN=$LOCK_DSN
+      - SMTP_HOST=${SMTP_HOST:-host.docker.internal}
+      - SMTP_PORT=${SMTP_PORT:-25}
+      - MAILER_DSN=${MAILER_DSN:-sendmail://default}
+      - CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
       - APP_URL=https://$URL
   chromadb:

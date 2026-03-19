@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Render msmtp config from template with env var defaults
+export SMTP_HOST="${SMTP_HOST:-host.docker.internal}"
+export SMTP_PORT="${SMTP_PORT:-25}"
+envsubst < /etc/msmtprc.template > /etc/msmtprc
+
+# Write .env from environment variables
 [ -n "$APP_ENV" ] && echo "APP_ENV=$APP_ENV" > .env
 [ -n "$APP_SECRET" ] && echo "APP_SECRET=$APP_SECRET" >> .env
 [ -n "$DATABASE_URL" ] && echo "DATABASE_URL=$DATABASE_URL" >> .env
@@ -25,5 +31,7 @@
 [ -n "$MCP_TOKEN_LIFETIME" ] && echo "MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME" >> .env
 [ -n "$MCP_CODE_LIFETIME" ] && echo "MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME" >> .env
 [ -n "$LOCK_DSN" ] && echo "LOCK_DSN=$LOCK_DSN" >> .env
+echo "MAILER_DSN=${MAILER_DSN:-sendmail://default}" >> .env
+echo "CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}" >> .env
 
 exec "$@"
