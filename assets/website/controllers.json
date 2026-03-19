@@ -1,4 +1,11 @@
 {
-    "controllers": [],
+    "controllers": {
+        "@symfony/ux-live-component": {
+            "live": {
+                "enabled": true,
+                "fetch": "eager"
+            }
+        }
+    },
     "entrypoints": []
 }
