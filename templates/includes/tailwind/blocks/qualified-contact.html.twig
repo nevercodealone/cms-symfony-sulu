@@ -1,0 +1,14 @@
+{# qualified-contact.html.twig #}
+<div class="relative overflow-hidden py-16 bg-white">
+  <div class="relative">
+    <h2 class="text-center text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+      {{ content.headline is defined and content.headline is not empty ? content.headline : 'Lass uns sprechen' }}
+    </h2>
+    <p class="text-center text-lg text-gray-600 mb-12 max-w-xl mx-auto">
+      {{ content.subline is defined and content.subline is not empty ? content.subline : 'Finde das passende Angebot für dein Projekt' }}
+    </p>
+
+    {{ component('qualified-contact') }}
+  </div>
+</div>
+{# end qualified-contact.html.twig #}

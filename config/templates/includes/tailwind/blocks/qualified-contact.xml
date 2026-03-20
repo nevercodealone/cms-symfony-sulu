@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="qualified-contact" minOccurs="0">
+        <types>
+            <type name="qualified-contact">
+                <meta>
+                    <title lang="en">Qualified Contact Form</title>
+                    <title lang="de">Qualifiziertes Kontaktformular</title>
+                </meta>
+                <properties>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title lang="en">Headline</title>
+                            <title lang="de">Überschrift</title>
+                        </meta>
+                    </property>
+                    <property name="subline" type="text_line">
+                        <meta>
+                            <title lang="en">Subline</title>
+                            <title lang="de">Untertitel</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

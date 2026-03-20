@@ -1,4 +1,5 @@
 import "./styles/app.css";
+import './bootstrap.js';
 import { initCarousels } from 'flowbite';
 import Alpine from "alpinejs";
 
