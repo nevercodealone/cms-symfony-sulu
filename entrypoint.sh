@@ -21,7 +21,8 @@
 [ -n "$DEEPL_API_KEY" ] && export DEEPL_API_KEY="$(cat $DEEPL_API_KEY)"
 [ -n "$GEMINI_API_KEY" ] && export GEMINI_API_KEY="$(cat $GEMINI_API_KEY)"
 [ -n "$GEMINI_MODEL" ] && export GEMINI_MODEL="$(cat $GEMINI_MODEL)"
-# ANTHROPIC_API_KEY and HUGGINGFACE_KEY are passed directly as env vars (not file paths)
+[ -n "$ANTHROPIC_API_KEY" ] && export ANTHROPIC_API_KEY="$(cat $ANTHROPIC_API_KEY)"
+[ -n "$HUGGINGFACE_KEY" ] && export HUGGINGFACE_KEY="$(cat $HUGGINGFACE_KEY)"
 [ -n "$CHROMADB_HOST" ] && export CHROMADB_HOST="$(cat $CHROMADB_HOST)"
 [ -n "$CHROMADB_PORT" ] && export CHROMADB_PORT="$(cat $CHROMADB_PORT)"
 [ -n "$CHROMADB_DATABASE" ] && export CHROMADB_DATABASE="$(cat $CHROMADB_DATABASE)"
