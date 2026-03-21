@@ -28,18 +28,7 @@ final readonly class SuluContentLoader implements LoaderInterface
      *
      * @return iterable<TextDocument>
      */
-    public function load(string $source, array $options = []): iterable
-    {
-        return $this->__invoke($source, $options);
-    }
-
-    /**
-     * @param string $source   Locale to load (e.g., 'de' or 'en')
-     * @param array<string, mixed>  $options  Options: limit, webspace
-     *
-     * @return iterable<TextDocument>
-     */
-    public function __invoke(string $source, array $options = []): iterable
+    public function load(?string $source = null, array $options = []): iterable
     {
         $locale = $source;
         $limit = $options['limit'] ?? 1000;
@@ -212,19 +201,19 @@ final readonly class SuluContentLoader implements LoaderInterface
 
         // 1. Yield title as separate document
         if (!empty($title)) {
-            yield new TextDocument(Uuid::v4(), $title, $metadata);
+            yield new TextDocument(Uuid::v4()->toRfc4122(), $title, $metadata);
         }
 
         // 2. Extract and yield content from properties
         $content = $this->extractContentFromPage($page);
         if (!empty($content)) {
-            yield new TextDocument(Uuid::v4(), $content, $metadata);
+            yield new TextDocument(Uuid::v4()->toRfc4122(), $content, $metadata);
         }
 
         // 3. Extract excerpt/description if available
         $excerpt = $this->extractExcerpt($page);
         if (!empty($excerpt)) {
-            yield new TextDocument(Uuid::v4(), $excerpt, $metadata);
+            yield new TextDocument(Uuid::v4()->toRfc4122(), $excerpt, $metadata);
         }
     }
 

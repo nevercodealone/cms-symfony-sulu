@@ -9,8 +9,9 @@ use Symfony\AI\Platform\Vector\Vector;
 use Symfony\AI\Store\Document\Metadata;
 use Symfony\AI\Store\Document\VectorDocument;
 use Symfony\AI\Store\Exception\RuntimeException;
+use Symfony\AI\Store\Query\QueryInterface;
+use Symfony\AI\Store\Query\VectorQuery;
 use Symfony\AI\Store\StoreInterface;
-use Symfony\Component\Uid\Uuid;
 
 /**
  * ChromaDB Store with upsert capability to prevent duplicates.
@@ -22,13 +23,14 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
         private Client $client,
         private string $collectionName,
     ) {
-        if (!class_exists(Client::class)) {
-            throw new RuntimeException('For using the ChromaDB as retrieval vector store, the codewithkyrian/chromadb-php package is required. Try running "composer require codewithkyrian/chromadb-php".');
-        }
     }
 
-    public function add(VectorDocument ...$documents): void
+    public function add(VectorDocument|array $documents): void
     {
+        if ($documents instanceof VectorDocument) {
+            $documents = [$documents];
+        }
+
         $ids = [];
         $vectors = [];
         $metadata = [];
@@ -36,32 +38,26 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
 
         foreach ($documents as $document) {
             // Generate deterministic ID based on video_id and content
-            $metadataArray = $document->metadata->getArrayCopy();
+            $metadataArray = $document->getMetadata()->getArrayCopy();
             $videoId = $metadataArray['id'] ?? $metadataArray['video_id'] ?? '';
-            $content = $document->metadata->getText() ?? '';
+            $content = $document->getMetadata()->getText() ?? '';
 
-            // Use YouTube video ID + content hash for deterministic IDs
             if ($videoId && $content !== '') {
-                // Create deterministic ID from video ID + content hash
-                // This ensures same content always gets same ID, regardless of batch order
                 $contentHash = substr(md5($content), 0, 8);
                 $deterministicId = $videoId . '_' . $contentHash;
             } elseif ($videoId) {
-                // Video ID but no content - use video ID with document UUID suffix
-                $deterministicId = $videoId . '_' . substr((string) $document->id, 0, 8);
+                $deterministicId = $videoId . '_' . substr((string) $document->getId(), 0, 8);
             } else {
-                // Fallback to original UUID if no video ID
-                $deterministicId = (string) $document->id;
+                $deterministicId = (string) $document->getId();
             }
 
             $ids[] = $deterministicId;
-            $vectors[] = $document->vector->getData();
+            $vectors[] = $document->getVector()->getData();
 
-            $metadataCopy = $document->metadata->getArrayCopy();
-            $originalDocuments[] = $document->metadata->getText() ?? '';
+            $metadataCopy = $document->getMetadata()->getArrayCopy();
+            $originalDocuments[] = $document->getMetadata()->getText() ?? '';
             unset($metadataCopy[Metadata::KEY_TEXT]);
 
-            // Ensure video_id is stored in metadata
             if ($videoId && !isset($metadataCopy['video_id'])) {
                 $metadataCopy['video_id'] = $videoId;
             }
@@ -70,43 +66,58 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
         }
 
         $collection = $this->client->getOrCreateCollection($this->collectionName);
-
-        // Use upsert instead of add to update existing documents
         $collection->upsert($ids, $vectors, $metadata, $originalDocuments);
+    }
+
+    public function remove(string|array $ids, array $options = []): void
+    {
+        if (\is_string($ids)) {
+            $ids = [$ids];
+        }
+
+        if ([] === $ids) {
+            return;
+        }
+
+        $collection = $this->client->getOrCreateCollection($this->collectionName);
+        $collection->delete(ids: $ids);
+    }
+
+    public function supports(string $queryClass): bool
+    {
+        return $queryClass === VectorQuery::class;
     }
 
     /**
      * @param array{limit?: int, where?: array<string, string>, whereDocument?: array<string, mixed>} $options
      */
-    public function query(Vector $vector, array $options = []): array
+    public function query(QueryInterface $query, array $options = []): iterable
     {
+        if (!$query instanceof VectorQuery) {
+            throw new RuntimeException(sprintf('Unsupported query type "%s".', $query::class));
+        }
+
         $collection = $this->client->getOrCreateCollection($this->collectionName);
         $queryResponse = $collection->query(
-            queryEmbeddings: [$vector->getData()],
+            queryEmbeddings: [$query->getVector()->getData()],
             nResults: $options['limit'] ?? 10,
             where: $options['where'] ?? null,
             whereDocument: $options['whereDocument'] ?? null,
         );
 
-        $documents = [];
         for ($i = 0; $i < \count($queryResponse->metadatas[0]); ++$i) {
-            // Try to reconstruct UUID from ID or create new one
-            $id = $queryResponse->ids[0][$i];
-            try {
-                $uuid = Uuid::fromString($id);
-            } catch (\Exception $e) {
-                // If ID is not a valid UUID (our deterministic ID), create a new UUID
-                $uuid = Uuid::v5(Uuid::fromString('6ba7b810-9dad-11d1-80b4-00c04fd430c8'), $id);
+            $metaData = new Metadata($queryResponse->metadatas[0][$i]);
+            if (isset($queryResponse->documents[0][$i])) {
+                $metaData->setText($queryResponse->documents[0][$i]);
             }
 
-            $documents[] = new VectorDocument(
-                id: $uuid,
+            yield new VectorDocument(
+                id: $queryResponse->ids[0][$i],
                 vector: new Vector($queryResponse->embeddings[0][$i]),
-                metadata: new Metadata($queryResponse->metadatas[0][$i]),
+                metadata: $metaData,
+                score: $queryResponse->distances[0][$i] ?? null,
             );
         }
-
-        return $documents;
     }
 
     /**
