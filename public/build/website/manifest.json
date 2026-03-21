@@ -1,8 +1,8 @@
 {
-  "build/website/app.js": "/build/website/app.6535f576.js",
-  "build/website/chat.js": "/build/website/chat.2fec7ee0.js",
-  "build/website/runtime.js": "/build/website/runtime.9135b120.js",
-  "build/website/236.7abb7741.js": "/build/website/236.7abb7741.js",
-  "build/website/613.3f2c0f76.js": "/build/website/613.3f2c0f76.js",
-  "build/website/230.447fbff2.css": "/build/website/230.447fbff2.css"
+  "build/website/app.js": "/build/website/app.js",
+  "build/website/chat.js": "/build/website/chat.js",
+  "build/website/runtime.js": "/build/website/runtime.js",
+  "build/website/vendors-node_modules_core-js_modules_es_array_concat_js-node_modules_core-js_modules_es_array-8c6c2e.js": "/build/website/vendors-node_modules_core-js_modules_es_array_concat_js-node_modules_core-js_modules_es_array-8c6c2e.js",
+  "build/website/vendors-node_modules_symfony_stimulus-bridge_dist_index_js-node_modules_alpinejs_dist_module_-26f4fb.js": "/build/website/vendors-node_modules_symfony_stimulus-bridge_dist_index_js-node_modules_alpinejs_dist_module_-26f4fb.js",
+  "build/website/assets_website_styles_app_css-node_modules_flowbite_src_themes_default_css.css": "/build/website/assets_website_styles_app_css-node_modules_flowbite_src_themes_default_css.css"
 }
