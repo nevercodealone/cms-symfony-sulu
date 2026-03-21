@@ -31,6 +31,14 @@ export class ChatMarkdown {
             return `<a href="${url}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">${text}</a>`;
         });
 
+        // Convert bare URLs (not already inside markdown links or HTML tags) to clickable links
+        html = html.replace(/(?<!\(|"|'|=)(https?:\/\/[^\s<)\]]+)/g, (match, url) => {
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                return `<a href="${url}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline font-medium">📺 ${url}</a>`;
+            }
+            return `<a href="${url}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">${url}</a>`;
+        });
+
         // Bold and italic
         html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
         html = html.replace(/\*([^*\n]+)\*/g, '<em class="italic">$1</em>');
