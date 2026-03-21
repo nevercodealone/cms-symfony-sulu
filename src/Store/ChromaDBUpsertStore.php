@@ -66,6 +66,8 @@ final readonly class ChromaDBUpsertStore implements StoreInterface
         }
 
         $collection = $this->client->getOrCreateCollection($this->collectionName);
+
+        // @phpstan-ignore argument.type (chromadb-php library has incorrect PHPDoc type for $metadatas parameter)
         $collection->upsert($ids, $vectors, $metadata, $originalDocuments);
     }
 
