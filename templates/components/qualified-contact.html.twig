@@ -1,0 +1,228 @@
+<div {{ attributes.defaults({
+    class: 'relative'
+}) }}>
+
+  {# === TABS === #}
+  <div class="flex justify-center mb-12">
+    <div class="inline-flex rounded-2xl bg-gray-100 p-1.5 border border-gray-200 shadow-lg">
+      {% for tab in this.tabs %}
+        <button
+          data-action="live#action"
+          data-live-action-param="selectTab"
+          data-live-tab-param="{{ tab.key }}"
+          class="relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-500 ease-out
+            {{ this.activeTab == tab.key
+              ? 'bg-green-700 text-white shadow-md'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200' }}"
+        >
+          {{ tab.label }}
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# === PROGRESS BAR === #}
+  <div class="max-w-2xl mx-auto mb-8">
+    <div class="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+      <div
+        class="h-full rounded-full bg-gradient-to-r from-green-700 to-green-500 transition-all duration-700 ease-out"
+        style="width: {{ this.progress }}%"
+      ></div>
+    </div>
+  </div>
+
+  {# === MAIN CONTENT AREA === #}
+  <div class="max-w-2xl mx-auto">
+
+    {% if this.submitted %}
+      {# === SUCCESS STATE === #}
+      <div class="text-center py-16 animate-fade-in">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-green-700 flex items-center justify-center shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 mb-3">Vielen Dank!</h3>
+        <p class="text-gray-600 mb-8">Wir melden uns innerhalb von 24 Stunden bei dir.</p>
+        <button
+          data-action="live#action"
+          data-live-action-param="reset"
+          class="px-6 py-3 rounded-xl text-sm font-semibold text-green-700 border-2 border-green-700 hover:text-white hover:bg-green-700 transition-all duration-300"
+        >
+          Neue Anfrage starten
+        </button>
+      </div>
+
+    {% elseif this.showContactForm %}
+      {# === CONTACT FORM === #}
+      <div class="animate-fade-in">
+        {% set assistant = this.assistant %}
+        <div class="flex items-start gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-green-700 flex items-center justify-center flex-shrink-0 shadow-md">
+            <span class="text-xl">🤖</span>
+          </div>
+          <div class="bg-gray-100 rounded-2xl rounded-tl-md px-6 py-4 border border-gray-200">
+            <p class="text-gray-700">Super! Ich habe alles, was ich brauche. Hinterlasse jetzt deine Kontaktdaten und wir melden uns.</p>
+          </div>
+        </div>
+
+        <div class="space-y-4 bg-gray-50 rounded-3xl p-8 border border-gray-200 shadow-xl">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail *</label>
+            <input
+              type="email"
+              data-model="contactEmail"
+              class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
+              placeholder="max@firma.de"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Name <span class="text-gray-400 font-normal">(optional)</span></label>
+            <input
+              type="text"
+              data-model="contactName"
+              class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
+              placeholder="Max Mustermann"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nachricht <span class="text-gray-400 font-normal">(optional — gerne auch KI-generiert)</span></label>
+            <textarea
+              data-model="contactMessage"
+              rows="3"
+              class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300 resize-none"
+              placeholder="Beschreib kurz dein Projekt oder lass ChatGPT/Claude eine Anfrage formulieren"
+            ></textarea>
+          </div>
+          {% if this.error is not empty %}
+            <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+              {{ this.error }}
+            </div>
+          {% endif %}
+          <button
+            data-action="live#action"
+            data-live-action-param="submitContact"
+            class="w-full py-4 rounded-xl font-bold text-white bg-green-700 hover:bg-green-800 shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Anfrage absenden
+          </button>
+        </div>
+      </div>
+
+    {% else %}
+      {# === QUESTION / DECISION TREE === #}
+      {% set assistant = this.assistant %}
+      {% set question = this.currentQuestion %}
+
+      {% if question %}
+        <div class="animate-fade-in">
+          {# Assistant bubble #}
+          <div class="flex items-start gap-4 mb-8">
+            <div class="w-12 h-12 rounded-2xl bg-green-700 flex items-center justify-center flex-shrink-0 shadow-md animate-pulse-subtle">
+              <span class="text-xl">🤖</span>
+            </div>
+            <div class="bg-gray-100 rounded-2xl rounded-tl-md px-6 py-4 border border-gray-200 max-w-lg">
+              {% if this.currentStep == 0 %}
+                <p class="text-gray-500 text-sm mb-2">{{ assistant.greeting }}</p>
+              {% endif %}
+              <p class="text-gray-900 font-medium">{{ question.label }}</p>
+            </div>
+          </div>
+
+          {# Answer options #}
+          {% if question.type == 'choice' %}
+            <div class="space-y-3 pl-16">
+              {% for option in question.options %}
+                <button
+                  data-action="live#action"
+                  data-live-action-param="answerQuestion"
+                  data-live-answer-param="{{ option.value }}"
+                  class="group w-full text-left px-6 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 hover:text-green-800 hover:border-green-700 hover:bg-green-50 hover:shadow-md transition-all duration-300 hover:translate-x-1"
+                >
+                  <span class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-green-700 transition-colors duration-300"></span>
+                    {{ option.label }}
+                  </span>
+                </button>
+              {% endfor %}
+            </div>
+          {% elseif question.type == 'checkbox' %}
+            <div class="space-y-3 pl-16">
+              {% for option in question.options %}
+                <button
+                  data-action="live#action"
+                  data-live-action-param="toggleCheckbox"
+                  data-live-value-param="{{ option.value }}"
+                  class="group w-full text-left px-6 py-4 rounded-2xl border transition-all duration-300
+                    {{ option.value in this.checkboxSelections
+                      ? 'bg-green-50 border-green-700 text-green-800 shadow-md'
+                      : 'bg-white border-gray-200 text-gray-700 hover:text-green-800 hover:border-green-700 hover:bg-green-50' }}"
+                >
+                  <span class="flex items-center gap-3">
+                    <span class="w-5 h-5 rounded flex-shrink-0 border-2 flex items-center justify-center transition-colors duration-300
+                      {{ option.value in this.checkboxSelections
+                        ? 'border-green-700 bg-green-700'
+                        : 'border-gray-300' }}">
+                      {% if option.value in this.checkboxSelections %}
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      {% endif %}
+                    </span>
+                    {{ option.label }}
+                  </span>
+                </button>
+              {% endfor %}
+              <button
+                data-action="live#action"
+                data-live-action-param="confirmCheckboxes"
+                class="w-full mt-4 py-3 rounded-xl font-semibold text-white bg-green-700 hover:bg-green-800 shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]
+                  {{ this.checkboxSelections|length == 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
+              >
+                Weiter
+              </button>
+            </div>
+          {% elseif question.type == 'text' %}
+            <div class="pl-16">
+              <div class="flex gap-3">
+                <input
+                  type="text"
+                  data-model="textAnswer"
+                  class="flex-1 px-5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
+                  placeholder="{{ question.placeholder ?? '' }}"
+                />
+                <button
+                  data-action="live#action"
+                  data-live-action-param="submitTextAnswer"
+                  class="px-6 py-4 rounded-2xl bg-green-700 text-white font-semibold hover:bg-green-800 hover:shadow-md transition-all duration-300 hover:scale-105 active:scale-95"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          {% endif %}
+
+          {# Previous answers #}
+          {% if this.answers|length > 0 %}
+            <div class="mt-8 pl-16 space-y-2">
+              {% for qId, answer in this.answers %}
+                <div class="flex items-center gap-2 text-sm text-gray-500">
+                  <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span>{{ qId }}: {{ answer }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

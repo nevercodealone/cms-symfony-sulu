@@ -28,18 +28,7 @@ final readonly class YouTubeChannelLoader implements LoaderInterface
      *
      * @return iterable<TextDocument>
      */
-    public function load(string $source, array $options = []): iterable
-    {
-        return $this->__invoke($source, $options);
-    }
-
-    /**
-     * @param string            $source  YouTube Channel Handle
-     * @param array{limit?: int} $options
-     *
-     * @return iterable<TextDocument>
-     */
-    public function __invoke(string $source, array $options = []): iterable
+    public function load(?string $source = null, array $options = []): iterable
     {
         $limit = $options['limit'] ?? 100;
 
@@ -55,11 +44,11 @@ final readonly class YouTubeChannelLoader implements LoaderInterface
             ]);
 
             // First yield the title as document
-            yield new TextDocument(Uuid::v4(), $video['title'], $metadata);
+            yield new TextDocument(Uuid::v4()->toRfc4122(), $video['title'], $metadata);
 
             if (!empty($video['description'])) {
                 // Then yield the description as document
-                yield new TextDocument(Uuid::v4(), $video['description'], $metadata);
+                yield new TextDocument(Uuid::v4()->toRfc4122(), $video['description'], $metadata);
             }
 
             try {
@@ -71,7 +60,7 @@ final readonly class YouTubeChannelLoader implements LoaderInterface
                     continue;
                 }
 
-                yield new TextDocument(Uuid::v4(), $transcript, $metadata);
+                yield new TextDocument(Uuid::v4()->toRfc4122(), $transcript, $metadata);
             } catch (YoutubeTranscriptExceptionInterface $e) {
                 $this->logger->warning(sprintf('Cannot load transcript for video "%s": "%s', $video['id'], $e->getMessage()));
             }

@@ -1,0 +1,3 @@
+Contact: mailto:info@nevercodealone.de
+Expires: 2027-03-22T00:00:00.000Z
+Preferred-Languages: de, en

@@ -1,7 +1,4 @@
 {
-    "behat/transliterator": {
-        "version": "v1.3.0"
-    },
     "brick/math": {
         "version": "0.9.3"
     },
@@ -300,9 +297,6 @@
     "php-http/message": {
         "version": "1.11.2"
     },
-    "php-http/message-factory": {
-        "version": "v1.0.2"
-    },
     "php-http/promise": {
         "version": "1.1.0"
     },
@@ -469,6 +463,30 @@
     },
     "symfony/ai-bundle": {
         "version": "dev-main"
+    },
+    "symfony/ai-chroma-db-store": {
+        "version": "0.6",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.1",
+            "ref": "70b5179ede32bb6faf93f7f521570d3740f5230e"
+        },
+        "files": [
+            "config/packages/ai_chroma_db_store.yaml"
+        ]
+    },
+    "symfony/ai-open-ai-platform": {
+        "version": "0.6",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.1",
+            "ref": "4f925d48b69c145cde2286e2cabfc7bd5eb4aca9"
+        },
+        "files": [
+            "config/packages/ai_open_ai_platform.yaml"
+        ]
     },
     "symfony/asset": {
         "version": "v5.3.4"

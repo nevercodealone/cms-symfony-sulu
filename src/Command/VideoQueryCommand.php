@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace App\Command;
 
 use Codewithkyrian\ChromaDB\Client;
-use Symfony\AI\Platform\Model;
-use Symfony\AI\Platform\PlatformInterface;
+use Symfony\AI\Store\Document\VectorizerInterface;
+use Symfony\AI\Store\Query\VectorQuery;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 
 #[AsCommand('app:video:query', description: 'Query indexed videos from the vector store')]
 final class VideoQueryCommand extends Command
 {
     public function __construct(
         private readonly Client $chromaClient,
-        private readonly PlatformInterface $platform,
+        #[Target('huggingface_embeddings')]
+        private readonly VectorizerInterface $vectorizer,
     ) {
         parent::__construct();
     }
@@ -39,9 +41,9 @@ final class VideoQueryCommand extends Command
         $io->comment(sprintf('Converting "%s" to vector & searching in Chroma DB ...', $search));
         $io->comment('Results are limited to 4 most similar documents.');
 
-        $result = $this->platform->invoke(new Model('intfloat/multilingual-e5-large'), $search);
+        $vector = $this->vectorizer->vectorize($search);
         $queryResponse = $collection->query(
-            queryEmbeddings: [$result->asVectors()[0]->getData()],
+            queryEmbeddings: [$vector->getData()],
             nResults: 4,
         );
 

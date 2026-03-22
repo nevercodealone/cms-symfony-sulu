@@ -89,13 +89,11 @@ dumpfinder:
     # Restore ChromaDB data from backup
     - docker cp /tmp/chromadb-backup.tar.gz $SHORTCODE1-chromadb:/tmp/chromadb-backup.tar.gz 2>/dev/null || true
     - docker exec $SHORTCODE1-chromadb tar xzf /tmp/chromadb-backup.tar.gz -C /chroma/chroma 2>/dev/null || true
-    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
-    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
-    # Always re-index content and videos (upsert prevents duplicates)
+    - docker exec $SHORTCODE1-web chown -R www-data:www-data /var/www/html/var/uploads/ /var/www/html/public/uploads/ 2>/dev/null || true
+    # Reset ChromaDB collections and re-index
+    - docker exec --user www-data $SHORTCODE1-web php bin/console app:chromadb:reset || true
     - docker exec --user www-data $SHORTCODE1-web php bin/console app:index:sulu-content --all-locales || true
     - docker exec --user www-data $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 100 || true
-    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
-    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
 
 deploy_stage:
   stage: deploy_stage
@@ -149,11 +147,7 @@ deploy_branch:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
-    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache/*
-    - docker exec $SHORTCODE1-web rm -rf /var/www/html/var/cache
-    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/var/
-    - docker exec $SHORTCODE1-web chown www-data:www-data -R /var/www/html/public/
-    # Re-index content and videos on every deploy (upsert prevents duplicates)
+    # Re-index content and videos on every deploy
     - docker exec --user www-data $SHORTCODE1-web php bin/console app:index:sulu-content --all-locales || true
     - docker exec --user www-data $SHORTCODE1-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit 100 || true
   environment:

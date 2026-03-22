@@ -40,7 +40,7 @@ final readonly class SuluContentIndexer
         $transformedDocuments = $this->transformer->transform($rawDocuments);
 
         foreach ($transformedDocuments as $document) {
-            $metadata = $document->metadata->getArrayCopy();
+            $metadata = $document->getMetadata()->getArrayCopy();
             $pageId = $metadata['id'] ?? null;
 
             if ($pageId) {

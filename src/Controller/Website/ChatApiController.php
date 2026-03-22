@@ -12,7 +12,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class ChatApiController extends AbstractController
 {
@@ -84,8 +84,7 @@ class ChatApiController extends AbstractController
             
             // Get the last assistant message
             $lastMessage = end($messages);
-            /** @phpstan-ignore-next-line Runtime message objects have content property */
-            $responseContent = $lastMessage !== false ? (string) $lastMessage->content : '';
+            $responseContent = $lastMessage !== false ? (string) $lastMessage->getContent() : '';
             
             // Check if response contains a video link
             $hasVideoLink = str_contains($responseContent, 'youtube.com') || 

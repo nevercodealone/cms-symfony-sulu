@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * @phpstan-type EventData array{
@@ -40,9 +40,7 @@ class ClientRequestRefactoringController extends AbstractController implements S
     $this->mediaManager = $mediaManager;
   }
 
-  /**
-   * @Route("/admin/api/client_request_refactorings/{id}", methods={"GET"}, name="app.get_client_request_refactoring")
-   */
+  #[Route('/admin/api/client_request_refactorings/{id}', methods: ['GET'], name: 'app.get_client_request_refactoring')]
   public function getAction(int $id): Response
   {
     $clientRequestRefactoring = $this->entityManager->getRepository(ClientRequestRefactoring::class)->find($id);
@@ -53,9 +51,7 @@ class ClientRequestRefactoringController extends AbstractController implements S
     return $this->json($this->getDataForEntity($clientRequestRefactoring));
   }
 
-  /**
-   * @Route("/admin/api/client_request_refactorings/{id}", methods={"PUT"}, name="app.put_client_request_refactoring")
-   */
+  #[Route('/admin/api/client_request_refactorings/{id}', methods: ['PUT'], name: 'app.put_client_request_refactoring')]
   public function putAction(Request $request, int $id): Response
   {
     $clientRequestRefactoring = $this->entityManager->getRepository(ClientRequestRefactoring::class)->find($id);
@@ -71,9 +67,7 @@ class ClientRequestRefactoringController extends AbstractController implements S
     return $this->json($this->getDataForEntity($clientRequestRefactoring));
   }
 
-  /**
-   * @Route("/admin/api/client_request_refactorings", methods={"POST"}, name="app.post_client_request_refactoring")
-   */
+  #[Route('/admin/api/client_request_refactorings', methods: ['POST'], name: 'app.post_client_request_refactoring')]
   public function postAction(Request $request): Response
   {
     $clientRequestRefactoring = new ClientRequestRefactoring();
@@ -87,9 +81,7 @@ class ClientRequestRefactoringController extends AbstractController implements S
     return $this->json($this->getDataForEntity($clientRequestRefactoring), 201);
   }
 
-  /**
-   * @Route("/admin/api/client_request_refactorings/{id}", methods={"DELETE"}, name="app.delete_client_request_refactoring")
-   */
+  #[Route('/admin/api/client_request_refactorings/{id}', methods: ['DELETE'], name: 'app.delete_client_request_refactoring')]
   public function deleteAction(int $id): Response
   {
     /** @var ClientRequestRefactoring $clientRequestRefactoring */
@@ -100,9 +92,7 @@ class ClientRequestRefactoringController extends AbstractController implements S
     return $this->json(null, 204);
   }
 
-  /**
-   * @Route("/admin/api/client_request_refactorings", methods={"GET"}, name="app.get_client_request_refactoring_list")
-   */
+  #[Route('/admin/api/client_request_refactorings', methods: ['GET'], name: 'app.get_client_request_refactoring_list')]
   public function getListAction(): Response
   {
     $listRepresentation = $this->doctrineListRepresentationFactory->createDoctrineListRepresentation(

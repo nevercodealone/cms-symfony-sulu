@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * @phpstan-type ChatMessageData array{
@@ -40,9 +40,7 @@ class ChatMessageController extends AbstractController implements SecuredControl
     ) {
     }
 
-    /**
-     * @Route("/admin/api/chat-messages/{id}", methods={"GET"}, name="app.get_chat_message")
-     */
+    #[Route('/admin/api/chat-messages/{id}', methods: ['GET'], name: 'app.get_chat_message')]
     public function getAction(int $id): Response
     {
         $chatMessage = $this->chatMessageRepository->find($id);
@@ -53,9 +51,7 @@ class ChatMessageController extends AbstractController implements SecuredControl
         return $this->json($this->getDataForEntity($chatMessage));
     }
 
-    /**
-     * @Route("/admin/api/chat-messages/{id}", methods={"DELETE"}, name="app.delete_chat_message")
-     */
+    #[Route('/admin/api/chat-messages/{id}', methods: ['DELETE'], name: 'app.delete_chat_message')]
     public function deleteAction(int $id): Response
     {
         $chatMessage = $this->entityManager->getReference(ChatMessage::class, $id);
@@ -65,9 +61,7 @@ class ChatMessageController extends AbstractController implements SecuredControl
         return $this->json(null, 204);
     }
 
-    /**
-     * @Route("/admin/api/chat-messages", methods={"GET"}, name="app.get_chat_message_list")
-     */
+    #[Route('/admin/api/chat-messages', methods: ['GET'], name: 'app.get_chat_message_list')]
     public function getListAction(Request $request): Response
     {
         $listRepresentation = $this->doctrineListRepresentationFactory->createDoctrineListRepresentation(
@@ -79,9 +73,7 @@ class ChatMessageController extends AbstractController implements SecuredControl
         return $this->json($listRepresentation->toArray());
     }
 
-    /**
-     * @Route("/admin/api/chat-messages/statistics", methods={"GET"}, name="app.get_chat_message_statistics")
-     */
+    #[Route('/admin/api/chat-messages/statistics', methods: ['GET'], name: 'app.get_chat_message_statistics')]
     public function getStatisticsAction(): Response
     {
         $statistics = $this->chatMessageRepository->getStatistics();

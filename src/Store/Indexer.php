@@ -57,7 +57,7 @@ final readonly class Indexer
         $skippedDocuments = 0;
         foreach ($transformedDocuments as $document) {
             // Extract video ID from metadata
-            $metadata = $document->metadata->getArrayCopy();
+            $metadata = $document->getMetadata()->getArrayCopy();
             $videoId = $metadata['video_id'] ?? $metadata['id'] ?? null;
 
             if ($videoId) {

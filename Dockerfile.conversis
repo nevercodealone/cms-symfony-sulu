@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
         openssl \
         git \
         msmtp \
+        gettext-base \
         unzip \
         libzip-dev \
         libicu-dev \
@@ -47,8 +48,8 @@ COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 ADD ./deploy/config/php.ini /usr/local/etc/php/conf.d/custom.ini
 
-# MSMTP config
-ADD ./deploy/config/msmtprc /etc/msmtprc
+# MSMTP config (template, rendered at runtime by entrypoint.sh)
+ADD ./deploy/config/msmtprc.template /etc/msmtprc.template
 
 ADD ./deploy/entrypoint.sh /entrypoint.sh
 
