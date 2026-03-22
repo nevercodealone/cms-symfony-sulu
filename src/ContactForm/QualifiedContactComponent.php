@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ContactForm;
 
 use App\Entity\ContactLead;
+use App\Repository\ContactLeadRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -58,6 +59,7 @@ final class QualifiedContactComponent
         private readonly EntityManagerInterface $entityManager,
         private readonly ContactLeadMailer $mailer,
         private readonly RequestStack $requestStack,
+        private readonly ContactLeadRepository $contactLeadRepository,
     ) {
     }
 
@@ -188,6 +190,14 @@ final class QualifiedContactComponent
             return;
         }
 
+        $request = $this->requestStack->getCurrentRequest();
+        $userIp = $request?->getClientIp() ?? '0.0.0.0';
+
+        if ($this->contactLeadRepository->countLeadsFromIpInLastHour($userIp) >= 1) {
+            $this->error = 'Du hast bereits eine Anfrage gesendet.';
+            return;
+        }
+
         try {
             $lead = new ContactLead();
             $lead->setProduct($this->activeTab);
@@ -195,11 +205,7 @@ final class QualifiedContactComponent
             $lead->setName($this->contactName ?: null);
             $lead->setEmail($this->contactEmail);
             $lead->setMessage($this->contactMessage ?: null);
-
-            $request = $this->requestStack->getCurrentRequest();
-            if ($request) {
-                $lead->setUserIp($request->getClientIp());
-            }
+            $lead->setUserIp($userIp);
 
             $this->entityManager->persist($lead);
             $this->entityManager->flush();
