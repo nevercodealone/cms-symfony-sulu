@@ -253,6 +253,13 @@ services:
         tags: ['klp_mcp_server.tool']
         public: true
 
+    # MCP OpenAPI Generator
+    App\MCP\OpenApi\OpenApiGenerator:
+        arguments:
+            $suluPagesTool: '@App\MCP\Tools\SuluPagesTool'
+            $blockTypeRegistry: '@App\Sulu\Block\BlockTypeRegistry'
+        public: true
+
     # MCP OAuth Security
     App\Security\McpTokenAuthenticator:
         autoconfigure: true
