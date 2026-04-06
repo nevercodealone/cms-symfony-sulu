@@ -1199,7 +1199,7 @@ class SuluPagesTool implements StreamableToolInterface
      */
     private function uploadMedia(array $arguments, string $locale): ToolResultInterface
     {
-        $title = $arguments['title'] ?? '';
+        $title = $this->unescapeUnicode($arguments['title'] ?? '');
         $sourceUrl = $arguments['sourceUrl'] ?? null;
         $filePath = $arguments['filePath'] ?? null;
         $collectionId = isset($arguments['collectionId']) ? (int) $arguments['collectionId'] : 1;
