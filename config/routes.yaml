@@ -9,3 +9,7 @@ klp_mcp_server:
 mcp_oauth:
     resource: App\Controller\McpOAuthController
     type: attribute
+
+mcp_openapi:
+    resource: App\Controller\McpOpenApiController
+    type: attribute
