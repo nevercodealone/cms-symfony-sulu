@@ -452,6 +452,86 @@ class MediaService
     }
 
     /**
+     * Update the title of an existing media item.
+     *
+     * Performs a direct DBAL UPSERT on me_file_version_meta for the given
+     * locale. Retries once on ConnectionException for stale DBAL connections
+     * in the long-lived MCP process.
+     *
+     * @return array{success: bool, message: string, media?: array{id: int, title: string|null, filename: string, mimeType: string, size: int|null, collectionId: int}}
+     */
+    public function updateMediaTitle(int $mediaId, string $title, string $locale = 'de'): array
+    {
+        try {
+            $fileVersionId = $this->resolveFileVersionId($mediaId);
+        } catch (ConnectionException $e) {
+            $this->connection->close();
+            $this->connection->connect();
+            $fileVersionId = $this->resolveFileVersionId($mediaId);
+        }
+
+        if ($fileVersionId === null) {
+            return [
+                'success' => false,
+                'message' => "Media with ID {$mediaId} not found",
+            ];
+        }
+
+        try {
+            $this->upsertFileVersionMeta($fileVersionId, $locale, $title);
+        } catch (ConnectionException $e) {
+            $this->connection->close();
+            $this->connection->connect();
+            $this->upsertFileVersionMeta($fileVersionId, $locale, $title);
+        }
+
+        $media = $this->getMedia($mediaId, $locale);
+
+        return [
+            'success' => true,
+            'message' => "Title updated for media ID {$mediaId}",
+            'media' => $media,
+        ];
+    }
+
+    private function resolveFileVersionId(int $mediaId): ?int
+    {
+        $result = $this->connection->fetchAssociative(
+            "SELECT fv.id
+             FROM me_media m
+             INNER JOIN me_files f ON f.idMedia = m.id
+             INNER JOIN me_file_versions fv ON fv.idFiles = f.id AND fv.version = f.version
+             WHERE m.id = ?",
+            [$mediaId]
+        );
+
+        return $result !== false ? (int) $result['id'] : null;
+    }
+
+    private function upsertFileVersionMeta(int $fileVersionId, string $locale, string $title): void
+    {
+        $existing = $this->connection->fetchAssociative(
+            "SELECT id FROM me_file_version_meta WHERE idFileVersions = ? AND locale = ?",
+            [$fileVersionId, $locale]
+        );
+
+        if ($existing !== false) {
+            $this->connection->update(
+                'me_file_version_meta',
+                ['title' => $title],
+                ['idFileVersions' => $fileVersionId, 'locale' => $locale]
+            );
+        } else {
+            $this->connection->insert('me_file_version_meta', [
+                'idFileVersions' => $fileVersionId,
+                'locale' => $locale,
+                'title' => $title,
+                'description' => '',
+            ]);
+        }
+    }
+
+    /**
      * Extract a usable filename from a URL.
      */
     private function extractFilenameFromUrl(string $url): string
