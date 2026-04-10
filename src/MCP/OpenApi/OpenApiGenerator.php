@@ -123,6 +123,7 @@ class OpenApiGenerator
             'list_snippets' => 'List snippets, optionally filtered by type',
             'list_media' => 'List media files with optional search and filters',
             'upload_media' => 'Upload media from URL or file path',
+            'update_media' => 'Update the title of an existing media item',
             'list_collections' => 'List all media collections',
             'clear_cache' => 'Clear HTTP cache for pages',
         ];
@@ -191,7 +192,7 @@ class OpenApiGenerator
                 'move_block', 'remove_block', 'remove_blocks',
                 'publish', 'unpublish',
                 'list_block_types', 'get_block_schema',
-                'list_snippets', 'list_media', 'upload_media', 'list_collections',
+                'list_snippets', 'list_media', 'upload_media', 'update_media', 'list_collections',
                 'clear_cache',
             ];
         } elseif ($name === 'locale') {
