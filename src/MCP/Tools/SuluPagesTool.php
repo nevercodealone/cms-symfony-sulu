@@ -59,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -76,6 +76,7 @@ class SuluPagesTool implements StreamableToolInterface
             'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. description fields MUST be wrapped in <p> tags (e.g. "<p>Your text here</p>"). Without <p> tags, content will not render correctly in the frontend. ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
+            'UPDATE MEDIA: update_media + mediaId + title. Updates the alt-text/title of an existing media item. Use list_media to find IDs. ' .
             'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
     }
 
@@ -85,7 +86,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -289,7 +290,13 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'collectionId',
                 type: PropertyType::INTEGER,
-                description: 'For list_media action: filter media by collection ID',
+                description: 'For list_media/upload_media action: filter by or upload to collection ID',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'mediaId',
+                type: PropertyType::INTEGER,
+                description: 'For update_media action: ID of the media item to update',
                 required: false
             ),
             new SchemaProperty(
@@ -421,6 +428,7 @@ class SuluPagesTool implements StreamableToolInterface
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
             'list_media' => $this->listMedia($arguments, $locale),
             'upload_media' => $this->uploadMedia($arguments, $locale),
+            'update_media' => $this->updateMedia($arguments, $locale),
             'list_collections' => $this->listCollections($locale),
             'clear_cache' => $this->clearCache(),
             default => new TextToolResult("Unknown action: $action"),
@@ -1242,6 +1250,29 @@ class SuluPagesTool implements StreamableToolInterface
                 'error' => 'Upload failed: ' . $e->getMessage(),
             ], JSON_PRETTY_PRINT) ?: '{}');
         }
+    }
+
+    /**
+     * Update the title of an existing media item.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function updateMedia(array $arguments, string $locale): ToolResultInterface
+    {
+        $mediaId = isset($arguments['mediaId']) ? (int) $arguments['mediaId'] : null;
+        $title = $this->unescapeUnicode($arguments['title'] ?? '');
+
+        if ($mediaId === null || $mediaId < 1) {
+            return new TextToolResult('Error: mediaId is required for update_media action');
+        }
+
+        if (empty($title)) {
+            return new TextToolResult('Error: title is required for update_media action');
+        }
+
+        $result = $this->mediaService->updateMediaTitle($mediaId, $title, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**

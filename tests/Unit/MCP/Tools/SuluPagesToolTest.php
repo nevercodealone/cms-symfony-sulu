@@ -1385,4 +1385,93 @@ class SuluPagesToolTest extends TestCase
         $decoded = json_decode($sanitized['text'], true);
         $this->assertTrue($decoded['success']);
     }
+
+    public function testUpdateMediaActionSuccess(): void
+    {
+        $this->mediaService->method('updateMediaTitle')
+            ->willReturn([
+                'success' => true,
+                'message' => 'Title updated for media ID 42',
+                'media' => ['id' => 42, 'title' => 'New Alt Text', 'filename' => 'test.jpg', 'mimeType' => 'image/jpeg', 'size' => 1234, 'collectionId' => 1],
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'update_media',
+            'mediaId' => 42,
+            'title' => 'New Alt Text',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('Title updated', $data['message']);
+        $this->assertEquals('New Alt Text', $data['media']['title']);
+    }
+
+    public function testUpdateMediaRequiresMediaId(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'update_media',
+            'title' => 'Some Title',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('mediaId is required', $sanitized['text']);
+    }
+
+    public function testUpdateMediaRequiresTitle(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'update_media',
+            'mediaId' => 42,
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('title is required', $sanitized['text']);
+    }
+
+    public function testUpdateMediaReturnsErrorForNotFound(): void
+    {
+        $this->mediaService->method('updateMediaTitle')
+            ->willReturn([
+                'success' => false,
+                'message' => 'Media with ID 999 not found',
+            ]);
+
+        $result = $this->tool->execute([
+            'action' => 'update_media',
+            'mediaId' => 999,
+            'title' => 'New Title',
+            'locale' => 'de',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertFalse($data['success']);
+        $this->assertStringContainsString('not found', $data['message']);
+    }
+
+    public function testDescriptionIncludesUpdateMedia(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('update_media', $description);
+    }
+
+    public function testInputSchemaIncludesMediaId(): void
+    {
+        $schema = $this->tool->getInputSchema();
+        $properties = $schema->getProperties();
+
+        $propertyNames = array_map(
+            fn($prop) => $prop->getName(),
+            $properties
+        );
+
+        $this->assertContains('mediaId', $propertyNames, 'Schema must include "mediaId" parameter');
+    }
 }
