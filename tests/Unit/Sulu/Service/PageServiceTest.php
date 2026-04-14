@@ -1511,6 +1511,93 @@ XML;
     }
 
     // ==========================================================================
+    // Update Page Title Tests
+    // ==========================================================================
+
+    public function testUpdatePageTitleSuccess(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
+
+        $capturedXml = null;
+        $this->connection->expects($this->exactly(2))
+            ->method('executeStatement')
+            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
+                $capturedXml = $params[0];
+                return 1;
+            });
+
+        $result = $this->pageService->updatePageTitle(
+            '/cmf/example/contents/test',
+            'Updated Title',
+            'de'
+        );
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('Page title updated successfully', $result['message']);
+        $this->assertEquals('Updated Title', $result['title']);
+
+        $xml = new \DOMDocument();
+        $xml->loadXML($capturedXml);
+        $xpath = new \DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-title"]/sv:value');
+        $this->assertEquals(1, $titleNodes->length);
+        $this->assertEquals('Updated Title', $titleNodes->item(0)->nodeValue);
+    }
+
+    public function testUpdatePageTitleFailsWithEmptyTitle(): void
+    {
+        $result = $this->pageService->updatePageTitle(
+            '/cmf/example/contents/test',
+            '',
+            'de'
+        );
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('title is required', $result['message']);
+    }
+
+    public function testUpdatePageTitleFailsForNonexistentPage(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(false);
+
+        $result = $this->pageService->updatePageTitle(
+            '/cmf/example/contents/nonexistent',
+            'New Title',
+            'de'
+        );
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals('Page not found', $result['message']);
+    }
+
+    public function testUpdatePageTitleLogsActivity(): void
+    {
+        $this->connection->method('fetchAssociative')
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
+
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        $this->activityLogger->expects($this->once())
+            ->method('logMcpAction')
+            ->with(
+                'mcp_page_title_updated',
+                '/cmf/example/contents/test',
+                'de',
+                ['title' => 'New Title']
+            );
+
+        $this->pageService->updatePageTitle(
+            '/cmf/example/contents/test',
+            'New Title',
+            'de'
+        );
+    }
+
+    // ==========================================================================
     // Copy Page Tests
     // ==========================================================================
 

@@ -59,13 +59,14 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
             'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
+            'UPDATE PAGE TITLE: path + title. Updates the page title. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
@@ -86,7 +87,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -164,7 +165,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'title',
                 type: PropertyType::STRING,
-                description: 'For create_page: Page title',
+                description: 'For create_page/update_page_title: Page title',
                 required: false
             ),
             new SchemaProperty(
@@ -412,6 +413,7 @@ class SuluPagesTool implements StreamableToolInterface
             'get_block' => $this->getBlock($arguments, $locale),
             'create_page' => $this->createPage($arguments, $locale),
             'copy_page' => $this->copyPageAction($arguments, $locale),
+            'update_page_title' => $this->updatePageTitleAction($arguments, $locale),
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
             'update_seo' => $this->updateSeoAction($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
@@ -545,6 +547,26 @@ class SuluPagesTool implements StreamableToolInterface
         ];
 
         $result = $this->pageService->copyPage($data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updatePageTitleAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        $title = $arguments['title'] ?? '';
+
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+        if (empty($title)) {
+            return new TextToolResult('Error: title is required');
+        }
+
+        $result = $this->pageService->updatePageTitle($path, $title, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
