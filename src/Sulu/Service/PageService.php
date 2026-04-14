@@ -1284,6 +1284,92 @@ class PageService
     }
 
     /**
+     * Update the title of an existing page.
+     *
+     * @return array{success: bool, message: string, title?: string}
+     */
+    public function updatePageTitle(string $path, string $title, string $locale = 'de'): array
+    {
+        if (empty($title)) {
+            return ['success' => false, 'message' => 'title is required'];
+        }
+
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $propertyName = "i18n:{$locale}-title";
+            $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]/sv:value');
+
+            if ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
+                $valueNode = $existingNodes->item(0);
+                $valueNode->nodeValue = htmlspecialchars($title, ENT_XML1);
+                if ($valueNode instanceof \DOMElement) {
+                    $valueNode->setAttribute('length', (string) strlen($title));
+                }
+            } else {
+                $rootNode = $xpath->query('/sv:node')->item(0);
+                if (!$rootNode) {
+                    return ['success' => false, 'message' => 'Invalid XML structure'];
+                }
+
+                $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                $property->setAttribute('sv:name', $propertyName);
+                $property->setAttribute('sv:type', 'String');
+                $property->setAttribute('sv:multi-valued', '0');
+
+                $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
+                $valueEl->setAttribute('length', (string) strlen($title));
+                $valueEl->appendChild($xml->createTextNode($title));
+                $property->appendChild($valueEl);
+
+                $rootNode->appendChild($property);
+            }
+
+            $updatedXml = $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_title_updated',
+                $path,
+                $locale,
+                ['title' => $title]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => 'Page title updated successfully',
+                'title' => $title,
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Update excerpt data (title, description, image) on an existing page.
      *
      * @param array{excerptTitle?: string|null, excerptDescription?: string|null, excerptImage?: int|null} $data
