@@ -75,6 +75,12 @@ dumpfinder:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
     - echo "DEBUG SHORTCODE=$SHORTCODE SHORTCODE1=$SHORTCODE1"
+    # Clean stale backup data
+    - rm -rf /tmp/uploads /tmp/public-uploads
+    # Backup uploads from LIVE system
+    - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/ || true
+    - docker cp $SHORTCODE-web:/var/www/html/public/uploads /tmp/public-uploads || true
+    - echo "Backup file counts: var/uploads=$(find /tmp/uploads -type f 2>/dev/null | wc -l) public/uploads=$(find /tmp/public-uploads -type f 2>/dev/null | wc -l)"
     # Backup ChromaDB data before removing containers
     - docker exec $SHORTCODE1-chromadb tar czf /tmp/chromadb-backup.tar.gz -C /chroma/chroma . 2>/dev/null || true
     - docker cp $SHORTCODE1-chromadb:/tmp/chromadb-backup.tar.gz /tmp/chromadb-backup.tar.gz 2>/dev/null || true
@@ -83,12 +89,10 @@ dumpfinder:
   script:
     - docker exec mariadb /bin/clonedb.sh $DB_USER $DB_NAME ${PREFIX}_${DB_NAME}
     - DB_NAME=${PREFIX}_${DB_NAME} docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
-    - echo "DEBUG SHORTCODE=$SHORTCODE SHORTCODE1=$SHORTCODE1"
-    - docker exec $SHORTCODE1-web ls -la /var/www/html/var/uploads || true
-    - docker cp $SHORTCODE1-web:/var/www/html/var/uploads /tmp/
-    - docker cp $SHORTCODE1-web:/var/www/html/public/uploads /tmp/public-uploads
+    # Restore uploads from live into new stage
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
     - docker cp /tmp/public-uploads/. $SHORTCODE1-web:/var/www/html/public/uploads
+    - echo "Restored file counts: var/uploads=$(docker exec $SHORTCODE1-web find /var/www/html/var/uploads -type f 2>/dev/null | wc -l) public/uploads=$(docker exec $SHORTCODE1-web find /var/www/html/public/uploads -type f 2>/dev/null | wc -l)"
     # Restore ChromaDB data from backup
     - docker cp /tmp/chromadb-backup.tar.gz $SHORTCODE1-chromadb:/tmp/chromadb-backup.tar.gz 2>/dev/null || true
     - docker exec $SHORTCODE1-chromadb tar xzf /tmp/chromadb-backup.tar.gz -C /chroma/chroma 2>/dev/null || true
