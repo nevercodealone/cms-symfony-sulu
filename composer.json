@@ -74,6 +74,8 @@
         "phpunit/phpunit": "^10.5",
         "rector/rector": "^0.17",
         "squizlabs/php_codesniffer": "^3.6",
+        "sulu/sulu-mate-extension": "^0.1.0@dev",
+        "symfony/ai-mate": "^0.6",
         "symfony/debug-bundle": "^7.0",
         "symfony/error-handler": "^7.0",
         "symfony/phpunit-bridge": "^7.0",
@@ -87,7 +89,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "App\\Tests\\": "tests/"
+            "App\\Tests\\": "tests/",
+            "App\\Mate\\": "mate/src/"
         }
     },
     "replace": {
@@ -178,6 +181,7 @@
             "infection/extension-installer": true,
             "php-http/discovery": true,
             "phpstan/extension-installer": true,
+            "symfony/ai-mate-composer-plugin": true,
             "symfony/flex": true,
             "symfony/thanks": true
         }
@@ -186,6 +190,15 @@
         "symfony": {
             "require": "7.4.*",
             "allow-contrib": true
+        },
+        "ai-mate": {
+            "extension": false,
+            "scan-dirs": [
+                "mate/src"
+            ],
+            "includes": [
+                "mate/config.php"
+            ]
         }
     },
     "minimum-stability": "dev",

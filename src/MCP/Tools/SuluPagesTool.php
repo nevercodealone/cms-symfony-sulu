@@ -71,6 +71,7 @@ class SuluPagesTool implements StreamableToolInterface
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
             'PAGE-TEASER: page (UUID of target page, required), headline maps to buttonText, content maps to showImage ("1" or "0"). Example: blockType "page-teaser", page "uuid-of-target-page". ' .
+            'HTML-RAW: blockType "html-raw", html "<iframe src=...></iframe>". For YouTube embeds, custom HTML, and iframes. ' .
             'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
             'BATCH OPERATIONS: remove_blocks with positions JSON array (auto-sorted highest-first). update_blocks with updates JSON array (max 10, each with position + data). ' .
             'SUBPAGES-OVERVIEW: dataSource (UUID of source page) is auto-detected from parent page if omitted. Optional: includeSubFolders (default true). ' .
@@ -117,7 +118,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'blockType',
                 type: PropertyType::STRING,
-                description: 'Block type for add_block. Values: headline-paragraphs (with items), hl-des, text, image, code, quote, video',
+                description: 'Block type for add_block. Values: headline-paragraphs (with items), hl-des, text, image, code, quote, video, html-raw',
                 required: false
             ),
             new SchemaProperty(
@@ -376,6 +377,12 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'author',
                 type: PropertyType::STRING,
                 description: 'For quote block: Author name, e.g. "Dario Amodei"',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'html',
+                type: PropertyType::STRING,
+                description: 'For html-raw block: Raw HTML content (iframes, embeds, custom HTML). Required when blockType is html-raw.',
                 required: false
             ),
             new SchemaProperty(

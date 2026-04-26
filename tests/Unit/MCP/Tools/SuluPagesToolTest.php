@@ -861,6 +861,94 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test add_block for html-raw passes html property from arguments.
+     */
+    public function testAddBlockHtmlRawPassesHtmlProperty(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $htmlContent = '<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/dP4zE-DTWAg" frameborder="0" allowfullscreen></iframe>';
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'html-raw',
+            'html' => $htmlContent,
+            'position' => 3,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('html-raw', $capturedBlock['type']);
+        $this->assertArrayHasKey('html', $capturedBlock, 'html property should be set on block');
+        $this->assertEquals($htmlContent, $capturedBlock['html']);
+    }
+
+    /**
+     * Test update_block for html-raw passes html property from arguments.
+     */
+    public function testUpdateBlockHtmlRawPassesHtmlProperty(): void
+    {
+        $this->pageService->method('getPage')
+            ->willReturn([
+                'blocks' => [
+                    ['type' => 'html-raw', 'html' => '<p>old</p>'],
+                ],
+            ]);
+
+        $capturedData = null;
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function ($path, $pos, $data) use (&$capturedData) {
+                $capturedData = $data;
+                return ['success' => true, 'message' => 'Block updated'];
+            });
+
+        $newHtml = '<iframe src="https://www.youtube.com/embed/new"></iframe>';
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 0,
+            'html' => $newHtml,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertArrayHasKey('html', $capturedData, 'html property should be passed to updateBlock');
+        $this->assertEquals($newHtml, $capturedData['html']);
+    }
+
+    /**
+     * Test description includes html-raw.
+     */
+    public function testDescriptionIncludesHtmlRaw(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('html-raw', $description);
+    }
+
+    /**
+     * Test input schema includes html parameter.
+     */
+    public function testInputSchemaIncludesHtmlParameter(): void
+    {
+        $schema = $this->tool->getInputSchema();
+        $properties = $schema->getProperties();
+
+        $propertyNames = array_map(
+            fn($prop) => $prop->getName(),
+            $properties
+        );
+
+        $this->assertContains('html', $propertyNames, 'Schema must include "html" parameter');
+    }
+
+    /**
      * Test get_structure action returns compact page metadata.
      */
     public function testGetStructureAction(): void

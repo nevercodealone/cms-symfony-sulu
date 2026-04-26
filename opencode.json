@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "symfony-ai-mate": {
+      "type": "local",
+      "command": ["ddev", "exec", "./vendor/bin/mate", "serve", "--force-keep-alive"],
+      "enabled": true
+    }
+  }
+}
