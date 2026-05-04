@@ -118,13 +118,6 @@ li {
     pointer-events: none;
 }
 
-/* Navigation: show chip nav only above 1200px */
-@media (min-width: 1200px) {
-    .nav-chips-visible {
-        display: block;
-    }
-}
-
 /* Navigation: chip scroll without scrollbar */
 .nav-chips-scroll {
     scrollbar-width: none;
