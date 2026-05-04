@@ -24,8 +24,9 @@ This ensures proper global gitignore rules and local git configuration are respe
 - Group all related files in a single commit
 
 ## CSS / Tailwind Conventions
-- Use Tailwind mobile-first responsive utilities (e.g., `hidden desktop:block`, `desktop:hidden`)
-- Custom `screens` in `tailwind.config.js`: `desktop: '1200px'` for the main navigation breakpoint
+- Use ONLY official Tailwind responsive utilities: `sm:` (640px), `md:` (768px), `lg:` (1024px), `xl:` (1280px), `2xl:` (1536px)
+- NEVER define custom `screens` in `tailwind.config.js` — no custom breakpoints
+- Use Tailwind mobile-first responsive utilities (e.g., `hidden xl:block`, `xl:hidden`)
 - No custom `@media` queries for responsive visibility — always use Tailwind responsive utilities
 - Custom CSS is only for animations, transitions, and complex effects that Tailwind cannot express
 

@@ -9,9 +9,7 @@ module.exports = {
   ],
   theme: {
     extend: {
-      screens: {
-        'desktop': '1200px',
-      },
+
       colors: {
         'nca': '#166534'  // green-800
       },

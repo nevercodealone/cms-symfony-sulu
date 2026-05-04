@@ -38,15 +38,14 @@ class NavigationBurgerMenuTest extends TestCase
         return file_get_contents($this->tailwindConfigPath);
     }
 
-    public function test_scenario_tailwindConfigHasDesktopBreakpoint(): void
+    public function test_scenario_tailwindConfigHasNoCustomScreens(): void
     {
         $config = $this->getTailwindConfigContent();
 
-        $this->assertStringContainsString("'1200px'", $config, 'Tailwind config must define a 1200px breakpoint for desktop');
-        $this->assertStringContainsString('desktop', $config, 'Tailwind config must name the 1200px breakpoint "desktop"');
+        $this->assertStringNotContainsString('desktop', $config, 'Tailwind config must NOT define a custom "desktop" screen — use official Tailwind breakpoints only (sm:, md:, lg:, xl:, 2xl:)');
     }
 
-    public function test_scenario_burgerButtonHasDesktopHiddenClass(): void
+    public function test_scenario_burgerButtonHasXlHiddenClass(): void
     {
         $template = $this->getTemplateContent();
 
@@ -56,27 +55,30 @@ class NavigationBurgerMenuTest extends TestCase
         preg_match($burgerButtonPattern, $template, $matches);
         $buttonTag = $matches[0];
 
-        $this->assertStringContainsString('desktop:hidden', $buttonTag, 'Burger button must use Tailwind desktop:hidden utility class');
+        $this->assertStringContainsString('xl:hidden', $buttonTag, 'Burger button must use official Tailwind xl:hidden utility class');
+        $this->assertStringNotContainsString('desktop:', $buttonTag, 'Burger button must NOT use custom desktop: prefix — use official Tailwind breakpoints only');
     }
 
-    public function test_scenario_overlayAndBackdropHaveDesktopHiddenClass(): void
+    public function test_scenario_overlayAndBackdropHaveXlHiddenClass(): void
     {
         $template = $this->getTemplateContent();
 
-        $backdropPattern = '/class="[^"]*desktop:hidden[^"]*fixed[^"]*"/s';
-        $this->assertMatchesRegularExpression($backdropPattern, $template, 'Backdrop must use Tailwind desktop:hidden utility class');
+        $backdropPattern = '/class="[^"]*xl:hidden[^"]*fixed[^"]*"/s';
+        $this->assertMatchesRegularExpression($backdropPattern, $template, 'Backdrop must use official Tailwind xl:hidden utility class');
 
-        $overlayPattern = '/class="[^"]*desktop:hidden[^"]*"/s';
+        $overlayPattern = '/class="[^"]*xl:hidden[^"]*"/s';
         preg_match_all($overlayPattern, $template, $overlayMatches);
-        $this->assertGreaterThanOrEqual(2, count($overlayMatches[0]), 'Both backdrop and overlay nav must use Tailwind desktop:hidden');
+        $this->assertGreaterThanOrEqual(2, count($overlayMatches[0]), 'Both backdrop and overlay nav must use official Tailwind xl:hidden');
+
+        $this->assertStringNotContainsString('desktop:', $template, 'Template must NOT use custom desktop: prefix anywhere');
     }
 
-    public function test_scenario_chipNavUsesDesktopBlock(): void
+    public function test_scenario_chipNavUsesXlBlock(): void
     {
         $template = $this->getTemplateContent();
 
-        $chipNavPattern = '/class="[^"]*hidden\s+desktop:block[^"]*"/s';
-        $this->assertMatchesRegularExpression($chipNavPattern, $template, 'Chip nav must use Tailwind hidden desktop:block utilities');
+        $chipNavPattern = '/class="[^"]*hidden\s+xl:block[^"]*"/s';
+        $this->assertMatchesRegularExpression($chipNavPattern, $template, 'Chip nav must use official Tailwind hidden xl:block utilities');
     }
 
     public function test_scenario_noCustomDesktopMediaQueriesForNav(): void
