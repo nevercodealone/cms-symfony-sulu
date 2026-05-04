@@ -166,3 +166,4 @@ phpstan.neon
 .phpunit.result.cache
 ###< phpunit/phpunit ###
 .mcp.json
+.crew/

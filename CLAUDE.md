@@ -18,6 +18,18 @@ Example:
 
 This ensures proper global gitignore rules and local git configuration are respected.
 
+## Commit Style
+- Simple one-liner commit messages, lowercase, no conventional commit prefixes
+- No co-author lines
+- Group all related files in a single commit
+
+## CSS / Tailwind Conventions
+- Use ONLY official Tailwind responsive utilities: `sm:` (640px), `md:` (768px), `lg:` (1024px), `xl:` (1280px), `2xl:` (1536px)
+- NEVER define custom `screens` in `tailwind.config.js` — no custom breakpoints
+- Use Tailwind mobile-first responsive utilities (e.g., `hidden xl:block`, `xl:hidden`)
+- No custom `@media` queries for responsive visibility — always use Tailwind responsive utilities
+- Custom CSS is only for animations, transitions, and complex effects that Tailwind cannot express
+
 ## Sulu Field Types: Rich Text vs Plain Text
 
 ### CRITICAL: Most fields are plain text — NEVER use HTML tags in them

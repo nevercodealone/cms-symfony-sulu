@@ -9,6 +9,7 @@ module.exports = {
   ],
   theme: {
     extend: {
+
       colors: {
         'nca': '#166534'  // green-800
       },
