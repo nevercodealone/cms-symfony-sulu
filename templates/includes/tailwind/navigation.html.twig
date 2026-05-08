@@ -60,55 +60,58 @@
         x-data="{ menuOpen: false }"
         itemscope itemtype="https://schema.org/SiteNavigationElement">
 
-  {# ══ LOGO + HAMBURGER ══ #}
-  <div class="bg-white border-b-2 border-green-900 px-4 py-3 flex items-center justify-between max-w-7xl mx-auto">
+  {# ══ LOGO + CHIP NAV + HAMBURGER (single row on desktop) ══ #}
+  <div class="bg-white border-b-2 border-green-900 px-4 py-3 flex items-center max-w-7xl mx-auto">
     <a href="{{ sulu_content_root_path() }}"
        aria-label="Zur Startseite – Never Code Alone"
        title="Link zur Startseite auf dem Logo"
-       class="flex no-underline"
+       class="flex no-underline flex-shrink-0"
        itemprop="url">
       <img aria-hidden="true" class="h-16 md:h-20 w-auto" src="/img/logo.png" alt="Logo Never Code Alone" itemprop="name">
     </a>
 
-    <button
-      type="button"
-      x-on:click="menuOpen = !menuOpen"
-      :aria-expanded="menuOpen"
-      aria-controls="nca-main-menu"
-      aria-label="Hauptmenü öffnen"
-      :class="menuOpen ? 'bg-white text-green-900 border-green-900' : 'bg-green-900 text-white border-green-900'"
-      class="xl:hidden flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 bg-green-900 text-white border-green-900 transition-colors duration-200">
+    {# Chip navigation — hidden on mobile, centered within its section on desktop #}
+    <nav aria-label="Schnellnavigation nach Bereich" class="hidden xl:flex flex-1 justify-center items-center px-4">
+      <ul role="list"
+          class="flex justify-center gap-2 nav-chips-scroll overflow-x-auto">
+        {% for item in navItems %}
+          {% set url = sulu_content_path(item.url) %}
+          <li class="flex-shrink-0" style="padding:0;margin:0">
+            <a href="{{ url }}"
+               title="{{ item.title }}"
+               class="border-2 border-green-900 text-xs font-black tracking-wide uppercase px-3 py-1.5 whitespace-nowrap transition-colors duration-150 inline-block no-underline
+                 {{ app.request.uri starts with url ? 'bg-green-900 text-white' : 'bg-white text-green-900 hover:bg-green-900 hover:text-white' }}">
+              {{ item.title }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
 
-      <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1 flex-shrink-0">
-        <span class="nav-bar block h-0.5 w-4 bg-current"
-          :style="menuOpen ? 'transform:translateY(5px) rotate(45deg)' : ''"></span>
-        <span class="nav-bar block h-0.5 w-4 bg-current"
-          :style="menuOpen ? 'opacity:0' : ''"></span>
-        <span class="nav-bar block h-0.5 w-4 bg-current"
-          :style="menuOpen ? 'transform:translateY(-5px) rotate(-45deg)' : ''"></span>
-      </span>
+    {# Hamburger button — visible only below desktop breakpoint, pushes chip nav center via flex-shrink-0 #}
+    <div class="xl:hidden flex-shrink-0 ml-auto">
+      <button
+        type="button"
+        x-on:click="menuOpen = !menuOpen"
+        :aria-expanded="menuOpen"
+        aria-controls="nca-main-menu"
+        aria-label="Hauptmenü öffnen"
+        :class="menuOpen ? 'bg-white text-green-900 border-green-900' : 'bg-green-900 text-white border-green-900'"
+        class="flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 bg-green-900 text-white border-green-900 transition-colors duration-200">
 
-      <span x-text="menuOpen ? 'CLOSE' : 'MENU'">MENU</span>
-    </button>
+        <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1 flex-shrink-0">
+          <span class="nav-bar block h-0.5 w-4 bg-current"
+            :style="menuOpen ? 'transform:translateY(5px) rotate(45deg)' : ''"></span>
+          <span class="nav-bar block h-0.5 w-4 bg-current"
+            :style="menuOpen ? 'opacity:0' : ''"></span>
+          <span class="nav-bar block h-0.5 w-4 bg-current"
+            :style="menuOpen ? 'transform:translateY(-5px) rotate(-45deg)' : ''"></span>
+        </span>
+
+        <span x-text="menuOpen ? 'CLOSE' : 'MENU'">MENU</span>
+      </button>
+    </div>
   </div>
-
-  {# ══ CHIP NAVIGATION (flat main topics, hidden below 1200px) ══ #}
-  <nav aria-label="Schnellnavigation nach Bereich" class="hidden xl:block">
-    <ul role="list"
-        class="bg-white border-b-2 border-green-900 px-4 py-2 flex justify-center gap-2 nav-chips-scroll overflow-x-auto max-w-7xl mx-auto">
-      {% for item in navItems %}
-        {% set url = sulu_content_path(item.url) %}
-        <li class="flex-shrink-0" style="padding:0;margin:0">
-          <a href="{{ url }}"
-             title="{{ item.title }}"
-             class="border-2 border-green-900 text-xs font-black tracking-wide uppercase px-3 py-1.5 whitespace-nowrap transition-colors duration-150 inline-block no-underline
-               {{ app.request.uri starts with url ? 'bg-green-900 text-white' : 'bg-white text-green-900 hover:bg-green-900 hover:text-white' }}">
-            {{ item.title }}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </nav>
 
   {# ══ BACKDROP (click to close) ══ #}
   <div x-show="menuOpen"
