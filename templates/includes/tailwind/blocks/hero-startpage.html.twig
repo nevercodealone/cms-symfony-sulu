@@ -7,19 +7,19 @@
                 <img class="h-full w-full object-cover" src="{{ source }}" alt="{{ content.description|replace({'<p>': '', '</p>': ''}) }}">
                 <div class="absolute inset-0 bg-gradient-to-r from-green-800 to-green-700 mix-blend-multiply"></div>
             </div>
-            <div class="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
+            <div class="relative px-4 py-6 sm:px-6 sm:py-10 lg:py-16 lg:px-8">
                 {% if loopIndex == 1 %}
-                  <h1 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                  <h1 class="text-center text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
                       <span class="block text-white">{{ content.textone }}</span>
                       <span class="block text-green-200">{{ content.texttwo }}</span>
                   </h1>
                 {% else %}
-                  <h2 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                  <h2 class="text-center text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
                     <span class="block text-white">{{ content.textone }}</span>
                     <span class="block text-green-200">{{ content.texttwo }}</span>
                   </h2>
                 {% endif %}
-                <div class="mx-auto mt-6 max-w-lg text-center text-xl text-green-200 sm:max-w-3xl">
+                <div class="mx-auto mt-6 max-w-lg text-center text-base text-green-200 sm:max-w-3xl sm:text-lg">
                     {{ content.description|raw }}
                 </div>
                 <div class="mx-auto mt-10 max-w-sm sm:flex sm:max-w-none sm:justify-center">
