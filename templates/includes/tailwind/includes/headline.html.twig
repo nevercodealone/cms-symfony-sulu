@@ -4,11 +4,11 @@
   |replace({'/[^a-z0-9\\-]/': ''}) %}
 
 {% if isFirstHeadline %}
-  <h1 class="mb-4 text-4xl tracking-tight font-bold text-gray-900" id="{{ htmlId }}">
+  <h1 class="mb-4 text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold text-gray-900" id="{{ htmlId }}">
     {{ content.headline }}
   </h1>
 {% else %}
-  <h2 class="mb-4 text-4xl tracking-tight font-bold text-gray-900" id="{{ htmlId }}">
+  <h2 class="mb-4 text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold text-gray-900" id="{{ htmlId }}">
     {{ content.headline }}
   </h2>
 {% endif %}
