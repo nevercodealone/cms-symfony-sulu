@@ -1,22 +1,39 @@
 <!-- hero-image-right.html.twig -->
+{% if content.image[0] is defined and content.image[0] is not empty %}
 <div class="bg-gray-50">
-  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8 lg:grid lg:grid-cols-2 lg:gap-8">
     <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl">
-      {% if content.subline %}
-        <h3 class="text-base font-semibold leading-7 text-green-600">
-          {{ content.subline }}
-        </h3>
-      {% endif %}
       <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
         {{ content.headline }}
       </h1>
       <p class="mt-6 text-lg leading-8 text-gray-800">
         {{ content.description|raw }}
       </p>
+      {% if content.items is defined and content.items is not empty %}
+        <div class="mt-8 flex flex-wrap items-center gap-4">
+          {% for item in content.items %}
+            {% if item.buttonText is defined and item.buttonText is not empty %}
+              {% if item.buttonLink is defined and item.buttonLink is not empty %}
+                <a href="{{ sulu_content_path(item.buttonLink) }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
+                  {{ item.buttonText }}
+                </a>
+              {% elseif item.url is defined and item.url is not empty %}
+                <a href="{{ item.url }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
+                  {{ item.buttonText }}
+                </a>
+              {% else %}
+                <span class="text-sm font-semibold text-gray-900">{{ item.buttonText }}</span>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
     </div>
-    <div class="mx-auto mt-10 max-w-lg lg:mx-0 lg:max-w-none lg:w-1/2">
-      <img src="{{ content.image }}" alt="{{ content.imageAlt }}" class="rounded-xl shadow-2xl ring-1 ring-gray-900/10 lg:mt-0 lg:ml-[max(-3rem,4vw)] lg:w-[57rem]">
+    <div class="mt-10 lg:mt-0">
+      {% set source = content.image[0].formats['hero-image-right']|default(content.image[0].formats['content-full.webp']|default('')) %}
+      <img src="{{ source }}" alt="{{ content.image[0].title }}" class="rounded-xl shadow-2xl ring-1 ring-gray-900/10">
     </div>
   </div>
 </div>
+{% endif %}
 <!-- end hero-image-right.html.twig -->
