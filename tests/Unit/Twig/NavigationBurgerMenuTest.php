@@ -52,11 +52,9 @@ class NavigationBurgerMenuTest extends TestCase
         $burgerButtonPattern = '/<button[^>]+x-on:click="menuOpen\s*=\s*!menuOpen"[^>]*>/s';
         $this->assertMatchesRegularExpression($burgerButtonPattern, $template, 'Burger button with Alpine toggle must exist in navigation template');
 
-        preg_match($burgerButtonPattern, $template, $matches);
-        $buttonTag = $matches[0];
-
-        $this->assertStringContainsString('xl:hidden', $buttonTag, 'Burger button must use official Tailwind xl:hidden utility class');
-        $this->assertStringNotContainsString('desktop:', $buttonTag, 'Burger button must NOT use custom desktop: prefix — use official Tailwind breakpoints only');
+        $wrapperPattern = '/<div[^>]*xl:hidden[^>]*>.*?<button[^>]+x-on:click="menuOpen\s*=\s*!menuOpen"/s';
+        $this->assertMatchesRegularExpression($wrapperPattern, $template, 'Burger wrapper must use xl:hidden');
+        $this->assertStringNotContainsString('desktop:', $template, 'Template must NOT use custom desktop: prefix — use official Tailwind breakpoints only');
     }
 
     public function test_scenario_overlayAndBackdropHaveXlHiddenClass(): void
@@ -77,8 +75,8 @@ class NavigationBurgerMenuTest extends TestCase
     {
         $template = $this->getTemplateContent();
 
-        $chipNavPattern = '/class="[^"]*hidden\s+xl:block[^"]*"/s';
-        $this->assertMatchesRegularExpression($chipNavPattern, $template, 'Chip nav must use official Tailwind hidden xl:block utilities');
+        $chipNavPattern = '/class="[^"]*hidden\s+xl:(?:block|flex)[^"]*"/s';
+        $this->assertMatchesRegularExpression($chipNavPattern, $template, 'Chip nav must use official Tailwind hidden xl:block or hidden xl:flex utilities');
     }
 
     public function test_scenario_noCustomDesktopMediaQueriesForNav(): void

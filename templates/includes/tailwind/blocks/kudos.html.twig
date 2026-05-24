@@ -1,0 +1,28 @@
+<!-- kudos.html.twig -->
+<div class="bg-white py-24 sm:py-32">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      {% if content.subline %}
+        <h3 class="text-base font-semibold leading-7 text-green-600">
+          {{ content.subline }}
+        </h3>
+      {% endif %}
+      <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+        {{ content.headline }}
+      </h1>
+    </div>
+    <ul role="list" class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-1 lg:max-w-none lg:grid-cols-3 lg:gap-8">
+      {% for item in content.kudos %}
+        <li class="flex flex-col justify-center rounded-2xl bg-gray-50 p-8 text-center shadow-sm ring-1 ring-gray-900/5">
+          <h3 class="text-base font-semibold leading-6 text-gray-900">
+            {{ item.person }}
+          </h3>
+          <p class="mt-4 text-lg leading-6 text-gray-600">
+            "{{ item.text }}"
+          </p>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<!-- end kudos.html.twig -->

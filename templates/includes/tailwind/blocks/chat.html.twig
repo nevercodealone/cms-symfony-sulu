@@ -2,56 +2,30 @@
 {% import "_message.html.twig" as message %}
 
 <section class="w-full max-w-4xl mx-auto">
-    <!-- Unified Header for all screen sizes -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg p-6 border-b border-gray-100">
-        <div class="flex items-center gap-4">
-            <img id="robot-image" src="/robot.png" alt="Robot Golla" class="w-16 h-16 md:w-20 md:h-20 object-contain rounded-full bg-white p-2 shadow-sm">
-            <div class="flex-1">
-                <div class="text-xl md:text-2xl font-bold text-gray-900">Never Code Alone AI Assistant</h2>
-                <p class="text-sm md:text-base text-gray-600">Dein YouTube-Wissensbegleiter für PHP, Symfony & mehr</p>
-            </div>
+  <div id="chat-body" class="p-4 md:p-6 bg-white overflow-y-auto" style="max-height: 500px;">
+    {% if messages is defined %}
+      {% for message in messages %}
+        {% include '_message.html.twig' with { message, latest: loop.last } %}
+      {% endfor %}
+    {% else %}
+      <div id="welcome" class="flex items-start gap-3 mb-4">
+        <img src="/robot.png" alt="Robot Golla" class="w-10 h-10 object-contain rounded-full bg-blue-100 p-1 flex-shrink-0">
+        <div class="flex-1 bg-gray-50 rounded-lg p-4 max-w-2xl">
+          <div class="text-lg font-semibold text-gray-800 mb-2">Hallo Freunde des Software-Entertainments!</div>
+          <p class="text-gray-600 leading-relaxed">
+            Ich bin Robot Golla, euer AI-Assistent für alle Fragen rund um die YouTube-Videos von <strong>Never Code Alone</strong>.
+          </p>
         </div>
-    </div>
+      </div>
+    {% endif %}
+  </div>
 
-    <!-- Chat container -->
-    <div class="bg-white rounded-b-lg shadow-lg">
-        <!-- Chat messages area -->
-        <div id="chat-body" class="p-4 md:p-6 bg-white overflow-y-auto" style="max-height: 500px;">
-                {% if messages is defined %}
-                    {% for message in messages %}
-                        {% include '_message.html.twig' with { message, latest: loop.last } %}
-                    {% endfor %}
-                {% else %}
-                    <div id="welcome" class="flex items-start gap-3 mb-4">
-                        <img src="/robot.png" alt="Robot Golla" class="w-10 h-10 object-contain rounded-full bg-blue-100 p-1 flex-shrink-0">
-                        <div class="flex-1 bg-gray-50 rounded-lg p-4 max-w-2xl">
-                            <div class="text-lg font-semibold text-gray-800 mb-2">Hallo Freunde des Software-Entertainments!</div>
-                            <p class="text-gray-600 leading-relaxed">
-                                Ich bin Robot Golla, euer AI-Assistent für alle Fragen rund um die YouTube-Videos von <strong>Never Code Alone</strong>.
-                            </p>
-                            <div class="mt-3 space-y-2 text-sm text-gray-600">
-                                <p>💡 <strong>Was ich kann:</strong></p>
-                                <ul class="ml-6 space-y-1">
-                                    <li>• Fragen zu PHP, Symfony, Laravel beantworten</li>
-                                    <li>• Coding-Tutorials und Best Practices erklären</li>
-                                    <li>• Inhalte aus den YouTube-Videos finden</li>
-                                </ul>
-                            </div>
-                            <p class="mt-3 text-sm text-gray-500">Stelle einfach deine Frage! 👇</p>
-                        </div>
-                    </div>
-                {% endif %}
-                <div id="loading-message" class="hidden"></div>
-        </div>
-
-        <!-- Input area -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4">
-            <div class="flex gap-2">
-                <input id="chat-message" type="text" class="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Stelle deine Frage hier...">
-                <button id="chat-submit" class="px-4 md:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium" type="button">Senden</button>
-            </div>
-        </div>
+  <div class="border-t border-gray-200 bg-gray-50 p-4">
+    <div class="flex gap-2">
+      <input id="chat-message" type="text" class="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Stelle deine Frage hier...">
+      <button id="chat-submit" class="px-4 md:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all font-medium" type="button">Senden</button>
     </div>
+  </div>
 </section>
 
 {{ encore_entry_script_tags('chat') }}
