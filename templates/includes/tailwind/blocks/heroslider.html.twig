@@ -1,12 +1,17 @@
 <!-- heroslider.html.twig -->
 <div class="bg-gray-50">
   <div class="mx-auto max-w-7xl py-12 sm:py-24 lg:px-8">
+    {% if content.images is defined and content.images|length > 1 %}
+      <div class="mx-auto max-w-4xl mb-12">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {% for media in content.images %}
+            {% set source = media.formats['content-full.webp']|default('') %}
+            <img src="{{ source }}" alt="{{ media.title }}" class="rounded-xl shadow-lg">
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
     <div class="mx-auto max-w-2xl text-center">
-      {% if content.subline %}
-        <h3 class="text-base font-semibold leading-7 text-green-600">
-          {{ content.subline }}
-        </h3>
-      {% endif %}
       <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
         {{ content.headline }}
       </h1>
@@ -14,9 +19,16 @@
         {{ content.description|raw }}
       </p>
       <div class="mt-10 flex items-center justify-center gap-x-6">
-        <a href="{{ content.url }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
-          {{ content.actionText }}
-        </a>
+        {% if content.pageurl1 is defined and content.pageurl1 is not empty %}
+          <a href="{{ sulu_content_path(content.pageurl1[0].url|default(content.pageurl1)) }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+            {{ content.pageurl1[0].title|default('Mehr erfahren') }}
+          </a>
+        {% endif %}
+        {% if content.pageurl2 is defined and content.pageurl2 is not empty %}
+          <a href="{{ sulu_content_path(content.pageurl2[0].url|default(content.pageurl2)) }}" class="text-sm font-semibold leading-6 text-gray-900">
+            {{ content.pageurl2[0].title|default('') }} <span aria-hidden="true">→</span>
+          </a>
+        {% endif %}
       </div>
     </div>
   </div>
