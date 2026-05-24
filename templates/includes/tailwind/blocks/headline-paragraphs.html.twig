@@ -1,24 +1,22 @@
 <!-- headline-paragraphs.html.twig -->
-<div class="px-4 mx-auto max-w-screen-xl lg:px-6">
-  <div class="max-w-screen-lg text-gray-800 sm:text-lg">
-    {% if content.headline is defined and content.headline is not empty %}
-      {% include "includes/tailwind/includes/headline.html.twig" with {
-        'content': content,
-        'loopIndex': loopIndex,
-        'isFirstHeadline': isFirstHeadline
-      } %}
-    {% endif %}
-    {% if content.items is defined and content.items is not empty %}
-      {% for item in content.items %}
-        <div class="mb-4 description-list">
-          {% if item.type == 'description' %}
-            {{ item.description|raw }}
-          {% elseif item.type == 'code' %}
-            {% include 'includes/tailwind/blocks/code.html.twig' with {'item': item} %}
-          {% endif %}
-        </div>
-      {% endfor %}
-    {% endif %}
-  </div>
+<div class="max-w-screen-lg mx-auto text-gray-800 sm:text-lg">
+  {% if content.headline is defined and content.headline is not empty %}
+    {% include "includes/tailwind/includes/headline.html.twig" with {
+      'content': content,
+      'loopIndex': loopIndex,
+      'isFirstHeadline': isFirstHeadline
+    } %}
+  {% endif %}
+  {% if content.items is defined and content.items is not empty %}
+    {% for item in content.items %}
+      <div class="mb-4 description-list">
+        {% if item.type == 'description' %}
+          {{ item.description|raw }}
+        {% elseif item.type == 'code' %}
+          {% include 'includes/tailwind/blocks/code.html.twig' with {'item': item} %}
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
 </div>
 <!-- end headline-paragraphs.html.twig -->
