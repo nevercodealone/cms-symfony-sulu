@@ -1,3 +1,4 @@
+<!-- base-tailwind.html.twig -->
 <!DOCTYPE html>
 <html class="scroll-smooth bg-white antialiased" lang="{{ app.request.locale|split('_')[0] }}">
 <head>
@@ -22,7 +23,7 @@
 <body>
 
 {% include 'includes/tailwind/navigation.html.twig' %}
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
     {% include 'includes/tailwind/breadcrumb.html.twig' %}
     <main id="content">
       {% block content %}{% endblock %}
@@ -42,3 +43,4 @@
     {{ encore_entry_script_tags('app') }}
 {% endblock %}
 </html>
+<!-- end base-tailwind.html.twig -->
