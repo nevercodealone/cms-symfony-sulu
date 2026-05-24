@@ -1,24 +1,22 @@
 <!-- cta-button.html.twig -->
 <div class="bg-white">
-    <div class="mx-auto max-w-7xl py-6 px-4 text-center sm:px-6 sm:py-8 lg:px-8">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            <span class="block">{{ content.headline }}</span>
-        </h2>
-        <div class="mt-5 text-2xl text-gray-700">
-            {{ content.description|raw }}
-        </div>
-        <div class="mt-8 flex justify-center">
-            <div class="inline-flex rounded-md shadow">
-                <a href="{{ content.url }}" class="inline-flex justify-center rounded-md py-1 px-4 text-2xl font-semibold tracking-tight shadow-sm focus:outline-none border border-green-700 text-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 active:bg-green-700 active:text-white disabled:opacity-30 disabled:hover:bg-green-700 hover:bg-green-700 hover:text-white">
-                    {{ content.text }}
-                </a>
-            </div>
-            <div class="ml-3 inline-flex">
-                <a href="{{ content.urltwo }}" class="inline-flex justify-center rounded-md py-1 px-4 text-2xl font-semibold tracking-tight shadow-sm focus:outline-none border border-green-700 text-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 active:bg-green-700 active:text-white disabled:opacity-30 disabled:hover:bg-green-700 hover:bg-green-700 hover:text-white">
-                    {{ content.texttwo }}
-                </a>
-            </div>
-        </div>
+  <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+    <span class="block">{{ content.headline }}</span>
+  </h2>
+  <div class="mt-5 text-2xl text-gray-700">
+    {{ content.description|raw }}
+  </div>
+  <div class="mt-8 flex justify-center">
+    <div class="inline-flex rounded-md shadow">
+      <a href="{{ content.url }}" class="inline-flex justify-center rounded-md py-1 px-4 text-2xl font-semibold tracking-tight shadow-sm focus:outline-none border border-green-700 text-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 active:bg-green-700 active:text-white disabled:opacity-30 disabled:hover:bg-green-700 hover:bg-green-700 hover:text-white">
+        {{ content.text }}
+      </a>
     </div>
+    <div class="ml-3 inline-flex">
+      <a href="{{ content.urltwo }}" class="inline-flex justify-center rounded-md py-1 px-4 text-2xl font-semibold tracking-tight shadow-sm focus:outline-none border border-green-700 text-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 active:bg-green-700 active:text-white disabled:opacity-30 disabled:hover:bg-green-700 hover:bg-green-700 hover:text-white">
+        {{ content.texttwo }}
+      </a>
+    </div>
+  </div>
 </div>
 <!-- end cta-button.html.twig -->
