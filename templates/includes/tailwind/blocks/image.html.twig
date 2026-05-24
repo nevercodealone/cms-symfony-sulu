@@ -1,4 +1,8 @@
 <!-- image.html.twig -->
-{% set source = content.image[0].thumbnails['content-full.webp'] %}
-<img class="h-auto max-w-full" src="{{ source }}" alt="{{ content.image[0].title }}">
+<figure class="text-center">
+  <img class="h-auto max-w-full mx-auto" src="{{ content.src }}" alt="{{ content.alt }}">
+  {% if content.caption %}
+    <figcaption class="pt-4 text-gray-900">{{ content.caption }}</figcaption>
+  {% endif %}
+</figure>
 <!-- end image.html.twig -->
