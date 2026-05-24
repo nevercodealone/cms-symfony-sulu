@@ -1,0 +1,52 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="kudos">
+        <types>
+            <type name="kudos">
+                <meta>
+                    <title>Kudos</title>
+                </meta>
+                <properties>
+                    <property name="subline" type="text_line">
+                        <meta>
+                            <title>Subline</title>
+                        </meta>
+                    </property>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <block name="kudos" default-type="kudo" minOccurs="1" maxOccurs="12">
+                        <meta>
+                            <title>Kudos</title>
+                        </meta>
+                        <types>
+                            <type name="kudo">
+                                <meta>
+                                    <title>Kudo</title>
+                                </meta>
+                                <properties>
+                                    <property name="person" type="text_line">
+                                        <meta>
+                                            <title>Person</title>
+                                        </meta>
+                                    </property>
+                                    <property name="text" type="text_area">
+                                        <meta>
+                                            <title>Text</title>
+                                        </meta>
+                                    </property>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>
