@@ -2,25 +2,30 @@
 <div class="bg-gray-50">
   <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
     <div class="mx-auto max-w-2xl text-center">
-      {% if content.subline %}
-        <h3 class="text-base font-semibold leading-7 text-green-600">
-          {{ content.subline }}
-        </h3>
+      {% if content.image[0] is defined and content.image[0] is not empty %}
+        {% set source = content.image[0].formats['hero-startpage']|default(content.image[0].formats['content-full.webp']|default('')) %}
+        <img src="{{ source }}" alt="{{ content.image[0].title }}" class="mx-auto mb-8 rounded-xl shadow-lg">
       {% endif %}
-      <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-        {{ content.headline }}
+      <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+        {{ content.textone }} {{ content.texttwo }}
       </h1>
       <p class="mt-6 text-lg leading-8 text-gray-800">
         {{ content.description|raw }}
       </p>
       <div class="mt-10 flex items-center justify-center gap-x-6">
-        <a href="{{ content.url }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
-          {{ content.actionText }}
-        </a>
-        {% if content.url2 %}
-          <a href="{{ content.url2 }}" class="text-sm font-semibold leading-6 text-gray-900">
-            {{ content.actionText2 }} <span aria-hidden="true">→</span>
-          </a>
+        {% if content.buttonText is defined and content.buttonText is not empty %}
+          {% if content.buttonLink is defined and content.buttonLink is not empty %}
+            <a href="{{ sulu_content_path(content.buttonLink) }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+              {{ content.buttonText }}
+            </a>
+          {% endif %}
+        {% endif %}
+        {% if content.buttonTextTwo is defined and content.buttonTextTwo is not empty %}
+          {% if content.url is defined and content.url is not empty %}
+            <a href="{{ content.url }}" class="text-sm font-semibold leading-6 text-gray-900">
+              {{ content.buttonTextTwo }} <span aria-hidden="true">→</span>
+            </a>
+          {% endif %}
         {% endif %}
       </div>
     </div>
