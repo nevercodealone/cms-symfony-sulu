@@ -1,8 +1,11 @@
 <!-- image.html.twig -->
+{% if content.image[0] is defined and content.image[0] is not empty %}
 <figure class="text-center">
-  <img class="h-auto max-w-full mx-auto" src="{{ content.src }}" alt="{{ content.alt }}">
-  {% if content.caption %}
-    <figcaption class="pt-4 text-gray-900">{{ content.caption }}</figcaption>
+  {% set source = content.image[0].formats['content-full.webp']|default('') %}
+  <img class="h-auto max-w-full mx-auto" src="{{ source }}" alt="{{ content.image[0].title }}">
+  {% if content.image[0].description is defined and content.image[0].description is not empty %}
+    <figcaption class="pt-4 text-gray-900">{{ content.image[0].description }}</figcaption>
   {% endif %}
 </figure>
+{% endif %}
 <!-- end image.html.twig -->
