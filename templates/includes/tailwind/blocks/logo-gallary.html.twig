@@ -1,19 +1,19 @@
 <!-- logo-gallary.html.twig -->
 <div class="bg-white">
-    <div class="mx-auto max-w-2xl pt-4 px-4 lg:max-w-4xl lg:pt-8 lg:px-12">
-        <h3 class="font-bold text-1xl pt-5 pb-2 text-gray-400">{{ content.headline }}</h3>
-        <div class="grid grid-cols-2 items-center gap-y-10 gap-x-3 text-gray-700 pt-6">
-            {% if content.items is not empty %}
-                {% for item in content.items %}
-                    {% set source = item.image[0].formats['logos'] %}
-                        <div class="mx-auto w-3/5 lg:w-2/5 align-middle overflow-hidden">
-                            <a href="{{ item.url }}" class="group hover:text-green-500" target="_blank" rel="nofollow" title="Link zu {{ item.headline }}">
-                                <img src="{{ source }}" alt="Logo von {{ item.headline }}" class="h-full w-full object-cover object-center group-hover:opacity-75">
-                            </a>
-                        </div>
-                {% endfor %}
-            {% endif %}
-        </div>
+  <div class="mx-auto max-w-2xl pt-4 px-4 lg:max-w-4xl lg:pt-8 lg:px-12">
+    <h3 class="font-bold text-1xl pt-5 pb-2 text-gray-400">{{ content.headline }}</h3>
+    <div class="grid grid-cols-2 items-center gap-y-10 gap-x-3 text-gray-700 pt-6">
+      {% if content.items is not empty %}
+        {% for item in content.items %}
+          {% set source = item.image[0].formats['logos'] %}
+          <div class="mx-auto w-3/5 lg:w-2/5 align-middle overflow-hidden">
+            <a href="{{ item.url }}" class="group hover:text-green-500" target="_blank" rel="nofollow" title="Link zu {{ item.headline }}">
+              <img src="{{ source }}" alt="Logo von {{ item.headline }}" class="h-full w-full object-cover object-center group-hover:opacity-75">
+            </a>
+          </div>
+        {% endfor %}
+      {% endif %}
     </div>
+  </div>
 </div>
 <!-- end logo-gallary.html.twig -->
