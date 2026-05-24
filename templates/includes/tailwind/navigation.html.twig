@@ -3,7 +3,7 @@
 
 {# Social Media Top-Bar #}
 <div class="text-green-900 text-sm border-b border-green-900/10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1 flex flex-wrap items-center gap-x-5 gap-y-1">
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-1 flex flex-wrap items-center gap-x-5 gap-y-1">
     <span class="font-medium text-green-900 text-xs sm:text-sm tracking-wide basis-full sm:basis-auto">NCA Social Media</span>
       {# YouTube #}
       <a href="https://www.youtube.com/c/NeverCodeAlone" target="_blank" rel="noopener"
@@ -61,13 +61,13 @@
         itemscope itemtype="https://schema.org/SiteNavigationElement">
 
   {# ══ LOGO + CHIP NAV + HAMBURGER (single row on desktop) ══ #}
-  <div class="bg-white px-4 py-3 flex items-center max-w-7xl mx-auto">
+  <div class="bg-white px-4 py-3 flex items-center max-w-screen-xl mx-auto">
     <a href="{{ sulu_content_root_path() }}"
        aria-label="Zur Startseite – Never Code Alone"
        title="Link zur Startseite auf dem Logo"
        class="flex no-underline flex-shrink-0"
        itemprop="url">
-      <img aria-hidden="true" class="h-16 md:h-20 w-auto" src="/img/logo.png" alt="Logo Never Code Alone" itemprop="name">
+       <img aria-hidden="true" class="h-16 md:h-20 w-auto" src="/img/logo.png" alt="Logo Never Code Alone" itemprop="name">
     </a>
 
     {# Chip navigation — hidden on mobile, centered within its section on desktop #}
@@ -81,7 +81,7 @@
                title="{{ item.title }}"
                class="border-2 border-green-900 text-xs font-black tracking-wide uppercase px-3 py-1.5 whitespace-nowrap transition-colors duration-150 inline-block no-underline
                  {{ app.request.uri starts with url ? 'bg-green-900 text-white' : 'bg-white text-green-900 hover:bg-green-900 hover:text-white' }}">
-              {{ item.title }}
+               {{ item.title }}
             </a>
           </li>
         {% endfor %}
