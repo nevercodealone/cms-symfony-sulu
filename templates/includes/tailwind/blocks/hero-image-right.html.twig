@@ -1,61 +1,21 @@
 <!-- hero-image-right.html.twig -->
-<div class="py-8 px-4 mx-auto max-w-screen-xl">
-  <div class="grid gap-8 items-center mb-8 lg:gap-12 lg:grid-cols-12">
-    <div class="col-span-6 text-center sm:mb-6 lg:text-left lg:mb-0">
-      {% if loopIndex == 1 %}
-        <h1 class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl">{{ content.headline }}</h1>
-      {% else %}
-        <h2 class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-900 md:text-5xl lg:text-6xl">{{ content.headline }}</h2>
+<div class="bg-gray-50">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl">
+      {% if content.subline %}
+        <h3 class="text-base font-semibold leading-7 text-green-600">
+          {{ content.subline }}
+        </h3>
       {% endif %}
-      <div class="mb-6 font-light text-gray-800 lg:mb-8 md:text-lg lg:text-xl leading-normal">{{ content.description|raw }}</div>
-      {# Define the base classes for buttons #}
-      {% set buttonBaseClasses = "inline-flex items-center text-black bg-gray-100 border-2 border-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-300" %}
-      {% set buttonHoverClasses = "hover:text-white hover:bg-green-700" %}
-      {% set buttonFocusClasses = "focus:text-white focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-white" %}
-      <div class="mx-auto m-auto flex flex-col items-center justify-center sm:flex-row sm:justify-center sm:items-center gap-4 sm:gap-16">
-        {% if content.items is defined and content.items is not empty %}
-          {% for item in content.items %}
-            <div class="mb-8 text-gray-800 sm:mb-0 w-full sm:w-auto">
-              {% if item.headline %}
-                {% if loop.first %}
-                  <h2 class="mb-3 text-xl font-semibold text-gray-900 text-center sm:text-center md:text-left" style="text-wrap: nowrap">{{ item.headline }}</h2>
-                {% else %}
-                  <h3 class="mb-3 text-xl font-semibold text-gray-900 text-center sm:text-center md:text-left" style="text-wrap: nowrap">{{ item.headline }}</h3>
-                {% endif %}
-              {% endif %}
-              <p class="mb-4 font-light text-center sm:text-center md:text-left">{{ item.text }}</p>
-              <div class="flex justify-center sm:justify-center md:justify-start">
-                {% if item.buttonLink is defined and item.buttonLink is not empty %}
-                  <sulu-link
-                    href="{{ item.buttonLink }}"
-                    class="{{ buttonBaseClasses }} {{ buttonHoverClasses }} {{ buttonFocusClasses }}"
-                  >
-                    {{ item.buttonText }}
-                    <svg class="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                  </sulu-link>
-                {% endif %}
-                {% if item.url is defined and item.url is not empty %}
-
-                  <a href="{{ item.url }}"
-                  target="_blank"
-                  class="{{ buttonBaseClasses }} {{ buttonHoverClasses }} {{ buttonFocusClasses }}"
-                  >
-                  {{ item.buttonText }}
-                  <svg class="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                  </a>
-                {% endif %}
-              </div>
-            </div>
-          {% endfor %}
-        {% endif %}
-      </div>
+      <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+        {{ content.headline }}
+      </h1>
+      <p class="mt-6 text-lg leading-8 text-gray-800">
+        {{ content.description|raw }}
+      </p>
     </div>
-    <div class="col-span-6 flex justify-center items-center">
-      {% if content.image is defined and content.image is not empty %}
-        {% set source = content.image[0].formats['contact'] %}
-        {% set title = content.image[0].title %}
-        <img src="{{ source }}" alt="{{ title }}">
-      {% endif %}
+    <div class="mx-auto mt-10 max-w-lg lg:mx-0 lg:max-w-none lg:w-1/2">
+      <img src="{{ content.image }}" alt="{{ content.imageAlt }}" class="rounded-xl shadow-2xl ring-1 ring-gray-900/10 lg:mt-0 lg:ml-[max(-3rem,4vw)] lg:w-[57rem]">
     </div>
   </div>
 </div>
