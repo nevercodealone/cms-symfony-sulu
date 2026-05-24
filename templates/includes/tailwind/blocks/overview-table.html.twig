@@ -1,0 +1,47 @@
+<!-- overview-table.html.twig -->
+<div class="bg-white py-24 sm:py-32">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      {% if content.subline %}
+        <h3 class="text-base font-semibold leading-7 text-green-600">
+          {{ content.subline }}
+        </h3>
+      {% endif %}
+      <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+        {{ content.headline }}
+      </h1>
+      <p class="mt-6 text-lg leading-8 text-gray-800">
+        {{ content.description|raw }}
+      </p>
+    </div>
+    <div class="mt-16 flow-root">
+      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                {% for header in content.headers %}
+                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 lg:pl-8">
+                    {{ header }}
+                  </th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              {% for row in content.rows %}
+                <tr>
+                  {% for cell in row %}
+                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-800 sm:pl-6 lg:pl-8">
+                      {{ cell }}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- end overview-table.html.twig -->
