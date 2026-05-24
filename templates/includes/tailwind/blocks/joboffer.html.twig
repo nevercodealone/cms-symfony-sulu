@@ -1,0 +1,34 @@
+<!-- joboffer.html.twig -->
+<div class="bg-white py-24 sm:py-32">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl">
+      {% if content.subline %}
+        <h3 class="text-base font-semibold leading-7 text-green-600">
+          {{ content.subline }}
+        </h3>
+      {% endif %}
+      <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+        {{ content.headline }}
+      </h1>
+      <div class="mt-6 space-y-6 text-lg leading-8 text-gray-600">
+        {{ content.description|raw }}
+      </div>
+      {% if content.jobtype is defined and content.jobtype is not empty %}
+        <div class="mt-10 flex items-center gap-x-6">
+          <a href="{{ content.applicationUrl }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+            {{ content.applicationButton }}
+          </a>
+          {% if content.jobtype == 'Remote' %}
+            <span class="flex items-center gap-x-1 rounded-md bg-green-700 px-3 py-1 text-sm font-semibold text-white shadow-sm">
+              <svg class="-ml-0.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.25 9a6.53 6.53 0 016.18-6.53h.75a6.53 6.53 0 016.18 6.53l-2.62 2.62a2.25 2.25 0 00-1.59.61 2.25 2.25 0 01-1.59.61 2.25 2.25 0 00-1.59.61 2.25 2.25 0 01-1.59.61 2.25 2.25 0 00-1.59.61 2.25 2.25 0 01-1.59.61 2.25 2.25 0 00-1.59.61 2.25 2.25 0 01-1.59.61 2.25 2.25 0 00-1.59.61A6.54 6.54 0 015.25 9V9zM2.62 9.75a8.25 8.25 0 018.63-8.25h.75a8.25 8.25 0 018.25 8.25v.75a8.25 8.25 0 01-8.25 8.25h-.75a8.25 8.25 0 01-8.25-8.25v-.75z" clip-rule="evenodd" />
+              </svg>
+              {{ content.jobtype }}
+            </span>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<!-- end joboffer.html.twig -->
