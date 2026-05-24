@@ -1,47 +1,53 @@
 <!-- overview-table.html.twig -->
-<div class="bg-white py-24 sm:py-32">
-  <div class="mx-auto max-w-7xl px-6 lg:px-8">
-    <div class="mx-auto max-w-2xl text-center">
-      {% if content.subline %}
-        <h3 class="text-base font-semibold leading-7 text-green-600">
-          {{ content.subline }}
-        </h3>
-      {% endif %}
-      <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-        {{ content.headline }}
-      </h1>
-      <p class="mt-6 text-lg leading-8 text-gray-800">
-        {{ content.description|raw }}
-      </p>
-    </div>
-    <div class="mt-16 flow-root">
-      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+{% if content.headers is defined and content.headers is not empty %}
+<div class="py-24 sm:py-32">
+  {% if content.subline is defined and content.subline is not empty %}
+    <h3 class="text-base font-semibold leading-7 text-green-600 text-center">
+      {{ content.subline }}
+    </h3>
+  {% endif %}
+  {% if content.headline is defined and content.headline is not empty %}
+    <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl text-center">
+      {{ content.headline }}
+    </h1>
+  {% endif %}
+  {% if content.description is defined and content.description is not empty %}
+    <p class="mt-6 text-lg leading-8 text-gray-800 text-center">
+      {{ content.description|raw }}
+    </p>
+  {% endif %}
+  <div class="mt-16 flow-root">
+    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              {% for header in content.headers %}
+                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 lg:pl-8">
+                  {{ header.text }}
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          {% if content.rows is defined and content.rows is not empty %}
+          <tbody class="divide-y divide-gray-200 bg-white">
+            {% for row in content.rows %}
               <tr>
-                {% for header in content.headers %}
-                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 lg:pl-8">
-                    {{ header }}
-                  </th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 bg-white">
-              {% for row in content.rows %}
-                <tr>
-                  {% for cell in row %}
+                {% if row.cells is defined and row.cells is not empty %}
+                  {% for cell in row.cells %}
                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-800 sm:pl-6 lg:pl-8">
-                      {{ cell }}
+                      {{ cell.text }}
                     </td>
                   {% endfor %}
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          {% endif %}
+        </table>
       </div>
     </div>
   </div>
 </div>
+{% endif %}
 <!-- end overview-table.html.twig -->
