@@ -15,9 +15,9 @@
       <div class="mt-10 flex items-center justify-center gap-x-6">
         {% if content.buttonText is defined and content.buttonText is not empty %}
           {% if content.buttonLink is defined and content.buttonLink is not empty %}
-            <a href="{{ sulu_content_path(content.buttonLink) }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+            <sulu-link href="{{ content.buttonLink }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
               {{ content.buttonText }}
-            </a>
+            </sulu-link>
           {% endif %}
         {% endif %}
         {% if content.buttonTextTwo is defined and content.buttonTextTwo is not empty %}
