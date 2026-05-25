@@ -17,7 +17,7 @@
                 <a href="{{ sulu_content_path(item.buttonLink) }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
                   {{ item.buttonText }}
                 </a>
-              {% elseif item.url is defined and item.url is not empty and (item.url matches '/^https?:\\/\\//') %}
+              {% elseif item.url is defined and item.url is not empty and (item.url starts with 'http://' or item.url starts with 'https://') %}
                 <a href="{{ item.url }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
                   {{ item.buttonText }}
                 </a>
