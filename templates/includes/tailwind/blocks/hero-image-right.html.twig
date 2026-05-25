@@ -3,9 +3,9 @@
 <div class="bg-gray-50">
   <div class="mx-auto max-w-7xl px-6 lg:px-8 lg:grid lg:grid-cols-2 lg:gap-8">
     <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl">
-      <h1 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+      <h2 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
         {{ content.headline }}
-      </h1>
+      </h2>
       <p class="mt-6 text-lg leading-8 text-gray-800">
         {{ content.description|raw }}
       </p>
@@ -17,12 +17,10 @@
                 <a href="{{ sulu_content_path(item.buttonLink) }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
                   {{ item.buttonText }}
                 </a>
-              {% elseif item.url is defined and item.url is not empty %}
+              {% elseif item.url is defined and item.url is not empty and (item.url matches '/^https?:\\/\\//') %}
                 <a href="{{ item.url }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
                   {{ item.buttonText }}
                 </a>
-              {% else %}
-                <span class="text-sm font-semibold text-gray-900">{{ item.buttonText }}</span>
               {% endif %}
             {% endif %}
           {% endfor %}
