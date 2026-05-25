@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<form xmlns="http://schemas.sulu.io/template/template"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
+    <key>contact_lead_details</key>
+    <properties>
+        <property name="product" type="text_line" mandatory="true" colspan="6">
+            <meta><title>Produkt</title></meta>
+            <params>
+                <param name="disabled" value="true"/>
+            </params>
+        </property>
+        <property name="email" type="text_line" mandatory="true" colspan="6">
+            <meta><title>E-Mail</title></meta>
+            <params>
+                <param name="disabled" value="true"/>
+            </params>
+        </property>
+        <property name="name" type="text_line" colspan="6">
+            <meta><title>Name</title></meta>
+            <params>
+                <param name="disabled" value="true"/>
+            </params>
+        </property>
+        <property name="createdAt" type="text_line" colspan="6">
+            <meta><title>Erstellt am</title></meta>
+            <params>
+                <param name="disabled" value="true"/>
+            </params>
+        </property>
+        <property name="message" type="text_area" colspan="12">
+            <meta><title>Nachricht</title></meta>
+            <params>
+                <param name="disabled" value="true"/>
+            </params>
+        </property>
+        <property name="answers" type="text_area" colspan="12">
+            <meta><title>Antworten</title></meta>
+            <params>
+                <param name="disabled" value="true"/>
+            </params>
+        </property>
+    </properties>
+</form>

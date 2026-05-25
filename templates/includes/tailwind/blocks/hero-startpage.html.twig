@@ -1,39 +1,34 @@
 <!-- hero-startpage.html.twig -->
-<div class="relative">
-    <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gray-100"></div>
-        <div class="relative shadow-xl sm:overflow-hidden sm:rounded-2xl">
-            <div class="absolute inset-0">
-                {% set source = content.image[0].formats['hero-startpage'] %}
-                <img class="h-full w-full object-cover" src="{{ source }}" alt="{{ content.description|replace({'<p>': '', '</p>': ''}) }}">
-                <div class="absolute inset-0 bg-gradient-to-r from-green-800 to-green-700 mix-blend-multiply"></div>
-            </div>
-            <div class="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
-                {% if loopIndex == 1 %}
-                  <h1 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                      <span class="block text-white">{{ content.textone }}</span>
-                      <span class="block text-green-200">{{ content.texttwo }}</span>
-                  </h1>
-                {% else %}
-                  <h2 class="text-center text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                    <span class="block text-white">{{ content.textone }}</span>
-                    <span class="block text-green-200">{{ content.texttwo }}</span>
-                  </h2>
-                {% endif %}
-                <div class="mx-auto mt-6 max-w-lg text-center text-xl text-green-200 sm:max-w-3xl">
-                    {{ content.description|raw }}
-                </div>
-                <div class="mx-auto mt-10 max-w-sm sm:flex sm:max-w-none sm:justify-center">
-                    <div class="space-y-4 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5 sm:space-y-0">
-                        <sulu-link href="{{ content.buttonLink }}" title="{{ content.buttonText }}" class="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-3 text-base font-medium text-green-700 shadow-sm hover:bg-green-50 sm:px-8">
-                            {{ content.buttonText }}
-                        </sulu-link>
-                        <a href="{{ content.url }}" title="{{ content.buttonTextTwo }}" class="flex items-center justify-center rounded-md border border-transparent bg-green-500 bg-opacity-60 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-opacity-70 sm:px-8">
-                            {{ content.buttonTextTwo }}
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="bg-gray-50">
+  <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
+    <div class="mx-auto max-w-2xl text-center">
+      {% if content.image[0] is defined and content.image[0] is not empty %}
+        {% set source = content.image[0].formats['hero-startpage']|default(content.image[0].formats['content-full.webp']|default('')) %}
+        <img src="{{ source }}" alt="{{ content.image[0].title }}" class="mx-auto mb-8 rounded-xl shadow-lg">
+      {% endif %}
+      <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+        {{ content.textone }} {{ content.texttwo }}
+      </h1>
+      <p class="mt-6 text-lg leading-8 text-gray-800">
+        {{ content.description|raw }}
+      </p>
+      <div class="mt-10 flex items-center justify-center gap-x-6">
+        {% if content.buttonText is defined and content.buttonText is not empty %}
+          {% if content.buttonLink is defined and content.buttonLink is not empty %}
+            <sulu-link href="{{ content.buttonLink }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+              {{ content.buttonText }}
+            </sulu-link>
+          {% endif %}
+        {% endif %}
+        {% if content.buttonTextTwo is defined and content.buttonTextTwo is not empty %}
+          {% if content.url is defined and content.url is not empty %}
+            <a href="{{ content.url }}" class="text-sm font-semibold leading-6 text-gray-900">
+              {{ content.buttonTextTwo }} <span aria-hidden="true">→</span>
+            </a>
+          {% endif %}
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
 <!-- end hero-startpage.html.twig -->

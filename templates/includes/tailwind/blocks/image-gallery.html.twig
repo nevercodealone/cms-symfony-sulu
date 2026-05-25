@@ -1,30 +1,28 @@
 <!-- image-gallery.html.twig -->
-<div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
-  <div class="mx-auto max-w-screen-md text-center mb-8 lg:mb-16">
-    <h2 class="text-gray-900 mb-4 text-4xl tracking-tight font-extrabold">{{ content.headline }}</h2>
-    <div class="text-gray-800 dark:text-gray-400 sm:text-xl">{{ content.description|raw }}</div>
-  </div>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% if content.image is defined and content.image is not empty %}
-        {% for image in content.image %}
-          {% set source = image.formats['image-gallery'] %}
-          {% set title = image.description ?? image.title %}
-          {% set uniqueId = 'img-' ~ loop.index %}
+<div class="mx-auto max-w-screen-md text-center mb-4 sm:mb-8">
+  <h2 class="text-gray-900 mb-4 text-2xl sm:text-3xl lg:text-4xl tracking-tight font-extrabold">{{ content.headline }}</h2>
+  <div class="text-gray-800 dark:text-gray-400 sm:text-xl">{{ content.description|raw }}</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% if content.image is defined and content.image is not empty %}
+    {% for image in content.image %}
+      {% set source = image.formats['image-gallery'] %}
+      {% set title = image.description ?? image.title %}
+      {% set uniqueId = 'img-' ~ loop.index %}
 
-          <figure class="bg-white p-5 rounded shadow overflow-hidden">
-            <img
-              class="w-full h-48 object-cover"
-              src="{{ source }}"
-              alt=""
-            >
-            {% if title %}
-              <figcaption class="p-4">
-                <h3 id="{{ uniqueId }}" class="text-gray-900 text-sm font-bold">{{ title }}</h3>
-              </figcaption>
-            {% endif %}
-          </figure>
-        {% endfor %}
-    {% endif %}
-  </div>
+      <figure class="bg-white p-5 rounded shadow overflow-hidden">
+        <img
+          class="w-full h-48 object-cover"
+          src="{{ source }}"
+          alt=""
+        >
+        {% if title %}
+          <figcaption class="p-4">
+            <h3 id="{{ uniqueId }}" class="text-gray-900 text-sm font-bold">{{ title }}</h3>
+          </figcaption>
+        {% endif %}
+      </figure>
+    {% endfor %}
+  {% endif %}
 </div>
 <!-- end image-gallery.html.twig -->

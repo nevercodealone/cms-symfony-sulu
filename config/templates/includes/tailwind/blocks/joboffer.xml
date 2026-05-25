@@ -1,0 +1,66 @@
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="joboffer">
+        <types>
+            <type name="joboffer">
+                <meta>
+                    <title>Job Offer</title>
+                </meta>
+                <properties>
+                    <property name="subline" type="text_line">
+                        <meta>
+                            <title>Subline</title>
+                        </meta>
+                    </property>
+                    <property name="headline" type="text_line">
+                        <meta>
+                            <title>Headline</title>
+                        </meta>
+                        <params>
+                            <param name="headline" value="true"/>
+                        </params>
+                    </property>
+                    <property name="description" type="text_editor">
+                        <meta>
+                            <title>Beschreibung</title>
+                        </meta>
+                        <params>
+                            <param name="table" value="false"/>
+                            <param name="link" value="true"/>
+                        </params>
+                    </property>
+                    <property name="jobtype" type="single_select" colspan="6">
+                        <meta>
+                            <title>Job Type</title>
+                        </meta>
+                        <params>
+                            <param name="default_value" value="onsite"/>
+                            <param name="values" type="collection">
+                                <param name="onsite">
+                                    <meta><title>On Site</title></meta>
+                                </param>
+                                <param name="Remote">
+                                    <meta><title>Remote</title></meta>
+                                </param>
+                                <param name="hybrid">
+                                    <meta><title>Hybrid</title></meta>
+                                </param>
+                            </param>
+                        </params>
+                    </property>
+                    <property name="applicationUrl" type="url" colspan="6">
+                        <meta>
+                            <title>Application URL</title>
+                        </meta>
+                    </property>
+                    <property name="applicationButton" type="text_line">
+                        <meta>
+                            <title>Application Button Text</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

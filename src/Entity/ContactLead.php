@@ -14,6 +14,9 @@ use Doctrine\ORM\Mapping as ORM;
 class ContactLead
 {
     final public const RESOURCE_KEY = 'contact_leads';
+    final public const FORM_KEY = 'contact_lead_details';
+    final public const LIST_KEY = 'contact_leads';
+    final public const SECURITY_CONTEXT = 'sulu.contact_leads.contact_leads';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
