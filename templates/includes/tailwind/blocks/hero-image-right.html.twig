@@ -14,9 +14,9 @@
           {% for item in content.items %}
             {% if item.buttonText is defined and item.buttonText is not empty %}
               {% if item.buttonLink is defined and item.buttonLink is not empty %}
-                <a href="{{ sulu_content_path(item.buttonLink) }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
+                <sulu-link href="{{ item.buttonLink }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
                   {{ item.buttonText }}
-                </a>
+                </sulu-link>
               {% elseif item.url is defined and item.url is not empty and (item.url starts with 'http://' or item.url starts with 'https://') %}
                 <a href="{{ item.url }}" class="rounded-md bg-green-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
                   {{ item.buttonText }}
