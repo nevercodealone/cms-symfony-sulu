@@ -54,7 +54,7 @@ services:
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - MAILER_DSN=${MAILER_DSN:-sendmail://default}
+      - MAILER_DSN=${MAILER_DSN:-smtp://${SMTP_USER}:${SMTP_PASSWORD}@${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}}
       - CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-roland@nevercodealone.de}
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
       - APP_URL=https://$URL
