@@ -55,7 +55,7 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - MAILER_DSN=${MAILER_DSN:-sendmail://default}
-      - CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}
+      - CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-roland@nevercodealone.de}
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
       - APP_URL=https://$URL
   chromadb:
