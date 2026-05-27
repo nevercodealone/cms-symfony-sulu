@@ -7,6 +7,7 @@ namespace App\ContactForm;
 use App\Entity\ContactLead;
 use App\Repository\ContactLeadRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -60,6 +61,7 @@ final class QualifiedContactComponent
         private readonly ContactLeadMailer $mailer,
         private readonly RequestStack $requestStack,
         private readonly ContactLeadRepository $contactLeadRepository,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -213,7 +215,8 @@ final class QualifiedContactComponent
             $this->mailer->sendNotification($lead);
 
             $this->submitted = true;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->logger->error('Contact lead submission failed: {message}', ['message' => $e->getMessage(), 'exception' => $e]);
             $this->error = 'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
         }
     }
