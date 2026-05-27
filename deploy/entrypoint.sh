@@ -35,7 +35,7 @@ fi
 [ -n "$MCP_TOKEN_LIFETIME" ] && echo "MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME" >> .env
 [ -n "$MCP_CODE_LIFETIME" ] && echo "MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME" >> .env
 [ -n "$LOCK_DSN" ] && echo "LOCK_DSN=$LOCK_DSN" >> .env
-echo "MAILER_DSN=${MAILER_DSN:-sendmail://default}" >> .env
+echo "MAILER_DSN=${MAILER_DSN:-smtp://${SMTP_USER}:${SMTP_PASSWORD}@${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}}" >> .env
 echo "CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}" >> .env
 
 # Fix .env ownership (just written as root)
