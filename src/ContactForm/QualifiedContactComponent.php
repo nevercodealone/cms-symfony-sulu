@@ -9,6 +9,7 @@ use App\Repository\ContactLeadRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -62,6 +63,7 @@ final class QualifiedContactComponent
         private readonly RequestStack $requestStack,
         private readonly ContactLeadRepository $contactLeadRepository,
         private readonly LoggerInterface $logger,
+        private readonly ValidatorInterface $validator,
     ) {
     }
 
@@ -182,13 +184,16 @@ final class QualifiedContactComponent
     {
         $this->error = '';
 
-        if (empty($this->contactEmail)) {
-            $this->error = 'Bitte gib deine E-Mail-Adresse ein.';
-            return;
-        }
+        $lead = new ContactLead();
+        $lead->setProduct($this->activeTab);
+        $lead->setAnswers($this->answers);
+        $lead->setName($this->contactName ?: null);
+        $lead->setEmail($this->contactEmail);
+        $lead->setMessage($this->contactMessage ?: null);
 
-        if (!filter_var($this->contactEmail, FILTER_VALIDATE_EMAIL)) {
-            $this->error = 'Bitte gib eine gültige E-Mail-Adresse ein.';
+        $errors = $this->validator->validate($lead);
+        if ($errors->count() > 0) {
+            $this->error = $errors->get(0)->getMessage();
             return;
         }
 
@@ -201,12 +206,6 @@ final class QualifiedContactComponent
         }
 
         try {
-            $lead = new ContactLead();
-            $lead->setProduct($this->activeTab);
-            $lead->setAnswers($this->answers);
-            $lead->setName($this->contactName ?: null);
-            $lead->setEmail($this->contactEmail);
-            $lead->setMessage($this->contactMessage ?: null);
             $lead->setUserIp($userIp);
 
             $this->entityManager->persist($lead);

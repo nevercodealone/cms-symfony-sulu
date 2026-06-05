@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Repository\ContactLeadRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ContactLeadRepository::class)]
 #[ORM\Table(name: 'app_contact_leads')]
@@ -30,12 +31,16 @@ class ContactLead
     #[ORM\Column(type: Types::JSON)]
     private array $answers = [];
 
+    #[Assert\Length(max: 30, maxMessage: 'Der Name darf maximal {{ limit }} Zeichen lang sein.')]
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
     private ?string $name = null;
 
+    #[Assert\NotBlank(message: 'Bitte gib deine E-Mail-Adresse ein.')]
+    #[Assert\Email(message: 'E-Mail korrigieren')]
     #[ORM\Column(type: Types::STRING, length: 255)]
     private string $email;
 
+    #[Assert\Length(max: 300, maxMessage: 'Die Nachricht darf maximal {{ limit }} Zeichen lang sein.')]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $message = null;
 

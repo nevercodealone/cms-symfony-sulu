@@ -72,16 +72,19 @@
             <input
               type="email"
               data-model="contactEmail"
+              id="contact-email"
               class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
               placeholder="max@firma.de"
               required
             />
+            <span id="email-hint" data-live-ignore class="hidden text-xs text-red-500 mt-1">E-Mail korrigieren</span>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Name <span class="text-gray-400 font-normal">(optional)</span></label>
             <input
               type="text"
               data-model="contactName"
+              maxlength="30"
               class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
               placeholder="Max Mustermann"
             />
@@ -90,10 +93,15 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Nachricht <span class="text-gray-400 font-normal">(optional — gerne auch KI-generiert)</span></label>
             <textarea
               data-model="contactMessage"
+              id="contact-message"
               rows="3"
+              maxlength="300"
               class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300 resize-none"
               placeholder="Beschreib kurz dein Projekt oder lass ChatGPT/Claude eine Anfrage formulieren"
             ></textarea>
+            <div class="text-xs text-right mt-1">
+              <span id="msg-counter" data-live-ignore class="text-gray-400">0 / 300</span>
+            </div>
           </div>
           {% if this.error is not empty %}
             <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
