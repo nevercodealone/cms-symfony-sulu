@@ -42,23 +42,25 @@
 {% endif %}
 
 {% if faqArray is defined and faqArray is not empty %}
-<script type="application/ld+json">
-  {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
+  {% set faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": []
+  } %}
   {% for item in faqArray %}
-  {
-      "@type": "Question",
-      "name": "{{ item.headline }}",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "{{ item.subline }}"
-                }
-            }{% if not loop.last %},{% endif %}
-          {% endfor %}
-  ]
-}
+    {% set faqSchema = faqSchema|merge({
+      mainEntity: faqSchema.mainEntity|merge([{
+        "@type": "Question",
+        "name": item.headline,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.subline
+        }
+      }])
+    }) %}
+  {% endfor %}
+<script type="application/ld+json">
+{{ faqSchema|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}
 </script>
 {% endif %}
 <!-- end blocks.html.twig -->
