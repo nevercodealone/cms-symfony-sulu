@@ -60,6 +60,11 @@
                                                                 <title lang="en">Team</title>
                                                             </meta>
                                                         </param>
+                                                        <param name="live">
+                                                            <meta>
+                                                                <title lang="en">Live</title>
+                                                            </meta>
+                                                        </param>
                                                     </param>
                                                 </params>
                                             </property>
@@ -109,6 +114,11 @@
                                                         <param name="team">
                                                             <meta>
                                                                 <title lang="en">Team</title>
+                                                            </meta>
+                                                        </param>
+                                                        <param name="live">
+                                                            <meta>
+                                                                <title lang="en">Live</title>
                                                             </meta>
                                                         </param>
                                                     </param>
