@@ -1,0 +1,41 @@
+<!-- page-meta.html.twig -->
+{% set pageLocale = app.request.locale|split('_')[0] %}
+
+{% if created is defined and created %}
+    {% set createdStamp = created|date('Y-m-d H:i:s') %}
+    {% set changedStamp = (changed is defined and changed) ? changed|date('Y-m-d H:i:s') : createdStamp %}
+    {% set hasBeenUpdated = changedStamp != createdStamp %}
+    {% set createdLabel = pageLocale == 'de' ? 'Erstellt' : 'Created' %}
+    {% set updatedLabel = pageLocale == 'de' ? 'Aktualisiert' : 'Updated' %}
+    {% set authorLabel = pageLocale == 'de' ? 'Autor' : 'Author' %}
+
+    <dl class="flex flex-wrap items-center gap-x-6 gap-y-2.5 py-4 mb-6 text-sm font-medium text-gray-800 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-gray-500 shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75z"/>
+            </svg>
+            <dt class="text-gray-600">{{ createdLabel }}:</dt>
+            <dd><time datetime="{{ created|date('c') }}">{{ created|format_datetime('long', 'none', locale=pageLocale) }}</time></dd>
+        </div>
+
+        {% if hasBeenUpdated %}
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-gray-500 shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/>
+            </svg>
+            <dt class="text-gray-600">{{ updatedLabel }}:</dt>
+            <dd><time datetime="{{ changed|date('c') }}">{{ changed|format_datetime('long', 'none', locale=pageLocale) }}</time></dd>
+        </div>
+        {% endif %}
+
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-gray-500 shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+            </svg>
+            <dt class="text-gray-600">{{ authorLabel }}:</dt>
+            <dd>
+                <a href="/{{ pageLocale }}/ueber-uns/nca-team/roland-golla" class="font-semibold text-gray-900 underline underline-offset-2 decoration-gray-400 hover:decoration-gray-900">Roland Golla</a>
+            </dd>
+        </div>
+    </dl>
+{% endif %}
