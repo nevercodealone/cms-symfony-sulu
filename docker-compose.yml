@@ -17,7 +17,6 @@ services:
     volumes:
       - './db-live:/var/lib/mysql'
       - './db-init:/docker-entrypoint-initdb.d'
-    restart: always
     env_file:
       - .env
 

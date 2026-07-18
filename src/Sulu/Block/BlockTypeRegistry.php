@@ -83,6 +83,7 @@ final class BlockTypeRegistry
         'related-content-by-page-tag' => 'Related content based on page tags.',
         'subpages-overview' => 'List of child pages.',
         'table-of-contents' => 'Auto-generated table of contents.',
+        'latest-articles' => 'Automatically lists the 6 most recently created published pages in the webspace, rendered as a 3-column card grid (matches highlights visual style). Optional headline field. No editor data source required.',
 
         // === EXTERNAL BLOCKS ===
         'html-raw' => 'Raw HTML block for embedding iframes, videos, and custom HTML content.',
@@ -370,6 +371,10 @@ final class BlockTypeRegistry
             'type' => 'table-of-contents',
             'headline' => 'Contents',
         ],
+        'latest-articles' => [
+            'type' => 'latest-articles',
+            'headline' => 'Latest Articles',
+        ],
 
         // === EXTERNAL BLOCKS ===
         'html-raw' => [
@@ -586,6 +591,9 @@ final class BlockTypeRegistry
             'encoding' => ['items' => 'json'],
         ],
         'table-of-contents' => [
+            'properties' => ['headline'],
+        ],
+        'latest-articles' => [
             'properties' => ['headline'],
         ],
 

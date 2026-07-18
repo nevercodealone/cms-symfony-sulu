@@ -1,0 +1,58 @@
+<!-- latest-articles.html.twig -->
+{% set latestArticleUuids = latestArticles(6) %}
+{% if latestArticleUuids is not empty %}
+  <aside aria-label="Latest articles" class="py-4 bg-white lg:py-8 antialiased">
+    <div class="mx-auto max-w-screen-xl">
+      {% if content.headline is defined and content.headline is not empty %}
+        {% include "includes/tailwind/includes/headline.html.twig" with {
+          'content': content,
+          'loopIndex': loopIndex,
+          'isFirstHeadline': isFirstHeadline
+        } %}
+      {% endif %}
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {% for articleUuid in latestArticleUuids %}
+          {% set articlePage = sulu_content_load(articleUuid) %}
+          {% if articlePage is not empty %}
+            {% set excerpt = articlePage.extension.excerpt %}
+            {% set seo = articlePage.extension.seo|default([]) %}
+            {% set articleTitle = excerpt.title|default(articlePage.content.title) %}
+            {% set articleUrl = articlePage.content.url|default('') %}
+            {% set articleDescription = excerpt.description|default(seo.description|default('')) %}
+
+            <article>
+              <a href="{{ sulu_content_path(articleUrl) }}">
+                {% if excerpt.images[0] is defined %}
+                  {% set source = excerpt.images[0].thumbnails['related-content-by-page.webp']|default('') %}
+                  {% if source is not empty %}
+                    <img src="{{ source }}"
+                         class="mb-5 w-full max-w-full rounded-lg"
+                         alt="{{ excerpt.images[0].title }}"
+                         loading="lazy">
+                  {% endif %}
+                {% endif %}
+              </a>
+              {% if isFirstHeadline %}
+                <h2 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
+                  <a href="{{ sulu_content_path(articleUrl) }}">{{ articleTitle }}</a>
+                </h2>
+              {% else %}
+                <h3 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
+                  <a href="{{ sulu_content_path(articleUrl) }}">{{ articleTitle }}</a>
+                </h3>
+              {% endif %}
+              {% if articleDescription is not empty %}
+                <p class="flex items-center space-x-4">
+                  <span class="text-sm text-gray-800">
+                    {{ articleDescription|raw }}
+                  </span>
+                </p>
+              {% endif %}
+            </article>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </aside>
+{% endif %}
+<!-- end latest-articles.html.twig -->
