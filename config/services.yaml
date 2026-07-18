@@ -237,6 +237,10 @@ services:
     App\Sulu\Service\SnippetService:
         public: true
 
+    # Latest Articles Service - Direct SQL for fetching most recently created pages
+    App\Sulu\Service\LatestArticlesService:
+        public: true
+
     # Sulu Media Service - Direct SQL for media operations + MediaManager for uploads
     App\Sulu\Service\MediaService:
         arguments:
