@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ContactForm;
 
 use App\Entity\ContactLead;
+use App\Telegram\TelegramNotifier;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
@@ -12,6 +13,7 @@ final class ContactLeadMailer
 {
     public function __construct(
         private readonly MailerInterface $mailer,
+        private readonly TelegramNotifier $telegramNotifier,
         private readonly string $recipientEmail,
     ) {
     }
@@ -50,5 +52,12 @@ final class ContactLeadMailer
             ->text($body);
 
         $this->mailer->send($email);
+
+        // Best-effort Telegram notification. Failures must not break lead submission.
+        try {
+            $this->telegramNotifier->sendText($body);
+        } catch (\Throwable $e) {
+            error_log('Telegram contact-lead notification failed: ' . $e->getMessage());
+        }
     }
 }

@@ -44,6 +44,11 @@ services:
         arguments:
             $recipientEmail: '%env(CONTACT_LEAD_EMAIL)%'
 
+    App\Telegram\TelegramNotifier:
+        arguments:
+            $botToken: '%env(TELEGRAM_BOT_TOKEN)%'
+            $defaultChatId: '%env(TELEGRAM_DEFAULT_CHAT_ID)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
     \Twig_Extensions_Extension_Intl:
