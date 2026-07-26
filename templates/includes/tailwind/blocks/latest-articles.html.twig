@@ -20,35 +20,19 @@
             {% set articleUrl = articlePage.content.url|default('') %}
             {% set articleDescription = excerpt.description|default(seo.description|default('')) %}
 
-            <article>
-              <a href="{{ sulu_content_path(articleUrl) }}">
-                {% if excerpt.images[0] is defined %}
-                  {% set source = excerpt.images[0].thumbnails['related-content-by-page.webp']|default('') %}
-                  {% if source is not empty %}
-                    <img src="{{ source }}"
-                         class="mb-5 w-full max-w-full rounded-lg"
-                         alt="{{ excerpt.images[0].title }}"
-                         loading="lazy">
-                  {% endif %}
-                {% endif %}
-              </a>
-              {% if isFirstHeadline %}
-                <h2 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
-                  <a href="{{ sulu_content_path(articleUrl) }}">{{ articleTitle }}</a>
-                </h2>
-              {% else %}
-                <h3 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
-                  <a href="{{ sulu_content_path(articleUrl) }}">{{ articleTitle }}</a>
-                </h3>
-              {% endif %}
-              {% if articleDescription is not empty %}
-                <p class="flex items-center space-x-4">
-                  <span class="text-sm text-gray-800">
-                    {{ articleDescription|raw }}
-                  </span>
-                </p>
-              {% endif %}
-            </article>
+            {% set imageSrc = '' %}
+            {% set imageAlt = '' %}
+            {% if excerpt.images[0] is defined %}
+              {% set imageSrc = excerpt.images[0].thumbnails['related-content-by-page.webp']|default('') %}
+              {% set imageAlt = excerpt.images[0].title|default('') %}
+            {% endif %}
+            {% include 'includes/tailwind/includes/article-card.html.twig' with {
+              'url': sulu_content_path(articleUrl),
+              'title': articleTitle,
+              'image_src': imageSrc,
+              'image_alt': imageAlt,
+              'description': articleDescription
+            } only %}
           {% endif %}
         {% endfor %}
       </div>
