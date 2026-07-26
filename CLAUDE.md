@@ -62,3 +62,11 @@ HTML tags in plain-text fields appear literally as `<p>...</p>` on the website.
 - Excerpt title, description, and image are inherited from source unless explicitly overridden
 - Media IDs are shared references — no media files are duplicated
 - Nested items in blocks (faqs, items, rows, cards, flags) are fully preserved
+
+## Environment Variables
+
+Three-layer flow: GitLab CI/CD vars → `docker-compose.conversis.yml` `webserver.environment:` → `deploy/entrypoint.sh` writes to `/var/www/html/.env`.
+
+Do NOT forward vars in `.gitlab-ci.yml` `variables:` blocks — that causes literal `$VARNAME` strings when CI/CD vars are missing. Let them auto-propagate like `DB_HOST` and `GEMINI_API_KEY`.
+
+See `docs/env-vars.md` for the full checklist, var registry, and a `DB_HOST` trace.
