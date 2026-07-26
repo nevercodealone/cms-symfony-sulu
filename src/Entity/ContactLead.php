@@ -40,7 +40,7 @@ class ContactLead
     #[ORM\Column(type: Types::STRING, length: 255)]
     private string $email;
 
-    #[Assert\Length(max: 300, maxMessage: 'Die Nachricht darf maximal {{ limit }} Zeichen lang sein.')]
+    #[Assert\Length(max: 350, maxMessage: 'Die Nachricht darf maximal {{ limit }} Zeichen lang sein.')]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $message = null;
 
