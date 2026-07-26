@@ -21,18 +21,24 @@ final class QualifiedContactComponent
 {
     use DefaultActionTrait;
 
-    #[LiveProp(writable: true)]
-    public string $activeTab = 'vibe-coding';
+    public const STEP_SERVICE = 'service';
+    public const STEP_DETAILS = 'details';
+    public const STEP_CONTACT = 'contact';
+    public const STEP_DONE = 'done';
 
     #[LiveProp(writable: true)]
-    public int $currentStep = 0;
+    public string $step = self::STEP_SERVICE;
+
+    #[LiveProp(writable: true)]
+    public string $selectedService = '';
 
     /** @var array<string, string> */
     #[LiveProp(writable: true)]
     public array $answers = [];
 
+    /** @var array<int, string> */
     #[LiveProp(writable: true)]
-    public bool $showContactForm = false;
+    public array $checkboxSelections = [];
 
     #[LiveProp(writable: true)]
     public bool $submitted = false;
@@ -46,15 +52,9 @@ final class QualifiedContactComponent
     #[LiveProp(writable: true)]
     public string $contactMessage = '';
 
+    /** @var array<string, string> Per-field validation errors (keys: message, name, email, _step, _general). */
     #[LiveProp(writable: true)]
-    public string $textAnswer = '';
-
-    /** @var array<int, string> */
-    #[LiveProp(writable: true)]
-    public array $checkboxSelections = [];
-
-    #[LiveProp(writable: true)]
-    public string $error = '';
+    public array $errors = [];
 
     public function __construct(
         private readonly QuestionTree $questionTree,
@@ -68,86 +68,91 @@ final class QualifiedContactComponent
     }
 
     /** @return array<int, array<string, mixed>> */
-    public function getTabs(): array
+    public function getServices(): array
     {
-        return $this->questionTree->getTabs();
+        return $this->questionTree->getServices();
     }
 
     /** @return array<string, mixed>|null */
-    public function getCurrentQuestion(): ?array
+    public function getCurrentService(): ?array
     {
-        return $this->questionTree->getQuestion($this->activeTab, $this->currentStep);
+        return $this->questionTree->getService($this->selectedService);
     }
 
-    /** @return array<string, string> */
-    public function getAssistant(): array
+    /** @return array<int, array<string, mixed>> */
+    public function getCurrentQuestions(): array
     {
-        foreach ($this->questionTree->getTabs() as $tab) {
-            if ($tab['key'] === $this->activeTab) {
-                return $tab['assistant'];
+        return $this->questionTree->getQuestions($this->selectedService);
+    }
+
+    /**
+     * Grouped checkbox options for the current service's checkbox question.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    public function getGroupedCheckboxOptions(): array
+    {
+        foreach ($this->getCurrentQuestions() as $question) {
+            if (($question['type'] ?? '') === 'checkbox') {
+                return $this->questionTree->groupOptions($question['options'] ?? []);
             }
         }
 
         return [];
     }
 
-    public function getProgress(): int
+    public function getProgressPercent(): int
     {
-        $total = $this->questionTree->getTotalQuestions($this->activeTab);
-        if ($total === 0) {
-            return 0;
-        }
-        if ($this->showContactForm) {
-            return 100;
-        }
+        return match ($this->step) {
+            self::STEP_SERVICE => 33,
+            self::STEP_DETAILS => 67,
+            self::STEP_CONTACT => 100,
+            self::STEP_DONE => 100,
+            default => 0,
+        };
+    }
 
-        return (int) round(($this->currentStep / $total) * 100);
+    /** @return array<int, array<string, mixed>> */
+    public function getStepTrail(): array
+    {
+        return [
+            [
+                'key' => self::STEP_SERVICE,
+                'label' => 'Hands-on Consulting wählen',
+                'hint' => 'Wähle eine unserer drei Spezialgebiete für den Einstieg.',
+            ],
+            [
+                'key' => self::STEP_DETAILS,
+                'label' => 'Infos auswählen',
+                'hint' => 'Spezifiziere deine Anforderungen und den technischen Rahmen.',
+            ],
+            [
+                'key' => self::STEP_CONTACT,
+                'label' => 'Finalisierung',
+                'hint' => 'Letzte Details und direkter Kontakt für deinen Termin.',
+            ],
+        ];
     }
 
     #[LiveAction]
-    public function selectTab(#[LiveArg] string $tab): void
+    public function selectService(#[LiveArg] string $service): void
     {
-        $this->activeTab = $tab;
-        $this->currentStep = 0;
+        if ($this->questionTree->getService($service) === null) {
+            return;
+        }
+
+        $this->selectedService = $service;
         $this->answers = [];
-        $this->textAnswer = '';
         $this->checkboxSelections = [];
-        $this->showContactForm = false;
-        $this->submitted = false;
-    }
+        $this->errors = [];
+        $this->step = self::STEP_DETAILS;
 
-    #[LiveAction]
-    public function answerQuestion(#[LiveArg] string $answer): void
-    {
-        $question = $this->getCurrentQuestion();
-        if ($question === null) {
-            return;
-        }
-
-        $this->answers[$question['id']] = $answer;
-
-        if ($this->questionTree->isLastQuestion($this->activeTab, $this->currentStep)) {
-            $this->showContactForm = true;
-        } else {
-            $this->currentStep++;
-        }
-    }
-
-    #[LiveAction]
-    public function submitTextAnswer(): void
-    {
-        $question = $this->getCurrentQuestion();
-        if ($question === null || empty($this->textAnswer)) {
-            return;
-        }
-
-        $this->answers[$question['id']] = $this->textAnswer;
-        $this->textAnswer = '';
-
-        if ($this->questionTree->isLastQuestion($this->activeTab, $this->currentStep)) {
-            $this->showContactForm = true;
-        } else {
-            $this->currentStep++;
+        // Pre-populate select answers that ship with a placeholder value
+        // (e.g. "weiß nicht" for php_version) so the default is a valid answer.
+        foreach ($this->questionTree->getQuestions($service) as $question) {
+            if (($question['type'] ?? '') === 'select' && isset($question['placeholderValue'])) {
+                $this->answers[$question['id']] = $question['placeholderValue'];
+            }
         }
     }
 
@@ -156,44 +161,92 @@ final class QualifiedContactComponent
     {
         if (in_array($value, $this->checkboxSelections, true)) {
             $this->checkboxSelections = array_values(array_diff($this->checkboxSelections, [$value]));
-        } else {
-            $this->checkboxSelections[] = $value;
+
+            return;
         }
+        $this->checkboxSelections[] = $value;
     }
 
     #[LiveAction]
-    public function confirmCheckboxes(): void
+    public function goToContact(): void
     {
-        $question = $this->getCurrentQuestion();
-        if ($question === null) {
-            return;
+        $this->errors = [];
+        $questions = $this->getCurrentQuestions();
+
+        foreach ($questions as $question) {
+            if ($question['type'] === 'select' && !isset($this->answers[$question['id']])) {
+                $this->errors['_step'] = 'Bitte alle Pflichtfelder ausfüllen.';
+
+                return;
+            }
         }
 
-        $this->answers[$question['id']] = implode(', ', $this->checkboxSelections);
+        // Freeze checkbox selections into answers under the question id.
+        foreach ($questions as $question) {
+            if ($question['type'] === 'checkbox' && !isset($this->answers[$question['id']])) {
+                $this->answers[$question['id']] = implode(', ', $this->checkboxSelections);
+            }
+        }
+
         $this->checkboxSelections = [];
+        $this->step = self::STEP_CONTACT;
+    }
 
-        if ($this->questionTree->isLastQuestion($this->activeTab, $this->currentStep)) {
-            $this->showContactForm = true;
-        } else {
-            $this->currentStep++;
-        }
+    #[LiveAction]
+    public function back(): void
+    {
+        $this->errors = [];
+        $this->step = match ($this->step) {
+            self::STEP_DETAILS => self::STEP_SERVICE,
+            self::STEP_CONTACT => self::STEP_DETAILS,
+            default => $this->step,
+        };
     }
 
     #[LiveAction]
     public function submitContact(): void
     {
-        $this->error = '';
+        $this->errors = [];
+
+        if (trim($this->contactMessage) === '') {
+            $this->errors['message'] = 'Bitte gib eine Nachricht ein.';
+        }
+
+        if (trim($this->contactName) === '') {
+            $this->errors['name'] = 'Bitte gib deinen Namen ein.';
+        }
+
+        if (trim($this->contactEmail) === '') {
+            $this->errors['email'] = 'Bitte gib deine E-Mail-Adresse ein.';
+        }
+
+        if (count($this->errors) > 0) {
+            return;
+        }
 
         $lead = new ContactLead();
-        $lead->setProduct($this->activeTab);
+        $lead->setProduct($this->selectedService);
         $lead->setAnswers($this->answers);
         $lead->setName($this->contactName ?: null);
         $lead->setEmail($this->contactEmail);
         $lead->setMessage($this->contactMessage ?: null);
 
-        $errors = $this->validator->validate($lead);
-        if ($errors->count() > 0) {
-            $this->error = $errors->get(0)->getMessage();
+        $violations = $this->validator->validate($lead);
+        if ($violations->count() > 0) {
+            // Route each violation to its field so the error lands next to the input.
+            for ($i = 0; $i < $violations->count(); ++$i) {
+                $violation = $violations->get($i);
+                $field = match ($violation->getPropertyPath()) {
+                    'email' => 'email',
+                    'name' => 'name',
+                    'message' => 'message',
+                    default => '_general',
+                };
+                if (!isset($this->errors[$field])) {
+                    $this->errors[$field] = $violation->getMessage();
+                }
+            }
+
             return;
         }
 
@@ -201,7 +254,8 @@ final class QualifiedContactComponent
         $userIp = $request?->getClientIp() ?? '0.0.0.0';
 
         if ($this->contactLeadRepository->countLeadsFromIpInLastHour($userIp) >= 1) {
-            $this->error = 'Du hast bereits eine Anfrage gesendet.';
+            $this->errors['_general'] = 'Du hast bereits eine Anfrage gesendet.';
+
             return;
         }
 
@@ -214,24 +268,27 @@ final class QualifiedContactComponent
             $this->mailer->sendNotification($lead);
 
             $this->submitted = true;
+            $this->step = self::STEP_DONE;
         } catch (\Throwable $e) {
-            $this->logger->error('Contact lead submission failed: {message}', ['message' => $e->getMessage(), 'exception' => $e]);
-            $this->error = 'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
+            $this->logger->error(
+                'Contact lead submission failed: {message}',
+                ['message' => $e->getMessage(), 'exception' => $e],
+            );
+            $this->errors['_general'] = 'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
         }
     }
 
     #[LiveAction]
     public function reset(): void
     {
-        $this->currentStep = 0;
+        $this->step = self::STEP_SERVICE;
+        $this->selectedService = '';
         $this->answers = [];
-        $this->showContactForm = false;
+        $this->checkboxSelections = [];
         $this->submitted = false;
         $this->contactEmail = '';
         $this->contactName = '';
         $this->contactMessage = '';
-        $this->textAnswer = '';
-        $this->checkboxSelections = [];
-        $this->error = '';
+        $this->errors = [];
     }
 }

@@ -19,9 +19,9 @@ final class ContactLeadMailer
     public function sendNotification(ContactLead $lead): void
     {
         $productLabels = [
-            'vibe-coding' => 'Vibe Coding Consulting',
+            'vibe-coding' => 'Vibe Coding für Production',
             'php-refactoring' => 'PHP Refactoring',
-            'ai-content' => 'AI Content Marketing',
+            'accessibility' => 'Barrierefreies Webdesign',
         ];
 
         $productLabel = $productLabels[$lead->getProduct()] ?? $lead->getProduct();

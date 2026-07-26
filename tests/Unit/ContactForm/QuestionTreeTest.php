@@ -9,70 +9,109 @@ use PHPUnit\Framework\TestCase;
 
 class QuestionTreeTest extends TestCase
 {
-    public function testGetTabs(): void
+    public function testGetServicesReturnsThree(): void
     {
         $tree = new QuestionTree();
-        $tabs = $tree->getTabs();
+        $services = $tree->getServices();
 
-        $this->assertCount(3, $tabs);
-        $this->assertSame('vibe-coding', $tabs[0]['key']);
-        $this->assertSame('php-refactoring', $tabs[1]['key']);
-        $this->assertSame('ai-content', $tabs[2]['key']);
+        $this->assertCount(3, $services);
+        $this->assertSame('php-refactoring', $services[0]['key']);
+        $this->assertSame('accessibility', $services[1]['key']);
+        $this->assertSame('vibe-coding', $services[2]['key']);
     }
 
-    public function testVibeCodingHasTwoQuestions(): void
+    public function testEachServiceHasRequiredFields(): void
+    {
+        $tree = new QuestionTree();
+
+        foreach ($tree->getServices() as $service) {
+            $this->assertArrayHasKey('key', $service);
+            $this->assertArrayHasKey('label', $service);
+            $this->assertArrayHasKey('icon', $service);
+            $this->assertArrayHasKey('badge', $service);
+            $this->assertArrayHasKey('description', $service);
+            $this->assertNotEmpty($service['label']);
+            $this->assertNotEmpty($service['badge']);
+        }
+    }
+
+    public function testGetServiceByKey(): void
+    {
+        $tree = new QuestionTree();
+        $service = $tree->getService('accessibility');
+
+        $this->assertNotNull($service);
+        $this->assertSame('Barrierefreies Webdesign', $service['label']);
+    }
+
+    public function testGetServiceReturnsNullForUnknownKey(): void
+    {
+        $tree = new QuestionTree();
+        $this->assertNull($tree->getService('does-not-exist'));
+    }
+
+    public function testPhpRefactoringHasVersionSelectAndSetupCheckbox(): void
+    {
+        $tree = new QuestionTree();
+        $questions = $tree->getQuestions('php-refactoring');
+
+        $this->assertCount(2, $questions);
+        $this->assertSame('php_version', $questions[0]['id']);
+        $this->assertSame('select', $questions[0]['type']);
+        $this->assertSame('setup', $questions[1]['id']);
+        $this->assertSame('checkbox', $questions[1]['type']);
+    }
+
+    public function testAccessibilityHasQuestions(): void
+    {
+        $tree = new QuestionTree();
+        $questions = $tree->getQuestions('accessibility');
+
+        $this->assertCount(2, $questions);
+        $this->assertSame('wcag_status', $questions[0]['id']);
+        $this->assertSame('select', $questions[0]['type']);
+        $this->assertSame('content_types', $questions[1]['id']);
+        $this->assertSame('checkbox', $questions[1]['type']);
+    }
+
+    public function testVibeCodingHasQuestions(): void
     {
         $tree = new QuestionTree();
         $questions = $tree->getQuestions('vibe-coding');
 
         $this->assertCount(2, $questions);
-        $this->assertSame('target', $questions[0]['id']);
-        $this->assertSame('tech_stack', $questions[1]['id']);
+        $this->assertSame('language', $questions[0]['id']);
+        $this->assertSame('select', $questions[0]['type']);
+        $this->assertSame('current_setup', $questions[1]['id']);
+        $this->assertSame('checkbox', $questions[1]['type']);
     }
 
-    public function testPhpRefactoringHasThreeQuestions(): void
+    public function testGetQuestionsReturnsEmptyForUnknownService(): void
+    {
+        $tree = new QuestionTree();
+        $this->assertSame([], $tree->getQuestions('nope'));
+    }
+
+    public function testCheckboxOptionsCarryGroupField(): void
     {
         $tree = new QuestionTree();
         $questions = $tree->getQuestions('php-refactoring');
+        $setupQuestion = $questions[1];
 
-        $this->assertCount(3, $questions);
-        $this->assertSame('php_version', $questions[0]['id']);
-        $this->assertSame('ci_cd_infra', $questions[1]['id']);
-        $this->assertSame('codebase_age', $questions[2]['id']);
+        foreach ($setupQuestion['options'] as $option) {
+            $this->assertArrayHasKey('group', $option);
+            $this->assertContains($option['group'], ['Setup', 'Framework']);
+        }
     }
 
-    public function testAiContentHasTwoQuestions(): void
+    public function testGroupOptionsPreservesOrderAndGroups(): void
     {
         $tree = new QuestionTree();
-        $questions = $tree->getQuestions('ai-content');
+        $questions = $tree->getQuestions('php-refactoring');
+        $grouped = $tree->groupOptions($questions[1]['options']);
 
-        $this->assertCount(2, $questions);
-        $this->assertSame('url', $questions[0]['id']);
-        $this->assertSame('seo_target_keyword', $questions[1]['id']);
-    }
-
-    public function testGetQuestionByIndex(): void
-    {
-        $tree = new QuestionTree();
-        $question = $tree->getQuestion('vibe-coding', 0);
-
-        $this->assertSame('target', $question['id']);
-        $this->assertNotEmpty($question['label']);
-        $this->assertNotEmpty($question['options']);
-    }
-
-    public function testGetQuestionReturnsNullForInvalidIndex(): void
-    {
-        $tree = new QuestionTree();
-        $this->assertNull($tree->getQuestion('vibe-coding', 99));
-    }
-
-    public function testIsLastQuestion(): void
-    {
-        $tree = new QuestionTree();
-        $this->assertFalse($tree->isLastQuestion('vibe-coding', 0));
-        $this->assertTrue($tree->isLastQuestion('vibe-coding', 1));
-        $this->assertFalse($tree->isLastQuestion('php-refactoring', 1));
-        $this->assertTrue($tree->isLastQuestion('php-refactoring', 2));
+        $this->assertSame(['Setup', 'Framework'], array_keys($grouped));
+        $this->assertCount(6, $grouped['Setup']);
+        $this->assertCount(3, $grouped['Framework']);
     }
 }

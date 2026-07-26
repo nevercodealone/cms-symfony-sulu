@@ -29,22 +29,19 @@
 
             {% if notag is defined or pageHasMatchingTag %}
               {% set seo = sulu_content_load(page.id).extension.seo %}
-              <article>
-                <a href="{{ page.url }}">
-                  {% if page.excerptImages[0] is defined %}
-                    {% set source = page.excerptImages[0].formats['related-content-by-page.webp'] %}
-                    <img src="{{ source }}" class="mb-5 w-full max-w-full rounded-lg" alt="{{ page.excerptImages[0].title }}" loading="lazy">
-                  {% endif %}
-                </a>
-                <h3 class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
-                  <a href="{{ page.url }}">{{ page.title }}</a>
-                </h3>
-                <p class="flex items-center space-x-4">
-                  <span class="text-sm text-gray-800">
-                      {{ seo.description }}
-                  </span>
-                </p>
-              </article>
+              {% set imageSrc = '' %}
+              {% set imageAlt = '' %}
+              {% if page.excerptImages[0] is defined %}
+                {% set imageSrc = page.excerptImages[0].formats['related-content-by-page.webp'] %}
+                {% set imageAlt = page.excerptImages[0].title %}
+              {% endif %}
+              {% include 'includes/tailwind/includes/article-card.html.twig' with {
+                'url': page.url,
+                'title': page.title,
+                'image_src': imageSrc,
+                'image_alt': imageAlt,
+                'description': seo.description
+              } only %}
             {% endif %}
           {% endif %}
         {% endfor %}
