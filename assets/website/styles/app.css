@@ -142,3 +142,35 @@ li {
     animation: pulse-subtle 2s ease-in-out infinite;
 }
 
+/* Qualified contact: mobile service accordion */
+.accordion-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.accordion-item-active .accordion-content {
+    grid-template-rows: 1fr;
+}
+.accordion-item-active .expand-icon {
+    transform: rotate(180deg);
+}
+.accordion-inner {
+    overflow: hidden;
+}
+
+/* Material Symbols defaults */
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
+
