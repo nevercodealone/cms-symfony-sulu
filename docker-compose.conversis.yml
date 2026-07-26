@@ -56,6 +56,8 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - MAILER_DSN=${MAILER_DSN:-smtp://${SMTP_USER}:${SMTP_PASSWORD}@${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}}
       - CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-roland@nevercodealone.de}
+      - TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+      - TELEGRAM_DEFAULT_CHAT_ID=$TELEGRAM_DEFAULT_CHAT_ID
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
       - APP_URL=https://$URL
   chromadb:

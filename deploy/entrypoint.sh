@@ -37,6 +37,8 @@ fi
 [ -n "$LOCK_DSN" ] && echo "LOCK_DSN=$LOCK_DSN" >> .env
 echo "MAILER_DSN=${MAILER_DSN:-smtp://${SMTP_USER}:${SMTP_PASSWORD}@${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}}" >> .env
 echo "CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}" >> .env
+[ -n "$TELEGRAM_BOT_TOKEN" ] && echo "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN" >> .env
+[ -n "$TELEGRAM_DEFAULT_CHAT_ID" ] && echo "TELEGRAM_DEFAULT_CHAT_ID=$TELEGRAM_DEFAULT_CHAT_ID" >> .env
 
 # Fix .env ownership (just written as root)
 chown www-data:www-data /var/www/html/.env 2>/dev/null || true
