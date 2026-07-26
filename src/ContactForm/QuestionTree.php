@@ -4,141 +4,175 @@ declare(strict_types=1);
 
 namespace App\ContactForm;
 
+/**
+ * Service catalogue and Step-2 question definitions for the qualified-contact wizard.
+ *
+ * Each service drives one card on Step 1 and one details form on Step 2.
+ * Supported question types: "select" (native dropdown) and "checkbox"
+ * (optionally grouped via the per-option "group" key).
+ */
 final class QuestionTree
 {
-    private const TABS = [
-        [
-            'key' => 'vibe-coding',
-            'label' => 'Vibe Coding Consulting',
-            'icon' => 'terminal',
-            'assistant' => [
-                'name' => 'CodeBot',
-                'avatar' => '/build/images/assistant-code.svg',
-                'greeting' => 'Hey! Ich bin CodeBot. Lass uns herausfinden, wie wir dein Projekt zum Fliegen bringen.',
-            ],
-        ],
+    private const SERVICES = [
         [
             'key' => 'php-refactoring',
             'label' => 'PHP Refactoring',
-            'icon' => 'refresh',
-            'assistant' => [
-                'name' => 'RefactorBot',
-                'avatar' => '/build/images/assistant-refactor.svg',
-                'greeting' => 'Hi! Ich bin RefactorBot. Zeig mir deinen Code-Schmerz, ich finde die Lösung.',
-            ],
+            'icon' => 'terminal',
+            'badge' => 'CORE EXPERTISE',
+            'description' => 'Eliminierung technischer Schulden mit PHPStan, Rector PHP und PHPUnit. '
+                . 'Über 20 Jahre Praxiserfahrung in skalierbaren Backends.',
         ],
         [
-            'key' => 'ai-content',
-            'label' => 'AI Content Marketing',
-            'icon' => 'sparkles',
-            'assistant' => [
-                'name' => 'ContentBot',
-                'avatar' => '/build/images/assistant-content.svg',
-                'greeting' => 'Moin! Ich bin ContentBot. Zusammen bringen wir deine Inhalte auf das nächste Level.',
-            ],
+            'key' => 'accessibility',
+            'label' => 'Barrierefreies Webdesign',
+            'icon' => 'accessibility_new',
+            'badge' => 'BFSG COMPLIANT',
+            'description' => 'Gesetzliche Konformität & Inklusion. Optimierung von Performance und Conversion '
+                . 'durch radikal nutzerzentriertes, universelles Design.',
+        ],
+        [
+            'key' => 'vibe-coding',
+            'label' => 'Vibe Coding für Production',
+            'icon' => 'rocket_launch',
+            'badge' => 'ENTERPRISE READY',
+            'description' => 'Skalierbare KI-Systeme mit echtem Code Ownership. CI/CD, Backup-Strategien '
+                . 'und Infrastruktur, die mit deinem Team wächst.',
         ],
     ];
 
+    /** @var array<string, array<int, array<string, mixed>>> */
     private const QUESTIONS = [
+        'php-refactoring' => [
+            [
+                'id' => 'php_version',
+                'label' => 'Aktuelle PHP-Version',
+                'type' => 'select',
+                'placeholder' => 'weiß nicht',
+                'placeholderValue' => 'unknown',
+                'options' => [
+                    ['value' => '5.6', 'label' => 'PHP 5.6 oder älter'],
+                    ['value' => '7.x', 'label' => 'PHP 7.x (7.0 - 7.4)'],
+                    ['value' => '8.0', 'label' => 'PHP 8.0'],
+                    ['value' => '8.1', 'label' => 'PHP 8.1'],
+                    ['value' => '8.2', 'label' => 'PHP 8.2'],
+                    ['value' => '8.3', 'label' => 'PHP 8.3'],
+                ],
+            ],
+            [
+                'id' => 'setup',
+                'label' => 'Vorhandenes Setup',
+                'type' => 'checkbox',
+                'options' => [
+                    ['value' => 'phpunit', 'label' => 'Automatisierte Tests (PHPUnit)', 'group' => 'Setup'],
+                    ['value' => 'static-analysis', 'label' => 'Static Analysis (PHPStan/Psalm)', 'group' => 'Setup'],
+                    ['value' => 'cicd', 'label' => 'CI/CD Pipeline', 'group' => 'Setup'],
+                    ['value' => 'docker', 'label' => 'Docker / DDEV', 'group' => 'Setup'],
+                    ['value' => 'github', 'label' => 'GitHub', 'group' => 'Setup'],
+                    ['value' => 'gitlab', 'label' => 'GitLab', 'group' => 'Setup'],
+                    ['value' => 'symfony', 'label' => 'Symfony', 'group' => 'Framework'],
+                    ['value' => 'laravel', 'label' => 'Laravel', 'group' => 'Framework'],
+                    ['value' => 'legacy', 'label' => 'Legacy Code (kein Framework)', 'group' => 'Framework'],
+                ],
+            ],
+        ],
+        'accessibility' => [
+            [
+                'id' => 'wcag_status',
+                'label' => 'Aktueller WCAG-Status',
+                'type' => 'select',
+                'placeholder' => 'Bitte auswählen...',
+                'options' => [
+                    ['value' => 'unknown', 'label' => 'Noch unbekannt — needs Audit'],
+                    ['value' => 'non-compliant', 'label' => 'Bekannte Barrieren vorhanden'],
+                    ['value' => 'partial', 'label' => 'Teilweise konform (WCAG 2.1 AA)'],
+                    ['value' => 'compliant', 'label' => 'Konform — Monitoring gewünscht'],
+                ],
+            ],
+            [
+                'id' => 'content_types',
+                'label' => 'Betroffene Bereiche',
+                'type' => 'checkbox',
+                'options' => [
+                    ['value' => 'marketing', 'label' => 'Marketing-Website', 'group' => 'Bereich'],
+                    ['value' => 'shop', 'label' => 'Shop / Checkout', 'group' => 'Bereich'],
+                    ['value' => 'portal', 'label' => 'Kundenportal / App', 'group' => 'Bereich'],
+                    ['value' => 'forms', 'label' => 'Formulare & Beratung', 'group' => 'Bereich'],
+                    ['value' => 'video', 'label' => 'Video & Audio', 'group' => 'Medien'],
+                    ['value' => 'docs', 'label' => 'Dokumente / PDFs', 'group' => 'Medien'],
+                ],
+            ],
+        ],
         'vibe-coding' => [
             [
-                'id' => 'target',
-                'label' => 'Was soll entstehen?',
-                'type' => 'choice',
+                'id' => 'project_type',
+                'label' => 'Art des Vorhabens',
+                'type' => 'select',
+                'placeholder' => 'Bitte auswählen...',
                 'options' => [
-                    ['value' => 'internal', 'label' => 'Internes Tool für Unternehmensprozesse'],
-                    ['value' => 'website', 'label' => 'Öffentliche Website / Webapplikation'],
+                    ['value' => 'new', 'label' => 'Neuer Greenfield-Build'],
+                    ['value' => 'augment', 'label' => 'Bestehendes System mit KI erweitern'],
+                    ['value' => 'platform', 'label' => 'Interne KI-Plattform / Tooling'],
+                    ['value' => 'content', 'label' => 'KI-Content-Automation'],
                 ],
             ],
             [
                 'id' => 'tech_stack',
-                'label' => 'Welche Technologie soll eingesetzt werden?',
-                'type' => 'choice',
-                'options' => [
-                    ['value' => 'javascript', 'label' => 'JavaScript / TypeScript'],
-                    ['value' => 'python', 'label' => 'Python'],
-                    ['value' => 'svelte', 'label' => 'Svelte / SvelteKit'],
-                    ['value' => 'unsure', 'label' => 'Noch unklar — brauche Beratung'],
-                ],
-            ],
-        ],
-        'php-refactoring' => [
-            [
-                'id' => 'php_version',
-                'label' => 'Welche PHP-Version läuft aktuell?',
-                'type' => 'choice',
-                'options' => [
-                    ['value' => 'php5', 'label' => 'PHP 5'],
-                    ['value' => 'php7', 'label' => 'PHP 7'],
-                    ['value' => 'php8', 'label' => 'PHP 8'],
-                ],
-            ],
-            [
-                'id' => 'ci_cd_infra',
-                'label' => 'Was ist schon im Einsatz?',
+                'label' => ' Gewünschter Stack',
                 'type' => 'checkbox',
                 'options' => [
-                    ['value' => 'docker', 'label' => 'Docker'],
-                    ['value' => 'gitlab_ci', 'label' => 'GitLab CI'],
-                    ['value' => 'github_actions', 'label' => 'GitHub Actions'],
-                    ['value' => 'phpunit', 'label' => 'PHPUnit Tests'],
-                    ['value' => 'phpstan', 'label' => 'PHPStan / Psalm'],
-                    ['value' => 'nichts', 'label' => 'Noch nichts davon'],
+                    ['value' => 'php', 'label' => 'PHP / Symfony', 'group' => 'Backend'],
+                    ['value' => 'node', 'label' => 'Node.js / TypeScript', 'group' => 'Backend'],
+                    ['value' => 'python', 'label' => 'Python', 'group' => 'Backend'],
+                    ['value' => 'openai', 'label' => 'OpenAI / Anthropic API', 'group' => 'KI'],
+                    ['value' => 'selfhosted', 'label' => 'Self-hosted LLM', 'group' => 'KI'],
+                    ['value' => 'rag', 'label' => 'RAG / Vektordatenbank', 'group' => 'KI'],
                 ],
-            ],
-            [
-                'id' => 'codebase_age',
-                'label' => 'Wie alt ist die Codebase?',
-                'type' => 'choice',
-                'options' => [
-                    ['value' => 'old', 'label' => 'Älter als 10 Jahre — einfach hart'],
-                    ['value' => 'good', 'label' => 'Läuft gut — soll nur besser werden'],
-                ],
-            ],
-        ],
-        'ai-content' => [
-            [
-                'id' => 'url',
-                'label' => 'Wie lautet die URL eurer Website?',
-                'type' => 'text',
-                'placeholder' => 'https://example.com',
-            ],
-            [
-                'id' => 'seo_target_keyword',
-                'label' => 'Was ist euer wichtigstes SEO-Ziel-Keyword?',
-                'type' => 'text',
-                'placeholder' => 'z.B. "PHP Entwickler Berlin"',
             ],
         ],
     ];
 
-    /** @return array<int, array{key: string, label: string, icon: string, assistant: array<string, string>}> */
-    public function getTabs(): array
+    /** @return array<int, array{key: string, label: string, icon: string, badge: string, description: string}> */
+    public function getServices(): array
     {
-        return self::TABS;
+        return self::SERVICES;
     }
 
     /** @return array<int, array<string, mixed>> */
-    public function getQuestions(string $tabKey): array
+    public function getQuestions(string $serviceKey): array
     {
-        return self::QUESTIONS[$tabKey] ?? [];
+        return self::QUESTIONS[$serviceKey] ?? [];
     }
 
     /** @return array<string, mixed>|null */
-    public function getQuestion(string $tabKey, int $index): ?array
+    public function getService(string $serviceKey): ?array
     {
-        return self::QUESTIONS[$tabKey][$index] ?? null;
+        foreach (self::SERVICES as $service) {
+            if ($service['key'] === $serviceKey) {
+                return $service;
+            }
+        }
+
+        return null;
     }
 
-    public function isLastQuestion(string $tabKey, int $index): bool
+    /**
+     * Group checkbox options by their "group" key while preserving order.
+     *
+     * @param array<int, array<string, mixed>> $options
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    public function groupOptions(array $options): array
     {
-        $questions = $this->getQuestions($tabKey);
+        $grouped = [];
+        foreach ($options as $option) {
+            $groupName = $option['group'] ?? '';
+            if (!isset($grouped[$groupName])) {
+                $grouped[$groupName] = [];
+            }
+            $grouped[$groupName][] = $option;
+        }
 
-        return $index === count($questions) - 1;
-    }
-
-    public function getTotalQuestions(string $tabKey): int
-    {
-        return count($this->getQuestions($tabKey));
+        return $grouped;
     }
 }
