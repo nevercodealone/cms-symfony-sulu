@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
-use App\Service\TwitterService;
 use App\Service\WordpressService;
 use App\Sulu\Service\LatestArticlesService;
 use App\Service\YouTubeService;
