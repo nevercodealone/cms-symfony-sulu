@@ -1,236 +1,697 @@
 <div {{ attributes.defaults({
-    class: 'relative'
+    class: 'relative font-sans antialiased text-gray-900'
 }) }}>
 
-  {# === TABS === #}
-  <div class="flex justify-center mb-4 sm:mb-6">
-    <div class="inline-flex rounded-2xl bg-gray-100 p-1.5 border border-gray-200 shadow-lg">
-      {% for tab in this.tabs %}
-        <button
-          data-action="live#action"
-          data-live-action-param="selectTab"
-          data-live-tab-param="{{ tab.key }}"
-          class="relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-500 ease-out
-            {{ this.activeTab == tab.key
-              ? 'bg-green-700 text-white shadow-md'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200' }}"
-        >
-          {{ tab.label }}
-        </button>
-      {% endfor %}
-    </div>
-  </div>
+  {# ====================================================================== #}
+  {# STEP: SERVICE                                                          #}
+  {# ====================================================================== #}
+  {% if this.step == 'service' %}
 
-  {# === PROGRESS BAR === #}
-  <div class="max-w-2xl mx-auto mb-8">
-    <div class="h-1.5 rounded-full bg-gray-200 overflow-hidden">
-      <div
-        class="h-full rounded-full bg-gradient-to-r from-green-700 to-green-500 transition-all duration-700 ease-out"
-        style="width: {{ this.progress }}%"
-      ></div>
-    </div>
-  </div>
+    {# === MOBILE: vertical accordion === #}
+    <section class="md:hidden">
+      <header class="mb-4">
+        <p class="text-xs font-mono uppercase tracking-[0.3em] font-bold text-gray-600 mb-2">Anfrage-Konfiguration</p>
+        <h1 class="text-2xl font-extrabold tracking-tight text-gray-900">Starten Sie Ihre Anfrage</h1>
+      </header>
 
-  {# === MAIN CONTENT AREA === #}
-  <div class="max-w-2xl mx-auto">
-
-    {% if this.submitted %}
-      {# === SUCCESS STATE === #}
-      <div class="text-center py-16 animate-fade-in">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-green-700 flex items-center justify-center shadow-lg">
-          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
+      <div class="mb-6 flex items-center justify-between px-2">
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-1.5 bg-green-700 rounded-full"></div>
+          <span class="text-xs font-mono text-green-700">Projektart</span>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900 mb-3">Vielen Dank!</h3>
-        <p class="text-gray-600 mb-8">Wir melden uns innerhalb von 24 Stunden bei dir.</p>
-        <button
-          data-action="live#action"
-          data-live-action-param="reset"
-          class="px-6 py-3 rounded-xl text-sm font-semibold text-green-700 border-2 border-green-700 hover:text-white hover:bg-green-700 transition-all duration-300"
-        >
-          Neue Anfrage starten
-        </button>
-      </div>
-
-    {% elseif this.showContactForm %}
-      {# === CONTACT FORM === #}
-      <div class="animate-fade-in">
-        {% set assistant = this.assistant %}
-        <div class="flex items-start gap-4 mb-8">
-          <div class="w-12 h-12 rounded-2xl bg-green-700 flex items-center justify-center flex-shrink-0 shadow-md">
-            <span class="text-xl">🤖</span>
-          </div>
-          <div class="bg-gray-100 rounded-2xl rounded-tl-md px-6 py-4 border border-gray-200">
-            <p class="text-gray-700">Super! Ich habe alles, was ich brauche. Hinterlasse jetzt deine Kontaktdaten und wir melden uns.</p>
-          </div>
+        <div class="flex-1 h-px bg-gray-300 mx-3 mb-5"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-2 h-1.5 bg-gray-300 rounded-full"></div>
+          <span class="text-xs font-mono text-gray-900">Infos</span>
         </div>
-
-        <div class="space-y-4 bg-gray-50 rounded-3xl p-4 sm:p-8 border border-gray-200 shadow-xl">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail *</label>
-            <input
-              type="email"
-              data-model="contactEmail"
-              id="contact-email"
-              class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
-              placeholder="max@firma.de"
-              required
-            />
-            <span id="email-hint" data-live-ignore class="hidden text-xs text-red-500 mt-1">E-Mail korrigieren</span>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Name <span class="text-gray-400 font-normal">(optional)</span></label>
-            <input
-              type="text"
-              data-model="contactName"
-              maxlength="30"
-              class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
-              placeholder="Max Mustermann"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Nachricht <span class="text-gray-400 font-normal">(optional — gerne auch KI-generiert)</span></label>
-            <textarea
-              data-model="contactMessage"
-              id="contact-message"
-              rows="3"
-              maxlength="300"
-              class="w-full px-4 py-3 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300 resize-none"
-              placeholder="Beschreib kurz dein Projekt oder lass ChatGPT/Claude eine Anfrage formulieren"
-            ></textarea>
-            <div class="text-xs text-right mt-1">
-              <span id="msg-counter" data-live-ignore class="text-gray-400">0 / 300</span>
-            </div>
-          </div>
-          {% if this.error is not empty %}
-            <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-              </svg>
-              {{ this.error }}
-            </div>
-          {% endif %}
-          <button
-            data-action="live#action"
-            data-live-action-param="submitContact"
-            class="w-full py-4 rounded-xl font-bold text-white bg-green-700 hover:bg-green-800 shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Anfrage absenden
-          </button>
+        <div class="flex-1 h-px bg-gray-300 mx-3 mb-5"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-2 h-1.5 bg-gray-300 rounded-full"></div>
+          <span class="text-xs font-mono text-gray-900">Nachricht</span>
         </div>
       </div>
 
-    {% else %}
-      {# === QUESTION / DECISION TREE === #}
-      {% set assistant = this.assistant %}
-      {% set question = this.currentQuestion %}
-
-      {% if question %}
-        <div class="animate-fade-in">
-          {# Assistant bubble #}
-          <div class="flex items-start gap-4 mb-8">
-            <div class="w-12 h-12 rounded-2xl bg-green-700 flex items-center justify-center flex-shrink-0 shadow-md animate-pulse-subtle">
-              <span class="text-xl">🤖</span>
-            </div>
-            <div class="bg-gray-100 rounded-2xl rounded-tl-md px-6 py-4 border border-gray-200 max-w-lg">
-              {% if this.currentStep == 0 %}
-                <p class="text-gray-500 text-sm mb-2">{{ assistant.greeting }}</p>
-              {% endif %}
-              <p class="text-gray-900 font-medium">{{ question.label }}</p>
-            </div>
-          </div>
-
-          {# Answer options #}
-          {% if question.type == 'choice' %}
-            <div class="space-y-3 pl-16">
-              {% for option in question.options %}
+      <div class="flex flex-col gap-2">
+        {% for service in this.services %}
+          <article class="relative bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+            <button
+              type="button"
+              class="w-full text-left flex items-center justify-between gap-3 py-3 px-4 focus:outline-none"
+              onclick="this.closest('article').classList.toggle('accordion-item-active')"
+              aria-expanded="false"
+            >
+              <span class="flex items-center gap-3">
+                <span class="w-12 h-12 bg-green-50 text-green-700 rounded-md flex items-center justify-center shrink-0 border border-green-200">
+                  <span class="material-symbols-outlined text-2xl">{{ service.icon }}</span>
+                </span>
+                <span class="text-base font-semibold text-gray-900">{{ service.label }}</span>
+              </span>
+              <span class="material-symbols-outlined text-gray-500 transition-transform duration-300 expand-icon">expand_more</span>
+            </button>
+            <div class="accordion-content">
+              <div class="accordion-inner px-4 pb-4">
+                <p class="text-sm text-gray-600 leading-relaxed mb-4">{{ service.description }}</p>
+                <div class="flex items-center gap-2 mb-4">
+                  <span class="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-gray-100 rounded text-gray-700">{{ service.badge }}</span>
+                </div>
                 <button
+                  type="button"
                   data-action="live#action"
-                  data-live-action-param="answerQuestion"
-                  data-live-answer-param="{{ option.value }}"
-                  class="group w-full text-left px-6 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 hover:text-green-800 hover:border-green-700 hover:bg-green-50 hover:shadow-md transition-all duration-300 hover:translate-x-1"
+                  data-live-action-param="selectService"
+                  data-live-service-param="{{ service.key }}"
+                  class="w-full bg-green-700 text-white py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2 hover:bg-green-800 active:scale-95 transition-all"
                 >
-                  <span class="flex items-center gap-3">
-                    <span class="w-2 h-2 rounded-full bg-gray-300 group-hover:bg-green-700 transition-colors duration-300"></span>
-                    {{ option.label }}
-                  </span>
-                </button>
-              {% endfor %}
-            </div>
-          {% elseif question.type == 'checkbox' %}
-            <div class="space-y-3 pl-16">
-              {% for option in question.options %}
-                <button
-                  data-action="live#action"
-                  data-live-action-param="toggleCheckbox"
-                  data-live-value-param="{{ option.value }}"
-                  class="group w-full text-left px-6 py-4 rounded-2xl border transition-all duration-300
-                    {{ option.value in this.checkboxSelections
-                      ? 'bg-green-50 border-green-700 text-green-800 shadow-md'
-                      : 'bg-white border-gray-200 text-gray-700 hover:text-green-800 hover:border-green-700 hover:bg-green-50' }}"
-                >
-                  <span class="flex items-center gap-3">
-                    <span class="w-5 h-5 rounded flex-shrink-0 border-2 flex items-center justify-center transition-colors duration-300
-                      {{ option.value in this.checkboxSelections
-                        ? 'border-green-700 bg-green-700'
-                        : 'border-gray-300' }}">
-                      {% if option.value in this.checkboxSelections %}
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                        </svg>
-                      {% endif %}
-                    </span>
-                    {{ option.label }}
-                  </span>
-                </button>
-              {% endfor %}
-              <button
-                data-action="live#action"
-                data-live-action-param="confirmCheckboxes"
-                class="w-full mt-4 py-3 rounded-xl font-semibold text-white bg-green-700 hover:bg-green-800 shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]
-                  {{ this.checkboxSelections|length == 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
-              >
-                Weiter
-              </button>
-            </div>
-          {% elseif question.type == 'text' %}
-            <div class="pl-16">
-              <div class="flex gap-3">
-                <input
-                  type="text"
-                  data-model="textAnswer"
-                  class="flex-1 px-5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-green-700 focus:ring-1 focus:ring-green-700 transition-all duration-300"
-                  placeholder="{{ question.placeholder ?? '' }}"
-                />
-                <button
-                  data-action="live#action"
-                  data-live-action-param="submitTextAnswer"
-                  class="px-6 py-4 rounded-2xl bg-green-700 text-white font-semibold hover:bg-green-800 hover:shadow-md transition-all duration-300 hover:scale-105 active:scale-95"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                  </svg>
+                  Diesen Service wählen
+                  <span class="material-symbols-outlined text-base">arrow_forward</span>
                 </button>
               </div>
             </div>
-          {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </section>
 
-          {# Previous answers #}
-          {% if this.answers|length > 0 %}
-            <div class="mt-8 pl-16 space-y-2">
-              {% for qId, answer in this.answers %}
-                <div class="flex items-center gap-2 text-sm text-gray-500">
-                  <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                  </svg>
-                  <span>{{ qId }}: {{ answer }}</span>
+    {# === DESKTOP: radio cards + sidebar === #}
+    <section class="hidden md:block">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white border-2 border-green-700 shadow-[0_32px_64px_-12px_rgba(0,107,44,0.08)]">
+        <div class="md:col-span-8 p-8 md:p-12 lg:p-16">
+          <header class="mb-8">
+            <p class="text-sm font-mono uppercase tracking-[0.3em] font-bold flex items-center gap-2 text-gray-900 mb-3">
+              <span class="w-8 h-px bg-gray-500"></span>
+              Anfrage-Konfiguration
+            </p>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">Worauf liegt dein Fokus?</h2>
+            <p class="text-gray-600">Wähle die Expertise, die dein Projekt jetzt am dringendsten benötigt.</p>
+          </header>
+
+          <div class="space-y-4">
+            {% for service in this.services %}
+              <button
+                type="button"
+                data-action="live#action"
+                data-live-action-param="selectService"
+                data-live-service-param="{{ service.key }}"
+                class="block w-full text-left group relative p-6 border bg-white transition-all duration-300 hover:border-green-700/50 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-green-700/10 border-green-700"
+              >
+                <div class="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                  <div class="w-14 h-14 bg-gray-100 flex items-center justify-center border border-gray-300 group-hover:border-green-700/30 group-hover:bg-white transition-colors">
+                    <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-green-700 transition-colors">{{ service.icon }}</span>
+                  </div>
+                  <div class="flex-grow">
+                    <div class="flex items-center justify-between mb-2 gap-3">
+                      <h3 class="text-xl font-semibold text-gray-900">{{ service.label }}</h3>
+                      <span class="font-mono text-[10px] text-gray-700 font-bold px-2 py-1 bg-gray-200 rounded">{{ service.badge }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed max-w-lg">{{ service.description }}</p>
+                  </div>
+                  <div class="shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 group-hover:text-green-700 transition-colors">
+                    <span class="material-symbols-outlined text-2xl">arrow_forward</span>
+                  </div>
+                </div>
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <aside class="md:col-span-4 bg-green-50 p-8 md:p-12 border-l-2 border-green-700">
+          <div class="sticky top-24">
+            <div class="mb-8 bg-green-600 border border-green-700/20 p-5 shadow-sm flex items-center gap-4 w-full relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-green-700/5 -mr-8 -mt-8 rounded-full"></div>
+              <div class="w-12 h-12 bg-white flex items-center justify-center shrink-0 border border-green-700/10">
+                <span class="material-symbols-outlined text-green-700 text-3xl">calendar_today</span>
+              </div>
+              <div>
+                <p class="text-[10px] uppercase tracking-widest font-bold text-white/80 font-mono">Exklusiv &amp; Unverbindlich</p>
+                <h3 class="font-bold text-white leading-tight text-sm">30 Minuten Kennenlernen <br>mit Hands-on Tipps</h3>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-8 h-8 rounded-full bg-green-700/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-green-700 text-xl">analytics</span>
+              </div>
+              <h2 class="font-bold text-sm uppercase tracking-widest text-gray-900">Prozess-Ablauf</h2>
+            </div>
+
+            <nav class="relative space-y-8">
+              {% for trail in this.stepTrail %}
+                <div class="relative flex items-start gap-6">
+                  <div class="z-10 w-10 h-10 bg-green-700 text-white flex items-center justify-center font-mono font-bold shadow-[0_0_20px_rgba(0,107,44,0.2)] shrink-0">{{ loop.index }}</div>
+                  <div>
+                    <h3 class="font-bold text-sm tracking-tight mb-1 uppercase">{{ trail.label }}</h3>
+                    <p class="text-xs text-gray-600 leading-relaxed">{{ trail.hint }}</p>
+                  </div>
+                </div>
+              {% endfor %}
+            </nav>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  {# ====================================================================== #}
+  {# STEP: DETAILS                                                          #}
+  {# ====================================================================== #}
+  {% elseif this.step == 'details' %}
+
+    {% set service = this.currentService %}
+
+    {# === MOBILE === #}
+    <section class="md:hidden">
+      <header class="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          data-action="live#action"
+          data-live-action-param="back"
+          class="p-2 -ml-2 text-gray-600 active:opacity-70"
+          aria-label="Zurück"
+        >
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="text-xs font-mono uppercase tracking-widest text-gray-900 flex-1 text-center">Anfrage</span>
+        <span class="w-10"></span>
+      </header>
+
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-mono text-gray-600">Schritt 2 von 3</span>
+          <span class="text-xs font-mono font-bold text-green-700">{{ this.progressPercent }}%</span>
+        </div>
+        <div class="h-1 bg-gray-200 rounded-full overflow-hidden">
+          <div class="h-full bg-green-700 rounded-full transition-all duration-500" style="width: {{ this.progressPercent }}%"></div>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900 mb-1">Dein Setup</h1>
+        <p class="text-sm text-gray-600">Damit wir den Aufwand abschätzen können, brauchen wir ein paar technische Details.</p>
+      </div>
+
+      <form class="flex flex-col gap-6">
+        {% for question in this.currentQuestions %}
+          {% if question.type == 'select' %}
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-mono font-bold text-gray-900" for="mobile-{{ question.id }}">{{ question.label }}</label>
+              <div class="relative">
+                <select
+                  id="mobile-{{ question.id }}"
+                  data-model="answers.{{ question.id }}"
+                  class="w-full appearance-none bg-white border border-gray-500 text-gray-900 text-base rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
+                >
+                  {% set ph_val = question.placeholderValue | default('') %}
+                  <option value="{{ ph_val }}" {{ (this.answers[question.id] ?? ph_val) == ph_val ? 'selected' : '' }} {{ ph_val is empty ? 'disabled' : '' }}>{{ question.placeholder ?? 'Bitte wählen' }}</option>
+                  {% for opt in question.options %}
+                    <option value="{{ opt.value }}" {{ (this.answers[question.id] ?? '') == opt.value ? 'selected' : '' }}>{{ opt.label }}</option>
+                  {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                  <span class="material-symbols-outlined text-xl">expand_more</span>
+                </div>
+              </div>
+            </div>
+          {% elseif question.type == 'checkbox' %}
+            <div class="flex flex-col gap-3">
+              <span class="text-sm font-mono font-bold text-gray-900">{{ question.label }}</span>
+              {% for group_name, options in this.groupedCheckboxOptions %}
+                <div class="flex flex-col gap-2 {{ not loop.first ? 'mt-2' : '' }}">
+                  {% if group_name is not empty %}
+                    <span class="text-xs font-mono text-gray-600 uppercase tracking-wider">{{ group_name }}</span>
+                  {% endif %}
+                  {% for opt in options %}
+                    <label class="flex items-start gap-3 p-3 border border-gray-300 rounded bg-white cursor-pointer hover:border-green-700 transition-colors focus-within:ring-2 focus-within:ring-green-700">
+                      <span class="flex items-center h-6">
+                        <input
+                          type="checkbox"
+                          value="{{ opt.value }}"
+                          {{ opt.value in this.checkboxSelections ? 'checked' : '' }}
+                          data-action="live#action"
+                          data-live-action-param="toggleCheckbox"
+                          data-live-value-param="{{ opt.value }}"
+                          class="w-5 h-5 text-green-700 border-gray-500 rounded focus:ring-green-700 bg-white"
+                        />
+                      </span>
+                      <span class="text-base text-gray-900 leading-none pt-0.5 font-medium">{{ opt.label }}</span>
+                    </label>
+                  {% endfor %}
                 </div>
               {% endfor %}
             </div>
           {% endif %}
+        {% endfor %}
+      </form>
+
+      <button
+        type="button"
+        data-action="live#action"
+        data-live-action-param="goToContact"
+        class="mt-6 w-full bg-green-700 text-white font-bold py-3 px-6 rounded text-base hover:bg-green-800 active:scale-[0.98] flex items-center justify-center gap-2"
+      >
+        Weiter
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </section>
+
+    {# === DESKTOP === #}
+    <section class="hidden md:block">
+      <header class="bg-white/80 backdrop-blur-md border-b border-gray-300 mb-8">
+        <div class="flex justify-between items-center max-w-7xl mx-auto px-6 py-4">
+          <span class="text-xl font-extrabold text-green-700">Never Code Alone</span>
+          <button
+            type="button"
+            data-action="live#action"
+            data-live-action-param="reset"
+            class="text-gray-600 hover:text-green-700 flex items-center gap-2 text-sm font-mono"
+          >
+            <span class="material-symbols-outlined">close</span>
+            Abbrechen
+          </button>
         </div>
-      {% endif %}
-    {% endif %}
-  </div>
+      </header>
+
+      <div class="max-w-7xl mx-auto px-6 flex gap-6">
+        <div class="flex-1 bg-white border border-gray-300 rounded-md p-8 shadow-sm">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900 mb-1">Technische Details definieren</h1>
+            <p class="text-lg text-gray-600">Gib uns einen Einblick in dein aktuelles Setup, damit wir dich optimal beraten können.</p>
+          </div>
+
+          <form class="space-y-8">
+            {% for question in this.currentQuestions %}
+              {% if question.type == 'select' %}
+                <div>
+                  <label class="block text-sm font-mono text-gray-900 mb-2 font-bold" for="desktop-{{ question.id }}">{{ question.label }}</label>
+                  <div class="relative">
+                    <select
+                      id="desktop-{{ question.id }}"
+                      data-model="answers.{{ question.id }}"
+                      class="appearance-none w-full bg-white border border-gray-500 text-gray-900 rounded py-3 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+                    >
+                      {% set ph_val = question.placeholderValue | default('') %}
+                  <option value="{{ ph_val }}" {{ (this.answers[question.id] ?? ph_val) == ph_val ? 'selected' : '' }} {{ ph_val is empty ? 'disabled' : '' }}>{{ question.placeholder ?? 'Bitte auswählen...' }}</option>
+                      {% for opt in question.options %}
+                        <option value="{{ opt.value }}" {{ (this.answers[question.id] ?? '') == opt.value ? 'selected' : '' }}>{{ opt.label }}</option>
+                      {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                      <span class="material-symbols-outlined">expand_more</span>
+                    </div>
+                  </div>
+                </div>
+              {% elseif question.type == 'checkbox' %}
+                <div>
+                  <label class="block text-sm font-mono text-gray-900 mb-4 font-bold">{{ question.label }}</label>
+                  {% for group_name, options in this.groupedCheckboxOptions %}
+                    <div class="{{ not loop.first ? 'mt-6 pt-4 border-t border-gray-300' : '' }}">
+                      {% if group_name is not empty %}
+                        <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-3">{{ group_name }}</p>
+                      {% endif %}
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {% for opt in options %}
+                          <label class="flex items-start gap-3 p-4 border border-gray-300 rounded bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+                            <span class="flex items-center h-5">
+                              <input
+                                type="checkbox"
+                                value="{{ opt.value }}"
+                                {{ opt.value in this.checkboxSelections ? 'checked' : '' }}
+                                data-action="live#action"
+                                data-live-action-param="toggleCheckbox"
+                                data-live-value-param="{{ opt.value }}"
+                                class="w-5 h-5 text-green-700 border-gray-500 rounded-sm focus:ring-2 focus:ring-green-700 bg-white"
+                              />
+                            </span>
+                            <span class="text-base text-gray-900">{{ opt.label }}</span>
+                          </label>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+
+            {% if this.errors['_step'] is defined %}
+              <p class="text-sm text-red-600">{{ this.errors['_step'] }}</p>
+            {% endif %}
+
+            <div class="pt-4 border-t border-gray-300 flex justify-end">
+              <button
+                type="button"
+                data-action="live#action"
+                data-live-action-param="goToContact"
+                class="bg-green-700 text-white text-sm font-mono py-3 px-8 rounded hover:bg-green-600 transition-colors"
+              >
+                Weiter (2/3)
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="w-80 flex-shrink-0">
+          <div class="bg-white border border-gray-300 rounded-md p-4 sticky top-32">
+            <h3 class="text-sm font-mono text-gray-600 mb-6 uppercase tracking-widest font-bold">Fortschritt</h3>
+            <ul class="space-y-6 relative before:absolute before:inset-y-0 before:left-3 before:w-px before:bg-gray-300">
+              <li class="relative flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-white border-2 border-green-700 flex items-center justify-center z-10 shrink-0">
+                  <span class="material-symbols-outlined text-sm text-green-700" style="font-variation-settings: 'FILL' 1;">check</span>
+                </span>
+                <span class="text-sm font-mono text-gray-900 line-through decoration-gray-300">Service wählen</span>
+              </li>
+              <li class="relative flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-green-700 flex items-center justify-center z-10 shrink-0 shadow-[0_0_0_4px_rgba(0,107,44,0.1)]">
+                  <span class="font-mono text-xs text-white">2</span>
+                </span>
+                <span>
+                  <span class="block text-sm font-mono text-green-700 font-bold">Tech-Stack</span>
+                  <span class="block text-xs text-gray-600 mt-1">{{ service.label }}</span>
+                </span>
+              </li>
+              <li class="relative flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center z-10 shrink-0">
+                  <span class="font-mono text-xs text-gray-400">3</span>
+                </span>
+                <span class="text-sm font-mono text-gray-500">Nachricht &amp; Kontakt</span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  {# ====================================================================== #}
+  {# STEP: CONTACT                                                          #}
+  {# ====================================================================== #}
+  {% elseif this.step == 'contact' %}
+
+    {# === MOBILE === #}
+    <section class="md:hidden">
+      <header class="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          data-action="live#action"
+          data-live-action-param="back"
+          class="p-2 -ml-2 text-gray-600 active:opacity-70"
+          aria-label="Zurück"
+        >
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="text-xs font-mono uppercase tracking-widest text-gray-900 flex-1 text-center">Anfrage</span>
+        <span class="w-10"></span>
+      </header>
+
+      <div class="w-full bg-white rounded-lg shadow-sm border border-gray-300 p-6 flex flex-col gap-6">
+        <div class="flex items-center justify-between w-full relative mb-2">
+          <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-gray-300 z-0"></div>
+          <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-green-700 z-0"></div>
+          <div class="relative z-10 flex flex-col items-center gap-1">
+            <div class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center">
+              <span class="material-symbols-outlined text-sm">check</span>
+            </div>
+          </div>
+          <div class="relative z-10 flex flex-col items-center gap-1">
+            <div class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center">
+              <span class="material-symbols-outlined text-sm">check</span>
+            </div>
+          </div>
+          <div class="relative z-10 flex flex-col items-center gap-1">
+            <div class="w-6 h-6 rounded-full bg-white border-2 border-green-700 flex items-center justify-center">
+              <span class="w-2 h-2 rounded-full bg-green-700"></span>
+            </div>
+            <span class="absolute top-8 text-xs font-mono text-green-700 whitespace-nowrap">Nachricht</span>
+          </div>
+        </div>
+
+        <form class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-mono text-gray-600" for="mobile-message">Ihre Nachricht <span class="text-red-600">*</span></label>
+            <textarea
+              id="mobile-message"
+              data-model="contactMessage"
+              rows="5"
+              maxlength="350"
+              required
+              oninput="document.getElementById('mobile-msg-counter').textContent = this.value.length + ' / 350'"
+              class="w-full rounded border bg-white p-3 text-base text-gray-900 focus:border-green-700 focus:ring-1 focus:ring-green-700 outline-none transition-colors resize-none {{ this.errors.message is defined ? 'border-red-600' : 'border-gray-300' }}"
+              placeholder="Beschreiben Sie kurz Ihr Anliegen..."
+            ></textarea>
+            {% if this.errors.message is defined %}
+              <p class="text-xs text-red-600">{{ this.errors.message }}</p>
+            {% endif %}
+            <div class="text-xs text-right">
+              <span id="mobile-msg-counter" data-live-ignore class="text-gray-400">0 / 350</span>
+            </div>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-mono text-gray-600" for="mobile-name">Name <span class="text-red-600">*</span></label>
+            <input
+              id="mobile-name"
+              type="text"
+              data-model="contactName"
+              maxlength="30"
+              required
+              class="w-full rounded border bg-white p-3 text-base text-gray-900 focus:border-green-700 focus:ring-1 focus:ring-green-700 outline-none transition-colors {{ this.errors.name is defined ? 'border-red-600' : 'border-gray-300' }}"
+            />
+            {% if this.errors.name is defined %}
+              <p class="text-xs text-red-600">{{ this.errors.name }}</p>
+            {% endif %}
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-mono text-gray-600" for="mobile-email">E-Mail <span class="text-red-600">*</span></label>
+            <input
+              id="mobile-email"
+              type="email"
+              data-model="contactEmail"
+              required
+              class="w-full rounded border bg-white p-3 text-base text-gray-900 focus:border-green-700 focus:ring-1 focus:ring-green-700 outline-none transition-colors {{ this.errors.email is defined ? 'border-red-600' : 'border-gray-300' }}"
+            />
+            {% if this.errors.email is defined %}
+              <p class="text-xs text-red-600">{{ this.errors.email }}</p>
+            {% endif %}
+          </div>
+
+          {% if this.errors['_general'] is defined %}
+            <p class="text-sm text-red-600">{{ this.errors['_general'] }}</p>
+          {% endif %}
+
+          <button
+            type="button"
+            data-action="live#action"
+            data-live-action-param="submitContact"
+            class="mt-2 w-full bg-green-700 text-white text-sm font-mono font-bold py-3 px-6 rounded hover:bg-green-800 transition-colors active:opacity-80 flex items-center justify-center gap-2"
+          >
+            Anfrage absenden
+            <span class="material-symbols-outlined text-base">send</span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    {# === DESKTOP === #}
+    <section class="hidden md:block">
+      <div class="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+        <div class="md:col-span-8 flex flex-col gap-8">
+          <header>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">Nachricht und Kontakt</h1>
+            <p class="text-base text-gray-600 mt-2">Bitte hinterlassen Sie uns Ihre Nachricht und Kontaktdaten. Wir melden uns umgehend bei Ihnen.</p>
+          </header>
+
+          <form class="flex flex-col gap-8">
+            <div class="flex flex-col gap-2">
+              <label class="text-sm font-mono text-gray-600 font-bold" for="desktop-message">Ihre Nachricht <span class="text-red-600">*</span></label>
+              <textarea
+                id="desktop-message"
+                data-model="contactMessage"
+                rows="8"
+                maxlength="350"
+                required
+                oninput="document.getElementById('desktop-msg-counter').textContent = this.value.length + ' / 350'"
+                class="w-full bg-white border-2 rounded p-4 text-base text-gray-900 transition-colors duration-200 outline-none resize-y {{ this.errors.message is defined ? 'border-red-600 focus:border-red-600' : 'border-gray-300 focus:border-green-700' }}"
+                placeholder="Beschreiben Sie kurz Ihr Anliegen oder Projekt..."
+              ></textarea>
+              {% if this.errors.message is defined %}
+                <p class="text-sm text-red-600">{{ this.errors.message }}</p>
+              {% endif %}
+              <div class="text-xs text-right">
+                <span id="desktop-msg-counter" data-live-ignore class="text-gray-400">0 / 350</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-mono text-gray-600 font-bold" for="desktop-name">Name <span class="text-red-600">*</span></label>
+                <input
+                  id="desktop-name"
+                  type="text"
+                  data-model="contactName"
+                  maxlength="30"
+                  required
+                  class="w-full bg-white border-2 rounded p-4 text-base text-gray-900 transition-colors duration-200 outline-none {{ this.errors.name is defined ? 'border-red-600 focus:border-red-600' : 'border-gray-300 focus:border-green-700' }}"
+                  placeholder="Max Mustermann"
+                />
+                {% if this.errors.name is defined %}
+                  <p class="text-sm text-red-600">{{ this.errors.name }}</p>
+                {% endif %}
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-sm font-mono text-gray-600 font-bold" for="desktop-email">E-Mail <span class="text-red-600">*</span></label>
+                <input
+                  id="desktop-email"
+                  type="email"
+                  data-model="contactEmail"
+                  required
+                  class="w-full bg-white border-2 rounded p-4 text-base text-gray-900 transition-colors duration-200 outline-none {{ this.errors.email is defined ? 'border-red-600 focus:border-red-600' : 'border-gray-300 focus:border-green-700' }}"
+                  placeholder="max@beispiel.de"
+                />
+                {% if this.errors.email is defined %}
+                  <p class="text-sm text-red-600">{{ this.errors.email }}</p>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if this.errors['_general'] is defined %}
+              <p class="text-sm text-red-600">{{ this.errors['_general'] }}</p>
+            {% endif %}
+
+            <div class="pt-2 flex justify-end">
+              <button
+                type="button"
+                data-action="live#action"
+                data-live-action-param="submitContact"
+                class="inline-flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 text-white text-sm font-mono px-8 py-4 rounded transition-colors duration-200"
+              >
+                <span>Anfrage absenden</span>
+                <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">send</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="md:col-span-4 hidden md:flex flex-col bg-gray-50 border-2 border-gray-200 rounded p-8 sticky top-8">
+          <h2 class="text-sm font-mono uppercase tracking-widest text-gray-600 mb-8 font-bold">Fortschritt</h2>
+          <div class="relative">
+            <div class="absolute left-[11px] top-4 bottom-8 w-0.5 bg-gray-200"></div>
+            <ul class="flex flex-col gap-8 relative z-10">
+              <li class="flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+                </span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-mono text-gray-900">Service wählen</span>
+                  <span class="text-sm text-gray-600 opacity-75">Schritt 1</span>
+                </span>
+              </li>
+              <li class="flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+                </span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-mono text-gray-900">Tech-Stack</span>
+                  <span class="text-sm text-gray-600 opacity-75">Schritt 2</span>
+                </span>
+              </li>
+              <li class="flex items-start gap-4 bg-white p-2 -ml-2 rounded border-2 border-green-700 shadow-sm relative">
+                <span class="w-6 h-6 rounded-full border-2 border-green-700 text-green-700 bg-white flex items-center justify-center flex-shrink-0 mt-1">
+                  <span class="text-xs font-mono font-bold">3</span>
+                </span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-mono text-green-700 font-bold">Nachricht &amp; Kontakt</span>
+                  <span class="text-sm text-gray-600">Aktueller Schritt</span>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  {# ====================================================================== #}
+  {# STEP: DONE                                                             #}
+  {# ====================================================================== #}
+  {% else %}
+
+    {# === MOBILE === #}
+    <section class="md:hidden h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+      <div class="mb-8 rounded-full bg-gray-100 p-6 shadow-sm border border-gray-300 flex items-center justify-center animate-bounce">
+        <span class="material-symbols-outlined text-green-700" style="font-size: 64px; font-variation-settings: 'FILL' 1;">check_circle</span>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Vielen Dank!</h1>
+      <p class="text-base text-gray-600 mb-8 max-w-xs">Wir melden uns innerhalb von 24 Stunden bei Ihnen.</p>
+    </section>
+
+    {# === DESKTOP === #}
+    <section class="hidden md:block min-h-screen px-6 py-12">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+        <div class="md:col-span-8 relative bg-white border border-gray-300 p-8 md:p-16 w-full text-center overflow-hidden flex flex-col items-center shadow-lg">
+          <div class="absolute inset-0 z-0 pointer-events-none opacity-40"
+               style="background-image: linear-gradient(rgba(189,202,186,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(189,202,186,0.4) 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+          <div class="relative z-10 w-full flex flex-col items-center">
+            <div class="mb-8 relative inline-flex items-center justify-center">
+              <div class="absolute inset-0 bg-green-600 opacity-20 rounded-full scale-150"></div>
+              <div class="absolute inset-0 bg-green-600 opacity-10 rounded-full scale-125"></div>
+              <span class="material-symbols-outlined text-green-700 relative z-10" style="font-size: 80px; font-variation-settings: 'FILL' 1;">check_circle</span>
+            </div>
+
+            <div class="space-y-4 max-w-2xl mx-auto mb-8">
+              <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">Vielen Dank für Ihre Anfrage!</h1>
+              <p class="text-lg text-gray-600 max-w-xl mx-auto">
+                Wir haben Ihre Details erhalten und melden uns innerhalb von 24 Stunden für das kostenlose 30-minütige Kennenlernen mit Hands-on Tipps.
+              </p>
+            </div>
+
+            <div class="text-xs font-mono text-gray-500 flex flex-wrap justify-center gap-3 mb-8 uppercase tracking-wider">
+              <span class="flex items-center gap-1 bg-gray-50 py-1 px-3 border border-gray-300">
+                <span class="material-symbols-outlined text-sm">schedule</span>
+                Antwort in 24h
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="md:col-span-4 hidden md:flex flex-col bg-gray-50 border-2 border-gray-200 rounded p-8 sticky top-8">
+          <h2 class="text-sm font-mono uppercase tracking-widest text-gray-600 mb-8 font-bold">Fortschritt</h2>
+          <div class="relative">
+            <div class="absolute left-[11px] top-4 bottom-8 w-0.5 bg-gray-200"></div>
+            <ul class="flex flex-col gap-8 relative z-10">
+              <li class="flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+                </span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-mono text-gray-900">Service wählen</span>
+                  <span class="text-sm text-gray-600 opacity-75">Schritt 1</span>
+                </span>
+              </li>
+              <li class="flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+                </span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-mono text-gray-900">Tech-Stack</span>
+                  <span class="text-sm text-gray-600 opacity-75">Schritt 2</span>
+                </span>
+              </li>
+              <li class="flex items-start gap-4">
+                <span class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+                </span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-mono text-gray-900">Nachricht &amp; Kontakt</span>
+                  <span class="text-sm text-gray-600 opacity-75">Schritt 3</span>
+                </span>
+              </li>
+              <li class="flex items-start gap-4 bg-white p-2 -ml-2 rounded border-2 border-green-700 shadow-sm relative">
+                <span class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                  <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+                </span>
+                <span class="flex flex-col">
+                  <span class="text-sm font-mono text-green-700 font-bold">Abgeschlossen</span>
+                  <span class="text-sm text-gray-600">Anfrage versendet</span>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  {% endif %}
 </div>
