@@ -97,7 +97,7 @@ final class BlockTypeRegistry
         'page-teaser' => 'Internal page teaser displaying SEO/excerpt data (title, description, image) from a referenced page. Description uses SEO description with excerpt fallback. Params: page (UUID, required), buttonText (default: "Mehr erfahren"), showImage (default: true).',
 
         // === QUALIFIED CONTACT ===
-        'qualified-contact' => 'Tabbed contact form with AI-assistant-style decision tree for lead qualification. 3 tabs: Vibe Coding Consulting, PHP Refactoring, AI Content Marketing. Rendered via LiveComponent.',
+        'qualified-contact' => 'Multi-step qualified contact wizard (service selection → tech details → contact → success). 3 services: PHP Refactoring, Barrierefreies Webdesign, Vibe Coding für Production. Rendered via LiveComponent with mobile and desktop layouts.',
     ];
 
     /**
@@ -409,7 +409,7 @@ final class BlockTypeRegistry
         'qualified-contact' => [
             'type' => 'qualified-contact',
             'headline' => 'Lass uns sprechen',
-            'subline' => 'Finde das passende Angebot für dein Projekt',
+            'subline' => 'Finde das passende Angebot für dein Projekt — in 3 Schritten zur maßgeschneiderten Lösung.',
         ],
     ];
 
