@@ -5,7 +5,7 @@
     {% for item in content.items %}
       {% set imageSrc = '' %}
       {% set imageAlt = item.title %}
-      {% if item.excerptImages is defined and item.excerptImages[0] is not empty %}
+      {% if item.excerptImages is defined and item.excerptImages is not empty and item.excerptImages[0] is not empty %}
         {% set imageSrc = item.excerptImages[0].formats['content-full.webp']|default('') %}
       {% endif %}
       {% set description = '' %}
