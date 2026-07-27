@@ -1,6 +1,7 @@
 <!-- article-card.html.twig -->
 <article>
   <a href="{{ url }}"{% if target is defined and target %} target="{{ target }}"{% endif %}
+     data-qa="article-link"
      class="group relative block bg-white rounded-lg p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl focus:scale-105 focus:shadow-xl border border-transparent hover:border-green-700/20 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2 no-underline hover:no-underline">
     {% if image_src is defined and image_src %}
       <div class="overflow-hidden rounded-lg mb-5">
