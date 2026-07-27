@@ -43,7 +43,7 @@ validate_html_stage:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - apk add --no-cache curl jq
+    - apk add --no-cache curl jq bash
     - chmod +x bin/validate-html.sh
     - ./bin/validate-html.sh
 
