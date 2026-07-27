@@ -11,7 +11,7 @@
     <img class="mx-auto w-full max-w-2xl rounded rounded-lg" src="{{ source }}" title="{{ title }}" alt="{{ title }}"/>
     {% if content.flags is defined and content.flags is not empty %}
       {% set current_locale = app.request.locale|split('_')[0] %}
-      <div class="mt-8 flex flex-wrap justify-center gap-8" aria-label="{% if current_locale == 'de' %}YouTube-Videos in verschiedenen Sprachen{% else %}YouTube videos in different languages{% endif %}">
+      <div class="mt-8 flex flex-wrap justify-center gap-8" role="group" aria-label="{% if current_locale == 'de' %}YouTube-Videos in verschiedenen Sprachen{% else %}YouTube videos in different languages{% endif %}">
         {% set language_data = {
           'es': {
             'name': 'Español',
