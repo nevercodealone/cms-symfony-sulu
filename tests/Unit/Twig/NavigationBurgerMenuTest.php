@@ -49,25 +49,21 @@ class NavigationBurgerMenuTest extends TestCase
     {
         $template = $this->getTemplateContent();
 
-        $burgerButtonPattern = '/<button[^>]+x-on:click="menuOpen\s*=\s*!menuOpen"[^>]*>/s';
-        $this->assertMatchesRegularExpression($burgerButtonPattern, $template, 'Burger button with Alpine toggle must exist in navigation template');
+        $burgerButtonPattern = '/<button[^>]+{{\s*stimulus_action\(\s*[\x27"]mobile-menu[\x27"]\s*,\s*[\x27"]open[\x27"]\s*\) }}[^>]*>/s';
+        $this->assertMatchesRegularExpression($burgerButtonPattern, $template, 'Burger button with Stimulus open action must exist in navigation template');
 
-        $wrapperPattern = '/<div[^>]*xl:hidden[^>]*>.*?<button[^>]+x-on:click="menuOpen\s*=\s*!menuOpen"/s';
+        $wrapperPattern = '/<div[^>]*xl:hidden[^>]*>.*?<button[^>]+{{\s*stimulus_action\(\s*[\x27"]mobile-menu[\x27"]\s*,\s*[\x27"]open[\x27"]\s*\)/s';
         $this->assertMatchesRegularExpression($wrapperPattern, $template, 'Burger wrapper must use xl:hidden');
         $this->assertStringNotContainsString('desktop:', $template, 'Template must NOT use custom desktop: prefix — use official Tailwind breakpoints only');
     }
 
-    public function test_scenario_overlayAndBackdropHaveXlHiddenClass(): void
+    public function test_scenario_dialogReplacesBackdropAndOverlay(): void
     {
         $template = $this->getTemplateContent();
 
-        $backdropPattern = '/class="[^"]*xl:hidden[^"]*fixed[^"]*"/s';
-        $this->assertMatchesRegularExpression($backdropPattern, $template, 'Backdrop must use official Tailwind xl:hidden utility class');
-
-        $overlayPattern = '/class="[^"]*xl:hidden[^"]*"/s';
-        preg_match_all($overlayPattern, $template, $overlayMatches);
-        $this->assertGreaterThanOrEqual(2, count($overlayMatches[0]), 'Both backdrop and overlay nav must use official Tailwind xl:hidden');
-
+        $this->assertStringContainsString('<dialog', $template, 'Navigation must use a native dialog element');
+        $this->assertStringContainsString('closedby="any"', $template, 'Dialog must support light dismiss');
+        $this->assertStringContainsString('id="nca-mobile-menu"', $template, 'Dialog must have correct ID');
         $this->assertStringNotContainsString('desktop:', $template, 'Template must NOT use custom desktop: prefix anywhere');
     }
 
