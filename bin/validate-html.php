@@ -36,9 +36,7 @@ foreach ($pages as $page) {
     $result = json_decode($response, true);
     $messages = $result['messages'] ?? [];
 
-    $errors = array_filter($messages, function ($m) {
-        return $m['type'] === 'error' && !preg_match('/Attribute .[x:@-]/u', $m['message']);
-    });
+    $errors = array_filter($messages, fn($m) => $m['type'] === 'error');
     $warnings = count(array_filter($messages, fn($m) => $m['type'] === 'warning'));
     $infos = count(array_filter($messages, fn($m) => $m['type'] === 'info'));
 
