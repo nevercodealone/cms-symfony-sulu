@@ -44,8 +44,7 @@ validate_html_stage:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
     - cd /var/www/html
-    - chmod +x bin/validate-html.sh
-    - ./bin/validate-html.sh
+    - node bin/validate-html.js
 
 build:
   stage: build
