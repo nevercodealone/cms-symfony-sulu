@@ -8,7 +8,7 @@
       {{ content.subline is defined and content.subline is not empty ? content.subline : 'Finde das passende Angebot für dein Projekt' }}
     </p>
 
-    {{ component('qualified-contact') }}
+    {{ component('qualified-contact', { key: loopIndex|default('a') }) }}
   </div>
 </div>
 {# end qualified-contact.html.twig #}
