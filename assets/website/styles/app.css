@@ -2,10 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-[x-cloak] {
-  display: none;
-}
 @import "flowbite/src/themes/default";
+
+dialog#nca-mobile-menu {
+    margin: 0;
+    margin-left: auto;
+    padding: 0;
+    border: none;
+    background: rgb(20 83 45);
+    color: white;
+    height: 100%;
+    max-height: 100dvh;
+    width: min(28rem, 100vw);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+dialog#nca-mobile-menu::backdrop {
+    background-color: rgb(20 83 45 / 0.5);
+}
+html.is-locked {
+    overflow: hidden;
+}
 
 blockquote,
 dl,
@@ -82,9 +99,30 @@ li {
 }
 
 /* Navigation: hamburger bar animation */
-.nav-bar {
+.nav-bar,
+.hamburger__bar {
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
     transform-origin: center;
+}
+
+/* Navigation: hamburger transformation via dialog[open] state */
+header:has(dialog[open]) .hamburger__bar:nth-child(1) {
+    transform: translateY(5px) rotate(45deg);
+}
+header:has(dialog[open]) .hamburger__bar:nth-child(2) {
+    opacity: 0;
+}
+header:has(dialog[open]) .hamburger__bar:nth-child(3) {
+    transform: translateY(-5px) rotate(-45deg);
+}
+header:has(dialog[open]) .nav-toggle__label--menu {
+    display: none;
+}
+header:has(dialog[open]) .nav-toggle__label--close {
+    display: inline;
+}
+.nav-toggle__label--close {
+    display: none;
 }
 
 /* Navigation: accordion via grid for smooth open/close */
@@ -105,6 +143,22 @@ li {
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .nav-chevron.open {
+    transform: rotate(90deg);
+}
+
+/* Navigation: native details/summary accordion */
+details > summary {
+    list-style: none;
+    cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+    display: none;
+}
+details[open] > summary {
+    background-color: #fff;
+    color: rgb(20 83 45);
+}
+details[open] .nav-chevron {
     transform: rotate(90deg);
 }
 
