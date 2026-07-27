@@ -4,11 +4,11 @@
       "js": [
         "/build/website/runtime.9135b120.js",
         "/build/website/236.7abb7741.js",
-        "/build/website/35.1b65ac03.js",
-        "/build/website/app.ea2c459c.js"
+        "/build/website/154.44c11a51.js",
+        "/build/website/app.c742679b.js"
       ],
       "css": [
-        "/build/website/230.b27fbc86.css"
+        "/build/website/230.9908fcb3.css"
       ]
     },
     "chat": {
@@ -23,7 +23,7 @@
         "/build/website/runtime.9135b120.js"
       ],
       "css": [
-        "/build/website/230.b27fbc86.css"
+        "/build/website/230.9908fcb3.css"
       ]
     }
   }
