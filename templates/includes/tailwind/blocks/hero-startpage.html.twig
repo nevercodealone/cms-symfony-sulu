@@ -9,9 +9,9 @@
       <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
         {{ content.textone }} {{ content.texttwo }}
       </h1>
-      <p class="mt-6 text-lg leading-8 text-gray-800">
+      <div class="mt-6 text-lg leading-8 text-gray-800">
         {{ content.description|raw }}
-      </p>
+      </div>
       <div class="mt-10 flex items-center justify-center gap-x-6">
         {% if content.buttonText is defined and content.buttonText is not empty %}
           {% if content.buttonLink is defined and content.buttonLink is not empty %}
