@@ -31,6 +31,21 @@ cypress_custom_tests_preview_stage:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
     TESTS_FAILED_cypress_custom_tests_preview_stage: $CI_JOB_STATUS == 'success'
 
+validate_html_stage:
+  stage: trigger_test
+  image: $CI_DEV_IMAGE
+  tags:
+    - docker1
+  variables:
+    BASE_URL: https://nevercodealone.projects.nevercodealone.de
+  needs:
+    - job: deploy_stage
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+    - cd /var/www/html
+    - php bin/validate-html.php
+
 build:
   stage: build
   before_script:
@@ -172,6 +187,7 @@ deploy_live:
   needs:
     - cypress_full_test_preview_stage
     - cypress_custom_tests_preview_stage
+    - validate_html_stage
 
 deploy_live_manual:
   extends: .deploy_live

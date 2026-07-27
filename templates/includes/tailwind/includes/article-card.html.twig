@@ -1,22 +1,24 @@
 <!-- article-card.html.twig -->
 <article>
-  <a href="{{ url }}"{% if target is defined and target %} target="{{ target }}"{% endif %}>
+  <a href="{{ url }}"{% if target is defined and target %} target="{{ target }}"{% endif %}
+     data-qa="article-link"
+     class="group relative block bg-white rounded-lg p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl focus:scale-105 focus:shadow-xl border border-transparent hover:border-green-700/20 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-2 no-underline hover:no-underline">
     {% if image_src is defined and image_src %}
-      <img src="{{ image_src }}"
-           class="mb-5 w-full max-w-full rounded-lg"
-           alt="{{ image_alt|default('') }}"
-           loading="lazy">
+      <div class="overflow-hidden rounded-lg mb-5">
+        <img src="{{ image_src }}"
+             class="w-full max-w-full"
+             alt="{{ image_alt|default('') }}"
+             loading="lazy">
+      </div>
+    {% endif %}
+    <span class="mb-2 block text-xl font-bold leading-tight text-gray-900 dark:text-white group-hover:text-green-800 transition-colors">
+      {{ title }}
+    </span>
+    {% if description is defined and description is not empty %}
+      <div class="text-sm text-gray-800">
+        {{ description|raw }}
+      </div>
     {% endif %}
   </a>
-  <p class="mb-2 text-xl font-bold leading-tight text-gray-900 dark:text-white">
-    <a href="{{ url }}"{% if target is defined and target %} target="{{ target }}"{% endif %}>{{ title }}</a>
-  </p>
-  {% if description is defined and description is not empty %}
-    <p class="flex items-center space-x-4">
-      <span class="text-sm text-gray-800">
-        {{ description|raw }}
-      </span>
-    </p>
-  {% endif %}
 </article>
 <!-- end article-card.html.twig -->

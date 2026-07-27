@@ -6,9 +6,9 @@
       <h2 class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
         {{ content.headline }}
       </h2>
-      <p class="mt-6 text-lg leading-8 text-gray-800">
+      <div class="mt-6 text-lg leading-8 text-gray-800">
         {{ content.description|raw }}
-      </p>
+      </div>
       {% if content.items is defined and content.items is not empty %}
         <div class="mt-8 flex flex-wrap items-center gap-4">
           {% for item in content.items %}
