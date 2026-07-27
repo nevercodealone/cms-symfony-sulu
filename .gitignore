@@ -33,7 +33,7 @@ infection.html
 !/bin/console.php
 !/bin/websiteconsole
 !/bin/adminconsole
-!/bin/validate-html.js
+!/bin/validate-html.php
 
 # var
 /var/*

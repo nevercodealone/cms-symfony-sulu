@@ -44,7 +44,7 @@ validate_html_stage:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
     - cd /var/www/html
-    - node bin/validate-html.js
+    - php bin/validate-html.php
 
 build:
   stage: build
