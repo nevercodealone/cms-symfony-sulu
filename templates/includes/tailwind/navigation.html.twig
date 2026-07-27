@@ -57,7 +57,7 @@
 </div>
 
 <header class="relative bg-white z-40 border-b-2 border-green-900"
-        x-data="{ menuOpen: false }"
+        {{ stimulus_controller('mobile-menu') }}
         itemscope itemtype="https://schema.org/SiteNavigationElement">
 
   {# ══ LOGO + CHIP NAV + HAMBURGER (single row on desktop) ══ #}
@@ -92,138 +92,118 @@
     <div class="xl:hidden flex-shrink-0 ml-auto">
       <button
         type="button"
-        x-on:click="menuOpen = !menuOpen"
-        :aria-expanded="menuOpen"
-        aria-controls="nca-main-menu"
+        {{ stimulus_action('mobile-menu', 'open') }}
+        {{ stimulus_target('mobile-menu', 'toggle') }}
+        aria-expanded="false"
+        aria-controls="nca-mobile-menu"
         aria-label="Hauptmenü öffnen"
-        :class="menuOpen ? 'bg-white text-green-900 border-green-900' : 'bg-green-900 text-white border-green-900'"
         class="flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 bg-green-900 text-white border-green-900 transition-colors duration-200">
 
         <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1 flex-shrink-0">
-          <span class="nav-bar block h-0.5 w-4 bg-current"
-            :style="menuOpen ? 'transform:translateY(5px) rotate(45deg)' : ''"></span>
-          <span class="nav-bar block h-0.5 w-4 bg-current"
-            :style="menuOpen ? 'opacity:0' : ''"></span>
-          <span class="nav-bar block h-0.5 w-4 bg-current"
-            :style="menuOpen ? 'transform:translateY(-5px) rotate(-45deg)' : ''"></span>
+          <span class="hamburger__bar block h-0.5 w-4 bg-current"></span>
+          <span class="hamburger__bar block h-0.5 w-4 bg-current"></span>
+          <span class="hamburger__bar block h-0.5 w-4 bg-current"></span>
         </span>
 
-        <span x-text="menuOpen ? 'CLOSE' : 'MENU'">MENU</span>
+        <span class="nav-toggle__label--menu">MENU</span>
+        <span class="nav-toggle__label--close">CLOSE</span>
       </button>
     </div>
   </div>
 
-  {# ══ BACKDROP (click to close) ══ #}
-  <div x-show="menuOpen"
-       x-on:click="menuOpen = false"
-       class="xl:hidden fixed inset-0 z-40 bg-green-900/50"
-       x-cloak></div>
+  {# ══ MAIN MENU OVERLAY (native dialog) ══ #}
+  <dialog id="nca-mobile-menu"
+          closedby="any"
+          {{ stimulus_target('mobile-menu', 'dialog') }}>
+    <nav aria-label="Hauptnavigation"
+         class="bg-green-900 text-white overflow-y-auto w-full h-full"
+         style="scrollbar-width: none;">
 
-  {# ══ MAIN MENU OVERLAY ══ #}
-  <nav id="nca-main-menu"
-       aria-label="Hauptnavigation"
-       class="xl:hidden fixed right-0 top-0 bottom-0 z-50 bg-green-900 nav-overlay overflow-y-auto w-full max-w-md"
-       :class="menuOpen ? '' : 'nav-overlay-hidden'"
-       :aria-hidden="!menuOpen"
-       x-init="$watch('menuOpen', val => $el.inert = !val); $el.inert = true"
-       style="scrollbar-width: none;"
-       x-cloak>
+      {# Action row: close + call #}
+      <div class="border-b border-white/20 px-4 py-3 flex items-center justify-between gap-3">
+        <a href="tel:+4917624747727"
+           {{ stimulus_action('mobile-menu', 'closeOnLink') }}
+           aria-label="Roland Golla direkt anrufen"
+           class="inline-flex items-center gap-2 bg-white text-green-900 text-sm font-bold tracking-widest uppercase px-4 py-2.5 border border-white hover:bg-green-900 hover:text-white hover:border-white transition-colors duration-200 no-underline">
+          <svg class="w-4 h-4 flex-shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+          </svg>
+          ROLAND ANRUFEN
+        </a>
+        <button
+          type="button"
+          {{ stimulus_action('mobile-menu', 'close') }}
+          aria-label="Menü schließen"
+          class="flex items-center gap-2 text-xs font-bold tracking-widest uppercase px-3 py-2 border border-white bg-green-900 text-white hover:bg-white hover:text-green-900 transition-colors duration-200 flex-shrink-0">
 
-    {# Overlay header with close button #}
-    <div class="bg-green-900 border-b-2 border-white px-4 py-3 flex items-center justify-end">
-      <button
-        type="button"
-        x-on:click="menuOpen = false"
-        aria-label="Menü schließen"
-        class="flex items-center gap-2 text-xs font-black tracking-widest uppercase px-3 py-2 border-2 border-white bg-green-900 text-white hover:bg-white hover:text-green-900 transition-colors duration-200">
+          <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1">
+            <span class="hamburger__bar block h-0.5 w-4 bg-current"></span>
+            <span class="hamburger__bar block h-0.5 w-4 bg-current"></span>
+            <span class="hamburger__bar block h-0.5 w-4 bg-current"></span>
+          </span>
 
-        <span aria-hidden="true" class="w-4 h-4 relative flex flex-col justify-center gap-1 flex-shrink-0">
-          <span class="nav-bar block h-0.5 w-4 bg-current" style="transform:translateY(5px) rotate(45deg)"></span>
-          <span class="nav-bar block h-0.5 w-4 bg-current" style="opacity:0"></span>
-          <span class="nav-bar block h-0.5 w-4 bg-current" style="transform:translateY(-5px) rotate(-45deg)"></span>
-        </span>
+          <span>CLOSE</span>
+        </button>
+      </div>
 
-        <span>CLOSE</span>
-      </button>
-    </div>
+      {# NAV LIST #}
+      <ul role="list">
 
-    {# CTA #}
-    <div class="px-4 py-4 border-b-2 border-white">
-      <a href="tel:+4917624747727"
-         aria-label="Roland Golla direkt anrufen"
-         class="inline-flex items-center gap-2 bg-white text-green-900 text-sm font-black tracking-widest uppercase px-4 py-3 border-2 border-white hover:bg-green-900 hover:text-white hover:border-white transition-colors duration-200 no-underline">
-        <svg class="w-4 h-4 flex-shrink-0" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
-        </svg>
-        ROLAND ANRUFEN
-      </a>
-    </div>
-
-    {# NAV LIST #}
-    <ul role="list">
-
-      {% for item in navItems %}
-        {% if item.children|length > 0 %}
-          {# Accordion item with children #}
-          <li class="border-b-2 border-white" x-data="{ open: false }" style="margin:0;padding:0">
-            <button
-              type="button"
-              x-on:click="open = !open"
-              :aria-expanded="open"
-              aria-controls="submenu-{{ loop.index }}"
-              class="w-full flex items-center justify-between px-4 py-5 text-left group transition-colors duration-150"
-              :class="open ? 'bg-white' : 'hover:bg-white hover:text-green-900'">
-              <span class="text-xl font-black tracking-tight uppercase transition-colors duration-150"
-                :class="open ? 'text-green-900' : 'text-white group-hover:text-green-900'">
-                {{ item.title }}
-              </span>
-              <svg aria-hidden="true"
-                class="w-5 h-5 flex-shrink-0 nav-chevron transition-colors duration-150"
-                :class="[open ? 'open text-green-900' : 'text-white group-hover:text-green-900']"
-                fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                <path stroke-linecap="square" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
-              </svg>
-            </button>
-            <div class="nav-acc-wrap" :class="open ? 'open' : ''">
-              <ul id="submenu-{{ loop.index }}" role="list" class="nav-acc-inner bg-white">
-                {# Link to overview page first #}
-                <li style="margin:0;padding:0">
-                  <a href="{{ sulu_content_path(item.url) }}"
-                     x-on:click="menuOpen = false"
-                     class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 hover:bg-green-900 hover:text-white transition-colors duration-150 group no-underline">
-                    <span aria-hidden="true" class="text-green-700 font-black text-xs group-hover:text-white">→</span>
-                    <span class="text-sm font-black uppercase tracking-wide text-green-900 group-hover:text-white">Übersicht {{ item.title }}</span>
-                  </a>
-                </li>
-                {% for child in item.children %}
+        {% for item in navItems %}
+          {% if item.children|length > 0 %}
+            {# Accordion item with children #}
+            <li class="border-b border-white/20" style="margin:0;padding:0">
+              <details>
+                <summary class="w-full flex items-center justify-between px-4 py-3 text-left text-white hover:bg-white hover:text-green-900 transition-colors duration-150">
+                  <span class="text-base font-semibold tracking-wide uppercase">
+                    {{ item.title }}
+                  </span>
+                  <svg aria-hidden="true"
+                    class="nav-chevron w-4 h-4 flex-shrink-0 transition-colors duration-150"
+                    fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="square" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                  </svg>
+                </summary>
+                <ul id="submenu-{{ loop.index }}" role="list" class="bg-white">
+                  {# Link to overview page first #}
                   <li style="margin:0;padding:0">
-                    <a href="{{ sulu_content_path(child.url) }}"
-                       x-on:click="menuOpen = false"
-                       class="flex items-center gap-3 px-4 py-3 {{ not loop.last ? 'border-b border-gray-200' }} hover:bg-green-900 hover:text-white transition-colors duration-150 group no-underline">
-                      <span aria-hidden="true" class="text-green-700 font-black text-xs group-hover:text-white">→</span>
-                      <span class="text-sm font-black uppercase tracking-wide text-green-900 group-hover:text-white">{{ child.title }}</span>
+                    <a href="{{ sulu_content_path(item.url) }}"
+                       {{ stimulus_action('mobile-menu', 'closeOnLink') }}
+                       class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-200 hover:bg-green-900 hover:text-white transition-colors duration-150 group no-underline">
+                      <span aria-hidden="true" class="text-green-700 font-bold text-xs group-hover:text-white">→</span>
+                      <span class="text-sm font-medium uppercase tracking-wide text-green-900 group-hover:text-white">Übersicht {{ item.title }}</span>
                     </a>
                   </li>
-                {% endfor %}
-              </ul>
-            </div>
-          </li>
-        {% else %}
-          {# Simple link without children #}
-          <li class="border-b-2 border-white" style="margin:0;padding:0">
-            <a href="{{ sulu_content_path(item.url) }}"
-               x-on:click="menuOpen = false"
-               class="flex items-center px-4 py-5 hover:bg-white transition-colors duration-150 group no-underline">
-              <span class="text-xl font-black tracking-tight uppercase text-white group-hover:text-green-900 transition-colors duration-150">
-                {{ item.title }}
-              </span>
-            </a>
-          </li>
-        {% endif %}
-      {% endfor %}
+                  {% for child in item.children %}
+                    <li style="margin:0;padding:0">
+                      <a href="{{ sulu_content_path(child.url) }}"
+                         {{ stimulus_action('mobile-menu', 'closeOnLink') }}
+                         class="flex items-center gap-3 px-4 py-2.5 {{ not loop.last ? 'border-b border-gray-200' }} hover:bg-green-900 hover:text-white transition-colors duration-150 group no-underline">
+                        <span aria-hidden="true" class="text-green-700 font-bold text-xs group-hover:text-white">→</span>
+                        <span class="text-sm font-medium uppercase tracking-wide text-green-900 group-hover:text-white">{{ child.title }}</span>
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </details>
+            </li>
+          {% else %}
+            {# Simple link without children #}
+            <li class="border-b border-white/20" style="margin:0;padding:0">
+              <a href="{{ sulu_content_path(item.url) }}"
+                 {{ stimulus_action('mobile-menu', 'closeOnLink') }}
+                 class="flex items-center px-4 py-3 hover:bg-white transition-colors duration-150 group no-underline">
+                <span class="text-base font-semibold tracking-wide uppercase text-white group-hover:text-green-900 transition-colors duration-150">
+                  {{ item.title }}
+                </span>
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
 
-    </ul>
-  </nav>
+      </ul>
+    </nav>
+  </dialog>
 
 </header>
 <!-- end navigation.html.twig -->
