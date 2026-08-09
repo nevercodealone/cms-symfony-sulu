@@ -1,0 +1,5 @@
+sulu_contact:
+    objects:
+        contact:
+            model: App\Entity\Contact
+            repository: App\Repository\ContactRepository

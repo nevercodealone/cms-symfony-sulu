@@ -27,5 +27,6 @@
     "app.chat_message.total_tokens": "Total Tokens",
     "app.chat_message.basic_information": "Basic Information",
     "app.chat_message.conversation": "Conversation",
-    "app.chat_message.metrics": "Metrics"
+    "app.chat_message.metrics": "Metrics",
+    "app.contact_detail_page": "Detail page"
 }

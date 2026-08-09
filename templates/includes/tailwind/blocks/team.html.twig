@@ -15,15 +15,46 @@
                 <img class="w-full rounded-lg object-cover shadow-lg" src="{{ source }}" alt="{{ item.fullName }}">
               </div>
               <div class="space-y-1 text-lg font-medium leading-6">
-                <h3 class="text-xl text-gray-900">{{ item.fullName }}</h3>
-                <p class="text-base text-green-800">{{ item.positionName }}</p>
+                {% set detailUrl = null %}
+                {% if item.detailPage is defined and item.detailPage is not empty %}
+                  {% set detailPage = sulu_content_load(item.detailPage) %}
+                  {% if detailPage is not empty %}
+                    {% set detailUrl = sulu_content_path(detailPage.content.url) %}
+                  {% endif %}
+                {% endif %}
+
+                <h3 class="text-xl text-gray-900">
+                  {% if detailUrl %}
+                    <a href="{{ detailUrl }}" class="inline-flex items-center gap-1.5">
+                      <span>{{ item.fullName }}</span><span class="sr-only"> Profilseite</span>
+                      <svg class="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m14 0-4 4m4-4-4-4"/>
+                      </svg>
+                    </a>
+                  {% else %}
+                    {{ item.fullName }}
+                  {% endif %}
+                </h3>
+                <p class="text-base text-black">{{ item.positionName }}</p>
               </div>
-              {% if item.contactDetails.socialMedia is not empty %}
+              {% if item.contactDetails.socialMedia is not empty or item.contactDetails.websites is not empty %}
                 <ul role="list" class="flex space-x-5 p-0" aria-label="Social Link Liste">
                   {% for social in item.contactDetails.socialMedia %}
                     <li>
                       {% include 'includes/tailwind/link-social-media.html.twig' with {'socialLink': social.username, 'fullName': item.fullName } %}
                     </li>
+                  {% endfor %}
+                  {% for website in item.contactDetails.websites %}
+                    {% if website.websiteType == 1 %}
+                      <li>
+                        <a href="{{ website.website }}" target="_blank" rel="noopener" class="text-green-800 hover:text-green-700">
+                          <span class="sr-only">Website von {{ item.fullName }}</span>
+                          <svg class="w-6 h-6" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/>
+                          </svg>
+                        </a>
+                      </li>
+                    {% endif %}
                   {% endfor %}
                 </ul>
               {% endif %}

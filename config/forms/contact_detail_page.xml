@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<form xmlns="http://schemas.sulu.io/template/template"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd">
+    <key>contact_detail_page</key>
+    <properties>
+        <property name="detailPage" type="single_page_selection" colspan="12">
+            <meta>
+                <title lang="de">Detailseite</title>
+                <title lang="en">Detail page</title>
+            </meta>
+            <params>
+                <param name="properties" type="collection">
+                    <param name="title" value="title"/>
+                    <param name="url" value="url"/>
+                </param>
+            </params>
+        </property>
+    </properties>
+</form>
