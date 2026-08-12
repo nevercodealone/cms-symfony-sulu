@@ -59,7 +59,7 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -67,6 +67,9 @@ class SuluPagesTool implements StreamableToolInterface
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
             'UPDATE PAGE TITLE: path + title. Updates the page title. ' .
+            'DELETE PAGE: path + confirm (must repeat the path exactly). Safety pipeline aborts unless every check passes: confirm match, page exists, page is NOT published, page is not locked (homepage, direct child of webspace root, or used as a subpages-overview dataSource), children policy is satisfied, no incoming references (page-teaser, subpages-overview dataSource, sulu-link). Optional: locale, children (reject|cascade|reparent, default reject), expectedChildCount (required for cascade, echoes dryRun output), dryRun (true returns the check report and deletes nothing). On success Sulu auto-trashes the page; trashId is returned. Cache is cleared via CLI after every delete. ' .
+            'DELETE PAGES: paths (JSON array, max 10) + confirm (must equal the JSON-encoded paths array exactly). All-or-nothing: if any path fails a check, nothing is deleted. A path is deletable inside the batch only when every direct child is also listed in the batch (implicit cascade). Paths are sorted deepest-first. Optional: locale, dryRun. ' .
+            'LIST REFERENCES: path. Returns every page that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Useful before delete or rename. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
@@ -88,7 +91,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -397,6 +400,36 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'For update_blocks: JSON array of update objects with position, headline, items. Max 10 per call.',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'confirm',
+                type: PropertyType::STRING,
+                description: 'For delete_page: must repeat the path exactly. For delete_pages: must equal the JSON-encoded paths array exactly. Any mismatch aborts the deletion.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'children',
+                type: PropertyType::STRING,
+                description: 'For delete_page: child-page policy. Values: reject (default, aborts if children exist), cascade (deletes the whole subtree, requires expectedChildCount), reparent (moves children to the parent of the deleted page).',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'expectedChildCount',
+                type: PropertyType::INTEGER,
+                description: 'For delete_page with children=cascade: total descendant count from the preceding dryRun. Server aborts if it does not match.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'dryRun',
+                type: PropertyType::STRING,
+                description: 'For delete_page/delete_pages: "true" returns the check report and deletes nothing. Recommended first call for agents.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'paths',
+                type: PropertyType::STRING,
+                description: 'For delete_pages: JSON array of PHPCR paths, max 10. Sorted deepest-first internally; a path is deletable only when every direct child is also in the batch.',
+                required: false
+            ),
         );
     }
 
@@ -430,6 +463,9 @@ class SuluPagesTool implements StreamableToolInterface
             'remove_block' => $this->removeBlock($arguments, $locale),
             'remove_blocks' => $this->removeBlocksBatch($arguments, $locale),
             'update_blocks' => $this->updateBlocksBatch($arguments, $locale),
+            'delete_page' => $this->deletePageAction($arguments, $locale),
+            'delete_pages' => $this->deletePagesAction($arguments, $locale),
+            'list_references' => $this->listReferencesAction($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
             'list_block_types' => $this->listBlockTypes(),
@@ -972,6 +1008,99 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->pageService->unpublishPage($path, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * delete_page MCP action. Delegates the full safety pipeline to
+     * PageService::deletePageSafe().
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function deletePageAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        if ($path === '') {
+            return new TextToolResult(json_encode([
+                'success' => false,
+                'errorCode' => 'page_not_found',
+                'message' => 'path is required',
+            ], JSON_PRETTY_PRINT) ?: '{}');
+        }
+
+        $result = $this->pageService->deletePageSafe([
+            'path' => $path,
+            'locale' => $locale,
+            'confirm' => (string) ($arguments['confirm'] ?? ''),
+            'children' => (string) ($arguments['children'] ?? 'reject'),
+            'expectedChildCount' => isset($arguments['expectedChildCount']) ? (int) $arguments['expectedChildCount'] : null,
+            'dryRun' => self::isTruthyString($arguments['dryRun'] ?? false),
+        ]);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * delete_pages MCP action. Batched all-or-nothing delete.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function deletePagesAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $pathsRaw = $arguments['paths'] ?? '[]';
+        $paths = json_decode((string) $pathsRaw, true);
+        if (!is_array($paths)) {
+            return new TextToolResult(json_encode([
+                'success' => false,
+                'errorCode' => 'page_not_found',
+                'message' => 'paths must be a JSON array of PHPCR paths',
+            ], JSON_PRETTY_PRINT) ?: '{}');
+        }
+
+        $paths = array_values(array_filter($paths, fn ($p): bool => is_string($p) && trim($p) !== ''));
+        $result = $this->pageService->deletePagesBatch(
+            $paths,
+            $locale,
+            (string) ($arguments['confirm'] ?? ''),
+            self::isTruthyString($arguments['dryRun'] ?? false)
+        );
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * list_references MCP action. Returns every incoming reference for a path.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function listReferencesAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        if ($path === '') {
+            return new TextToolResult(json_encode([
+                'success' => false,
+                'errorCode' => 'page_not_found',
+                'message' => 'path is required',
+            ], JSON_PRETTY_PRINT) ?: '{}');
+        }
+
+        $result = $this->pageService->listIncomingReferences($path, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * MCP transport delivers booleans as strings ("true"/"false") or actual bools.
+     */
+    private static function isTruthyString(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_string($value)) {
+            return strtolower($value) === 'true' || $value === '1';
+        }
+
+        return (bool) $value;
     }
 
     /**

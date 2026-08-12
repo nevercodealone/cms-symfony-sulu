@@ -1562,4 +1562,208 @@ class SuluPagesToolTest extends TestCase
 
         $this->assertContains('mediaId', $propertyNames, 'Schema must include "mediaId" parameter');
     }
+
+    // ======================================================================
+    // delete_page / delete_pages / list_references
+    // ======================================================================
+
+    public function testDescriptionIncludesDeleteActions(): void
+    {
+        $description = $this->tool->getDescription();
+
+        $this->assertStringContainsString('delete_page', $description);
+        $this->assertStringContainsString('delete_pages', $description);
+        $this->assertStringContainsString('list_references', $description);
+    }
+
+    public function testInputSchemaIncludesDeleteProperties(): void
+    {
+        $schema = $this->tool->getInputSchema();
+        $properties = $schema->getProperties();
+
+        $propertyNames = array_map(
+            fn($prop) => $prop->getName(),
+            $properties
+        );
+
+        $this->assertContains('confirm', $propertyNames);
+        $this->assertContains('children', $propertyNames);
+        $this->assertContains('expectedChildCount', $propertyNames);
+        $this->assertContains('dryRun', $propertyNames);
+        $this->assertContains('paths', $propertyNames);
+    }
+
+    public function testDeletePageActionRequiresPath(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'delete_page',
+            'confirm' => '',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertFalse($data['success']);
+        $this->assertSame('page_not_found', $data['errorCode']);
+    }
+
+    public function testDeletePageActionPassesAllParametersToService(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('deletePageSafe')
+            ->with([
+                'path' => '/cmf/example/contents/foo',
+                'locale' => 'de',
+                'confirm' => '/cmf/example/contents/foo',
+                'children' => 'cascade',
+                'expectedChildCount' => 3,
+                'dryRun' => true,
+            ])
+            ->willReturn(['success' => true, 'dryRun' => true, 'path' => '/cmf/example/contents/foo']);
+
+        $result = $this->tool->execute([
+            'action' => 'delete_page',
+            'path' => '/cmf/example/contents/foo',
+            'confirm' => '/cmf/example/contents/foo',
+            'children' => 'cascade',
+            'expectedChildCount' => 3,
+            'dryRun' => 'true',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertTrue($data['dryRun']);
+    }
+
+    public function testDeletePageActionAcceptsStringTrueForDryRun(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('deletePageSafe')
+            ->willReturn(['success' => true, 'dryRun' => true]);
+
+        $this->tool->execute([
+            'action' => 'delete_page',
+            'path' => '/cmf/example/contents/x',
+            'confirm' => '/cmf/example/contents/x',
+            'dryRun' => 'true',
+        ]);
+    }
+
+    public function testDeletePageActionReturnsErrorCodeOnFailure(): void
+    {
+        $this->pageService->method('deletePageSafe')->willReturn([
+            'success' => false,
+            'errorCode' => 'page_published',
+            'message' => 'page is published',
+            'details' => ['path' => '/cmf/example/contents/x'],
+        ]);
+
+        $result = $this->tool->execute([
+            'action' => 'delete_page',
+            'path' => '/cmf/example/contents/x',
+            'confirm' => '/cmf/example/contents/x',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertFalse($data['success']);
+        $this->assertSame('page_published', $data['errorCode']);
+    }
+
+    public function testDeletePagesActionRequiresValidPathsJson(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'delete_pages',
+            'paths' => 'not-json',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertFalse($data['success']);
+        $this->assertSame('page_not_found', $data['errorCode']);
+    }
+
+    public function testDeletePagesActionPassesConfirmAndDryRun(): void
+    {
+        $paths = ['/cmf/example/contents/a', '/cmf/example/contents/b'];
+        $confirm = (string) json_encode($paths);
+
+        $this->pageService->expects($this->once())
+            ->method('deletePagesBatch')
+            ->with($paths, 'de', $confirm, true)
+            ->willReturn(['success' => true, 'count' => 2, 'deletedCount' => 2]);
+
+        $result = $this->tool->execute([
+            'action' => 'delete_pages',
+            'paths' => $confirm,
+            'confirm' => $confirm,
+            'dryRun' => 'true',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertSame(2, $data['count']);
+    }
+
+    public function testDeletePagesActionFiltersBlankPaths(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('deletePagesBatch')
+            ->with(['/cmf/example/contents/a'], 'de', '', false)
+            ->willReturn(['success' => true, 'count' => 1]);
+
+        $result = $this->tool->execute([
+            'action' => 'delete_pages',
+            'paths' => json_encode(['/cmf/example/contents/a', '', '  ']),
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertSame(1, $data['count']);
+    }
+
+    public function testListReferencesActionRequiresPath(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'list_references',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertFalse($data['success']);
+        $this->assertSame('page_not_found', $data['errorCode']);
+    }
+
+    public function testListReferencesActionReturnsReferences(): void
+    {
+        $this->pageService->method('listIncomingReferences')->willReturn([
+            'success' => true,
+            'path' => '/cmf/example/contents/target',
+            'uuid' => 'target-uuid',
+            'references' => [
+                ['sourcePath' => '/cmf/example/contents/ref', 'sourceUuid' => 'ref-uuid', 'blockType' => 'page-teaser', 'blockPosition' => 0, 'locale' => 'de', 'field' => 'i18n:de-blocks-page#0'],
+            ],
+        ]);
+
+        $result = $this->tool->execute([
+            'action' => 'list_references',
+            'path' => '/cmf/example/contents/target',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertCount(1, $data['references']);
+        $this->assertSame('page-teaser', $data['references'][0]['blockType']);
+    }
 }
