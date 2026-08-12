@@ -10,6 +10,7 @@ use App\Sulu\Block\BlockValidator;
 use App\Sulu\Block\BlockWriter;
 use App\Sulu\Cache\HttpCacheClearer;
 use App\Sulu\Logger\McpActivityLogger;
+use App\Sulu\Service\PageReferenceScanner;
 use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
@@ -71,6 +72,7 @@ class PageService
         private ?HttpCacheClearer $httpCacheClearer = null,
         private ?SnippetService $snippetService = null,
         private ?string $projectDir = null,
+        private ?PageReferenceScanner $referenceScanner = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -1871,7 +1873,7 @@ class PageService
      * @param string $locale Locale for search deindexing
      * @return array{success: bool, message: string}
      */
-    public function deletePage(string $identifier, string $locale = 'de'): array
+    public function deletePage(string $identifier, string $locale = 'de', bool $skipAudit = false): array
     {
         if (!$this->documentManager) {
             return ['success' => false, 'message' => 'DocumentManager not available'];
@@ -1893,18 +1895,581 @@ class PageService
             $this->documentManager->remove($document);
             $this->documentManager->flush();
 
-            $this->activityLogger->logMcpAction(
-                'mcp_page_deleted',
-                $path,
-                $locale,
-                ['identifier' => $identifier]
-            );
+            // When called from deletePageSafe() the audit is enriched and written
+            // by the caller - skip the basic log to avoid a double entry per delete.
+            // Subtree children (deleteSubtree) keep their own per-row log.
+            if (!$skipAudit) {
+                $this->activityLogger->logMcpAction(
+                    'mcp_page_deleted',
+                    $path,
+                    $locale,
+                    ['identifier' => $identifier]
+                );
+            }
 
             return ['success' => true, 'message' => 'Page deleted successfully'];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    // ==========================================================================
+    // Safe Delete (delete_page / delete_pages MCP actions)
+    //
+    // deletePage() above is a thin DocumentManager wrapper. The methods in this
+    // section add the safety rails demanded by the MCP delete_page spec:
+    // confirm token, publication-state check, child-policy enforcement,
+    // incoming-reference scan, dryRun, audit enrichment, and CLI cache clear.
+    //
+    // Sulu's PageTrashSubscriber fires automatically on DocumentManager::remove,
+    // so every successful delete lands in tr_trash_items - the MCP server does
+    // not expose restore/list/purge (Sulu admin remains the only recovery path).
+    // ==========================================================================
+
+    private const HOMEPAGE_PATH = '/cmf/example/contents';
+
+    /**
+     * Delete a page with the full safety pipeline.
+     *
+     * @param array{
+     *     path?: string,
+     *     locale?: string,
+     *     confirm?: string,
+     *     children?: string,
+     *     expectedChildCount?: int|null,
+     *     dryRun?: bool
+     * } $params
+     *
+     * @return array{success: bool, errorCode?: string, message?: string, details?: array<string, mixed>, ...}
+     */
+    public function deletePageSafe(array $params): array
+    {
+        $path = (string) ($params['path'] ?? '');
+        $locale = (string) ($params['locale'] ?? 'de');
+        $confirm = (string) ($params['confirm'] ?? '');
+        $childrenPolicy = (string) ($params['children'] ?? 'reject');
+        $expectedChildCount = isset($params['expectedChildCount']) ? (int) $params['expectedChildCount'] : null;
+        $dryRun = !empty($params['dryRun']);
+
+        if ($path === '') {
+            return $this->deleteError('page_not_found', 'path is required');
+        }
+
+        // 1. confirm must echo the path exactly - typo/context-drift guard
+        if ($confirm !== $path) {
+            return $this->deleteError(
+                'confirmation_mismatch',
+                'confirm must exactly match path',
+                ['expected' => $path, 'got' => $confirm]
+            );
+        }
+
+        // 2. resolve UUID - page must exist in the default workspace
+        $uuid = $this->getPageUuid($path);
+        if ($uuid === null) {
+            return $this->deleteError('page_not_found', "page not found at path: {$path}");
+        }
+
+        // 3. published pages are never deleted - redirects must be put in place first.
+        // Note: isPagePublished() only checks LIVE row existence, but createPage()
+        // writes both workspaces even for drafts (state=1). The real published
+        // signal is state=2 in the LIVE workspace props.
+        if ($this->isPageInPublishedState($path, $locale)) {
+            return $this->deleteError(
+                'page_published',
+                'page is published - unpublish first, then delete',
+                ['path' => $path]
+            );
+        }
+
+        // 4. locked pages: homepage, direct children of webspace root, dataSource-used
+        $lockReason = $this->getLockReason($path, $uuid);
+        if ($lockReason !== null) {
+            return $this->deleteError(
+                'page_locked',
+                "page is locked: {$lockReason}",
+                ['reason' => $lockReason, 'path' => $path]
+            );
+        }
+
+        // 5. children policy
+        $directChildren = $this->getDirectChildPaths($path);
+        $descendants = $this->getAllDescendantPaths($path);
+
+        if (!in_array($childrenPolicy, ['reject', 'cascade', 'reparent'], true)) {
+            return $this->deleteError(
+                'children_present',
+                "unknown children policy: {$childrenPolicy}",
+                ['allowed' => ['reject', 'cascade', 'reparent']]
+            );
+        }
+
+        if (!empty($directChildren) && $childrenPolicy === 'reject') {
+            return $this->deleteError(
+                'children_present',
+                'page has child pages - set children=cascade or children=reparent',
+                ['childCount' => count($directChildren), 'descendantCount' => count($descendants), 'children' => $directChildren]
+            );
+        }
+
+        if ($childrenPolicy === 'cascade') {
+            if ($expectedChildCount === null) {
+                return $this->deleteError(
+                    'child_count_mismatch',
+                    'children=cascade requires expectedChildCount from a preceding dryRun',
+                    ['actualDescendantCount' => count($descendants)]
+                );
+            }
+            if ($expectedChildCount !== count($descendants)) {
+                return $this->deleteError(
+                    'child_count_mismatch',
+                    "expectedChildCount mismatch: expected {$expectedChildCount}, actual " . count($descendants),
+                    ['expected' => $expectedChildCount, 'actual' => count($descendants)]
+                );
+            }
+        }
+
+        $reparentCollisions = [];
+        if ($childrenPolicy === 'reparent' && !empty($directChildren)) {
+            $newParentPath = $this->getParentPath($path);
+            if ($newParentPath === null) {
+                return $this->deleteError(
+                    'reparent_failed',
+                    'cannot reparent - deleted page has no parent (is it the webspace root?)',
+                    ['path' => $path]
+                );
+            }
+            $reparentCollisions = $this->detectReparentCollisions($path, $newParentPath);
+            if (!empty($reparentCollisions)) {
+                return $this->deleteError(
+                    'reparent_failed',
+                    'reparent would create sibling name collisions at the new parent',
+                    ['collisions' => $reparentCollisions, 'newParent' => $newParentPath]
+                );
+            }
+        }
+
+        // 6. incoming references
+        $references = [];
+        if ($this->referenceScanner instanceof PageReferenceScanner) {
+            $references = $this->referenceScanner->findIncomingReferences($uuid, $locale);
+        }
+        if (!empty($references)) {
+            return $this->deleteError(
+                'references_present',
+                'page has incoming references - remove or update the referring blocks first',
+                ['referenceCount' => count($references), 'references' => $references]
+            );
+        }
+
+        // 7. dryRun returns the check report and bails out before any mutation
+        if ($dryRun) {
+            return [
+                'success' => true,
+                'dryRun' => true,
+                'path' => $path,
+                'uuid' => $uuid,
+                'mode' => 'trash',
+                'childrenPolicy' => $childrenPolicy,
+                'descendantCount' => count($descendants),
+                'childrenRemoved' => $childrenPolicy === 'cascade' ? count($descendants) : 0,
+                'checks' => [
+                    ['name' => 'exists', 'status' => 'pass'],
+                    ['name' => 'confirm', 'status' => 'pass'],
+                    ['name' => 'published', 'status' => 'pass'],
+                    ['name' => 'locked', 'status' => 'pass'],
+                    ['name' => 'children', 'status' => 'pass', 'policy' => $childrenPolicy, 'directCount' => count($directChildren), 'descendantCount' => count($descendants)],
+                    ['name' => 'references', 'status' => 'pass', 'count' => 0],
+                ],
+                'children' => $directChildren,
+                'descendants' => $descendants,
+                'references' => $references,
+                'trashId' => null,
+            ];
+        }
+
+        // 8. execute
+        try {
+            $childrenRemoved = 0;
+
+            if ($childrenPolicy === 'reparent' && !empty($directChildren)) {
+                $this->reparentChildren($path, $this->getParentPath($path));
+            } elseif ($childrenPolicy === 'cascade' && !empty($descendants)) {
+                // Delete every descendant deepest-first so no parent/child conflict
+                // is created mid-loop. The top-level expectedChildCount has already
+                // validated the total subtree size.
+                $childrenRemoved = $this->deleteSubtree($path, $locale);
+            }
+
+            $deleteResult = $this->deletePage($path, $locale, skipAudit: true);
+            if (empty($deleteResult['success'])) {
+                return $this->deleteError(
+                    'delete_failed',
+                    'deletePage failed: ' . $deleteResult['message'],
+                    ['deleteResult' => $deleteResult]
+                );
+            }
+
+            $trashId = $this->getTrashIdForUuid($uuid);
+            $cacheResult = $this->projectDir !== null ? $this->clearCache() : ['success' => false, 'message' => 'projectDir not configured'];
+
+            $this->activityLogger->logMcpAction(
+                'mcp_page_deleted',
+                $path,
+                $locale,
+                [
+                    'uuid' => $uuid,
+                    'mode' => 'trash',
+                    'childrenPolicy' => $childrenPolicy,
+                    'childrenRemoved' => $childrenRemoved,
+                    'trashId' => $trashId,
+                    'referenceCount' => count($references),
+                ]
+            );
+
+            return [
+                'success' => true,
+                'path' => $path,
+                'uuid' => $uuid,
+                'mode' => 'trash',
+                'childrenRemoved' => $childrenRemoved,
+                'trashId' => $trashId,
+                'cacheCleared' => !empty($cacheResult['success']),
+            ];
+        } catch (\Exception $e) {
+            return $this->deleteError(
+                'delete_failed',
+                'exception during delete: ' . $e->getMessage(),
+                ['exception' => $e->getMessage()]
+            );
+        }
+    }
+
+    /**
+     * Delete multiple pages atomically (all-or-nothing preconditions).
+     *
+     * A path is deletable inside the batch when its children are all also
+     * listed in the batch - this implicit-cascade rule lets the agent clean
+     * up whole subtrees in one call without per-path expected-counts.
+     *
+     * @param list<string> $paths
+     * @return array{success: bool, ...}
+     */
+    public function deletePagesBatch(array $paths, string $locale = 'de', string $confirm = '', bool $dryRun = false): array
+    {
+        if (empty($paths)) {
+            return $this->deleteError('page_not_found', 'paths must be a non-empty array');
+        }
+        if (count($paths) > 10) {
+            return $this->deleteError(
+                'batch_too_large',
+                'maximum 10 paths per call, got ' . count($paths),
+                ['count' => count($paths), 'max' => 10]
+            );
+        }
+
+        $expectedConfirm = (string) json_encode(array_values($paths));
+        if ($confirm !== $expectedConfirm) {
+            return $this->deleteError(
+                'confirmation_mismatch',
+                'confirm must equal the JSON-encoded paths array',
+                ['expected' => $expectedConfirm, 'got' => $confirm]
+            );
+        }
+
+        // Deepest-first ordering avoids artificial parent/child conflicts.
+        $ordered = $this->sortPathsDeepestFirst(array_values($paths));
+        $pathSet = array_flip($ordered);
+
+        // All-or-nothing precondition pass
+        $preconditions = [];
+        foreach ($ordered as $candidatePath) {
+            $directChildren = $this->getDirectChildPaths($candidatePath);
+            $orphans = array_values(array_filter(
+                $directChildren,
+                fn (string $childPath): bool => !isset($pathSet[$childPath])
+            ));
+            if (!empty($orphans)) {
+                return $this->deleteError(
+                    'children_present',
+                    "path {$candidatePath} has children not included in the batch",
+                    ['path' => $candidatePath, 'orphans' => $orphans]
+                );
+            }
+
+            $result = $this->deletePageSafe([
+                'path' => $candidatePath,
+                'locale' => $locale,
+                'confirm' => $candidatePath,
+                'children' => empty($directChildren) ? 'reject' : 'cascade',
+                'expectedChildCount' => count($this->getAllDescendantPaths($candidatePath)),
+                'dryRun' => true,
+            ]);
+            if (empty($result['success'])) {
+                // Surface the failing path so the caller can retry without it
+                $details = is_array($result['details'] ?? null) ? $result['details'] : [];
+                $details['path'] = $candidatePath;
+                $result['details'] = $details;
+
+                return $result;
+            }
+            $preconditions[$candidatePath] = $result;
+        }
+
+        if ($dryRun) {
+            return [
+                'success' => true,
+                'dryRun' => true,
+                'count' => count($ordered),
+                'ordered' => $ordered,
+                'preconditions' => array_values($preconditions),
+            ];
+        }
+
+        // Execute deepest-first. By the time we reach a parent, its in-batch
+        // children are already gone so its direct-children check would pass.
+        $results = [];
+        $okCount = 0;
+        foreach ($ordered as $candidatePath) {
+            $directChildren = $this->getDirectChildPaths($candidatePath);
+            $result = $this->deletePageSafe([
+                'path' => $candidatePath,
+                'locale' => $locale,
+                'confirm' => $candidatePath,
+                'children' => empty($directChildren) ? 'reject' : 'cascade',
+                'expectedChildCount' => count($this->getAllDescendantPaths($candidatePath)),
+                'dryRun' => false,
+            ]);
+            $results[] = $result;
+            if (!empty($result['success'])) {
+                $okCount++;
+            }
+        }
+
+        return [
+            'success' => $okCount === count($ordered),
+            'count' => count($ordered),
+            'deletedCount' => $okCount,
+            'results' => $results,
+        ];
+    }
+
+    /**
+     * Proxy for the MCP list_references action. Returns incoming references
+     * for a page path.
+     *
+     * @return array{success: bool, ...}
+     */
+    public function listIncomingReferences(string $path, string $locale = 'de'): array
+    {
+        $uuid = $this->getPageUuid($path);
+        if ($uuid === null) {
+            return $this->deleteError('page_not_found', "page not found at path: {$path}");
+        }
+        if (!$this->referenceScanner instanceof PageReferenceScanner) {
+            return $this->deleteError('delete_failed', 'PageReferenceScanner is not available');
+        }
+
+        return [
+            'success' => true,
+            'path' => $path,
+            'uuid' => $uuid,
+            'references' => $this->referenceScanner->findIncomingReferences($uuid, $locale),
+        ];
+    }
+
+    /**
+     * Delete every descendant of $path deepest-first. Returns the count removed.
+     */
+    private function deleteSubtree(string $path, string $locale): int
+    {
+        $descendants = $this->getAllDescendantPaths($path);
+        $ordered = $this->sortPathsDeepestFirst($descendants);
+        $removed = 0;
+        foreach ($ordered as $descendantPath) {
+            $r = $this->deletePage($descendantPath, $locale);
+            if (!empty($r['success'])) {
+                $removed++;
+            }
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Move every descendant of $deletedPath one level up (under the parent of $deletedPath).
+     * Touches both workspaces. UUIDs, props and routes are untouched - only the path column moves.
+     */
+    private function reparentChildren(string $deletedPath, string $newParentPath): void
+    {
+        foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes
+                 SET path = CONCAT(?, SUBSTRING(path, CHAR_LENGTH(?) + 1))
+                 WHERE path LIKE ?
+                   AND workspace_name = ?",
+                [$newParentPath, $deletedPath, $deletedPath . '/%', $workspace]
+            );
+        }
+    }
+
+    /**
+     * @return list<string> direct children of $path
+     */
+    private function getDirectChildPaths(string $path): array
+    {
+        $prefix = $path . '/';
+        $rows = $this->connection->fetchAllAssociative(
+            "SELECT path FROM phpcr_nodes
+             WHERE path LIKE ?
+               AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'
+             ORDER BY path",
+            [$prefix . '%']
+        );
+
+        $children = [];
+        $pathLen = strlen($prefix);
+        foreach ($rows as $row) {
+            $candidate = $row['path'];
+            if (!str_starts_with($candidate, $prefix)) {
+                continue;
+            }
+            $relative = substr($candidate, $pathLen);
+            if ($relative === false || $relative === '' || str_contains($relative, '/')) {
+                continue; // not a direct child
+            }
+            $children[] = $candidate;
+        }
+
+        return $children;
+    }
+
+    /**
+     * @return list<string> every descendant of $path at any depth
+     */
+    private function getAllDescendantPaths(string $path): array
+    {
+        $rows = $this->connection->fetchAllAssociative(
+            "SELECT path FROM phpcr_nodes
+             WHERE path LIKE ?
+               AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'
+             ORDER BY path",
+            [$path . '/%']
+        );
+
+        return array_values(array_filter(
+            array_column($rows, 'path'),
+            fn (string $p): bool => $p !== $path
+        ));
+    }
+
+    private function getParentPath(string $path): ?string
+    {
+        $pos = strrpos($path, '/');
+        if ($pos === false || $pos === 0) {
+            return null;
+        }
+
+        return substr($path, 0, $pos);
+    }
+
+    /**
+     * Locked = homepage, direct child of webspace root, or referenced as
+     * a subpages-overview dataSource.
+     */
+    private function getLockReason(string $path, string $uuid): ?string
+    {
+        if ($path === self::HOMEPAGE_PATH) {
+            return 'homepage';
+        }
+
+        $parent = $this->getParentPath($path);
+        if ($parent === self::HOMEPAGE_PATH) {
+            return 'section-landing-page';
+        }
+
+        if ($this->referenceScanner instanceof PageReferenceScanner
+            && $this->referenceScanner->isUsedAsDataSource($uuid)) {
+            return 'used-as-datasource';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string> basenames that would collide at the new parent
+     */
+    private function detectReparentCollisions(string $deletedPath, string $newParentPath): array
+    {
+        $directChildren = $this->getDirectChildPaths($deletedPath);
+        if (empty($directChildren)) {
+            return [];
+        }
+
+        $newSiblings = $this->getDirectChildPaths($newParentPath);
+        $existingBasenames = array_map(fn (string $p): string => basename($p), $newSiblings);
+        $existingSet = array_flip($existingBasenames);
+
+        $collisions = [];
+        foreach ($directChildren as $childPath) {
+            $base = basename($childPath);
+            if (isset($existingSet[$base])) {
+                $collisions[] = $base;
+            }
+        }
+
+        return $collisions;
+    }
+
+    private function getTrashIdForUuid(string $uuid): ?int
+    {
+        try {
+            $row = $this->connection->fetchAssociative(
+                "SELECT id FROM tr_trash_items
+                 WHERE resourceKey = 'pages' AND resourceId = ?
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [$uuid]
+            );
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        return $row ? (int) $row['id'] : null;
+    }
+
+    /**
+     * @param list<string> $paths
+     * @return list<string>
+     */
+    private function sortPathsDeepestFirst(array $paths): array
+    {
+        usort($paths, static function (string $a, string $b): int {
+            $depthA = substr_count($a, '/');
+            $depthB = substr_count($b, '/');
+            if ($depthA === $depthB) {
+                return strcmp($b, $a); // stable tie-break, reverse alpha
+            }
+
+            return $depthB <=> $depthA; // deeper first
+        });
+
+        return $paths;
+    }
+
+    /**
+     * @param array<string, mixed> $details
+     * @return array{success: false, errorCode: string, message: string, details: array<string, mixed>}
+     */
+    private function deleteError(string $code, string $message, array $details = []): array
+    {
+        return [
+            'success' => false,
+            'errorCode' => $code,
+            'message' => $message,
+            'details' => $details,
+        ];
     }
 
     // ==========================================================================
@@ -2212,6 +2777,27 @@ class PageService
             [$path, self::WORKSPACE_LIVE]
         );
         return $result !== false;
+    }
+
+    /**
+     * Check if a page is actually in published state.
+     *
+     * Unlike isPagePublished(), this inspects the i18n:{locale}-state property
+     * inside the LIVE workspace XML. createPage() writes both workspaces even
+     * for drafts (state=1), so LIVE row existence alone is not sufficient.
+     */
+    private function isPageInPublishedState(string $path, string $locale): bool
+    {
+        $result = $this->connection->fetchAssociative(
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
+            [$path, self::WORKSPACE_LIVE]
+        );
+        if (!$result) {
+            return false;
+        }
+        $state = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-state");
+
+        return (int) $state === 2;
     }
 
     /**

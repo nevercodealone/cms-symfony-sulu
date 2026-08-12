@@ -235,7 +235,14 @@ services:
             $documentManager: '@Sulu\Component\DocumentManager\DocumentManagerInterface'
             $httpCacheClearer: '@App\Sulu\Cache\HttpCacheClearer'
             $snippetService: '@App\Sulu\Service\SnippetService'
+            $referenceScanner: '@App\Sulu\Service\PageReferenceScanner'
             $projectDir: '%kernel.project_dir%'
+        public: true
+
+    # Sulu Page Reference Scanner - DBAL scanner for incoming page references
+    App\Sulu\Service\PageReferenceScanner:
+        arguments:
+            $connection: '@doctrine.dbal.default_connection'
         public: true
 
     # Sulu Snippet Service - Direct SQL for snippet operations
