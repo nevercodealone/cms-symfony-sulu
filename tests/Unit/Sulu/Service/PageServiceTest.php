@@ -2516,7 +2516,7 @@ XML;
     public function testDeletePageSafeAbortsWhenPageNotFound(): void
     {
         // getPageUuid -> no row
-        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): false {
             if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
                 return false;
             }

@@ -1941,7 +1941,25 @@ class PageService
      *     dryRun?: bool
      * } $params
      *
-     * @return array{success: bool, errorCode?: string, message?: string, details?: array<string, mixed>, ...}
+     * @return array{
+     *     success: bool,
+     *     errorCode?: string,
+     *     message?: string,
+     *     details?: array<string, mixed>,
+     *     path?: string,
+     *     uuid?: string,
+     *     mode?: string,
+     *     childrenPolicy?: string,
+     *     childrenRemoved?: int,
+     *     descendantCount?: int,
+     *     trashId?: int|null,
+     *     cacheCleared?: bool,
+     *     dryRun?: bool,
+     *     checks?: list<array<string, mixed>>,
+     *     children?: list<string>,
+     *     descendants?: list<string>,
+     *     references?: list<array<string, mixed>>
+     * }
      */
     public function deletePageSafe(array $params): array
     {
@@ -2154,7 +2172,18 @@ class PageService
      * up whole subtrees in one call without per-path expected-counts.
      *
      * @param list<string> $paths
-     * @return array{success: bool, ...}
+     * @return array{
+     *     success: bool,
+     *     errorCode?: string,
+     *     message?: string,
+     *     details?: array<string, mixed>,
+     *     dryRun?: bool,
+     *     count?: int,
+     *     ordered?: list<string>,
+     *     preconditions?: list<array<string, mixed>>,
+     *     deletedCount?: int,
+     *     results?: list<array<string, mixed>>
+     * }
      */
     public function deletePagesBatch(array $paths, string $locale = 'de', string $confirm = '', bool $dryRun = false): array
     {
@@ -2259,7 +2288,15 @@ class PageService
      * Proxy for the MCP list_references action. Returns incoming references
      * for a page path.
      *
-     * @return array{success: bool, ...}
+     * @return array{
+     *     success: bool,
+     *     errorCode?: string,
+     *     message?: string,
+     *     details?: array<string, mixed>,
+     *     path?: string,
+     *     uuid?: string,
+     *     references?: list<array<string, mixed>>
+     * }
      */
     public function listIncomingReferences(string $path, string $locale = 'de'): array
     {
