@@ -1946,6 +1946,7 @@ class PageService
      *     errorCode?: string,
      *     message?: string,
      *     details?: array<string, mixed>,
+     *     nextAction?: string,
      *     path?: string,
      *     uuid?: string,
      *     mode?: string,
@@ -2083,6 +2084,13 @@ class PageService
 
         // 7. dryRun returns the check report and bails out before any mutation
         if ($dryRun) {
+            $next = 'call again with dryRun=false to execute';
+            if (count($descendants) > 0 && $childrenPolicy === 'cascade') {
+                $next = 'call again with dryRun=false, children=cascade, expectedChildCount=' . count($descendants) . ' to execute';
+            } elseif (count($descendants) > 0 && $childrenPolicy === 'reparent') {
+                $next = 'call again with dryRun=false, children=reparent to execute';
+            }
+
             return [
                 'success' => true,
                 'dryRun' => true,
@@ -2092,6 +2100,7 @@ class PageService
                 'childrenPolicy' => $childrenPolicy,
                 'descendantCount' => count($descendants),
                 'childrenRemoved' => $childrenPolicy === 'cascade' ? count($descendants) : 0,
+                'nextAction' => $next,
                 'checks' => [
                     ['name' => 'exists', 'status' => 'pass'],
                     ['name' => 'confirm', 'status' => 'pass'],
@@ -2177,6 +2186,7 @@ class PageService
      *     errorCode?: string,
      *     message?: string,
      *     details?: array<string, mixed>,
+     *     nextAction?: string,
      *     dryRun?: bool,
      *     count?: int,
      *     ordered?: list<string>,
@@ -2252,6 +2262,7 @@ class PageService
                 'dryRun' => true,
                 'count' => count($ordered),
                 'ordered' => $ordered,
+                'nextAction' => 'call again with dryRun=false and the same confirm to execute all ' . count($ordered) . ' deletion(s)',
                 'preconditions' => array_values($preconditions),
             ];
         }
@@ -2293,6 +2304,7 @@ class PageService
      *     errorCode?: string,
      *     message?: string,
      *     details?: array<string, mixed>,
+     *     nextAction?: string,
      *     path?: string,
      *     uuid?: string,
      *     references?: list<array<string, mixed>>
@@ -2497,17 +2509,35 @@ class PageService
 
     /**
      * @param array<string, mixed> $details
-     * @return array{success: false, errorCode: string, message: string, details: array<string, mixed>}
+     * @return array{success: false, errorCode: string, message: string, details: array<string, mixed>, nextAction: string}
      */
-    private function deleteError(string $code, string $message, array $details = []): array
+    private function deleteError(string $code, string $message, array $details = [], ?string $nextAction = null): array
     {
         return [
             'success' => false,
             'errorCode' => $code,
             'message' => $message,
             'details' => $details,
+            'nextAction' => $nextAction ?? (self::ERROR_NEXT_ACTIONS[$code] ?? ''),
         ];
     }
+
+    /**
+     * Mechanical recovery hint for each error code - lets an AI agent pick
+     * the next call without reasoning about the failure from scratch.
+     */
+    private const ERROR_NEXT_ACTIONS = [
+        'page_not_found' => 'verify the path with action=list, then retry',
+        'confirmation_mismatch' => 'confirm must exactly equal path (delete_page) or the JSON-encoded paths array (delete_pages)',
+        'page_published' => 'call action=unpublish on this path first, then retry',
+        'page_locked' => 'page is homepage, a section landing page, or a subpages-overview dataSource; not deletable',
+        'children_present' => 'set children=cascade with expectedChildCount from dryRun, or children=reparent',
+        'child_count_mismatch' => 're-run dryRun; expectedChildCount must equal the reported descendantCount',
+        'references_present' => 'call action=list_references on this path, then remove or update the referrers',
+        'reparent_failed' => 'rename the colliding children first',
+        'batch_too_large' => 'split into batches of max 10 paths',
+        'delete_failed' => 'see details; retry once the underlying issue is fixed',
+    ];
 
     // ==========================================================================
     // Page Discovery Methods

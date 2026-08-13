@@ -2562,6 +2562,7 @@ XML;
 
         $this->assertFalse($result['success']);
         $this->assertSame('page_published', $result['errorCode']);
+        $this->assertStringContainsString('unpublish', $result['nextAction']);
     }
 
     public function testDeletePageSafeAllowsDraftEvenWhenLiveRowExists(): void
@@ -2812,6 +2813,7 @@ XML;
         $this->assertSame(self::TARGET_UUID, $result['uuid']);
         $this->assertArrayHasKey('checks', $result);
         $this->assertNull($result['trashId']);
+        $this->assertStringContainsString('dryRun=false', $result['nextAction']);
     }
 
     public function testDeletePageSafeHappyPathReturnsSuccessAndCallsClearCacheIndirectly(): void
