@@ -67,9 +67,9 @@ class SuluPagesTool implements StreamableToolInterface
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
             'UPDATE PAGE TITLE: path + title. Updates the page title. ' .
-            'DELETE PAGE: path + confirm (must repeat the path exactly). Safety pipeline aborts unless every check passes: confirm match, page exists, page is NOT published, page is not locked (homepage, direct child of webspace root, or used as a subpages-overview dataSource), children policy is satisfied, no incoming references (page-teaser, subpages-overview dataSource, sulu-link). Optional: locale, children (reject|cascade|reparent, default reject), expectedChildCount (required for cascade, echoes dryRun output), dryRun (true returns the check report and deletes nothing). On success Sulu auto-trashes the page; trashId is returned. Cache is cleared via CLI after every delete. ' .
-            'DELETE PAGES: paths (JSON array, max 10) + confirm (must equal the JSON-encoded paths array exactly). All-or-nothing: if any path fails a check, nothing is deleted. A path is deletable inside the batch only when every direct child is also listed in the batch (implicit cascade). Paths are sorted deepest-first. Optional: locale, dryRun. ' .
-            'LIST REFERENCES: path. Returns every page that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Useful before delete or rename. ' .
+            'DELETE PAGE - safe removal; page goes to Sulu trash (recoverable via admin only). WORKFLOW (follow exactly): 1) dryRun: {"action":"delete_page","path":"/cmf/example/contents/foo","confirm":"/cmf/example/contents/foo","dryRun":"true"} 2) read response.checks (all "pass") and response.descendantCount 3) execute: same call with "dryRun":"false"; if descendantCount>0 add "children":"cascade","expectedChildCount":<descendantCount from step 2> or "children":"reparent". REQUIRED: path, confirm (confirm MUST byte-for-byte equal path). ERRORS return nextAction field - follow it (e.g. page_published -> unpublish first, references_present -> call list_references first). ON SUCCESS: returns uuid, trashId, cacheCleared=true. ' .
+            'DELETE PAGES - batch safe removal (max 10). WORKFLOW: 1) dryRun: {"action":"delete_pages","paths":"[\"/cmf/.../a\",\"/cmf/.../b\"]","confirm":"[\"/cmf/.../a\",\"/cmf/.../b\"]","dryRun":"true"} 2) read response.preconditions (all success=true) 3) execute: same paths and confirm with "dryRun":"false". REQUIRED: paths (JSON array), confirm (confirm MUST byte-for-byte equal the JSON-encoded paths array - copy it verbatim). RULE: a path is deletable in batch only when every direct child is also listed in paths. Paths are sorted deepest-first internally. All-or-nothing: any failure deletes nothing. ' .
+            'LIST REFERENCES - incoming-reference report. {"action":"list_references","path":"/cmf/example/contents/foo"}. Returns every page/snippet that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Use before delete (to satisfy the references_present check) or before rename. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
             'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
             'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
@@ -403,31 +403,31 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'confirm',
                 type: PropertyType::STRING,
-                description: 'For delete_page: must repeat the path exactly. For delete_pages: must equal the JSON-encoded paths array exactly. Any mismatch aborts the deletion.',
+                description: 'REQUIRED for delete_page/delete_pages. Safety token - must byte-for-byte echo the identifier. delete_page: confirm == path (e.g. confirm="/cmf/example/contents/foo"). delete_pages: confirm == JSON-encoded paths array (e.g. confirm="[\"/cmf/.../a\",\"/cmf/.../b\"]" - copy the same string you passed as paths). Any mismatch aborts.',
                 required: false
             ),
             new SchemaProperty(
                 name: 'children',
                 type: PropertyType::STRING,
-                description: 'For delete_page: child-page policy. Values: reject (default, aborts if children exist), cascade (deletes the whole subtree, requires expectedChildCount), reparent (moves children to the parent of the deleted page).',
+                description: 'delete_page child-page policy. Pick by reading dryRun.descendantCount: "reject" (default) if 0 or to abort on any children; "cascade" if descendantCount>0 and you want the whole subtree gone (requires expectedChildCount=descendantCount); "reparent" to move children to the deleted page\'s parent (preserves them).',
                 required: false
             ),
             new SchemaProperty(
                 name: 'expectedChildCount',
                 type: PropertyType::INTEGER,
-                description: 'For delete_page with children=cascade: total descendant count from the preceding dryRun. Server aborts if it does not match.',
+                description: 'REQUIRED when children=cascade. Copy this verbatim from the dryRun response\'s descendantCount field. Server aborts if it does not match - re-run dryRun if the tree changed.',
                 required: false
             ),
             new SchemaProperty(
                 name: 'dryRun',
                 type: PropertyType::STRING,
-                description: 'For delete_page/delete_pages: "true" returns the check report and deletes nothing. Recommended first call for agents.',
+                description: 'delete_page/delete_pages. Pass "true" to run every check and return the report (with nextAction hint) WITHOUT deleting anything. ALWAYS do this first. Then call again with "false" (or omit) to execute.',
                 required: false
             ),
             new SchemaProperty(
                 name: 'paths',
                 type: PropertyType::STRING,
-                description: 'For delete_pages: JSON array of PHPCR paths, max 10. Sorted deepest-first internally; a path is deletable only when every direct child is also in the batch.',
+                description: 'REQUIRED for delete_pages. JSON array of PHPCR paths, max 10. Example: "[\"/cmf/example/contents/a\",\"/cmf/example/contents/a/b\"]". Sorted deepest-first internally. A path is deletable in the batch only when every direct child is also listed.',
                 required: false
             ),
         );
