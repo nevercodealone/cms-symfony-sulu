@@ -2252,12 +2252,16 @@ class PageService
             );
         }
 
-        $expectedConfirm = (string) json_encode(array_values($paths));
-        if ($confirm !== $expectedConfirm) {
+        // Semantic comparison: decode confirm and compare the resulting
+        // arrays. Accepts any valid JSON encoding (escaped or unescaped
+        // slashes) - callers cannot be expected to guess the server's
+        // exact json_encode flags.
+        $confirmDecoded = json_decode($confirm, true);
+        if (!is_array($confirmDecoded) || array_values($confirmDecoded) !== array_values($paths)) {
             return $this->deleteError(
                 'confirmation_mismatch',
-                'confirm must equal the JSON-encoded paths array',
-                ['expected' => $expectedConfirm, 'got' => $confirm]
+                'confirm must be a JSON array containing exactly the same paths in the same order',
+                ['expected' => array_values($paths), 'got' => $confirm]
             );
         }
 

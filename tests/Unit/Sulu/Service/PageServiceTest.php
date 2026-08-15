@@ -3028,4 +3028,84 @@ XML;
         $this->assertSame('delete_timeout', $result['errorCode']);
         $this->assertStringContainsString('get_structure', $result['nextAction']);
     }
+
+    public function testDeletePagesBatchAcceptsUnescapedJsonConfirm(): void
+    {
+        // Regression: json_encode escapes "/" - the agent sends unescaped JSON.
+        // Confirm must be compared semantically, not as a string.
+        $paths = ['/cmf/example/contents/section/rips'];
+        $confirm = '["/cmf/example/contents/section/rips"]'; // unescaped slashes
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'leaf-uuid'];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->deletePagesBatch($paths, 'de', $confirm, true);
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['dryRun']);
+    }
+
+    public function testDeletePagesBatchAcceptsEscapedJsonConfirm(): void
+    {
+        $paths = ['/cmf/example/contents/section/a', '/cmf/example/contents/section/b'];
+        $confirm = (string) json_encode($paths); // PHP default: escapes slashes
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'leaf-uuid'];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->deletePagesBatch($paths, 'de', $confirm, true);
+
+        $this->assertTrue($result['success']);
+    }
+
+    public function testDeletePagesBatchRejectsDifferentArrayInConfirm(): void
+    {
+        $paths = ['/cmf/example/contents/section/a', '/cmf/example/contents/section/b'];
+        $confirm = json_encode(['/cmf/example/contents/section/a', '/cmf/example/contents/section/OTHER']);
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePagesBatch($paths, 'de', $confirm, true);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('confirmation_mismatch', $result['errorCode']);
+        // details.expected now carries the array, not an encoded string
+        $this->assertSame($paths, $result['details']['expected']);
+    }
+
+    public function testDeletePagesBatchRejectsNonJsonConfirm(): void
+    {
+        $paths = ['/cmf/example/contents/section/a'];
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePagesBatch($paths, 'de', 'not-json', true);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('confirmation_mismatch', $result['errorCode']);
+    }
 }
