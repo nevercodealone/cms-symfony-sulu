@@ -3262,4 +3262,133 @@ XML;
         $this->assertFalse($page['published']);
         $this->assertSame('unpublished', $page['state']);
     }
+
+    // ======================================================================
+    // deletePage process-result handling (regression: false negative bug)
+    // ======================================================================
+
+    private function buildServiceWithSpawn(array $spawnResult): PageService
+    {
+        $service = $this->getMockBuilder(PageService::class)
+            ->setConstructorArgs([$this->connection, $this->activityLogger, null, null, null, null, null, null, null, null, '/project'])
+            ->onlyMethods(['spawnDeleteProcess'])
+            ->getMock();
+        $service->method('spawnDeleteProcess')->willReturn($spawnResult);
+
+        return $service;
+    }
+
+    public function testDeletePageTrustsCommandResultOverNonZeroExitCode(): void
+    {
+        // Regression (production bug report): the console process exits
+        // non-zero AFTER flushing the success JSON (shutdown fault). The
+        // command's JSON is authoritative - success must be reported.
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 255,
+            'output' => " [WARNING] This command will be executed in the \"admin\" context.\n{\"success\":true,\"message\":\"Page deleted successfully\",\"path\":\"/cmf/example/contents/x\",\"uuid\":\"11111111-1111-1111-1111-111111111111\"}",
+            'errorOutput' => 'PHP Fatal error: shutdown fault',
+            'timedOut' => false,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertArrayNotHasKey('errorCode', $result);
+    }
+
+    public function testDeletePageReportsSuccessWhenJsonFlushedBeforeTimeout(): void
+    {
+        // Timeout after the JSON made it out (e.g. hang at process shutdown):
+        // the deletion landed - success, not delete_timeout.
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => null,
+            'output' => '{"success":true,"message":"Page deleted successfully","path":"/cmf/example/contents/x","uuid":"u"}',
+            'errorOutput' => '',
+            'timedOut' => true,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertTrue($result['success']);
+    }
+
+    public function testDeletePageReturnsDeleteTimeoutWhenNoJsonAndTimedOut(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => null,
+            'output' => ' [WARNING] banner only, no result',
+            'errorOutput' => '',
+            'timedOut' => true,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('delete_timeout', $result['errorCode']);
+    }
+
+    public function testDeletePagePassesThroughStructuredCommandFailure(): void
+    {
+        // errorCode and message come from the same JSON object - they can
+        // no longer contradict each other.
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 1,
+            'output' => '{"success":false,"errorCode":"page_not_found","message":"Page not found: /cmf/example/contents/missing"}',
+            'errorOutput' => '',
+            'timedOut' => false,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/missing', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_not_found', $result['errorCode']);
+        $this->assertStringContainsString('Page not found', $result['message']);
+    }
+
+    public function testDeletePageWithoutJsonReturnsDeleteFailedWithExitCodeDetails(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 7,
+            'output' => ' [WARNING] banner only',
+            'errorOutput' => 'some stderr noise',
+            'timedOut' => false,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('delete_failed', $result['errorCode']);
+        $this->assertStringContainsString('some stderr noise', $result['message']);
+        $this->assertSame(7, $result['details']['exitCode']);
+    }
+
+    public function testDeletePageWritesAuditLogOnSuccess(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 0,
+            'output' => '{"success":true,"message":"Page deleted successfully","path":"/cmf/example/contents/x","uuid":"u"}',
+            'errorOutput' => '',
+            'timedOut' => false,
+        ]);
+
+        $this->activityLogger->expects($this->once())
+            ->method('logMcpAction')
+            ->with('mcp_page_deleted', '/cmf/example/contents/x', 'de', $this->anything());
+
+        $service->deletePage('/cmf/example/contents/x', 'de');
+    }
+
+    public function testDeletePageSkipsAuditLogWhenRequested(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 0,
+            'output' => '{"success":true,"message":"Page deleted successfully","path":"/cmf/example/contents/x","uuid":"u"}',
+            'errorOutput' => '',
+            'timedOut' => false,
+        ]);
+
+        $this->activityLogger->expects($this->never())->method('logMcpAction');
+
+        $service->deletePage('/cmf/example/contents/x', 'de', skipAudit: true);
+    }
 }

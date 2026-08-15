@@ -1878,18 +1878,16 @@ class PageService
     }
 
     /**
-     * Delete a page completely.
+     * Delete a page via a fresh console process (auto-trashed by Sulu).
      *
-     * Uses DocumentManager for proper deletion (same as Sulu admin API).
-     * This removes the page from both workspaces, routes, and search index.
+     * The command's JSON result is the authoritative outcome - the process
+     * exit code is advisory only: a shutdown fault in the console process
+     * can exit non-zero AFTER the success JSON has already been flushed
+     * (observed in production). Branching on the exit code turned completed
+     * deletions into false negatives.
      *
      * @param string $identifier UUID or path of the page
-     * @param string $locale Locale for search deindexing
-     * @return array{success: bool, message: string}
-     */
-    /**
-     * @param string $identifier UUID or path of the page
-     * @return array{success: bool, message: string, errorCode?: string}
+     * @return array{success: bool, message: string, errorCode?: string, details?: array<string, mixed>}
      */
     public function deletePage(string $identifier, string $locale = 'de', bool $skipAudit = false): array
     {
@@ -1898,49 +1896,26 @@ class PageService
         }
 
         try {
-            // Spawn a fresh process for the DocumentManager removal. The
-            // in-process DocumentManager blocks indefinitely in the long-lived
-            // MCP server (stale PHPCR session / trash-subscriber ORM
-            // connections) - see the architecture note at the top of this
-            // class and MediaService::saveViaMediaManager() for the same
-            // stale-connection failure mode. The hard timeout guarantees a
-            // structured error instead of a transport-level silence.
-            $process = new Process(
-                [$this->projectDir . '/bin/console', 'app:page:delete', $identifier, '--locale=' . $locale],
-                $this->projectDir
-            );
-            $process->setTimeout(self::DELETE_PROCESS_TIMEOUT);
-            $process->run();
+            $spawn = $this->spawnDeleteProcess($identifier, $locale);
+        } catch (\Exception $e) {
+            return ['success' => false, 'errorCode' => 'delete_failed', 'message' => $e->getMessage()];
+        }
 
-            // bin/console may print banners (e.g. the Sulu context warning)
-            // to stdout before the command's JSON - decode the last line
-            // that parses as a JSON object, not the whole stream.
-            $result = null;
-            $outputLines = explode("\n", trim($process->getOutput()));
-            for ($i = count($outputLines) - 1; $i >= 0; $i--) {
-                $line = trim($outputLines[$i]);
-                if ($line !== '' && str_starts_with($line, '{')) {
-                    $decoded = json_decode($line, true);
-                    if (is_array($decoded)) {
-                        $result = $decoded;
-                        break;
-                    }
-                }
+        $result = $this->parseDeleteProcessOutput($spawn['output']);
+
+        // The command reported its own outcome - trust it over the exit code.
+        if (is_array($result) && !empty($result['success'])) {
+            if ($spawn['exitCode'] !== 0) {
+                // Deletion landed; the console process still exited non-zero
+                // (e.g. a shutdown fault). Log for observability, keep success.
+                error_log(sprintf(
+                    'app:page:delete succeeded but exited with code %s: %s',
+                    var_export($spawn['exitCode'], true),
+                    mb_substr($spawn['errorOutput'], 0, 500)
+                ));
             }
 
-            if (!$process->isSuccessful() || !is_array($result) || empty($result['success'])) {
-                $message = is_array($result) && isset($result['message'])
-                    ? (string) $result['message']
-                    : trim($process->getErrorOutput() ?: 'delete process failed with exit code ' . $process->getExitCode());
-
-                return [
-                    'success' => false,
-                    'errorCode' => is_array($result) && isset($result['errorCode']) ? (string) $result['errorCode'] : 'delete_failed',
-                    'message' => $message,
-                ];
-            }
-
-            $path = is_array($result) && !empty($result['path']) ? (string) $result['path'] : $identifier;
+            $path = !empty($result['path']) ? (string) $result['path'] : $identifier;
 
             // When called from deletePageSafe() the audit is enriched and written
             // by the caller - skip the basic log to avoid a double entry per delete.
@@ -1955,16 +1930,95 @@ class PageService
             }
 
             return ['success' => true, 'message' => 'Page deleted successfully'];
+        }
 
-        } catch (ProcessTimedOutException $e) {
+        // No parsable JSON: the command never reached its result statement.
+        if (!is_array($result)) {
+            if ($spawn['timedOut']) {
+                return [
+                    'success' => false,
+                    'errorCode' => 'delete_timeout',
+                    'message' => 'delete process exceeded ' . self::DELETE_PROCESS_TIMEOUT . 's and was killed; verify the page state before retrying',
+                ];
+            }
+
+            $stderr = trim($spawn['errorOutput']);
+
             return [
                 'success' => false,
-                'errorCode' => 'delete_timeout',
-                'message' => 'delete process exceeded ' . self::DELETE_PROCESS_TIMEOUT . 's and was killed; verify the page state before retrying',
+                'errorCode' => 'delete_failed',
+                'message' => $stderr !== ''
+                    ? 'delete process produced no result: ' . mb_substr($stderr, 0, 300)
+                    : 'delete process failed with exit code ' . var_export($spawn['exitCode'], true),
+                'details' => ['exitCode' => $spawn['exitCode']],
             ];
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
         }
+
+        // The command reported a structured failure - errorCode and message
+        // come from the same source, so they cannot contradict each other.
+        return [
+            'success' => false,
+            'errorCode' => isset($result['errorCode']) ? (string) $result['errorCode'] : 'delete_failed',
+            'message' => isset($result['message']) ? (string) $result['message'] : 'delete command failed',
+        ];
+    }
+
+    /**
+     * Run the delete command in a fresh process. Separated so unit tests can
+     * stub the process interaction and exercise the decision logic.
+     *
+     * @return array{exitCode: int|null, output: string, errorOutput: string, timedOut: bool}
+     */
+    protected function spawnDeleteProcess(string $identifier, string $locale): array
+    {
+        // Spawn a fresh process for the DocumentManager removal. The
+        // in-process DocumentManager blocks indefinitely in the long-lived
+        // MCP server (stale PHPCR session / trash-subscriber ORM
+        // connections) - see the architecture note at the top of this class.
+        // The hard timeout guarantees a structured error instead of a
+        // transport-level silence.
+        $process = new Process(
+            [$this->projectDir . '/bin/console', 'app:page:delete', $identifier, '--locale=' . $locale],
+            $this->projectDir
+        );
+        $process->setTimeout(self::DELETE_PROCESS_TIMEOUT);
+
+        $timedOut = false;
+        try {
+            $process->run();
+        } catch (ProcessTimedOutException) {
+            $timedOut = true;
+        }
+
+        return [
+            'exitCode' => $process->getExitCode(),
+            'output' => $process->getOutput(),
+            'errorOutput' => $process->getErrorOutput(),
+            'timedOut' => $timedOut,
+        ];
+    }
+
+    /**
+     * Extract the command's JSON from stdout. bin/console may print banners
+     * (e.g. the Sulu context warning) before the JSON - decode the last
+     * line that parses as a JSON object.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function parseDeleteProcessOutput(string $output): ?array
+    {
+        $lines = explode("\n", trim($output));
+        for ($i = count($lines) - 1; $i >= 0; $i--) {
+            $line = trim($lines[$i]);
+            if ($line !== '' && str_starts_with($line, '{')) {
+                $decoded = json_decode($line, true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+            }
+        }
+
+        return null;
     }
 
     // ==========================================================================
