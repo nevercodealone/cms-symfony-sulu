@@ -2992,43 +2992,6 @@ XML;
         $this->assertSame('page_not_found', $result['errorCode']);
     }
 
-    public function testDeletePageSafePassesThroughTimeoutErrorCode(): void
-    {
-        // deletePage mocked to return the timeout shape the Process wrapper
-        // produces when the spawned app:page:delete exceeds its limit.
-        $builder = $this->getMockBuilder(PageService::class)
-            ->setConstructorArgs([$this->connection, $this->activityLogger])
-            ->onlyMethods(['deletePage']);
-        $service = $builder->getMock();
-        $service->method('deletePage')->willReturn([
-            'success' => false,
-            'errorCode' => 'delete_timeout',
-            'message' => 'delete process exceeded 60s and was killed',
-        ]);
-
-        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
-            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
-                return ['identifier' => self::TARGET_UUID];
-            }
-
-            return false;
-        });
-        $this->connection->method('fetchAllAssociative')->willReturn([]);
-
-        $scanner = $this->createMock(PageReferenceScanner::class);
-        $scanner->method('isUsedAsDataSource')->willReturn(false);
-        $scanner->method('findIncomingReferences')->willReturn([]);
-
-        $result = $service->deletePageSafe([
-            'path' => self::TARGET_PATH,
-            'confirm' => self::TARGET_PATH,
-        ]);
-
-        $this->assertFalse($result['success']);
-        $this->assertSame('delete_timeout', $result['errorCode']);
-        $this->assertStringContainsString('get_structure', $result['nextAction']);
-    }
-
     public function testDeletePagesBatchAcceptsUnescapedJsonConfirm(): void
     {
         // Regression: json_encode escapes "/" - the agent sends unescaped JSON.
@@ -3107,5 +3070,171 @@ XML;
 
         $this->assertFalse($result['success']);
         $this->assertSame('confirmation_mismatch', $result['errorCode']);
+    }
+
+    public function testDeletePageSafePassesThroughTimeoutErrorCode(): void
+    {
+        // deletePage mocked to return the timeout shape the Process wrapper
+        // produces when the spawned app:page:delete exceeds its limit.
+        $builder = $this->getMockBuilder(PageService::class)
+            ->setConstructorArgs([$this->connection, $this->activityLogger])
+            ->onlyMethods(['deletePage']);
+        $service = $builder->getMock();
+        $service->method('deletePage')->willReturn([
+            'success' => false,
+            'errorCode' => 'delete_timeout',
+            'message' => 'delete process exceeded 60s and was killed',
+        ]);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('delete_timeout', $result['errorCode']);
+        $this->assertStringContainsString('get_structure', $result['nextAction']);
+    }
+
+    public function testListPagesReportsUnpublishedWhenLiveStateIsDowngraded(): void
+    {
+        // Regression (error report issue 3): after unpublish, the default
+        // workspace keeps state=2 while LIVE carries state=1. list() must
+        // report published=false from the LIVE state.
+        $defaultProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Rips</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-published" sv:type="Date" sv:multi-valued="0">
+        <sv:value length="24">2026-01-01T00:00:00+00:00</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $liveProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array {
+            if (str_contains($sql, 'workspace_name = ?')) {
+                // LIVE batch fetch
+                return [['path' => '/cmf/example/contents/rips', 'props' => $liveProps]];
+            }
+
+            return [['path' => '/cmf/example/contents/rips', 'props' => $defaultProps]];
+        });
+
+        $result = $this->pageService->listPages('de', '/cmf/example/contents');
+
+        $this->assertCount(1, $result);
+        $this->assertFalse($result[0]['published']);
+        $this->assertSame('unpublished', $result[0]['state']);
+    }
+
+    public function testListPagesReportsPublishedWhenBothStatesAreTwo(): void
+    {
+        $defaultProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Rips</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-published" sv:type="Date" sv:multi-valued="0">
+        <sv:value length="24">2026-01-01T00:00:00+00:00</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $liveProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array {
+            if (str_contains($sql, 'workspace_name = ?')) {
+                return [['path' => '/cmf/example/contents/rips', 'props' => $liveProps]];
+            }
+
+            return [['path' => '/cmf/example/contents/rips', 'props' => $defaultProps]];
+        });
+
+        $result = $this->pageService->listPages('de', '/cmf/example/contents');
+
+        $this->assertCount(1, $result);
+        $this->assertTrue($result[0]['published']);
+        $this->assertSame('published', $result[0]['state']);
+    }
+
+    public function testGetPageReportsUnpublishedWhenLiveStateIsDowngraded(): void
+    {
+        $defaultProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Rips</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-published" sv:type="Date" sv:multi-valued="0">
+        <sv:value length="24">2026-01-01T00:00:00+00:00</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $liveProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array|false {
+            if (str_contains($sql, 'workspace_name = ?')) {
+                // getLiveState: LIVE workspace
+                return ['props' => $liveProps];
+            }
+
+            // default workspace read
+            return ['path' => '/cmf/example/contents/rips', 'props' => $defaultProps];
+        });
+
+        $page = $this->pageService->getPage('/cmf/example/contents/rips', 'de');
+
+        $this->assertNotNull($page);
+        $this->assertFalse($page['published']);
+        $this->assertSame('unpublished', $page['state']);
     }
 }

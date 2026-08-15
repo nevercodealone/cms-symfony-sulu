@@ -216,16 +216,21 @@ class PageService
             [$pathPrefix . '%']
         );
 
-        // Batch check which pages exist in live workspace
-        $livePaths = [];
+        // Batch fetch LIVE workspace rows to derive the real publication
+        // state per page. LIVE state is the source of truth: unpublish()
+        // downgrades only the LIVE state, while the default workspace
+        // keeps state=2 - row existence alone would report stale values.
+        $liveStates = [];
         if (!empty($results)) {
             $paths = array_column($results, 'path');
             $placeholders = implode(',', array_fill(0, count($paths), '?'));
             $liveResults = $this->connection->fetchAllAssociative(
-                "SELECT path FROM phpcr_nodes WHERE path IN ({$placeholders}) AND workspace_name = ?",
+                "SELECT path, props FROM phpcr_nodes WHERE path IN ({$placeholders}) AND workspace_name = ?",
                 [...$paths, self::WORKSPACE_LIVE]
             );
-            $livePaths = array_flip(array_column($liveResults, 'path'));
+            foreach ($liveResults as $liveRow) {
+                $liveStates[$liveRow['path']] = $this->extractPropertyFromXml($liveRow['props'], "i18n:{$locale}-state");
+            }
         }
 
         $pages = [];
@@ -235,8 +240,10 @@ class PageService
             $url = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-url");
 
             if ($title !== null) {
-                $existsInLive = isset($livePaths[$row['path']]);
-                $pubMeta = $this->extractPublicationMeta($row['props'], $locale, $existsInLive);
+                $liveStateValue = isset($liveStates[$row['path']]) && $liveStates[$row['path']] !== null
+                    ? (int) $liveStates[$row['path']]
+                    : null;
+                $pubMeta = $this->extractPublicationMeta($row['props'], $locale, $liveStateValue);
 
                 $pages[] = [
                     'path' => $row['path'],
@@ -280,9 +287,9 @@ class PageService
         $excerptDescription = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-description");
         $excerptImages = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-images");
 
-        // Get publication metadata
-        $existsInLive = $this->isPagePublished($path);
-        $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $existsInLive);
+        // Get publication metadata - LIVE workspace state is the source of truth
+        $liveState = $this->getLiveState($path, $locale);
+        $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $liveState);
 
         return [
             'path' => $result['path'],
@@ -2884,44 +2891,47 @@ class PageService
     }
 
     /**
-     * Check if a page exists in the live workspace.
-     */
-    private function isPagePublished(string $path): bool
-    {
-        $result = $this->connection->fetchAssociative(
-            "SELECT 1 FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
-            [$path, self::WORKSPACE_LIVE]
-        );
-        return $result !== false;
-    }
-
-    /**
-     * Check if a page is actually in published state.
+     * Get the i18n:{locale}-state value from the LIVE workspace.
+     * Returns null when the page has no row in the LIVE workspace.
      *
-     * Unlike isPagePublished(), this inspects the i18n:{locale}-state property
-     * inside the LIVE workspace XML. createPage() writes both workspaces even
-     * for drafts (state=1), so LIVE row existence alone is not sufficient.
+     * The LIVE state is the source of truth for public availability:
+     * unpublish() writes state=1 into LIVE only, while the default
+     * (draft) workspace keeps state=2.
      */
-    private function isPageInPublishedState(string $path, string $locale): bool
+    private function getLiveState(string $path, string $locale): ?int
     {
         $result = $this->connection->fetchAssociative(
             "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
             [$path, self::WORKSPACE_LIVE]
         );
         if (!$result) {
-            return false;
+            return null;
         }
         $state = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-state");
 
-        return (int) $state === 2;
+        return $state === null ? null : (int) $state;
+    }
+
+    /**
+     * Check if a page is actually in published state.
+     *
+     * Inspects the i18n:{locale}-state property inside the LIVE workspace
+     * XML. createPage() writes both workspaces even for drafts (state=1),
+     * and unpublish() only downgrades the LIVE state - so neither workspace
+     * alone nor row existence is sufficient.
+     */
+    private function isPageInPublishedState(string $path, string $locale): bool
+    {
+        return $this->getLiveState($path, $locale) === 2;
     }
 
     /**
      * Extract publication metadata from PHPCR XML properties.
      *
+     * @param int|null $liveState State from the LIVE workspace (null = no LIVE row)
      * @return array{published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null}
      */
-    private function extractPublicationMeta(string $props, string $locale, bool $existsInLive): array
+    private function extractPublicationMeta(string $props, string $locale, ?int $liveState): array
     {
         $state = $this->extractPropertyFromXml($props, "i18n:{$locale}-state");
         $publishedAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-published");
@@ -2931,13 +2941,13 @@ class PageService
         // Determine state string
         $stateValue = (int) ($state ?? 1);
         $stateString = match (true) {
-            $stateValue === 2 && $existsInLive => 'published',
+            $stateValue === 2 && $liveState === 2 => 'published',
             $publishedAt !== null => 'unpublished',  // Was published before
             default => 'draft',
         };
 
         return [
-            'published' => $stateValue === 2 && $existsInLive,
+            'published' => $stateValue === 2 && $liveState === 2,
             'state' => $stateString,
             'publishedAt' => $publishedAt,
             'createdAt' => $createdAt,
