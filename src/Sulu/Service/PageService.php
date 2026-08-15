@@ -10,14 +10,15 @@ use App\Sulu\Block\BlockValidator;
 use App\Sulu\Block\BlockWriter;
 use App\Sulu\Cache\HttpCacheClearer;
 use App\Sulu\Logger\McpActivityLogger;
+use App\Sulu\Service\PageReferenceScanner;
 use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
-use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
@@ -43,8 +44,9 @@ use Sulu\Component\DocumentManager\DocumentManagerInterface;
  * - Don't add DocumentManager->clear() for cache management
  * - Don't wrap this in Sulu's PageDocument or StructureManager
  *
- * The only DocumentManager usage is deletePage() which requires it for proper
- * cleanup of routes and search indexes - and even that is carefully isolated.
+ * DocumentManager deletion runs in a FRESH process (app:page:delete via
+ * Symfony Process) - the in-process DocumentManager blocks indefinitely in
+ * the long-lived MCP server. See deletePage() and PageDeleteCommand.
  *
  * @see BlockWriter For XML block writing logic
  * @see BlockExtractor For XML block reading logic
@@ -53,6 +55,13 @@ class PageService
 {
     private const WORKSPACE_DEFAULT = 'default';
     private const WORKSPACE_LIVE = 'default_live';
+
+    /**
+     * Hard server-side limit for one spawned page-deletion process.
+     * Guarantees a structured delete_timeout error instead of a silent
+     * transport timeout in the MCP layer.
+     */
+    private const DELETE_PROCESS_TIMEOUT = 60;
 
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
@@ -67,10 +76,10 @@ class PageService
         ?BlockExtractor $blockExtractor = null,
         ?BlockWriter $blockWriter = null,
         ?BlockValidator $blockValidator = null,
-        private ?DocumentManagerInterface $documentManager = null,
         private ?HttpCacheClearer $httpCacheClearer = null,
         private ?SnippetService $snippetService = null,
         private ?string $projectDir = null,
+        private ?PageReferenceScanner $referenceScanner = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -205,16 +214,21 @@ class PageService
             [$pathPrefix . '%']
         );
 
-        // Batch check which pages exist in live workspace
-        $livePaths = [];
+        // Batch fetch LIVE workspace rows to derive the real publication
+        // state per page. LIVE state is the source of truth: unpublish()
+        // downgrades only the LIVE state, while the default workspace
+        // keeps state=2 - row existence alone would report stale values.
+        $liveStates = [];
         if (!empty($results)) {
             $paths = array_column($results, 'path');
             $placeholders = implode(',', array_fill(0, count($paths), '?'));
             $liveResults = $this->connection->fetchAllAssociative(
-                "SELECT path FROM phpcr_nodes WHERE path IN ({$placeholders}) AND workspace_name = ?",
+                "SELECT path, props FROM phpcr_nodes WHERE path IN ({$placeholders}) AND workspace_name = ?",
                 [...$paths, self::WORKSPACE_LIVE]
             );
-            $livePaths = array_flip(array_column($liveResults, 'path'));
+            foreach ($liveResults as $liveRow) {
+                $liveStates[$liveRow['path']] = $this->extractPropertyFromXml($liveRow['props'], "i18n:{$locale}-state");
+            }
         }
 
         $pages = [];
@@ -224,8 +238,10 @@ class PageService
             $url = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-url");
 
             if ($title !== null) {
-                $existsInLive = isset($livePaths[$row['path']]);
-                $pubMeta = $this->extractPublicationMeta($row['props'], $locale, $existsInLive);
+                $liveStateValue = isset($liveStates[$row['path']]) && $liveStates[$row['path']] !== null
+                    ? (int) $liveStates[$row['path']]
+                    : null;
+                $pubMeta = $this->extractPublicationMeta($row['props'], $locale, $liveStateValue);
 
                 $pages[] = [
                     'path' => $row['path'],
@@ -269,9 +285,9 @@ class PageService
         $excerptDescription = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-description");
         $excerptImages = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-excerpt-images");
 
-        // Get publication metadata
-        $existsInLive = $this->isPagePublished($path);
-        $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $existsInLive);
+        // Get publication metadata - LIVE workspace state is the source of truth
+        $liveState = $this->getLiveState($path, $locale);
+        $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $liveState);
 
         return [
             'path' => $result['path'],
@@ -1862,50 +1878,778 @@ class PageService
     }
 
     /**
-     * Delete a page completely.
+     * Delete a page via a fresh console process (auto-trashed by Sulu).
      *
-     * Uses DocumentManager for proper deletion (same as Sulu admin API).
-     * This removes the page from both workspaces, routes, and search index.
+     * The command's JSON result is the authoritative outcome - the process
+     * exit code is advisory only: a shutdown fault in the console process
+     * can exit non-zero AFTER the success JSON has already been flushed
+     * (observed in production). Branching on the exit code turned completed
+     * deletions into false negatives.
      *
      * @param string $identifier UUID or path of the page
-     * @param string $locale Locale for search deindexing
-     * @return array{success: bool, message: string}
+     * @return array{success: bool, message: string, errorCode?: string, details?: array<string, mixed>}
      */
-    public function deletePage(string $identifier, string $locale = 'de'): array
+    public function deletePage(string $identifier, string $locale = 'de', bool $skipAudit = false): array
     {
-        if (!$this->documentManager) {
-            return ['success' => false, 'message' => 'DocumentManager not available'];
+        if ($this->projectDir === null) {
+            return ['success' => false, 'message' => 'projectDir not configured'];
         }
 
         try {
-            // Find document by UUID or path
-            $document = $this->documentManager->find($identifier, $locale);
+            $spawn = $this->spawnDeleteProcess($identifier, $locale);
+        } catch (\Exception $e) {
+            return ['success' => false, 'errorCode' => 'delete_failed', 'message' => $e->getMessage()];
+        }
 
-            if ($document === null) {
-                return ['success' => false, 'message' => 'Page not found: ' . $identifier];
+        $result = $this->parseDeleteProcessOutput($spawn['output']);
+
+        // The command reported its own outcome - trust it over the exit code.
+        if (is_array($result) && !empty($result['success'])) {
+            if ($spawn['exitCode'] !== 0) {
+                // Deletion landed; the console process still exited non-zero
+                // (e.g. a shutdown fault). Log for observability, keep success.
+                error_log(sprintf(
+                    'app:page:delete succeeded but exited with code %s: %s',
+                    var_export($spawn['exitCode'], true),
+                    mb_substr($spawn['errorOutput'], 0, 500)
+                ));
             }
 
-            // Get path for logging before deletion
-            $path = method_exists($document, 'getPath') ? $document->getPath() : $identifier;
+            $path = !empty($result['path']) ? (string) $result['path'] : $identifier;
 
+            // When called from deletePageSafe() the audit is enriched and written
+            // by the caller - skip the basic log to avoid a double entry per delete.
+            // Subtree children (deleteSubtree) keep their own per-row log.
+            if (!$skipAudit) {
+                $this->activityLogger->logMcpAction(
+                    'mcp_page_deleted',
+                    $path,
+                    $locale,
+                    ['identifier' => $identifier]
+                );
+            }
 
-            // Remove the document (this handles both workspaces and routes)
-            $this->documentManager->remove($document);
-            $this->documentManager->flush();
+            return ['success' => true, 'message' => 'Page deleted successfully'];
+        }
+
+        // No parsable JSON: the command never reached its result statement.
+        if (!is_array($result)) {
+            if ($spawn['timedOut']) {
+                return [
+                    'success' => false,
+                    'errorCode' => 'delete_timeout',
+                    'message' => 'delete process exceeded ' . self::DELETE_PROCESS_TIMEOUT . 's and was killed; verify the page state before retrying',
+                ];
+            }
+
+            $stderr = trim($spawn['errorOutput']);
+
+            return [
+                'success' => false,
+                'errorCode' => 'delete_failed',
+                'message' => $stderr !== ''
+                    ? 'delete process produced no result: ' . mb_substr($stderr, 0, 300)
+                    : 'delete process failed with exit code ' . var_export($spawn['exitCode'], true),
+                'details' => ['exitCode' => $spawn['exitCode']],
+            ];
+        }
+
+        // The command reported a structured failure - errorCode and message
+        // come from the same source, so they cannot contradict each other.
+        return [
+            'success' => false,
+            'errorCode' => isset($result['errorCode']) ? (string) $result['errorCode'] : 'delete_failed',
+            'message' => isset($result['message']) ? (string) $result['message'] : 'delete command failed',
+        ];
+    }
+
+    /**
+     * Run the delete command in a fresh process. Separated so unit tests can
+     * stub the process interaction and exercise the decision logic.
+     *
+     * @return array{exitCode: int|null, output: string, errorOutput: string, timedOut: bool}
+     */
+    protected function spawnDeleteProcess(string $identifier, string $locale): array
+    {
+        // Spawn a fresh process for the DocumentManager removal. The
+        // in-process DocumentManager blocks indefinitely in the long-lived
+        // MCP server (stale PHPCR session / trash-subscriber ORM
+        // connections) - see the architecture note at the top of this class.
+        // The hard timeout guarantees a structured error instead of a
+        // transport-level silence.
+        $process = new Process(
+            [$this->projectDir . '/bin/console', 'app:page:delete', $identifier, '--locale=' . $locale],
+            $this->projectDir
+        );
+        $process->setTimeout(self::DELETE_PROCESS_TIMEOUT);
+
+        $timedOut = false;
+        try {
+            $process->run();
+        } catch (ProcessTimedOutException) {
+            $timedOut = true;
+        }
+
+        return [
+            'exitCode' => $process->getExitCode(),
+            'output' => $process->getOutput(),
+            'errorOutput' => $process->getErrorOutput(),
+            'timedOut' => $timedOut,
+        ];
+    }
+
+    /**
+     * Extract the command's JSON from stdout. bin/console may print banners
+     * (e.g. the Sulu context warning) before the JSON - decode the last
+     * line that parses as a JSON object.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function parseDeleteProcessOutput(string $output): ?array
+    {
+        $lines = explode("\n", trim($output));
+        for ($i = count($lines) - 1; $i >= 0; $i--) {
+            $line = trim($lines[$i]);
+            if ($line !== '' && str_starts_with($line, '{')) {
+                $decoded = json_decode($line, true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // ==========================================================================
+    // Safe Delete (delete_page / delete_pages MCP actions)
+    //
+    // deletePage() above is a thin DocumentManager wrapper. The methods in this
+    // section add the safety rails demanded by the MCP delete_page spec:
+    // confirm token, publication-state check, child-policy enforcement,
+    // incoming-reference scan, dryRun, audit enrichment, and CLI cache clear.
+    //
+    // Sulu's PageTrashSubscriber fires automatically on DocumentManager::remove,
+    // so every successful delete lands in tr_trash_items - the MCP server does
+    // not expose restore/list/purge (Sulu admin remains the only recovery path).
+    // ==========================================================================
+
+    private const HOMEPAGE_PATH = '/cmf/example/contents';
+
+    /**
+     * Delete a page with the full safety pipeline.
+     *
+     * @param array{
+     *     path?: string,
+     *     locale?: string,
+     *     confirm?: string,
+     *     children?: string,
+     *     expectedChildCount?: int|null,
+     *     dryRun?: bool
+     * } $params
+     *
+     * @return array{
+     *     success: bool,
+     *     errorCode?: string,
+     *     message?: string,
+     *     details?: array<string, mixed>,
+     *     nextAction?: string,
+     *     path?: string,
+     *     uuid?: string,
+     *     mode?: string,
+     *     childrenPolicy?: string,
+     *     childrenRemoved?: int,
+     *     descendantCount?: int,
+     *     trashId?: int|null,
+     *     cacheCleared?: bool,
+     *     dryRun?: bool,
+     *     checks?: list<array<string, mixed>>,
+     *     children?: list<string>,
+     *     descendants?: list<string>,
+     *     references?: list<array<string, mixed>>
+     * }
+     */
+    public function deletePageSafe(array $params): array
+    {
+        $path = (string) ($params['path'] ?? '');
+        $locale = (string) ($params['locale'] ?? 'de');
+        $confirm = (string) ($params['confirm'] ?? '');
+        $childrenPolicy = (string) ($params['children'] ?? 'reject');
+        $expectedChildCount = isset($params['expectedChildCount']) ? (int) $params['expectedChildCount'] : null;
+        $dryRun = !empty($params['dryRun']);
+
+        if ($path === '') {
+            return $this->deleteError('page_not_found', 'path is required');
+        }
+
+        // 1. confirm must echo the path exactly - typo/context-drift guard
+        if ($confirm !== $path) {
+            return $this->deleteError(
+                'confirmation_mismatch',
+                'confirm must exactly match path',
+                ['expected' => $path, 'got' => $confirm]
+            );
+        }
+
+        // 2. resolve UUID - page must exist in the default workspace
+        $uuid = $this->getPageUuid($path);
+        if ($uuid === null) {
+            return $this->deleteError('page_not_found', "page not found at path: {$path}");
+        }
+
+        // 3. published pages are never deleted - redirects must be put in place first.
+        // Note: isPagePublished() only checks LIVE row existence, but createPage()
+        // writes both workspaces even for drafts (state=1). The real published
+        // signal is state=2 in the LIVE workspace props.
+        if ($this->isPageInPublishedState($path, $locale)) {
+            return $this->deleteError(
+                'page_published',
+                'page is published - unpublish first, then delete',
+                ['path' => $path]
+            );
+        }
+
+        // 4. locked pages: homepage, direct children of webspace root, dataSource-used
+        $lockReason = $this->getLockReason($path, $uuid);
+        if ($lockReason !== null) {
+            return $this->deleteError(
+                'page_locked',
+                "page is locked: {$lockReason}",
+                ['reason' => $lockReason, 'path' => $path]
+            );
+        }
+
+        // 5. children policy
+        $directChildren = $this->getDirectChildPaths($path);
+        $descendants = $this->getAllDescendantPaths($path);
+
+        if (!in_array($childrenPolicy, ['reject', 'cascade', 'reparent'], true)) {
+            return $this->deleteError(
+                'children_present',
+                "unknown children policy: {$childrenPolicy}",
+                ['allowed' => ['reject', 'cascade', 'reparent']]
+            );
+        }
+
+        if (!empty($directChildren) && $childrenPolicy === 'reject') {
+            return $this->deleteError(
+                'children_present',
+                'page has child pages - set children=cascade or children=reparent',
+                ['childCount' => count($directChildren), 'descendantCount' => count($descendants), 'children' => $directChildren]
+            );
+        }
+
+        if ($childrenPolicy === 'cascade') {
+            if ($expectedChildCount === null) {
+                return $this->deleteError(
+                    'child_count_mismatch',
+                    'children=cascade requires expectedChildCount from a preceding dryRun',
+                    ['actualDescendantCount' => count($descendants)]
+                );
+            }
+            if ($expectedChildCount !== count($descendants)) {
+                return $this->deleteError(
+                    'child_count_mismatch',
+                    "expectedChildCount mismatch: expected {$expectedChildCount}, actual " . count($descendants),
+                    ['expected' => $expectedChildCount, 'actual' => count($descendants)]
+                );
+            }
+        }
+
+        $reparentCollisions = [];
+        if ($childrenPolicy === 'reparent' && !empty($directChildren)) {
+            $newParentPath = $this->getParentPath($path);
+            if ($newParentPath === null) {
+                return $this->deleteError(
+                    'reparent_failed',
+                    'cannot reparent - deleted page has no parent (is it the webspace root?)',
+                    ['path' => $path]
+                );
+            }
+            $reparentCollisions = $this->detectReparentCollisions($path, $newParentPath);
+            if (!empty($reparentCollisions)) {
+                return $this->deleteError(
+                    'reparent_failed',
+                    'reparent would create sibling name collisions at the new parent',
+                    ['collisions' => $reparentCollisions, 'newParent' => $newParentPath]
+                );
+            }
+        }
+
+        // 6. incoming references
+        $references = [];
+        if ($this->referenceScanner instanceof PageReferenceScanner) {
+            $references = $this->referenceScanner->findIncomingReferences($uuid, $locale);
+        }
+        if (!empty($references)) {
+            return $this->deleteError(
+                'references_present',
+                'page has incoming references - remove or update the referring blocks first',
+                ['referenceCount' => count($references), 'references' => $references]
+            );
+        }
+
+        // 7. dryRun returns the check report and bails out before any mutation
+        if ($dryRun) {
+            $next = 'call again with dryRun=false to execute';
+            if (count($descendants) > 0 && $childrenPolicy === 'cascade') {
+                $next = 'call again with dryRun=false, children=cascade, expectedChildCount=' . count($descendants) . ' to execute';
+            } elseif (count($descendants) > 0 && $childrenPolicy === 'reparent') {
+                $next = 'call again with dryRun=false, children=reparent to execute';
+            }
+
+            return [
+                'success' => true,
+                'dryRun' => true,
+                'path' => $path,
+                'uuid' => $uuid,
+                'mode' => 'trash',
+                'childrenPolicy' => $childrenPolicy,
+                'descendantCount' => count($descendants),
+                'childrenRemoved' => $childrenPolicy === 'cascade' ? count($descendants) : 0,
+                'nextAction' => $next,
+                'checks' => [
+                    ['name' => 'exists', 'status' => 'pass'],
+                    ['name' => 'confirm', 'status' => 'pass'],
+                    ['name' => 'published', 'status' => 'pass'],
+                    ['name' => 'locked', 'status' => 'pass'],
+                    ['name' => 'children', 'status' => 'pass', 'policy' => $childrenPolicy, 'directCount' => count($directChildren), 'descendantCount' => count($descendants)],
+                    ['name' => 'references', 'status' => 'pass', 'count' => 0],
+                ],
+                'children' => $directChildren,
+                'descendants' => $descendants,
+                'references' => $references,
+                'trashId' => null,
+            ];
+        }
+
+        // 8. execute
+        try {
+            $childrenRemoved = 0;
+
+            if ($childrenPolicy === 'reparent' && !empty($directChildren)) {
+                $this->reparentChildren($path, $this->getParentPath($path));
+            } elseif ($childrenPolicy === 'cascade' && !empty($descendants)) {
+                // Delete every descendant deepest-first so no parent/child conflict
+                // is created mid-loop. The top-level expectedChildCount has already
+                // validated the total subtree size.
+                $childrenRemoved = $this->deleteSubtree($path, $locale);
+            }
+
+            $deleteResult = $this->deletePage($path, $locale, skipAudit: true);
+            if (empty($deleteResult['success'])) {
+                return $this->deleteError(
+                    isset($deleteResult['errorCode']) ? (string) $deleteResult['errorCode'] : 'delete_failed',
+                    'deletePage failed: ' . $deleteResult['message'],
+                    ['deleteResult' => $deleteResult]
+                );
+            }
+
+            $trashId = $this->getTrashIdForUuid($uuid);
+            $cacheResult = $this->projectDir !== null ? $this->clearCache() : ['success' => false, 'message' => 'projectDir not configured'];
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_deleted',
                 $path,
                 $locale,
-                ['identifier' => $identifier]
+                [
+                    'uuid' => $uuid,
+                    'mode' => 'trash',
+                    'childrenPolicy' => $childrenPolicy,
+                    'childrenRemoved' => $childrenRemoved,
+                    'trashId' => $trashId,
+                    'referenceCount' => count($references),
+                ]
             );
 
-            return ['success' => true, 'message' => 'Page deleted successfully'];
-
+            return [
+                'success' => true,
+                'path' => $path,
+                'uuid' => $uuid,
+                'mode' => 'trash',
+                'childrenRemoved' => $childrenRemoved,
+                'trashId' => $trashId,
+                'cacheCleared' => !empty($cacheResult['success']),
+            ];
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            return $this->deleteError(
+                'delete_failed',
+                'exception during delete: ' . $e->getMessage(),
+                ['exception' => $e->getMessage()]
+            );
         }
     }
+
+    /**
+     * Delete multiple pages atomically (all-or-nothing preconditions).
+     *
+     * A path is deletable inside the batch when its children are all also
+     * listed in the batch - this implicit-cascade rule lets the agent clean
+     * up whole subtrees in one call without per-path expected-counts.
+     *
+     * @param list<string> $paths
+     * @return array{
+     *     success: bool,
+     *     errorCode?: string,
+     *     message?: string,
+     *     details?: array<string, mixed>,
+     *     nextAction?: string,
+     *     dryRun?: bool,
+     *     count?: int,
+     *     ordered?: list<string>,
+     *     preconditions?: list<array<string, mixed>>,
+     *     deletedCount?: int,
+     *     results?: list<array<string, mixed>>
+     * }
+     */
+    public function deletePagesBatch(array $paths, string $locale = 'de', string $confirm = '', bool $dryRun = false): array
+    {
+        if (empty($paths)) {
+            return $this->deleteError('page_not_found', 'paths must be a non-empty array');
+        }
+        if (count($paths) > 10) {
+            return $this->deleteError(
+                'batch_too_large',
+                'maximum 10 paths per call, got ' . count($paths),
+                ['count' => count($paths), 'max' => 10]
+            );
+        }
+
+        // Semantic comparison: decode confirm and compare the resulting
+        // arrays. Accepts any valid JSON encoding (escaped or unescaped
+        // slashes) - callers cannot be expected to guess the server's
+        // exact json_encode flags.
+        $confirmDecoded = json_decode($confirm, true);
+        if (!is_array($confirmDecoded) || array_values($confirmDecoded) !== array_values($paths)) {
+            return $this->deleteError(
+                'confirmation_mismatch',
+                'confirm must be a JSON array containing exactly the same paths in the same order',
+                ['expected' => array_values($paths), 'got' => $confirm]
+            );
+        }
+
+        // Deepest-first ordering avoids artificial parent/child conflicts.
+        $ordered = $this->sortPathsDeepestFirst(array_values($paths));
+        $pathSet = array_flip($ordered);
+
+        // All-or-nothing precondition pass
+        $preconditions = [];
+        foreach ($ordered as $candidatePath) {
+            $directChildren = $this->getDirectChildPaths($candidatePath);
+            $orphans = array_values(array_filter(
+                $directChildren,
+                fn (string $childPath): bool => !isset($pathSet[$childPath])
+            ));
+            if (!empty($orphans)) {
+                return $this->deleteError(
+                    'children_present',
+                    "path {$candidatePath} has children not included in the batch",
+                    ['path' => $candidatePath, 'orphans' => $orphans]
+                );
+            }
+
+            $result = $this->deletePageSafe([
+                'path' => $candidatePath,
+                'locale' => $locale,
+                'confirm' => $candidatePath,
+                'children' => empty($directChildren) ? 'reject' : 'cascade',
+                'expectedChildCount' => count($this->getAllDescendantPaths($candidatePath)),
+                'dryRun' => true,
+            ]);
+            if (empty($result['success'])) {
+                // Surface the failing path so the caller can retry without it
+                $details = is_array($result['details'] ?? null) ? $result['details'] : [];
+                $details['path'] = $candidatePath;
+                $result['details'] = $details;
+
+                return $result;
+            }
+            $preconditions[$candidatePath] = $result;
+        }
+
+        if ($dryRun) {
+            return [
+                'success' => true,
+                'dryRun' => true,
+                'count' => count($ordered),
+                'ordered' => $ordered,
+                'nextAction' => 'call again with dryRun=false and the same confirm to execute all ' . count($ordered) . ' deletion(s)',
+                'preconditions' => array_values($preconditions),
+            ];
+        }
+
+        // Execute deepest-first. By the time we reach a parent, its in-batch
+        // children are already gone so its direct-children check would pass.
+        $results = [];
+        $okCount = 0;
+        foreach ($ordered as $candidatePath) {
+            $directChildren = $this->getDirectChildPaths($candidatePath);
+            $result = $this->deletePageSafe([
+                'path' => $candidatePath,
+                'locale' => $locale,
+                'confirm' => $candidatePath,
+                'children' => empty($directChildren) ? 'reject' : 'cascade',
+                'expectedChildCount' => count($this->getAllDescendantPaths($candidatePath)),
+                'dryRun' => false,
+            ]);
+            $results[] = $result;
+            if (!empty($result['success'])) {
+                $okCount++;
+            }
+        }
+
+        return [
+            'success' => $okCount === count($ordered),
+            'count' => count($ordered),
+            'deletedCount' => $okCount,
+            'results' => $results,
+        ];
+    }
+
+    /**
+     * Proxy for the MCP list_references action. Returns incoming references
+     * for a page path.
+     *
+     * @return array{
+     *     success: bool,
+     *     errorCode?: string,
+     *     message?: string,
+     *     details?: array<string, mixed>,
+     *     nextAction?: string,
+     *     path?: string,
+     *     uuid?: string,
+     *     references?: list<array<string, mixed>>
+     * }
+     */
+    public function listIncomingReferences(string $path, string $locale = 'de'): array
+    {
+        $uuid = $this->getPageUuid($path);
+        if ($uuid === null) {
+            return $this->deleteError('page_not_found', "page not found at path: {$path}");
+        }
+        if (!$this->referenceScanner instanceof PageReferenceScanner) {
+            return $this->deleteError('delete_failed', 'PageReferenceScanner is not available');
+        }
+
+        return [
+            'success' => true,
+            'path' => $path,
+            'uuid' => $uuid,
+            'references' => $this->referenceScanner->findIncomingReferences($uuid, $locale),
+        ];
+    }
+
+    /**
+     * Delete every descendant of $path deepest-first. Returns the count removed.
+     */
+    private function deleteSubtree(string $path, string $locale): int
+    {
+        $descendants = $this->getAllDescendantPaths($path);
+        $ordered = $this->sortPathsDeepestFirst($descendants);
+        $removed = 0;
+        foreach ($ordered as $descendantPath) {
+            $r = $this->deletePage($descendantPath, $locale);
+            if (!empty($r['success'])) {
+                $removed++;
+            }
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Move every descendant of $deletedPath one level up (under the parent of $deletedPath).
+     * Touches both workspaces. UUIDs, props and routes are untouched - only the path column moves.
+     */
+    private function reparentChildren(string $deletedPath, string $newParentPath): void
+    {
+        foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes
+                 SET path = CONCAT(?, SUBSTRING(path, CHAR_LENGTH(?) + 1))
+                 WHERE path LIKE ?
+                   AND workspace_name = ?",
+                [$newParentPath, $deletedPath, $deletedPath . '/%', $workspace]
+            );
+        }
+    }
+
+    /**
+     * @return list<string> direct children of $path
+     */
+    private function getDirectChildPaths(string $path): array
+    {
+        $prefix = $path . '/';
+        $rows = $this->connection->fetchAllAssociative(
+            "SELECT path FROM phpcr_nodes
+             WHERE path LIKE ?
+               AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'
+             ORDER BY path",
+            [$prefix . '%']
+        );
+
+        $children = [];
+        $pathLen = strlen($prefix);
+        foreach ($rows as $row) {
+            $candidate = $row['path'];
+            if (!str_starts_with($candidate, $prefix)) {
+                continue;
+            }
+            $relative = substr($candidate, $pathLen);
+            if ($relative === false || $relative === '' || str_contains($relative, '/')) {
+                continue; // not a direct child
+            }
+            $children[] = $candidate;
+        }
+
+        return $children;
+    }
+
+    /**
+     * @return list<string> every descendant of $path at any depth
+     */
+    private function getAllDescendantPaths(string $path): array
+    {
+        $rows = $this->connection->fetchAllAssociative(
+            "SELECT path FROM phpcr_nodes
+             WHERE path LIKE ?
+               AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'
+             ORDER BY path",
+            [$path . '/%']
+        );
+
+        return array_values(array_filter(
+            array_column($rows, 'path'),
+            fn (string $p): bool => $p !== $path
+        ));
+    }
+
+    private function getParentPath(string $path): ?string
+    {
+        $pos = strrpos($path, '/');
+        if ($pos === false || $pos === 0) {
+            return null;
+        }
+
+        return substr($path, 0, $pos);
+    }
+
+    /**
+     * Locked = homepage, direct child of webspace root, or referenced as
+     * a subpages-overview dataSource.
+     */
+    private function getLockReason(string $path, string $uuid): ?string
+    {
+        if ($path === self::HOMEPAGE_PATH) {
+            return 'homepage';
+        }
+
+        $parent = $this->getParentPath($path);
+        if ($parent === self::HOMEPAGE_PATH) {
+            return 'section-landing-page';
+        }
+
+        if ($this->referenceScanner instanceof PageReferenceScanner
+            && $this->referenceScanner->isUsedAsDataSource($uuid)) {
+            return 'used-as-datasource';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string> basenames that would collide at the new parent
+     */
+    private function detectReparentCollisions(string $deletedPath, string $newParentPath): array
+    {
+        $directChildren = $this->getDirectChildPaths($deletedPath);
+        if (empty($directChildren)) {
+            return [];
+        }
+
+        $newSiblings = $this->getDirectChildPaths($newParentPath);
+        $existingBasenames = array_map(fn (string $p): string => basename($p), $newSiblings);
+        $existingSet = array_flip($existingBasenames);
+
+        $collisions = [];
+        foreach ($directChildren as $childPath) {
+            $base = basename($childPath);
+            if (isset($existingSet[$base])) {
+                $collisions[] = $base;
+            }
+        }
+
+        return $collisions;
+    }
+
+    private function getTrashIdForUuid(string $uuid): ?int
+    {
+        try {
+            $row = $this->connection->fetchAssociative(
+                "SELECT id FROM tr_trash_items
+                 WHERE resourceKey = 'pages' AND resourceId = ?
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [$uuid]
+            );
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        return $row ? (int) $row['id'] : null;
+    }
+
+    /**
+     * @param list<string> $paths
+     * @return list<string>
+     */
+    private function sortPathsDeepestFirst(array $paths): array
+    {
+        usort($paths, static function (string $a, string $b): int {
+            $depthA = substr_count($a, '/');
+            $depthB = substr_count($b, '/');
+            if ($depthA === $depthB) {
+                return strcmp($b, $a); // stable tie-break, reverse alpha
+            }
+
+            return $depthB <=> $depthA; // deeper first
+        });
+
+        return $paths;
+    }
+
+    /**
+     * @param array<string, mixed> $details
+     * @return array{success: false, errorCode: string, message: string, details: array<string, mixed>, nextAction: string}
+     */
+    private function deleteError(string $code, string $message, array $details = [], ?string $nextAction = null): array
+    {
+        return [
+            'success' => false,
+            'errorCode' => $code,
+            'message' => $message,
+            'details' => $details,
+            'nextAction' => $nextAction ?? (self::ERROR_NEXT_ACTIONS[$code] ?? ''),
+        ];
+    }
+
+    /**
+     * Mechanical recovery hint for each error code - lets an AI agent pick
+     * the next call without reasoning about the failure from scratch.
+     */
+    private const ERROR_NEXT_ACTIONS = [
+        'page_not_found' => 'verify the path with action=list, then retry',
+        'confirmation_mismatch' => 'confirm must exactly equal path (delete_page) or the JSON-encoded paths array (delete_pages)',
+        'page_published' => 'call action=unpublish on this path first, then retry',
+        'page_locked' => 'page is homepage, a section landing page, or a subpages-overview dataSource; not deletable',
+        'children_present' => 'set children=cascade with expectedChildCount from dryRun, or children=reparent',
+        'child_count_mismatch' => 're-run dryRun; expectedChildCount must equal the reported descendantCount',
+        'references_present' => 'call action=list_references on this path, then remove or update the referrers',
+        'reparent_failed' => 'rename the colliding children first',
+        'batch_too_large' => 'split into batches of max 10 paths',
+        'delete_timeout' => 'verify page state with action=get_structure; if it still exists, retry once',
+        'delete_failed' => 'see details; retry once the underlying issue is fixed',
+    ];
 
     // ==========================================================================
     // Page Discovery Methods
@@ -2203,23 +2947,47 @@ class PageService
     }
 
     /**
-     * Check if a page exists in the live workspace.
+     * Get the i18n:{locale}-state value from the LIVE workspace.
+     * Returns null when the page has no row in the LIVE workspace.
+     *
+     * The LIVE state is the source of truth for public availability:
+     * unpublish() writes state=1 into LIVE only, while the default
+     * (draft) workspace keeps state=2.
      */
-    private function isPagePublished(string $path): bool
+    private function getLiveState(string $path, string $locale): ?int
     {
         $result = $this->connection->fetchAssociative(
-            "SELECT 1 FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
             [$path, self::WORKSPACE_LIVE]
         );
-        return $result !== false;
+        if (!$result) {
+            return null;
+        }
+        $state = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-state");
+
+        return $state === null ? null : (int) $state;
+    }
+
+    /**
+     * Check if a page is actually in published state.
+     *
+     * Inspects the i18n:{locale}-state property inside the LIVE workspace
+     * XML. createPage() writes both workspaces even for drafts (state=1),
+     * and unpublish() only downgrades the LIVE state - so neither workspace
+     * alone nor row existence is sufficient.
+     */
+    private function isPageInPublishedState(string $path, string $locale): bool
+    {
+        return $this->getLiveState($path, $locale) === 2;
     }
 
     /**
      * Extract publication metadata from PHPCR XML properties.
      *
+     * @param int|null $liveState State from the LIVE workspace (null = no LIVE row)
      * @return array{published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null}
      */
-    private function extractPublicationMeta(string $props, string $locale, bool $existsInLive): array
+    private function extractPublicationMeta(string $props, string $locale, ?int $liveState): array
     {
         $state = $this->extractPropertyFromXml($props, "i18n:{$locale}-state");
         $publishedAt = $this->extractPropertyFromXml($props, "i18n:{$locale}-published");
@@ -2229,13 +2997,13 @@ class PageService
         // Determine state string
         $stateValue = (int) ($state ?? 1);
         $stateString = match (true) {
-            $stateValue === 2 && $existsInLive => 'published',
+            $stateValue === 2 && $liveState === 2 => 'published',
             $publishedAt !== null => 'unpublished',  // Was published before
             default => 'draft',
         };
 
         return [
-            'published' => $stateValue === 2 && $existsInLive,
+            'published' => $stateValue === 2 && $liveState === 2,
             'state' => $stateString,
             'publishedAt' => $publishedAt,
             'createdAt' => $createdAt,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Sulu\Service;
 
 use App\Sulu\Logger\McpActivityLogger;
+use App\Sulu\Service\PageReferenceScanner;
 use App\Sulu\Service\PageService;
 use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
@@ -1009,11 +1010,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
@@ -1058,11 +1064,16 @@ XML;
         $snippetService->method('getSnippet')->willReturn(null);
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
@@ -1115,11 +1126,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithMultiValuedSnippets]);
@@ -1171,11 +1187,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithStringSnippet]);
@@ -2127,11 +2148,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturnCallback(function ($sql, $params) use (&$callCount) {
@@ -2456,5 +2482,913 @@ XML;
 
         $this->assertCount(1, $compact);
         $this->assertNull($compact[0]['snippet_uuid']);
+    }
+
+    // ======================================================================
+    // deletePageSafe / deletePagesBatch / listIncomingReferences
+    // ======================================================================
+
+    private const TARGET_PATH = '/cmf/example/contents/glossare/nca-php-glossar/phpunit';
+    private const TARGET_UUID = 'abc12345-0000-0000-0000-000000000001';
+
+    /**
+     * Build a partial-mock PageService with deletePage() stubbed so the unit
+     * tests don't touch the DocumentManager. Connection and ActivityLogger
+     * are the existing mocks from setUp().
+     */
+    private function buildServiceForDeleteTest(?PageReferenceScanner $scanner = null, bool $expectDelete = false): PageService
+    {
+        $builder = $this->getMockBuilder(PageService::class)
+            ->setConstructorArgs([$this->connection, $this->activityLogger, null, null, null, null, null, null, null, null, null, $scanner])
+            ->onlyMethods(['deletePage']);
+
+        if ($expectDelete) {
+            $service = $builder->getMock();
+            $service->expects($this->atLeastOnce())->method('deletePage')
+                ->willReturn(['success' => true, 'message' => 'Page deleted successfully']);
+        } else {
+            $service = $builder->getMock();
+            $service->expects($this->never())->method('deletePage');
+        }
+
+        return $service;
+    }
+
+    public function testDeletePageSafeRequiresPath(): void
+    {
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe(['path' => '', 'confirm' => '']);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_not_found', $result['errorCode']);
+    }
+
+    public function testDeletePageSafeAbortsOnConfirmationMismatch(): void
+    {
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH . ' TYPO',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('confirmation_mismatch', $result['errorCode']);
+        $this->assertSame(self::TARGET_PATH, $result['details']['expected']);
+    }
+
+    public function testDeletePageSafeAbortsWhenPageNotFound(): void
+    {
+        // getPageUuid -> no row
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return false;
+            }
+
+            return false;
+        });
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe(['path' => self::TARGET_PATH, 'confirm' => self::TARGET_PATH]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_not_found', $result['errorCode']);
+    }
+
+    public function testDeletePageSafeAbortsWhenPageIsPublished(): void
+    {
+        // Published = state=2 in LIVE workspace props (not just LIVE row existence,
+        // because createPage writes both workspaces even for drafts)
+        $publishedProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql) use ($publishedProps): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+            if (str_contains($sql, "SELECT props FROM phpcr_nodes") && str_contains($sql, self::WORKSPACE_LIVE_FLAG)) {
+                return ['props' => $publishedProps];
+            }
+
+            return false;
+        });
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe(['path' => self::TARGET_PATH, 'confirm' => self::TARGET_PATH]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_published', $result['errorCode']);
+        $this->assertStringContainsString('unpublish', $result['nextAction']);
+    }
+
+    public function testDeletePageSafeAllowsDraftEvenWhenLiveRowExists(): void
+    {
+        // Regression: createPage() writes both workspaces even for drafts.
+        // A draft has state=1 in LIVE; must NOT be considered published.
+        $draftProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql) use ($draftProps): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+            if (str_contains($sql, 'SELECT props FROM phpcr_nodes') && str_contains($sql, self::WORKSPACE_LIVE_FLAG)) {
+                return ['props' => $draftProps];
+            }
+            if (str_contains($sql, 'tr_trash_items')) {
+                return ['id' => 7];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner, expectDelete: true);
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+            'dryRun' => false,
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(7, $result['trashId']);
+    }
+
+    private const WORKSPACE_LIVE_FLAG = 'workspace_name = ?';
+
+    public function testDeletePageSafeLocksHomepage(): void
+    {
+        // Homepage must exist (UUID resolves) and must not be published before
+        // the lock check runs - they are earlier steps in the pipeline.
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'home-uuid'];
+            }
+
+            return false;
+        });
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe([
+            'path' => '/cmf/example/contents',
+            'confirm' => '/cmf/example/contents',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_locked', $result['errorCode']);
+        $this->assertSame('homepage', $result['details']['reason']);
+    }
+
+    public function testDeletePageSafeLocksDirectChildOfWebspaceRoot(): void
+    {
+        //getPageUuid returns a uuid, isPagePublished returns false, parent is the homepage
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe([
+            'path' => '/cmf/example/contents/glossare',
+            'confirm' => '/cmf/example/contents/glossare',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_locked', $result['errorCode']);
+        $this->assertSame('section-landing-page', $result['details']['reason']);
+    }
+
+    public function testDeletePageSafeAbortsWhenChildrenPresentInRejectMode(): void
+    {
+        $childPath = self::TARGET_PATH . '/child-a';
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql) use ($childPath): array {
+            if (str_contains($sql, 'LIKE ?')) {
+                return [['path' => $childPath]];
+            }
+
+            return [];
+        });
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+            'children' => 'reject',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('children_present', $result['errorCode']);
+        $this->assertSame([$childPath], $result['details']['children']);
+    }
+
+    public function testDeletePageSafeCascadeAbortsOnChildCountMismatch(): void
+    {
+        $childPath = self::TARGET_PATH . '/child-a';
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql) use ($childPath): array {
+            if (str_contains($sql, 'LIKE ?')) {
+                return [['path' => $childPath]];
+            }
+
+            return [];
+        });
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+            'children' => 'cascade',
+            'expectedChildCount' => 5, // wrong: actual is 1
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('child_count_mismatch', $result['errorCode']);
+        $this->assertSame(5, $result['details']['expected']);
+        $this->assertSame(1, $result['details']['actual']);
+    }
+
+    public function testDeletePageSafeCascadeAbortsWhenExpectedCountMissing(): void
+    {
+        $childPath = self::TARGET_PATH . '/child-a';
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql) use ($childPath): array {
+            if (str_contains($sql, 'LIKE ?')) {
+                return [['path' => $childPath]];
+            }
+
+            return [];
+        });
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+            'children' => 'cascade',
+            // expectedChildCount omitted
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('child_count_mismatch', $result['errorCode']);
+    }
+
+    public function testDeletePageSafeAbortsWhenIncomingReferencesExist(): void
+    {
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([
+            ['sourcePath' => '/cmf/example/contents/referrer', 'sourceUuid' => 'ref-uuid', 'blockType' => 'page-teaser', 'blockPosition' => 3, 'locale' => 'de', 'field' => 'i18n:de-blocks-page#3'],
+        ]);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('references_present', $result['errorCode']);
+        $this->assertNotEmpty($result['details']['references']);
+    }
+
+    public function testDeletePageSafeDryRunReturnsChecksOnlyAndDoesNotDelete(): void
+    {
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner); // expects never() on deletePage
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+            'dryRun' => true,
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['dryRun']);
+        $this->assertSame(self::TARGET_UUID, $result['uuid']);
+        $this->assertArrayHasKey('checks', $result);
+        $this->assertNull($result['trashId']);
+        $this->assertStringContainsString('dryRun=false', $result['nextAction']);
+    }
+
+    public function testDeletePageSafeHappyPathReturnsSuccessAndCallsClearCacheIndirectly(): void
+    {
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+            if (str_contains($sql, 'tr_trash_items')) {
+                return ['id' => 42];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner, expectDelete: true);
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+            'dryRun' => false,
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(self::TARGET_UUID, $result['uuid']);
+        $this->assertSame(42, $result['trashId']);
+        $this->assertSame('trash', $result['mode']);
+        $this->assertSame(0, $result['childrenRemoved']);
+    }
+
+    public function testDeletePageSafeLocksPageUsedAsDataSource(): void
+    {
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(true);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_locked', $result['errorCode']);
+        $this->assertSame('used-as-datasource', $result['details']['reason']);
+    }
+
+    public function testDeletePagesBatchRejectsMoreThanTenPaths(): void
+    {
+        $service = $this->buildServiceForDeleteTest();
+
+        $paths = array_map(fn (int $i): string => '/cmf/example/contents/p' . $i, range(1, 11));
+
+        $result = $service->deletePagesBatch($paths, 'de', (string) json_encode($paths));
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('batch_too_large', $result['errorCode']);
+    }
+
+    public function testDeletePagesBatchAbortsOnConfirmationMismatch(): void
+    {
+        $service = $this->buildServiceForDeleteTest();
+
+        $paths = ['/cmf/example/contents/a', '/cmf/example/contents/b'];
+
+        $result = $service->deletePagesBatch($paths, 'de', 'wrong-confirm');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('confirmation_mismatch', $result['errorCode']);
+    }
+
+    public function testDeletePagesBatchAbortsWhenChildNotInBatch(): void
+    {
+        // parent has a child that is NOT listed in the batch
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'parent-uuid'];
+            }
+            if (str_contains($sql, 'SELECT 1 FROM phpcr_nodes')) {
+                return false; // not published
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql): array {
+            if (str_contains($sql, "LIKE ?")) {
+                // parent has child /parent/child-a, not in batch
+                return [['path' => '/cmf/example/contents/parent/child-a']];
+            }
+
+            return [];
+        });
+
+        $paths = ['/cmf/example/contents/parent'];
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePagesBatch($paths, 'de', (string) json_encode($paths));
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('children_present', $result['errorCode']);
+    }
+
+    public function testDeletePagesBatchDryRunReportsAllPaths(): void
+    {
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        // Two leaf paths nested under a section so they are NOT direct children
+        // of the webspace root (which would trip the section-landing-page lock).
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'leaf-uuid'];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $paths = ['/cmf/example/contents/section/leaf-a', '/cmf/example/contents/section/leaf-b'];
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->deletePagesBatch($paths, 'de', (string) json_encode($paths), true);
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['dryRun']);
+        $this->assertSame(2, $result['count']);
+    }
+
+    public function testListIncomingReferencesReturnsScannerResults(): void
+    {
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('findIncomingReferences')->willReturn([
+            ['sourcePath' => '/ref', 'sourceUuid' => 'r', 'blockType' => 'page-teaser', 'blockPosition' => 0, 'locale' => 'de', 'field' => 'i18n:de-blocks-page#0'],
+        ]);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'target-uuid'];
+            }
+
+            return false;
+        });
+
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->listIncomingReferences(self::TARGET_PATH, 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertCount(1, $result['references']);
+        $this->assertSame('page-teaser', $result['references'][0]['blockType']);
+    }
+
+    public function testListIncomingReferencesAbortsWhenPageNotFound(): void
+    {
+        $this->connection->method('fetchAssociative')->willReturn(false);
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->listIncomingReferences(self::TARGET_PATH, 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_not_found', $result['errorCode']);
+    }
+
+    public function testDeletePagesBatchAcceptsUnescapedJsonConfirm(): void
+    {
+        // Regression: json_encode escapes "/" - the agent sends unescaped JSON.
+        // Confirm must be compared semantically, not as a string.
+        $paths = ['/cmf/example/contents/section/rips'];
+        $confirm = '["/cmf/example/contents/section/rips"]'; // unescaped slashes
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'leaf-uuid'];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->deletePagesBatch($paths, 'de', $confirm, true);
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['dryRun']);
+    }
+
+    public function testDeletePagesBatchAcceptsEscapedJsonConfirm(): void
+    {
+        $paths = ['/cmf/example/contents/section/a', '/cmf/example/contents/section/b'];
+        $confirm = (string) json_encode($paths); // PHP default: escapes slashes
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => 'leaf-uuid'];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $service = $this->buildServiceForDeleteTest($scanner);
+
+        $result = $service->deletePagesBatch($paths, 'de', $confirm, true);
+
+        $this->assertTrue($result['success']);
+    }
+
+    public function testDeletePagesBatchRejectsDifferentArrayInConfirm(): void
+    {
+        $paths = ['/cmf/example/contents/section/a', '/cmf/example/contents/section/b'];
+        $confirm = json_encode(['/cmf/example/contents/section/a', '/cmf/example/contents/section/OTHER']);
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePagesBatch($paths, 'de', $confirm, true);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('confirmation_mismatch', $result['errorCode']);
+        // details.expected now carries the array, not an encoded string
+        $this->assertSame($paths, $result['details']['expected']);
+    }
+
+    public function testDeletePagesBatchRejectsNonJsonConfirm(): void
+    {
+        $paths = ['/cmf/example/contents/section/a'];
+
+        $service = $this->buildServiceForDeleteTest();
+
+        $result = $service->deletePagesBatch($paths, 'de', 'not-json', true);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('confirmation_mismatch', $result['errorCode']);
+    }
+
+    public function testDeletePageSafePassesThroughTimeoutErrorCode(): void
+    {
+        // deletePage mocked to return the timeout shape the Process wrapper
+        // produces when the spawned app:page:delete exceeds its limit.
+        $builder = $this->getMockBuilder(PageService::class)
+            ->setConstructorArgs([$this->connection, $this->activityLogger])
+            ->onlyMethods(['deletePage']);
+        $service = $builder->getMock();
+        $service->method('deletePage')->willReturn([
+            'success' => false,
+            'errorCode' => 'delete_timeout',
+            'message' => 'delete process exceeded 60s and was killed',
+        ]);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('delete_timeout', $result['errorCode']);
+        $this->assertStringContainsString('get_structure', $result['nextAction']);
+    }
+
+    public function testListPagesReportsUnpublishedWhenLiveStateIsDowngraded(): void
+    {
+        // Regression (error report issue 3): after unpublish, the default
+        // workspace keeps state=2 while LIVE carries state=1. list() must
+        // report published=false from the LIVE state.
+        $defaultProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Rips</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-published" sv:type="Date" sv:multi-valued="0">
+        <sv:value length="24">2026-01-01T00:00:00+00:00</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $liveProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array {
+            if (str_contains($sql, 'workspace_name = ?')) {
+                // LIVE batch fetch
+                return [['path' => '/cmf/example/contents/rips', 'props' => $liveProps]];
+            }
+
+            return [['path' => '/cmf/example/contents/rips', 'props' => $defaultProps]];
+        });
+
+        $result = $this->pageService->listPages('de', '/cmf/example/contents');
+
+        $this->assertCount(1, $result);
+        $this->assertFalse($result[0]['published']);
+        $this->assertSame('unpublished', $result[0]['state']);
+    }
+
+    public function testListPagesReportsPublishedWhenBothStatesAreTwo(): void
+    {
+        $defaultProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Rips</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-published" sv:type="Date" sv:multi-valued="0">
+        <sv:value length="24">2026-01-01T00:00:00+00:00</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $liveProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAllAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array {
+            if (str_contains($sql, 'workspace_name = ?')) {
+                return [['path' => '/cmf/example/contents/rips', 'props' => $liveProps]];
+            }
+
+            return [['path' => '/cmf/example/contents/rips', 'props' => $defaultProps]];
+        });
+
+        $result = $this->pageService->listPages('de', '/cmf/example/contents');
+
+        $this->assertCount(1, $result);
+        $this->assertTrue($result[0]['published']);
+        $this->assertSame('published', $result[0]['state']);
+    }
+
+    public function testGetPageReportsUnpublishedWhenLiveStateIsDowngraded(): void
+    {
+        $defaultProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">Rips</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-published" sv:type="Date" sv:multi-valued="0">
+        <sv:value length="24">2026-01-01T00:00:00+00:00</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $liveProps = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">1</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array {
+            if (str_contains($sql, 'workspace_name = ?')) {
+                // getLiveState: LIVE workspace
+                return ['props' => $liveProps];
+            }
+
+            // default workspace read
+            return ['path' => '/cmf/example/contents/rips', 'props' => $defaultProps];
+        });
+
+        $page = $this->pageService->getPage('/cmf/example/contents/rips', 'de');
+
+        $this->assertNotNull($page);
+        $this->assertFalse($page['published']);
+        $this->assertSame('unpublished', $page['state']);
+    }
+
+    // ======================================================================
+    // deletePage process-result handling (regression: false negative bug)
+    // ======================================================================
+
+    private function buildServiceWithSpawn(array $spawnResult): PageService
+    {
+        $service = $this->getMockBuilder(PageService::class)
+            ->setConstructorArgs([$this->connection, $this->activityLogger, null, null, null, null, null, null, null, null, '/project'])
+            ->onlyMethods(['spawnDeleteProcess'])
+            ->getMock();
+        $service->method('spawnDeleteProcess')->willReturn($spawnResult);
+
+        return $service;
+    }
+
+    public function testDeletePageTrustsCommandResultOverNonZeroExitCode(): void
+    {
+        // Regression (production bug report): the console process exits
+        // non-zero AFTER flushing the success JSON (shutdown fault). The
+        // command's JSON is authoritative - success must be reported.
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 255,
+            'output' => " [WARNING] This command will be executed in the \"admin\" context.\n{\"success\":true,\"message\":\"Page deleted successfully\",\"path\":\"/cmf/example/contents/x\",\"uuid\":\"11111111-1111-1111-1111-111111111111\"}",
+            'errorOutput' => 'PHP Fatal error: shutdown fault',
+            'timedOut' => false,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertArrayNotHasKey('errorCode', $result);
+    }
+
+    public function testDeletePageReportsSuccessWhenJsonFlushedBeforeTimeout(): void
+    {
+        // Timeout after the JSON made it out (e.g. hang at process shutdown):
+        // the deletion landed - success, not delete_timeout.
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => null,
+            'output' => '{"success":true,"message":"Page deleted successfully","path":"/cmf/example/contents/x","uuid":"u"}',
+            'errorOutput' => '',
+            'timedOut' => true,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertTrue($result['success']);
+    }
+
+    public function testDeletePageReturnsDeleteTimeoutWhenNoJsonAndTimedOut(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => null,
+            'output' => ' [WARNING] banner only, no result',
+            'errorOutput' => '',
+            'timedOut' => true,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('delete_timeout', $result['errorCode']);
+    }
+
+    public function testDeletePagePassesThroughStructuredCommandFailure(): void
+    {
+        // errorCode and message come from the same JSON object - they can
+        // no longer contradict each other.
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 1,
+            'output' => '{"success":false,"errorCode":"page_not_found","message":"Page not found: /cmf/example/contents/missing"}',
+            'errorOutput' => '',
+            'timedOut' => false,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/missing', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('page_not_found', $result['errorCode']);
+        $this->assertStringContainsString('Page not found', $result['message']);
+    }
+
+    public function testDeletePageWithoutJsonReturnsDeleteFailedWithExitCodeDetails(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 7,
+            'output' => ' [WARNING] banner only',
+            'errorOutput' => 'some stderr noise',
+            'timedOut' => false,
+        ]);
+
+        $result = $service->deletePage('/cmf/example/contents/x', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('delete_failed', $result['errorCode']);
+        $this->assertStringContainsString('some stderr noise', $result['message']);
+        $this->assertSame(7, $result['details']['exitCode']);
+    }
+
+    public function testDeletePageWritesAuditLogOnSuccess(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 0,
+            'output' => '{"success":true,"message":"Page deleted successfully","path":"/cmf/example/contents/x","uuid":"u"}',
+            'errorOutput' => '',
+            'timedOut' => false,
+        ]);
+
+        $this->activityLogger->expects($this->once())
+            ->method('logMcpAction')
+            ->with('mcp_page_deleted', '/cmf/example/contents/x', 'de', $this->anything());
+
+        $service->deletePage('/cmf/example/contents/x', 'de');
+    }
+
+    public function testDeletePageSkipsAuditLogWhenRequested(): void
+    {
+        $service = $this->buildServiceWithSpawn([
+            'exitCode' => 0,
+            'output' => '{"success":true,"message":"Page deleted successfully","path":"/cmf/example/contents/x","uuid":"u"}',
+            'errorOutput' => '',
+            'timedOut' => false,
+        ]);
+
+        $this->activityLogger->expects($this->never())->method('logMcpAction');
+
+        $service->deletePage('/cmf/example/contents/x', 'de', skipAudit: true);
     }
 }
