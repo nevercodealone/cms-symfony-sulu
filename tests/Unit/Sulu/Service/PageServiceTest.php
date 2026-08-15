@@ -2991,4 +2991,41 @@ XML;
         $this->assertFalse($result['success']);
         $this->assertSame('page_not_found', $result['errorCode']);
     }
+
+    public function testDeletePageSafePassesThroughTimeoutErrorCode(): void
+    {
+        // deletePage mocked to return the timeout shape the Process wrapper
+        // produces when the spawned app:page:delete exceeds its limit.
+        $builder = $this->getMockBuilder(PageService::class)
+            ->setConstructorArgs([$this->connection, $this->activityLogger])
+            ->onlyMethods(['deletePage']);
+        $service = $builder->getMock();
+        $service->method('deletePage')->willReturn([
+            'success' => false,
+            'errorCode' => 'delete_timeout',
+            'message' => 'delete process exceeded 60s and was killed',
+        ]);
+
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql): array|false {
+            if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
+                return ['identifier' => self::TARGET_UUID];
+            }
+
+            return false;
+        });
+        $this->connection->method('fetchAllAssociative')->willReturn([]);
+
+        $scanner = $this->createMock(PageReferenceScanner::class);
+        $scanner->method('isUsedAsDataSource')->willReturn(false);
+        $scanner->method('findIncomingReferences')->willReturn([]);
+
+        $result = $service->deletePageSafe([
+            'path' => self::TARGET_PATH,
+            'confirm' => self::TARGET_PATH,
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('delete_timeout', $result['errorCode']);
+        $this->assertStringContainsString('get_structure', $result['nextAction']);
+    }
 }

@@ -17,6 +17,7 @@ use DOMDocument;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
@@ -44,8 +45,9 @@ use Sulu\Component\DocumentManager\DocumentManagerInterface;
  * - Don't add DocumentManager->clear() for cache management
  * - Don't wrap this in Sulu's PageDocument or StructureManager
  *
- * The only DocumentManager usage is deletePage() which requires it for proper
- * cleanup of routes and search indexes - and even that is carefully isolated.
+ * DocumentManager deletion runs in a FRESH process (app:page:delete via
+ * Symfony Process) - the in-process DocumentManager blocks indefinitely in
+ * the long-lived MCP server. See deletePage() and PageDeleteCommand.
  *
  * @see BlockWriter For XML block writing logic
  * @see BlockExtractor For XML block reading logic
@@ -54,6 +56,13 @@ class PageService
 {
     private const WORKSPACE_DEFAULT = 'default';
     private const WORKSPACE_LIVE = 'default_live';
+
+    /**
+     * Hard server-side limit for one spawned page-deletion process.
+     * Guarantees a structured delete_timeout error instead of a silent
+     * transport timeout in the MCP layer.
+     */
+    private const DELETE_PROCESS_TIMEOUT = 60;
 
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
@@ -1875,25 +1884,54 @@ class PageService
      */
     public function deletePage(string $identifier, string $locale = 'de', bool $skipAudit = false): array
     {
-        if (!$this->documentManager) {
-            return ['success' => false, 'message' => 'DocumentManager not available'];
+        if ($this->projectDir === null) {
+            return ['success' => false, 'message' => 'projectDir not configured'];
         }
 
         try {
-            // Find document by UUID or path
-            $document = $this->documentManager->find($identifier, $locale);
+            // Spawn a fresh process for the DocumentManager removal. The
+            // in-process DocumentManager blocks indefinitely in the long-lived
+            // MCP server (stale PHPCR session / trash-subscriber ORM
+            // connections) - see the architecture note at the top of this
+            // class and MediaService::saveViaMediaManager() for the same
+            // stale-connection failure mode. The hard timeout guarantees a
+            // structured error instead of a transport-level silence.
+            $process = new Process(
+                [$this->projectDir . '/bin/console', 'app:page:delete', $identifier, '--locale=' . $locale],
+                $this->projectDir
+            );
+            $process->setTimeout(self::DELETE_PROCESS_TIMEOUT);
+            $process->run();
 
-            if ($document === null) {
-                return ['success' => false, 'message' => 'Page not found: ' . $identifier];
+            // bin/console may print banners (e.g. the Sulu context warning)
+            // to stdout before the command's JSON - decode the last line
+            // that parses as a JSON object, not the whole stream.
+            $result = null;
+            $outputLines = explode("\n", trim($process->getOutput()));
+            for ($i = count($outputLines) - 1; $i >= 0; $i--) {
+                $line = trim($outputLines[$i]);
+                if ($line !== '' && str_starts_with($line, '{')) {
+                    $decoded = json_decode($line, true);
+                    if (is_array($decoded)) {
+                        $result = $decoded;
+                        break;
+                    }
+                }
             }
 
-            // Get path for logging before deletion
-            $path = method_exists($document, 'getPath') ? $document->getPath() : $identifier;
+            if (!$process->isSuccessful() || !is_array($result) || empty($result['success'])) {
+                $message = is_array($result) && isset($result['message'])
+                    ? (string) $result['message']
+                    : trim($process->getErrorOutput() ?: 'delete process failed with exit code ' . $process->getExitCode());
 
+                return [
+                    'success' => false,
+                    'errorCode' => is_array($result) && isset($result['errorCode']) ? (string) $result['errorCode'] : 'delete_failed',
+                    'message' => $message,
+                ];
+            }
 
-            // Remove the document (this handles both workspaces and routes)
-            $this->documentManager->remove($document);
-            $this->documentManager->flush();
+            $path = is_array($result) && !empty($result['path']) ? (string) $result['path'] : $identifier;
 
             // When called from deletePageSafe() the audit is enriched and written
             // by the caller - skip the basic log to avoid a double entry per delete.
@@ -1909,6 +1947,12 @@ class PageService
 
             return ['success' => true, 'message' => 'Page deleted successfully'];
 
+        } catch (ProcessTimedOutException $e) {
+            return [
+                'success' => false,
+                'errorCode' => 'delete_timeout',
+                'message' => 'delete process exceeded ' . self::DELETE_PROCESS_TIMEOUT . 's and was killed; verify the page state before retrying',
+            ];
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -2132,7 +2176,7 @@ class PageService
             $deleteResult = $this->deletePage($path, $locale, skipAudit: true);
             if (empty($deleteResult['success'])) {
                 return $this->deleteError(
-                    'delete_failed',
+                    isset($deleteResult['errorCode']) ? (string) $deleteResult['errorCode'] : 'delete_failed',
                     'deletePage failed: ' . $deleteResult['message'],
                     ['deleteResult' => $deleteResult]
                 );
@@ -2536,6 +2580,7 @@ class PageService
         'references_present' => 'call action=list_references on this path, then remove or update the referrers',
         'reparent_failed' => 'rename the colliding children first',
         'batch_too_large' => 'split into batches of max 10 paths',
+        'delete_timeout' => 'verify page state with action=get_structure; if it still exists, retry once',
         'delete_failed' => 'see details; retry once the underlying issue is fixed',
     ];
 
