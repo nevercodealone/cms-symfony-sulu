@@ -1010,11 +1010,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
@@ -1059,11 +1064,16 @@ XML;
         $snippetService->method('getSnippet')->willReturn(null);
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithSnippets]);
@@ -1116,11 +1126,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithMultiValuedSnippets]);
@@ -1172,11 +1187,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturn(['path' => '/cmf/example/contents/contact', 'props' => $xmlWithStringSnippet]);
@@ -2128,11 +2148,16 @@ XML;
             });
 
         $pageService = new PageService(
-            $this->connection,
-            $this->activityLogger,
-            null, null, null, null, null, null, null, null,
-            $snippetService
-        );
+$this->connection,
+$this->activityLogger,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+$snippetService);
 
         $this->connection->method('fetchAssociative')
             ->willReturnCallback(function ($sql, $params) use (&$callCount) {
@@ -2474,7 +2499,7 @@ XML;
     private function buildServiceForDeleteTest(?PageReferenceScanner $scanner = null, bool $expectDelete = false): PageService
     {
         $builder = $this->getMockBuilder(PageService::class)
-            ->setConstructorArgs([$this->connection, $this->activityLogger, null, null, null, null, null, null, null, null, null, null, $scanner])
+            ->setConstructorArgs([$this->connection, $this->activityLogger, null, null, null, null, null, null, null, null, null, $scanner])
             ->onlyMethods(['deletePage']);
 
         if ($expectDelete) {
@@ -3221,7 +3246,7 @@ XML;
 </sv:node>
 XML;
 
-        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array|false {
+        $this->connection->method('fetchAssociative')->willReturnCallback(function (string $sql) use ($defaultProps, $liveProps): array {
             if (str_contains($sql, 'workspace_name = ?')) {
                 // getLiveState: LIVE workspace
                 return ['props' => $liveProps];

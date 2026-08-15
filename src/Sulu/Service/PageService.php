@@ -19,7 +19,6 @@ use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
-use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 /**
  * Service for Sulu page CRUD operations via direct database access.
@@ -77,7 +76,6 @@ class PageService
         ?BlockExtractor $blockExtractor = null,
         ?BlockWriter $blockWriter = null,
         ?BlockValidator $blockValidator = null,
-        private ?DocumentManagerInterface $documentManager = null,
         private ?HttpCacheClearer $httpCacheClearer = null,
         private ?SnippetService $snippetService = null,
         private ?string $projectDir = null,
@@ -1888,6 +1886,10 @@ class PageService
      * @param string $identifier UUID or path of the page
      * @param string $locale Locale for search deindexing
      * @return array{success: bool, message: string}
+     */
+    /**
+     * @param string $identifier UUID or path of the page
+     * @return array{success: bool, message: string, errorCode?: string}
      */
     public function deletePage(string $identifier, string $locale = 'de', bool $skipAudit = false): array
     {
