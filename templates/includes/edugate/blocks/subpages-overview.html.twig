@@ -14,7 +14,7 @@
                                 <div class="edugate-layout-2">
                                     <div class="edugate-layout-2-wrapper">
                                         <div class="edugate-content">
-                                            <a href="{{ item.url }}" class="title" data-q="list-item-title">
+                                            <a href="{{ sulu_content_path(item.url) }}" class="title" data-q="list-item-title">
                                                 {{ item.title }}
                                             </a>
                                             <div class="info">
@@ -45,7 +45,7 @@
                                             <div class="description" data-q="list-item-description">
                                                 {{ item.excerptDescription|raw }}
                                             </div>
-                                            <a href="{{ item.url }}" class="btn btn-green" data-q="list-item-url"><span>Zum Kurs</span></a>
+                                            <a href="{{ sulu_content_path(item.url) }}" class="btn btn-green" data-q="list-item-url"><span>Zum Kurs</span></a>
                                         </div>
                                         <div class="edugate-image">
                                             <img src="{{ item.image[0].formats['400x300'] }}" alt="{{ item.title }} - {{ item.seoDescription }}" title="{{ item.title }} - {{ item.seoDescription }}" class="img-responsive" data-q="list-item-img"/>
