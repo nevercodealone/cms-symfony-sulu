@@ -43,7 +43,7 @@ final class BlockTypeRegistry
         'code' => 'Standalone code snippet block with syntax highlighting.',
         'introduction' => 'Page introduction with headline, two description fields, and optional items.',
         'table' => 'Data table with 3 columns. Uses rows[] array (NOT items).',
-        'quote' => 'Standalone quote block with structured attribution (author, role, source, date, URL). Renders as <blockquote> with <figcaption>.',
+        'quote' => 'Standalone quote block with structured attribution. Renders as <blockquote> with <figcaption>. Required fields: text, author, source (mandatory in the template XML - missing them makes the page unsaveable in the Sulu admin with "The form contains invalid values"). Optional: role, date, url.',
 
         // === HERO BLOCKS ===
         'hero' => 'Full-width hero banner with image, headline, description, and CTA button.',
