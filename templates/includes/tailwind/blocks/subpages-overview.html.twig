@@ -15,7 +15,7 @@
         {% set description = item.seoDescription %}
       {% endif %}
       {% include 'includes/tailwind/includes/article-card.html.twig' with {
-        'url': item.url,
+        'url': sulu_content_path(item.url),
         'title': item.title,
         'image_src': imageSrc,
         'image_alt': imageAlt,

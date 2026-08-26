@@ -36,7 +36,7 @@
                 {% set imageAlt = page.excerptImages[0].title %}
               {% endif %}
               {% include 'includes/tailwind/includes/article-card.html.twig' with {
-                'url': page.url,
+                'url': sulu_content_path(page.url),
                 'title': page.title,
                 'image_src': imageSrc,
                 'image_alt': imageAlt,

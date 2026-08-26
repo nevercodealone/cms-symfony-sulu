@@ -67,7 +67,7 @@
                                                 <ul class="sub-menu sub-menu-style-1">
                                                     {% for child in item.children %}
                                                         <li>
-                                                            <a href="{{ child.url }}" title="{{ child.title }}">
+                                                            <a href="{{ sulu_content_path(child.url) }}" title="{{ child.title }}">
                                                                 {{ child.excerpt.title|default(child.title) }}
                                                             </a>
                                                         </li>
