@@ -79,12 +79,12 @@ Blocks with nested items require the correct `type` value for each nested item. 
 | `card-trio` | `cards` | `card` | `{"type":"card","title":"Title","icon":"code"}` |
 | `table` | `rows` | `row` | `{"type":"row","cell1":"A","cell2":"B","cell3":"C"}` |
 | `image-with-flags` | `flags` | `flag` | `{"type":"flag","language":"en","url":"/en"}` |
-| `headline-paragraphs` | `items` | `description` or `code` | `{"type":"description","description":"<p>Text</p>"}` |
-| `feature` | `items` | `items` | `{"type":"items","headline":"Title","description":"<p>Text</p>"}` |
-| `feature-default` | `items` | `items` | `{"type":"items","headline":"Title","description":"<p>Text</p>"}` |
+| `headline-paragraphs` | `items` | `description` or `code` | `{"type":"description","description":"Text"}` |
+| `feature` | `items` | `items` | `{"type":"items","headline":"Title","description":"Text"}` |
+| `feature-default` | `items` | `items` | `{"type":"items","headline":"Title","description":"Text"}` |
 | `feature-with-icons` | `items` | `items` | `{"type":"items","headline":"Title","text":"Text"}` |
 | `formats` | `items` | `items` | `{"type":"items","icon":"user","headline":"Title"}` |
-| `introduction` | `items` | `items` | `{"type":"items","description":"<p>Text</p>"}` |
+| `introduction` | `items` | `items` | `{"type":"items","description":"Text"}` |
 | `hero-image-right` | `items` | `items` | `{"type":"items","headline":"Title","text":"Text"}` |
 | `logo-gallary` | `items` | `items` | `{"type":"items","headline":"Alt","url":"https://..."}` |
 
@@ -135,33 +135,14 @@ BlockExtractor reads both the correct Reference format and the legacy JSON Strin
 
 ---
 
-## IMPORTANT: Rich Text vs Plain Text Fields
+## IMPORTANT: Field-Type Rules (Single Source)
 
-Sulu has two field types. Using the wrong format breaks frontend rendering.
-
-### Rich-text fields (HTML required)
-These fields MUST contain HTML tags like `<p>`, `<strong>`, `<a>`:
-- `description` — in 25+ block types
-- `descriptiontwo` — in introduction block
-- `code` — in headline-paragraphs nested code items (auto-escaped: pass plain text, MCP wraps in `<p>` and escapes HTML entities)
-- `html` — in html-raw block (iframes, embeds)
-
-Correct: `"description": "<p>This is a paragraph with <strong>bold</strong> text.</p>"`
-
-### Plain-text fields (NO HTML — ever)
-ALL other fields are plain text. Never wrap them in HTML tags:
-- `headline`, `subline`, `text`, `title`, `buttonText`, `linkText`, `badgeText`
-- `columnheader1/2/3`, `cell1/2/3`, `language`, `playlistid`
-- `seoTitle`, `seoDescription`, `excerptTitle`, `excerptDescription`
-- `url`, `urltwo`, `textone`, `texttwo`, `buttonTextTwo`
-- FAQ `subline` (this is plain text, NOT HTML)
-
-Correct: `"headline": "Meine Überschrift"`
-WRONG: `"headline": "<p>Meine Überschrift</p>"` — tags render as visible text
-
-### Why this matters
-All 33 Twig block templates render plain-text fields auto-escaped (no |raw filter).
-HTML tags in plain-text fields appear literally as `<p>...</p>` on the website.
+All field-type rules — which fields accept HTML, how prose and code items are
+written — are defined in exactly one place:
+`App\Sulu\Block\BlockTypeRegistry::FIELD_TYPES_RULE`, served live in the
+`sulu_pages` tool description (FIELD TYPES section) and via `list_block_types`.
+This file intentionally does not restate them — read them there. Do not
+duplicate the rules anywhere else; point to that source instead.
 
 ---
 
@@ -518,7 +499,7 @@ Primary block for tutorials, guides, documentation with alternating text and cod
 {
   "blockType": "headline-paragraphs",
   "headline": "Installation Guide",
-  "items": "[{\"type\":\"description\",\"description\":\"<p>Install dependencies:</p>\"},{\"type\":\"code\",\"code\":\"composer require vendor/package\"},{\"type\":\"description\",\"description\":\"<p>Configuration complete.</p>\"}]"
+  "items": "[{\"type\":\"description\",\"description\":\"Install dependencies:\"},{\"type\":\"code\",\"code\":\"composer require vendor/package\"},{\"type\":\"description\",\"description\":\"Configuration complete.\"}]"
 }
 ```
 
@@ -601,9 +582,9 @@ Introduction block with headline, description, bullet items, and bottom text.
 {
   "blockType": "introduction",
   "headline": "Why Choose Us",
-  "description": "<p>We offer the best service.</p>",
-  "items": "[{\"description\":\"<p>Fast delivery</p>\"},{\"description\":\"<p>24/7 support</p>\"}]",
-  "descriptiontwo": "<p>Contact us today!</p>"
+  "description": "We offer the best service.",
+  "items": "[{\"description\":\"Fast delivery\"},{\"description\":\"24/7 support\"}]",
+  "descriptiontwo": "Contact us today!"
 }
 ```
 
@@ -666,7 +647,7 @@ Hero section with image, headline, description, and CTA button.
 {
   "blockType": "hero",
   "headline": "Welcome to Our Site",
-  "description": "<p>We build amazing software.</p>",
+  "description": "We build amazing software.",
   "buttonText": "Get Started",
   "url": "https://example.com/signup"
 }
@@ -758,7 +739,7 @@ CTA section with headline, description, and two buttons.
 {
   "blockType": "cta-button",
   "headline": "Ready to Start?",
-  "description": "<p>Join thousands of happy customers.</p>",
+  "description": "Join thousands of happy customers.",
   "text": "Sign Up Free",
   "url": "/signup",
   "texttwo": "Learn More",
@@ -1015,7 +996,7 @@ Card section with 1-3 cards featuring icons, badges, tags, and internal page lin
   "path": "/cmf/example/contents/my-page",
   "blockType": "card-trio",
   "headline": "What We Offer",
-  "items": "[{\"type\":\"card\",\"icon\":\"code\",\"title\":\"Development\",\"description\":\"<p>Custom software.</p>\",\"tags\":[{\"type\":\"tag\",\"text\":\"PHP\"},{\"type\":\"tag\",\"text\":\"Symfony\"}],\"linkText\":\"Learn more\",\"linkPage\":\"page-uuid\",\"badgeType\":\"success\",\"badgeText\":\"Popular\"},{\"type\":\"card\",\"icon\":\"users\",\"title\":\"Consulting\",\"description\":\"<p>Expert advice.</p>\",\"tags\":[],\"linkText\":\"Get started\",\"linkPage\":\"page-uuid\",\"badgeType\":\"none\"}]",
+  "items": "[{\"type\":\"card\",\"icon\":\"code\",\"title\":\"Development\",\"description\":\"Custom software.\",\"tags\":[{\"type\":\"tag\",\"text\":\"PHP\"},{\"type\":\"tag\",\"text\":\"Symfony\"}],\"linkText\":\"Learn more\",\"linkPage\":\"page-uuid\",\"badgeType\":\"success\",\"badgeText\":\"Popular\"},{\"type\":\"card\",\"icon\":\"users\",\"title\":\"Consulting\",\"description\":\"Expert advice.\",\"tags\":[],\"linkText\":\"Get started\",\"linkPage\":\"page-uuid\",\"badgeType\":\"none\"}]",
   "locale": "de"
 }
 ```
@@ -1237,7 +1218,7 @@ Fetches and displays WordPress posts.
 {"tool": "sulu-page-create", "parentPath": "/cmf/example/contents/preise", "title": "Preisliste", "resourceSegment": "/preisliste"}
 
 // 2. Add table block - NOTE: nestedType is "row"
-{"tool": "sulu-block-add", "path": "/cmf/example/contents/preise/preisliste", "blockType": "table", "headline": "Unsere Tarife", "description": "<p>Wählen Sie den passenden Tarif.</p>", "columnheader1": "Tarif", "columnheader2": "Preis", "columnheader3": "Funktionen", "items": "[{\"type\":\"row\",\"cell1\":\"Starter\",\"cell2\":\"9,99 €\",\"cell3\":\"5 Projekte\"},{\"type\":\"row\",\"cell1\":\"Professional\",\"cell2\":\"29,99 €\",\"cell3\":\"Unbegrenzt\"}]"}
+{"tool": "sulu-block-add", "path": "/cmf/example/contents/preise/preisliste", "blockType": "table", "headline": "Unsere Tarife", "description": "Wählen Sie den passenden Tarif.", "columnheader1": "Tarif", "columnheader2": "Preis", "columnheader3": "Funktionen", "items": "[{\"type\":\"row\",\"cell1\":\"Starter\",\"cell2\":\"9,99 €\",\"cell3\":\"5 Projekte\"},{\"type\":\"row\",\"cell1\":\"Professional\",\"cell2\":\"29,99 €\",\"cell3\":\"Unbegrenzt\"}]"}
 
 // 3. Publish
 {"tool": "sulu-page-publish", "path": "/cmf/example/contents/preise/preisliste"}
@@ -1483,7 +1464,7 @@ Response:
   "nested": "faqs",
   "nestedType": "items",
   "nestedProperties": ["headline", "subline"],
-  "description": "FAQ section with expandable questions/answers. Uses faqs[] array (NOT items).",
+  "description": "FAQ section with expandable questions/answers. Entries passed via the items parameter on add_block/append_to_block/update_block; stored as faqs[]. Only update_blocks accepts the faqs key directly.",
   "example": {
     "type": "faq",
     "faqs": [
@@ -1537,7 +1518,7 @@ These contact snippets are available for use in `contact` blocks via the `snippe
   "path": "/cmf/example/contents/my-page",
   "blockType": "contact",
   "snippets": "[\"cdba3044-9725-41c0-8056-0437dfae2841\"]",
-  "description": "<p>Kontaktieren Sie uns für KI Content Marketing.</p>"
+  "description": "Kontaktieren Sie uns für KI Content Marketing."
 }
 ```
 
@@ -1590,7 +1571,7 @@ Use these pages as templates with `copy_page` to quickly create new content:
 {"action": "copy_page", "sourcePath": "/cmf/example/contents/glossare/nca-php-glossar/phpunit", "parentPath": "/cmf/example/contents/glossare/nca-php-glossar", "title": "PHPStan", "resourceSegment": "/phpstan"}
 
 // Step 2: Update the first block with new content
-{"action": "update_block", "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan", "position": 0, "headline": "Was ist PHPStan?", "items": "[{\"type\":\"description\",\"description\":\"<p>PHPStan ist ein statisches Analyse-Tool für PHP.</p>\"}]"}
+{"action": "update_block", "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan", "position": 0, "headline": "Was ist PHPStan?", "items": "[{\"type\":\"description\",\"description\":\"PHPStan ist ein statisches Analyse-Tool für PHP.\"}]"}
 
 // Step 3: Publish when ready
 {"action": "publish", "path": "/cmf/example/contents/glossare/nca-php-glossar/phpstan"}
