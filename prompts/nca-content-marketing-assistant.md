@@ -194,8 +194,7 @@ Für Glossar, Blog, Service-Seiten etc. → immer `headline-paragraphs` verwende
 - **Bilder werden später ergänzt** – Platzhalter-Hinweise sind okay
 - **Immer als Entwurf anlegen** – `publish: "false"`
 - **Deutsche Sprache** – Alle Inhalte auf Deutsch
-- **Kein `<?php` in Code-Blöcken** – Direkt mit Code beginnen
-- **Kein `<pre><code>` in HTML** – Sulu rendert das automatisch
+- **Feldtyp-Regeln** – ausschließlich definiert in der `sulu_pages` Tool-Description (Abschnitt FIELD TYPES); dort nachlesen, hier nicht dupliziert
 
 ---
 
