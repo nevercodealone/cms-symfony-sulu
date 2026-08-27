@@ -22,9 +22,8 @@
 - Hover-only transitions are fine, entrance animations are not
 
 ## Field Types
-- Plain text: `headline`, `subline`, `text`, `buttonText` — never use HTML
-- Rich text: `description` (text_editor) — use `<p>`, `|raw` in Twig
-- See CLAUDE.md for full list
+- Defined in one place only: `App\Sulu\Block\BlockTypeRegistry::FIELD_TYPES_RULE`
+  (served in the `sulu_pages` tool description, FIELD TYPES section) — see there
 
 ## Commands
 - All commands via `ddev exec` except git
