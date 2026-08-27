@@ -59,30 +59,43 @@ class SuluPagesTool implements StreamableToolInterface
 
     public function getDescription(): string
     {
+        $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
+
         return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
-            'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. ' .
+            'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. Fails with "Page already exists at: <path>" when the resource segment is taken — run list with pathPrefix set to the parent path first and inspect the result instead of retrying. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
             'UPDATE EXCERPT: path + excerptTitle/excerptDescription/excerptImage. Excerpts are teaser metadata shown in listing pages, subpages-overview blocks, and social sharing previews. ' .
             'UPDATE PAGE TITLE: path + title. Updates the page title. ' .
             'DELETE PAGE - safe removal; page goes to Sulu trash (recoverable via admin only). WORKFLOW (follow exactly): 1) dryRun: {"action":"delete_page","path":"/cmf/example/contents/foo","confirm":"/cmf/example/contents/foo","dryRun":"true"} 2) read response.checks (all "pass") and response.descendantCount 3) execute: same call with "dryRun":"false"; if descendantCount>0 add "children":"cascade","expectedChildCount":<descendantCount from step 2> or "children":"reparent". REQUIRED: path, confirm (confirm MUST byte-for-byte equal path). ERRORS return nextAction field - follow it (e.g. page_published -> unpublish first, references_present -> call list_references first). ON SUCCESS: returns uuid, trashId, cacheCleared=true. ' .
             'DELETE PAGES - batch safe removal (max 10). WORKFLOW: 1) dryRun: {"action":"delete_pages","paths":"[\"/cmf/.../a\",\"/cmf/.../b\"]","confirm":"[\"/cmf/.../a\",\"/cmf/.../b\"]","dryRun":"true"} 2) read response.preconditions (all success=true) 3) execute: same paths and confirm with "dryRun":"false". REQUIRED: paths (JSON array), confirm (a JSON array containing exactly the same paths in the same order - any valid JSON encoding is accepted, escaped or unescaped slashes). RULE: a path is deletable in batch only when every direct child is also listed in paths. Paths are sorted deepest-first internally. All-or-nothing: any failure deletes nothing. ' .
             'LIST REFERENCES - incoming-reference report. {"action":"list_references","path":"/cmf/example/contents/foo"}. Returns every page/snippet that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Use before delete (to satisfy the references_present check) or before rename. ' .
-            'DEFAULT BLOCK: headline-paragraphs for ALL content: {"type":"headline-paragraphs","headline":"Title","items":[{"type":"description","description":"<p>Text</p>"}]}. ' .
-            'For code: {"type":"headline-paragraphs","headline":"Code Example","items":[{"type":"description","description":"<p>Intro</p>"},{"type":"code","code":"echo 1;","language":"php"}]}. ' .
-            'OTHER BLOCKS: faq (faqs array), table (rows array), feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
+            'DEFAULT BLOCK: headline-paragraphs for ALL content, canonical example (same as list_block_types): ' . $canonicalExample . '. ' .
+            'OTHER BLOCKS: faq, table, feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
             'PAGE-TEASER: page (UUID of target page, required), headline maps to buttonText, content maps to showImage ("1" or "0"). Example: blockType "page-teaser", page "uuid-of-target-page". ' .
             'HTML-RAW: blockType "html-raw", html "<iframe src=...></iframe>". For YouTube embeds, custom HTML, and iframes. ' .
-            'FAQ: {"type":"faq","faqs":[{"headline":"Question?","subline":"Answer"}]}. ' .
+            'FAQ: entries always via the items parameter (auto-mapped per block type): add_block/append_to_block/update_block with blockType "faq" take items [{"type":"items","headline":"Question?","subline":"Answer"}]. Only update_blocks accepts the faqs key directly. ' .
             'BATCH OPERATIONS: remove_blocks with positions JSON array (auto-sorted highest-first). update_blocks with updates JSON array (max 10, each with position + data). ' .
             'SUBPAGES-OVERVIEW: dataSource (UUID of source page) is auto-detected from parent page if omitted. Optional: includeSubFolders (default true). ' .
-            'FIELD TYPES: Only description/descriptiontwo/code/html accept HTML. All other fields (headline, subline, buttonText, title, etc.) are plain text — never use HTML tags in them. description fields MUST be wrapped in <p> tags (e.g. "<p>Your text here</p>"). Without <p> tags, content will not render correctly in the frontend. ' .
+            BlockTypeRegistry::FIELD_TYPES_RULE . ' ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
             'UPDATE MEDIA: update_media + mediaId + title. Updates the alt-text/title of an existing media item. Use list_media to find IDs. ' .
             'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
+    }
+
+    /**
+     * @param array<mixed>|null $example
+     */
+    private function encodeExample(?array $example): string
+    {
+        if ($example === null) {
+            return '[]';
+        }
+
+        return json_encode($example, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
     }
 
     public function getInputSchema(): StructuredSchema
@@ -139,7 +152,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'items',
                 type: PropertyType::STRING,
-                description: 'JSON array of items. For headline-paragraphs: [{"type":"description","content":"<p>HTML</p>"},{"type":"code","code":"...","language":"php"}]. For FAQ append_to_block: [{"headline":"Question?","subline":"Answer"}]. For table: [{"col1":"...","col2":"..."}]',
+                description: 'JSON array of items — the entry parameter for add_block, append_to_block and update_block (auto-mapped per block type; only update_blocks takes the native keys faqs/rows/flags/cards). For headline-paragraphs: [{"type":"description","description":"Text"},{"type":"code","code":"...","language":"php"}]. For FAQ blocks: [{"type":"items","headline":"Question?","subline":"Answer"}]. For table: [{"col1":"...","col2":"..."}]',
                 required: false
             ),
             new SchemaProperty(
