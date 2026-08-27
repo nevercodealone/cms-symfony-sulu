@@ -61,6 +61,36 @@ class SuluPagesToolTest extends TestCase
         $this->assertNotEmpty($description);
     }
 
+    public function testGetDescriptionUsesCanonicalFieldTypesRule(): void
+    {
+        $description = $this->tool->getDescription();
+
+        $this->assertStringContainsString(BlockTypeRegistry::FIELD_TYPES_RULE, $description);
+        $this->assertStringNotContainsString('Only description/descriptiontwo/code/html accept HTML', $description);
+        $this->assertStringNotContainsString('MUST be wrapped in <p>', $description);
+    }
+
+    public function testGetDescriptionDocumentsDuplicateSlugFailure(): void
+    {
+        $description = $this->tool->getDescription();
+
+        $this->assertStringContainsString('Page already exists at: <path>', $description);
+        $this->assertStringContainsString('run list with pathPrefix', $description);
+    }
+
+    public function testGetDescriptionDerivesExampleFromRegistry(): void
+    {
+        $description = $this->tool->getDescription();
+        $expected = json_encode(
+            $this->blockTypeRegistry->getExample('headline-paragraphs'),
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+
+        $this->assertStringContainsString($expected, $description);
+        $this->assertStringContainsString('function foo(): void', $description);
+        $this->assertStringNotContainsString('<p>Text</p>', $description);
+    }
+
     /**
      * This test ensures all PropertyTypes in the schema are valid.
      * It would have caught the BOOLEAN issue before deployment.
@@ -1212,7 +1242,10 @@ class SuluPagesToolTest extends TestCase
         $this->assertStringContainsString('update_blocks', $description);
         $this->assertStringContainsString('EFFICIENCY', $description);
         $this->assertStringContainsString('RESPONSE CONTROL', $description);
-        $this->assertStringContainsString('MUST be wrapped in <p> tags', $description);
+        $this->assertStringContainsString('code is plain text only', $description);
+        $this->assertStringContainsString('do NOT wrap in <p> tags', $description);
+        $this->assertStringContainsString('entries always via the items parameter', $description);
+        $this->assertStringContainsString('Only update_blocks accepts the faqs key directly', $description);
     }
 
     /**
