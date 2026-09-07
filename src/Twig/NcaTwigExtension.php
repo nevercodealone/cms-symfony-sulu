@@ -9,6 +9,7 @@ use App\Sulu\Service\LatestArticlesService;
 use App\Service\YouTubeService;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
@@ -22,6 +23,16 @@ class NcaTwigExtension extends AbstractExtension
         private readonly LatestArticlesService $latestArticlesService,
         private readonly RequestStack $requestStack,
     ) {
+    }
+
+    public function getFilters(): array
+    {
+        return [
+            new TwigFilter(
+                'nca_canonical_url',
+                [$this, 'canonicalUrl']
+            ),
+        ];
     }
 
     public function getFunctions(): array
@@ -42,9 +53,25 @@ class NcaTwigExtension extends AbstractExtension
         ];
     }
 
+    /**
+     * Force the canonical URL onto the live domain, keeping only the path.
+     */
+    public function canonicalUrl(string $url): string
+    {
+        $path = \parse_url($url, \PHP_URL_PATH);
+
+        if (!\is_string($path) || '' === $path) {
+            $path = '/';
+        } elseif (!\str_starts_with($path, '/')) {
+            $path = '/' . $path;
+        }
+
+        return 'https://nevercodealone.de' . $path;
+    }
+
   /**
-   * @return array<int, mixed>
-   */
+    * @return array<int, mixed>
+    */
     public function playlistItemsListByPlaylistId(string $playlistId): array
     {
         return $this->youTubeService->getItemsFromChannel($playlistId);
