@@ -54,11 +54,6 @@
                                                         <title>User</title>
                                                     </meta>
                                                 </param>
-                                                <param name="newsletter">
-                                                    <meta>
-                                                        <title>Newsletter</title>
-                                                    </meta>
-                                                </param>
                                                 <param name="github">
                                                     <meta>
                                                         <title>GitHub</title>
