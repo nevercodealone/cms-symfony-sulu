@@ -38,10 +38,15 @@
     {% set seoRobots = seoRobots ~ ',follow' -%}
 {%- endif -%}
 
-{% set seoCanonical = seo.canonicalUrl|default() %}
+{% set seoCanonical = '' %}
 
-{%- if not seoCanonical and shadowBaseLocale and localizations[shadowBaseLocale]|default() %}
-    {% set seoCanonical = localizations[shadowBaseLocale].url %}
+{#- canonical points to the page's active route, never to the requested URL -#}
+{%- if app.request.attributes.get('structure') %}
+    {%- if shadowBaseLocale and localizations[shadowBaseLocale]|default() %}
+        {% set seoCanonical = localizations[shadowBaseLocale].url %}
+    {%- elseif localizations[app.request.locale]|default() and localizations[app.request.locale].alternate|default(true) %}
+        {% set seoCanonical = localizations[app.request.locale].url %}
+    {%- endif %}
 {%- endif -%}
 
 {#- render blocks -#}
@@ -85,6 +90,6 @@
 {%- endblock -%}
 
 {%- block canonical -%}
-    {#- Set canonical to itself if a bot clone the page -#}
-    <link rel="canonical" href="{{ seoCanonical|default(app.request.uri) }}">
+    {#- force the live domain so environment hosts never leak into the canonical -#}
+    <link rel="canonical" href="{{ (seoCanonical|default(app.request.uri))|nca_canonical_url }}">
 {%- endblock -%}
