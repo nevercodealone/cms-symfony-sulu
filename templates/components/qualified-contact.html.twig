@@ -1,3 +1,4 @@
+<!-- components/qualified-contact.html.twig -->
 <div {{ attributes.defaults({
     class: 'relative font-sans antialiased text-gray-900'
 }) }}>
@@ -10,8 +11,8 @@
     {# === MOBILE: vertical accordion === #}
     <section class="md:hidden">
       <header class="mb-4">
-        <p class="text-xs font-mono uppercase tracking-[0.3em] font-bold text-gray-600 mb-2">Anfrage-Konfiguration</p>
-        <h1 class="text-2xl font-extrabold tracking-tight text-gray-900">Starten Sie Ihre Anfrage</h1>
+        <div class="text-xs font-mono tracking-[0.3em] font-bold text-gray-600 mb-2">Anfrage-Konfiguration</div>
+        <div class="text-2xl font-extrabold tracking-tight text-gray-900">Starten Sie Ihre Anfrage</div>
       </header>
 
       <div class="mb-6 flex items-center justify-between px-2">
@@ -52,7 +53,7 @@
               <div class="accordion-inner px-4 pb-4">
                 <p class="text-sm text-gray-600 leading-relaxed mb-4">{{ service.description }}</p>
                 <div class="flex items-center gap-2 mb-4">
-                  <span class="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-gray-100 rounded text-gray-700">{{ service.badge }}</span>
+                  <span class="font-mono text-[10px] font-bold tracking-wider px-2 py-1 bg-gray-100 rounded text-gray-700">{{ service.badge }}</span>
                 </div>
                 <button
                   type="button"
@@ -76,12 +77,12 @@
       <div class="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white border-2 border-green-700 shadow-[0_32px_64px_-12px_rgba(0,107,44,0.08)]">
         <div class="md:col-span-8 p-8 md:p-12 lg:p-16">
           <header class="mb-8">
-            <p class="text-sm font-mono uppercase tracking-[0.3em] font-bold flex items-center gap-2 text-gray-900 mb-3">
+            <div class="text-sm font-mono tracking-[0.3em] font-bold flex items-center gap-2 text-gray-900 mb-3">
               <span class="w-8 h-px bg-gray-500"></span>
               Anfrage-Konfiguration
-            </p>
-            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">Worauf liegt dein Fokus?</h2>
-            <p class="text-gray-600">Wähle die Expertise, die dein Projekt jetzt am dringendsten benötigt.</p>
+            </div>
+            <div class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">Worauf liegt dein Fokus?</div>
+            <div class="text-gray-600">Wähle die Expertise, die dein Projekt jetzt am dringendsten benötigt.</div>
           </header>
 
           <div class="space-y-4">
@@ -121,8 +122,8 @@
                 <span class="material-symbols-outlined text-green-700 text-3xl">calendar_today</span>
               </div>
               <div>
-                <p class="text-[10px] uppercase tracking-widest font-bold text-white/80 font-mono">Exklusiv &amp; Unverbindlich</p>
-                <h3 class="font-bold text-white leading-tight text-sm">30 Minuten Kennenlernen <br>mit Hands-on Tipps</h3>
+                <div class="text-[10px] tracking-widest font-bold text-white/80 font-mono">Exklusiv &amp; Unverbindlich</div>
+                <div class="font-bold text-white leading-tight text-sm">30 Minuten Kennenlernen <br>mit Hands-on Tipps</div>
               </div>
             </div>
 
@@ -130,7 +131,7 @@
               <div class="w-8 h-8 rounded-full bg-green-700/10 flex items-center justify-center">
                 <span class="material-symbols-outlined text-green-700 text-xl">analytics</span>
               </div>
-              <h2 class="font-bold text-sm uppercase tracking-widest text-gray-900">Prozess-Ablauf</h2>
+              <div class="font-bold text-sm tracking-widest text-gray-900">Prozess-Ablauf</div>
             </div>
 
             <nav class="relative space-y-8">
@@ -138,8 +139,8 @@
                 <div class="relative flex items-start gap-6">
                   <div class="z-10 w-10 h-10 bg-green-700 text-white flex items-center justify-center font-mono font-bold shadow-[0_0_20px_rgba(0,107,44,0.2)] shrink-0">{{ loop.index }}</div>
                   <div>
-                    <h3 class="font-bold text-sm tracking-tight mb-1 uppercase">{{ trail.label }}</h3>
-                    <p class="text-xs text-gray-600 leading-relaxed">{{ trail.hint }}</p>
+                    <div class="font-bold text-sm tracking-tight mb-1">{{ trail.label }}</div>
+                    <div class="text-xs text-gray-600 leading-relaxed">{{ trail.hint }}</div>
                   </div>
                 </div>
               {% endfor %}
@@ -168,7 +169,7 @@
         >
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
-        <span class="text-xs font-mono uppercase tracking-widest text-gray-900 flex-1 text-center">Anfrage</span>
+        <span class="text-xs font-mono tracking-widest text-gray-900 flex-1 text-center">Anfrage</span>
         <span class="w-10"></span>
       </header>
 
@@ -183,8 +184,8 @@
       </div>
 
       <div class="mb-6">
-        <h1 class="text-2xl font-bold tracking-tight text-gray-900 mb-1">Dein Setup</h1>
-        <p class="text-sm text-gray-600">Damit wir den Aufwand abschätzen können, brauchen wir ein paar technische Details.</p>
+        <div class="text-2xl font-bold tracking-tight text-gray-900 mb-1">Dein Setup</div>
+        <div class="text-sm text-gray-600">Damit wir den Aufwand abschätzen können, brauchen wir ein paar technische Details.</div>
       </div>
 
       <form class="flex flex-col gap-6">
@@ -215,7 +216,7 @@
               {% for group_name, options in this.groupedCheckboxOptions %}
                 <div class="flex flex-col gap-2 {{ not loop.first ? 'mt-2' : '' }}">
                   {% if group_name is not empty %}
-                    <span class="text-xs font-mono text-gray-600 uppercase tracking-wider">{{ group_name }}</span>
+                    <span class="text-xs font-mono text-gray-600 tracking-wider">{{ group_name }}</span>
                   {% endif %}
                   {% for opt in options %}
                     <label class="flex items-start gap-3 p-3 border border-gray-300 rounded bg-white cursor-pointer hover:border-green-700 transition-colors focus-within:ring-2 focus-within:ring-green-700">
@@ -271,8 +272,8 @@
       <div class="max-w-7xl mx-auto px-6 flex gap-6">
         <div class="flex-1 bg-white border border-gray-300 rounded-md p-8 shadow-sm">
           <div class="mb-8">
-            <h1 class="text-3xl font-bold tracking-tight text-gray-900 mb-1">Technische Details definieren</h1>
-            <p class="text-lg text-gray-600">Gib uns einen Einblick in dein aktuelles Setup, damit wir dich optimal beraten können.</p>
+            <div class="text-3xl font-bold tracking-tight text-gray-900 mb-1">Technische Details definieren</div>
+            <div class="text-lg text-gray-600">Gib uns einen Einblick in dein aktuelles Setup, damit wir dich optimal beraten können.</div>
           </div>
 
           <form class="space-y-8">
@@ -303,7 +304,7 @@
                   {% for group_name, options in this.groupedCheckboxOptions %}
                     <div class="{{ not loop.first ? 'mt-6 pt-4 border-t border-gray-300' : '' }}">
                       {% if group_name is not empty %}
-                        <p class="text-xs font-mono text-gray-600 uppercase tracking-widest mb-3">{{ group_name }}</p>
+                        <p class="text-xs font-mono text-gray-600 tracking-widest mb-3">{{ group_name }}</p>
                       {% endif %}
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {% for opt in options %}
@@ -348,7 +349,7 @@
 
         <aside class="w-80 flex-shrink-0">
           <div class="bg-white border border-gray-300 rounded-md p-4 sticky top-32">
-            <h3 class="text-sm font-mono text-gray-600 mb-6 uppercase tracking-widest font-bold">Fortschritt</h3>
+            <div class="text-sm font-mono text-gray-600 mb-6 tracking-widest font-bold">Fortschritt</div>
             <ul class="space-y-6 relative before:absolute before:inset-y-0 before:left-3 before:w-px before:bg-gray-300">
               <li class="relative flex items-start gap-4">
                 <span class="w-6 h-6 rounded-full bg-white border-2 border-green-700 flex items-center justify-center z-10 shrink-0">
@@ -394,7 +395,7 @@
         >
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
-        <span class="text-xs font-mono uppercase tracking-widest text-gray-900 flex-1 text-center">Anfrage</span>
+        <span class="text-xs font-mono tracking-widest text-gray-900 flex-1 text-center">Anfrage</span>
         <span class="w-10"></span>
       </header>
 
@@ -490,8 +491,8 @@
       <div class="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
         <div class="md:col-span-8 flex flex-col gap-8">
           <header>
-            <h1 class="text-3xl font-bold tracking-tight text-gray-900">Nachricht und Kontakt</h1>
-            <p class="text-base text-gray-600 mt-2">Bitte hinterlassen Sie uns Ihre Nachricht und Kontaktdaten. Wir melden uns umgehend bei Ihnen.</p>
+            <div class="text-3xl font-bold tracking-tight text-gray-900">Nachricht und Kontakt</div>
+            <div class="text-base text-gray-600 mt-2">Bitte hinterlassen Sie uns Ihre Nachricht und Kontaktdaten. Wir melden uns umgehend bei Ihnen.</div>
           </header>
 
           <form class="flex flex-col gap-8">
@@ -565,7 +566,7 @@
         </div>
 
         <aside class="md:col-span-4 hidden md:flex flex-col bg-gray-50 border-2 border-gray-200 rounded p-8 sticky top-8">
-          <h2 class="text-sm font-mono uppercase tracking-widest text-gray-600 mb-8 font-bold">Fortschritt</h2>
+          <div class="text-sm font-mono tracking-widest text-gray-600 mb-8 font-bold">Fortschritt</div>
           <div class="relative">
             <div class="absolute left-[11px] top-4 bottom-8 w-0.5 bg-gray-200"></div>
             <ul class="flex flex-col gap-8 relative z-10">
@@ -612,8 +613,8 @@
       <div class="mb-8 rounded-full bg-gray-100 p-6 shadow-sm border border-gray-300 flex items-center justify-center animate-bounce">
         <span class="material-symbols-outlined text-green-700" style="font-size: 64px; font-variation-settings: 'FILL' 1;">check_circle</span>
       </div>
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Vielen Dank!</h1>
-      <p class="text-base text-gray-600 mb-8 max-w-xs">Wir melden uns innerhalb von 24 Stunden bei Ihnen.</p>
+      <div class="text-3xl font-bold text-gray-900 mb-2">Vielen Dank!</div>
+      <div class="text-base text-gray-600 mb-8 max-w-xs">Wir melden uns innerhalb von 24 Stunden bei Ihnen.</div>
     </section>
 
     {# === DESKTOP === #}
@@ -631,13 +632,13 @@
             </div>
 
             <div class="space-y-4 max-w-2xl mx-auto mb-8">
-              <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">Vielen Dank für Ihre Anfrage!</h1>
-              <p class="text-lg text-gray-600 max-w-xl mx-auto">
+              <div class="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">Vielen Dank für Ihre Anfrage!</div>
+              <div class="text-lg text-gray-600 max-w-xl mx-auto">
                 Wir haben Ihre Details erhalten und melden uns innerhalb von 24 Stunden für das kostenlose 30-minütige Kennenlernen mit Hands-on Tipps.
-              </p>
+              </div>
             </div>
 
-            <div class="text-xs font-mono text-gray-500 flex flex-wrap justify-center gap-3 mb-8 uppercase tracking-wider">
+            <div class="text-xs font-mono text-gray-500 flex flex-wrap justify-center gap-3 mb-8 tracking-wider">
               <span class="flex items-center gap-1 bg-gray-50 py-1 px-3 border border-gray-300">
                 <span class="material-symbols-outlined text-sm">schedule</span>
                 Antwort in 24h
@@ -647,7 +648,7 @@
         </div>
 
         <aside class="md:col-span-4 hidden md:flex flex-col bg-gray-50 border-2 border-gray-200 rounded p-8 sticky top-8">
-          <h2 class="text-sm font-mono uppercase tracking-widest text-gray-600 mb-8 font-bold">Fortschritt</h2>
+          <div class="text-sm font-mono tracking-widest text-gray-600 mb-8 font-bold">Fortschritt</div>
           <div class="relative">
             <div class="absolute left-[11px] top-4 bottom-8 w-0.5 bg-gray-200"></div>
             <ul class="flex flex-col gap-8 relative z-10">
@@ -695,3 +696,4 @@
 
   {% endif %}
 </div>
+<!-- end components/qualified-contact.html.twig -->
