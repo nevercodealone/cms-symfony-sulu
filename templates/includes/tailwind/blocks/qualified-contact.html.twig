@@ -1,14 +1,14 @@
-{# qualified-contact.html.twig #}
+<!-- qualified-contact.html.twig -->
 <div class="relative py-4 sm:py-8">
   <div class="relative">
-    <h2 class="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+    <div class="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
       {{ content.headline is defined and content.headline is not empty ? content.headline : 'Lass uns sprechen' }}
-    </h2>
-    <p class="text-center text-lg text-gray-600 mb-4 sm:mb-6 max-w-xl mx-auto">
+    </div>
+    <div class="text-center text-lg text-gray-600 mb-4 sm:mb-6 max-w-xl mx-auto">
       {{ content.subline is defined and content.subline is not empty ? content.subline : 'Finde das passende Angebot für dein Projekt' }}
-    </p>
+    </div>
 
     {{ component('qualified-contact', { key: loopIndex|default('a') }) }}
   </div>
 </div>
-{# end qualified-contact.html.twig #}
+<!-- end qualified-contact.html.twig -->
