@@ -34,15 +34,26 @@ namespace App\Sulu\Block;
 final class BlockTypeRegistry
 {
     /**
+     * Authoritative field-type rules for block fields (single source of truth).
+     *
+     * Consumed by the sulu_pages tool description; llms.txt and
+     * prompts/nca-content-marketing-assistant.md reference it instead of
+     * duplicating the rules. Sulu text_editor fields store HTML (the admin
+     * editor adds <p> itself) — via MCP, plain prose goes in without <p>
+     * and code is plain text end to end.
+     */
+    public const FIELD_TYPES_RULE = 'FIELD TYPES: description, descriptiontwo and html are rich-text fields. Write plain prose — do NOT wrap in <p> tags, each description item renders as its own paragraph. Structural HTML (strong, ul, h3, a) is allowed when needed. code is plain text only — real newlines (\n) and leading spaces are preserved, the template renders it as a code block. Never put <p>, <br> or &nbsp; inside code. Write angle brackets as-is (< and >) — storage escapes them automatically, never pre-escape as &lt;. All other fields (headline, subline, buttonText, title) are plain text and MUST NOT contain tags.';
+
+    /**
      * Human-readable descriptions of each block type for MCP documentation.
      */
     public const DESCRIPTIONS = [
         // === CONTENT BLOCKS ===
         'headline-paragraphs' => 'Primary block for tutorials with mixed text and code. Uses items[] array with type: description or code.',
-        'faq' => 'FAQ section with expandable questions/answers. Uses faqs[] array (NOT items).',
+        'faq' => 'FAQ section with expandable questions/answers. Entries passed via the items parameter on add_block/append_to_block/update_block; stored as faqs[]. Only update_blocks accepts the faqs key directly.',
         'code' => 'Standalone code snippet block with syntax highlighting.',
         'introduction' => 'Page introduction with headline, two description fields, and optional items.',
-        'table' => 'Data table with 3 columns. Uses rows[] array (NOT items).',
+        'table' => 'Data table with 3 columns. Rows passed via the items parameter on add_block/append_to_block/update_block; stored as rows[]. Only update_blocks accepts the rows key directly.',
         'quote' => 'Standalone quote block with structured attribution. Renders as <blockquote> with <figcaption>. Required fields: text, author, source (mandatory in the template XML - missing them makes the page unsaveable in the Sulu admin with "The form contains invalid values"). Optional: role, date, url.',
 
         // === HERO BLOCKS ===
@@ -65,7 +76,7 @@ final class BlockTypeRegistry
         'image' => 'Single image block.',
         'image-gallery' => 'Image gallery with headline and description.',
         'images-with-heading-and-description' => 'Image with overlay text.',
-        'image-with-flags' => 'Image with language flags. Uses flags[] array (NOT items).',
+        'image-with-flags' => 'Image with language flags. Flags passed via the items parameter; stored as flags[]. Only update_blocks accepts the flags key directly.',
         'logo-gallary' => 'Logo carousel/gallery. Uses items[] with headline, url, image.',
         'excerpt-image' => 'Page excerpt with featured image.',
 
@@ -110,9 +121,9 @@ final class BlockTypeRegistry
             'type' => 'headline-paragraphs',
             'headline' => 'Tutorial Section',
             'items' => [
-                ['type' => 'description', 'description' => '<p>Introduction text goes here.</p>'],
-                ['type' => 'code', 'code' => 'echo "Hello World";', 'language' => 'php'],
-                ['type' => 'description', 'description' => '<p>Explanation of the code above.</p>'],
+                ['type' => 'description', 'description' => 'Introduction text goes here.'],
+                ['type' => 'code', 'code' => "function foo(): void\n{\n    echo 1;\n}", 'language' => 'php'],
+                ['type' => 'description', 'description' => 'Explanation of the code above.'],
             ],
         ],
         'faq' => [
@@ -124,21 +135,21 @@ final class BlockTypeRegistry
         ],
         'code' => [
             'type' => 'code',
-            'description' => '<?php echo "Hello"; ?>',
+            'description' => 'echo "Hello World";',
         ],
         'introduction' => [
             'type' => 'introduction',
             'headline' => 'Welcome',
-            'description' => '<p>First paragraph.</p>',
-            'descriptiontwo' => '<p>Second paragraph.</p>',
+            'description' => 'First paragraph.',
+            'descriptiontwo' => 'Second paragraph.',
             'items' => [
-                ['type' => 'items', 'description' => '<p>Item text.</p>'],
+                ['type' => 'items', 'description' => 'Item text.'],
             ],
         ],
         'table' => [
             'type' => 'table',
             'headline' => 'Comparison Table',
-            'description' => '<p>Overview of options.</p>',
+            'description' => 'Overview of options.',
             'columnheader1' => 'Feature',
             'columnheader2' => 'Option A',
             'columnheader3' => 'Option B',
@@ -162,7 +173,7 @@ final class BlockTypeRegistry
             'type' => 'hero',
             'image' => ['id' => 1],
             'headline' => 'Hero Title',
-            'description' => '<p>Hero description text.</p>',
+            'description' => 'Hero description text.',
             'buttonText' => 'Learn More',
             'url' => '/page',
         ],
@@ -171,7 +182,7 @@ final class BlockTypeRegistry
             'image' => ['id' => 1],
             'textone' => 'Main Headline',
             'texttwo' => 'Subheadline',
-            'description' => '<p>Description</p>',
+            'description' => 'Description',
             'buttonText' => 'Primary CTA',
             'buttonLink' => '/primary',
             'buttonTextTwo' => 'Secondary CTA',
@@ -181,7 +192,7 @@ final class BlockTypeRegistry
             'type' => 'hero-image-right',
             'image' => ['id' => 1],
             'headline' => 'Feature Title',
-            'description' => '<p>Feature description.</p>',
+            'description' => 'Feature description.',
             'items' => [
                 ['type' => 'items', 'headline' => 'CTA', 'text' => 'Description', 'buttonText' => 'Click', 'buttonLink' => '/link', 'url' => '/url'],
             ],
@@ -189,7 +200,7 @@ final class BlockTypeRegistry
         'heroslider' => [
             'type' => 'heroslider',
             'headline' => 'Slider Title',
-            'description' => '<p>Slider description.</p>',
+            'description' => 'Slider description.',
             'pageurl1' => '/page1',
             'pageurl2' => '/page2',
             'images' => [['id' => 1], ['id' => 2]],
@@ -199,7 +210,7 @@ final class BlockTypeRegistry
         'cta-button' => [
             'type' => 'cta-button',
             'headline' => 'Ready to Start?',
-            'description' => '<p>Join us today.</p>',
+            'description' => 'Join us today.',
             'text' => 'Get Started',
             'url' => '/signup',
             'texttwo' => 'Learn More',
@@ -216,24 +227,24 @@ final class BlockTypeRegistry
             'type' => 'feature',
             'subline' => 'Our Features',
             'headline' => 'Why Choose Us',
-            'description' => '<p>Feature overview.</p>',
+            'description' => 'Feature overview.',
             'items' => [
-                ['type' => 'items', 'headline' => 'Fast', 'description' => '<p>Lightning speed.</p>'],
-                ['type' => 'items', 'headline' => 'Secure', 'description' => '<p>Bank-level security.</p>'],
+                ['type' => 'items', 'headline' => 'Fast', 'description' => 'Lightning speed.'],
+                ['type' => 'items', 'headline' => 'Secure', 'description' => 'Bank-level security.'],
             ],
         ],
         'feature-default' => [
             'type' => 'feature-default',
             'headline' => 'Features',
-            'description' => '<p>What we offer.</p>',
+            'description' => 'What we offer.',
             'items' => [
-                ['type' => 'items', 'headline' => 'Feature 1', 'description' => '<p>Description 1.</p>'],
+                ['type' => 'items', 'headline' => 'Feature 1', 'description' => 'Description 1.'],
             ],
         ],
         'feature-with-icons' => [
             'type' => 'feature-with-icons',
             'headline' => 'Key Benefits',
-            'description' => '<p>Overview.</p>',
+            'description' => 'Overview.',
             'items' => [
                 ['type' => 'items', 'headline' => 'Benefit 1', 'text' => 'Description text'],
             ],
@@ -241,9 +252,9 @@ final class BlockTypeRegistry
         'formats' => [
             'type' => 'formats',
             'headline' => 'Available Formats',
-            'description' => '<p>Choose your format.</p>',
+            'description' => 'Choose your format.',
             'items' => [
-                ['type' => 'items', 'icon' => 'pdf', 'headline' => 'PDF', 'description' => '<p>Download as PDF.</p>'],
+                ['type' => 'items', 'icon' => 'pdf', 'headline' => 'PDF', 'description' => 'Download as PDF.'],
             ],
         ],
 
@@ -255,14 +266,14 @@ final class BlockTypeRegistry
         'image-gallery' => [
             'type' => 'image-gallery',
             'headline' => 'Gallery',
-            'description' => '<p>Our work.</p>',
+            'description' => 'Our work.',
             'image' => [['id' => 1], ['id' => 2], ['id' => 3]],
         ],
         'images-with-heading-and-description' => [
             'type' => 'images-with-heading-and-description',
             'image' => ['id' => 1],
             'headline' => 'Image Title',
-            'description' => '<p>Image caption.</p>',
+            'description' => 'Image caption.',
         ],
         'image-with-flags' => [
             'type' => 'image-with-flags',
@@ -290,13 +301,13 @@ final class BlockTypeRegistry
             'type' => 'card-trio',
             'subline' => 'Our Services',
             'headline' => 'What We Offer',
-            'description' => '<p>Choose from our specialized services.</p>',
+            'description' => 'Choose from our specialized services.',
             'cards' => [
                 [
                     'type' => 'card',
                     'icon' => 'code',
                     'title' => 'Development',
-                    'description' => '<p>Custom software development.</p>',
+                    'description' => 'Custom software development.',
                     'tags' => [['type' => 'tag', 'text' => 'PHP'], ['type' => 'tag', 'text' => 'Symfony']],
                     'linkText' => 'Learn more',
                     'linkPage' => 'page-uuid-here',
@@ -307,7 +318,7 @@ final class BlockTypeRegistry
                     'type' => 'card',
                     'icon' => 'users',
                     'title' => 'Consulting',
-                    'description' => '<p>Expert consulting services.</p>',
+                    'description' => 'Expert consulting services.',
                     'tags' => [['type' => 'tag', 'text' => 'Strategy']],
                     'linkText' => 'Get started',
                     'linkPage' => 'page-uuid-here',
@@ -318,7 +329,7 @@ final class BlockTypeRegistry
                     'type' => 'card',
                     'icon' => 'rocket',
                     'title' => 'Training',
-                    'description' => '<p>Professional training courses.</p>',
+                    'description' => 'Professional training courses.',
                     'tags' => [['type' => 'tag', 'text' => 'Workshop']],
                     'linkText' => 'Book now',
                     'linkPage' => 'page-uuid-here',
@@ -335,23 +346,23 @@ final class BlockTypeRegistry
         'team' => [
             'type' => 'team',
             'headline' => 'Our Team',
-            'description' => '<p>Meet the experts.</p>',
+            'description' => 'Meet the experts.',
             'organisation' => 'Example Company',
         ],
         'consultant' => [
             'type' => 'consultant',
             'organisation' => 'Consulting Firm',
-            'description' => '<p>Expert consulting services.</p>',
+            'description' => 'Expert consulting services.',
         ],
         'contact' => [
             'type' => 'contact',
             'snippets' => ['uuid-of-contact-snippet'],
-            'description' => '<p>Contact us.</p>',
+            'description' => 'Contact us.',
         ],
         'chat' => [
             'type' => 'chat',
             'headline' => 'Need Help?',
-            'description' => '<p>Start a conversation.</p>',
+            'description' => 'Start a conversation.',
         ],
 
         // === NAVIGATION BLOCKS ===
@@ -396,7 +407,7 @@ final class BlockTypeRegistry
         'hl-des' => [
             'type' => 'hl-des',
             'headline' => 'Section Title',
-            'description' => '<p>Section content.</p>',
+            'description' => 'Section content.',
         ],
 
         // === PAGE REFERENCE ===

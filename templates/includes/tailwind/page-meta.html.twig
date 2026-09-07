@@ -3,9 +3,8 @@
 
 {% if created is defined and created %}
     {% set createdDay = created|date('Y-m-d') %}
-    {% set changedDay = (changed is defined and changed) ? changed|date('Y-m-d') : createdDay %}
-    {% set displayChanged = (changed is defined and changed) ? changed : created %}
-    {% set hasBeenUpdated = changedDay != createdDay %}
+    {% set updateDate = (published is defined and published) ? published : ((changed is defined and changed) ? changed : created) %}
+    {% set hasBeenUpdated = updateDate|date('Y-m-d') != createdDay %}
     {% set createdLabel = pageLocale == 'de' ? 'Erstellt' : 'Created' %}
     {% set updatedLabel = pageLocale == 'de' ? 'Aktualisiert' : 'Updated' %}
     {% set authorLabel = pageLocale == 'de' ? 'Autor' : 'Author' %}
@@ -34,7 +33,7 @@
                     {{ updatedLabel }}:
                 </span>
             </dt>
-            <dd><time datetime="{{ displayChanged|date('c') }}">{{ displayChanged|format_datetime('long', 'none', locale=pageLocale) }}</time></dd>
+            <dd><time datetime="{{ updateDate|date('c') }}">{{ updateDate|format_datetime('long', 'none', locale=pageLocale) }}</time></dd>
         </div>
 
         <div class="flex items-center gap-3">

@@ -30,30 +30,12 @@ This ensures proper global gitignore rules and local git configuration are respe
 - No custom `@media` queries for responsive visibility — always use Tailwind responsive utilities
 - Custom CSS is only for animations, transitions, and complex effects that Tailwind cannot express
 
-## Sulu Field Types: Rich Text vs Plain Text
+## Sulu Field Types
 
-### CRITICAL: Most fields are plain text — NEVER use HTML tags in them
-
-**Rich-text fields (HTML required — use `<p>`, `<strong>`, `<a>`):**
-
-| Field | Type | Blocks |
-|-------|------|--------|
-| `description` | text_editor | 25+ blocks (hero, feature, table, cta-button, etc.) |
-| `descriptiontwo` | text_editor | introduction |
-| `code` | text_editor | headline-paragraphs nested code items |
-| `html` | raw HTML | html-raw (iframes, embeds) |
-
-**Plain-text fields (NEVER use HTML tags):**
-
-ALL other fields: `headline`, `subline`, `text`, `textone`, `texttwo`, `buttonText`,
-`buttonTextTwo`, `title`, `linkText`, `badgeText`, `footerText`, `footerButtonText`,
-`ctaText`, `ctaButtonText`, `columnheader1/2/3`, `cell1/2/3`, `language`, `playlistid`,
-`url`, `urltwo`, `seoTitle`, `seoDescription`, `excerptTitle`, `excerptDescription`
-
-FAQ `subline` is plain text — confirmed: XML type `text_line`, Twig renders without `|raw`.
-
-**Why:** All 33 Twig templates render plain-text fields auto-escaped (no `|raw` filter).
-HTML tags in plain-text fields appear literally as `<p>...</p>` on the website.
+All field-type rules are defined in exactly one place:
+`App\Sulu\Block\BlockTypeRegistry::FIELD_TYPES_RULE`, served live in the
+`sulu_pages` tool description (FIELD TYPES section) and via `list_block_types`.
+This file does not restate them — read them there.
 
 ## copy_page: Media & Excerpt Preservation
 

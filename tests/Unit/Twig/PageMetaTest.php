@@ -33,22 +33,22 @@ class PageMetaTest extends TestCase
         );
 
         $this->assertStringContainsString('createdDay', $template, 'Template must compute a day-level "createdDay" value.');
-        $this->assertStringContainsString('changedDay', $template, 'Template must compute a day-level "changedDay" value.');
+        $this->assertStringContainsString('updateDate', $template, 'Template must compute an "updateDate" value.');
         $this->assertStringContainsString(
-            'hasBeenUpdated = changedDay != createdDay',
+            'hasBeenUpdated = updateDate|date(\'Y-m-d\') != createdDay',
             $template,
             'hasBeenUpdated must be derived from a day-level comparison.'
         );
     }
 
-    public function test_changedFallbackKeepsUpdateRenderableWhenChangedIsMissing(): void
+    public function test_updateDateFallsBackFromPublishedToChangedToCreated(): void
     {
         $template = $this->getTemplateContent();
 
         $this->assertStringContainsString(
-            'displayChanged',
+            '(published is defined and published) ? published : ((changed is defined and changed) ? changed : created)',
             $template,
-            'Because the "Aktualisiert" block now always renders, a displayChanged fallback (changed or created) is required.'
+            'Because the "Aktualisiert" block now always renders, updateDate must prefer published and fall back to changed or created.'
         );
     }
 

@@ -22,6 +22,42 @@ class BlockTypeRegistryTest extends TestCase
         $this->assertCount($this->registry->count(), $this->registry->getAllTypes());
     }
 
+    public function testFieldTypesRuleDocumentsCodeAsPlainText(): void
+    {
+        $rule = BlockTypeRegistry::FIELD_TYPES_RULE;
+
+        $this->assertStringContainsString('code is plain text only', $rule);
+        $this->assertStringContainsString('do NOT wrap in <p> tags', $rule);
+        $this->assertStringContainsString('Never put <p>, <br> or &nbsp; inside code', $rule);
+        $this->assertStringNotContainsString('Only description/descriptiontwo/code/html accept HTML', $rule);
+    }
+
+    public function testHeadlineParagraphsExampleUsesPlainTextAndRealNewlines(): void
+    {
+        $example = $this->registry->getExample('headline-paragraphs');
+
+        $this->assertNotNull($example);
+        foreach ($example['items'] as $item) {
+            if ($item['type'] === 'description') {
+                $this->assertStringNotContainsString('<p>', $item['description']);
+            }
+        }
+        $codeItems = array_values(array_filter($example['items'], static fn ($item) => $item['type'] === 'code'));
+        $this->assertNotEmpty($codeItems);
+        foreach ($codeItems as $item) {
+            $this->assertStringContainsString("\n", $item['code']);
+            $this->assertStringNotContainsString('<br>', $item['code']);
+            $this->assertStringNotContainsString('&nbsp;', $item['code']);
+        }
+    }
+
+    public function testNoExampleWrapsProseInParagraphTags(): void
+    {
+        $encoded = json_encode(BlockTypeRegistry::EXAMPLES, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $this->assertStringNotContainsString('<p>', $encoded);
+    }
+
     public function testGetSchemaReturnsArrayForKnownType(): void
     {
         $schema = $this->registry->getSchema('faq');
