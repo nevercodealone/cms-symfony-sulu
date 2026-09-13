@@ -300,6 +300,12 @@ class SuluPagesTool implements StreamableToolInterface
                 required: false
             ),
             new SchemaProperty(
+                name: 'template',
+                type: PropertyType::STRING,
+                description: 'Optional page template, default "tailwind". For list_block_types and get_block_schema: which template\'s block set to describe. Block type NAMES are reused across templates with DIFFERENT fields - on a "training-detail" page, quote is headline/description/name/company, not text/author/source - so pass template="training-detail" before editing a training page. Editing actions detect the template automatically.',
+                required: false
+            ),
+            new SchemaProperty(
                 name: 'search',
                 type: PropertyType::STRING,
                 description: 'For list_media action: search term to filter media by title or filename',
@@ -481,8 +487,8 @@ class SuluPagesTool implements StreamableToolInterface
             'list_references' => $this->listReferencesAction($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
-            'list_block_types' => $this->listBlockTypes(),
-            'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? ''),
+            'list_block_types' => $this->listBlockTypes($arguments['template'] ?? null),
+            'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? '', $arguments['template'] ?? null),
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
             'list_media' => $this->listMedia($arguments, $locale),
             'upload_media' => $this->uploadMedia($arguments, $locale),
@@ -763,14 +769,12 @@ class SuluPagesTool implements StreamableToolInterface
                 return $item;
             }, $items);
 
-            // Use correct nested property name based on block type
-            $nestedKey = match ($blockType) {
-                'faq' => 'faqs',
-                'table' => 'rows',
-                'image-with-flags' => 'flags',
-                'card-trio' => 'cards',
-                default => 'items',
-            };
+            // Nested property name comes from the registry, scoped to the page template's
+            // schema family (faq => faqs, table => rows, edugate list => items, ...).
+            $nestedKey = $this->blockTypeRegistry->getNestedName(
+                $blockType,
+                $this->pageService->getPageFamily($path, $locale),
+            ) ?? 'items';
 
             $block = [
                 'type' => $blockType,
@@ -1165,14 +1169,12 @@ class SuluPagesTool implements StreamableToolInterface
                 return $item;
             }, $items);
 
-            // Use correct nested property name based on auto-detected or provided blockType
-            $nestedKey = match ($blockType) {
-                'faq' => 'faqs',
-                'table' => 'rows',
-                'image-with-flags' => 'flags',
-                'card-trio' => 'cards',
-                default => 'items',
-            };
+            // Nested property name comes from the registry, scoped to the page template's
+            // schema family (see addBlock()).
+            $nestedKey = $this->blockTypeRegistry->getNestedName(
+                $blockType,
+                $this->pageService->getPageFamily($path, $locale),
+            ) ?? 'items';
             $blockData[$nestedKey] = $normalizedItems;
         }
 
@@ -1294,53 +1296,70 @@ class SuluPagesTool implements StreamableToolInterface
     /**
      * List all block types with full schema information from BlockTypeRegistry.
      */
-    private function listBlockTypes(): ToolResultInterface
+    private function listBlockTypes(?string $template = null): ToolResultInterface
     {
+        $family = BlockTypeRegistry::familyFor($template);
+
         $types = [];
-        foreach ($this->blockTypeRegistry->getAllTypes() as $name) {
-            $schema = $this->blockTypeRegistry->getSchema($name);
+        foreach ($this->blockTypeRegistry->getAllTypes($family) as $name) {
+            $schema = $this->blockTypeRegistry->getSchema($name, $family);
             $types[] = [
                 'name' => $name,
                 'properties' => $schema['properties'] ?? [],
-                'nested' => $this->blockTypeRegistry->getNestedName($name),
-                'nestedType' => $this->blockTypeRegistry->getNestedType($name),
-                'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($name),
-                'description' => $this->blockTypeRegistry->getDescription($name),
-                'example' => $this->blockTypeRegistry->getExample($name),
+                'nested' => $this->blockTypeRegistry->getNestedName($name, $family),
+                'nestedType' => $this->blockTypeRegistry->getNestedType($name, $family),
+                'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($name, $family),
+                'description' => $this->blockTypeRegistry->getDescription($name, $family),
+                'example' => $this->blockTypeRegistry->getExample($name, $family),
             ];
         }
 
-        return new TextToolResult(json_encode(['types' => $types, 'total' => count($types)], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+        return new TextToolResult(json_encode([
+            'template' => $template ?? 'tailwind',
+            'family' => $family,
+            'types' => $types,
+            'total' => count($types),
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
      * Get detailed schema for a specific block type.
      */
-    private function getBlockSchema(string $blockType): ToolResultInterface
+    private function getBlockSchema(string $blockType, ?string $template = null): ToolResultInterface
     {
+        $family = BlockTypeRegistry::familyFor($template);
+
         if (empty($blockType)) {
             return new TextToolResult(json_encode([
                 'error' => 'blockTypeName is required',
-                'available_types' => $this->blockTypeRegistry->getAllTypes(),
+                'available_types' => $this->blockTypeRegistry->getAllTypes($family),
             ], JSON_PRETTY_PRINT));
         }
 
-        if (!$this->blockTypeRegistry->hasType($blockType)) {
+        if (!$this->blockTypeRegistry->hasType($blockType, $family)) {
+            // Distinguish "no such block type anywhere" from "exists, but belongs to the
+            // other template's block library" - the latter is the actionable mistake.
+            $error = $this->blockTypeRegistry->getSchemaForRead($blockType, $family) !== null
+                ? "Block type '{$blockType}' not found for template '"
+                    . ($template ?? 'tailwind') . "': it belongs to a different template's block set"
+                : "Block type '{$blockType}' not found";
+
             return new TextToolResult(json_encode([
-                'error' => "Block type '{$blockType}' not found",
-                'available_types' => $this->blockTypeRegistry->getAllTypes(),
+                'error' => $error,
+                'available_types' => $this->blockTypeRegistry->getAllTypes($family),
             ], JSON_PRETTY_PRINT));
         }
 
-        $schema = $this->blockTypeRegistry->getSchema($blockType);
+        $schema = $this->blockTypeRegistry->getSchema($blockType, $family);
         return new TextToolResult(json_encode([
             'name' => $blockType,
+            'family' => $family,
             'properties' => $schema['properties'] ?? [],
-            'nested' => $this->blockTypeRegistry->getNestedName($blockType),
-            'nestedType' => $this->blockTypeRegistry->getNestedType($blockType),
-            'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($blockType),
-            'description' => $this->blockTypeRegistry->getDescription($blockType),
-            'example' => $this->blockTypeRegistry->getExample($blockType),
+            'nested' => $this->blockTypeRegistry->getNestedName($blockType, $family),
+            'nestedType' => $this->blockTypeRegistry->getNestedType($blockType, $family),
+            'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($blockType, $family),
+            'description' => $this->blockTypeRegistry->getDescription($blockType, $family),
+            'example' => $this->blockTypeRegistry->getExample($blockType, $family),
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
 

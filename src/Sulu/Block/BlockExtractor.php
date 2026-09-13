@@ -42,8 +42,12 @@ final class BlockExtractor
      *
      * @return array<int, array<string, mixed>>
      */
-    public function extractBlocks(string $xmlString, string $locale): array
-    {
+    public function extractBlocks(
+        string $xmlString,
+        string $locale,
+        string $family = BlockTypeRegistry::FAMILY_TAILWIND,
+        string $blockProperty = 'blocks',
+    ): array {
         if (empty($xmlString)) {
             return [];
         }
@@ -55,7 +59,7 @@ final class BlockExtractor
             $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
-            $prefix = "i18n:{$locale}-blocks";
+            $prefix = "i18n:{$locale}-{$blockProperty}";
 
             // Get blocks length
             $blocksLength = $this->getIntProperty($xpath, "{$prefix}-length");
@@ -66,7 +70,7 @@ final class BlockExtractor
             $blocks = [];
 
             for ($i = 0; $i < $blocksLength; $i++) {
-                $block = $this->extractBlock($xpath, $prefix, $i);
+                $block = $this->extractBlock($xpath, $prefix, $i, $family);
                 if ($block !== null) {
                     $blocks[] = $block;
                 }
@@ -83,8 +87,12 @@ final class BlockExtractor
      *
      * @return array<string, mixed>|null
      */
-    private function extractBlock(DOMXPath $xpath, string $prefix, int $position): ?array
-    {
+    private function extractBlock(
+        DOMXPath $xpath,
+        string $prefix,
+        int $position,
+        string $family = BlockTypeRegistry::FAMILY_TAILWIND,
+    ): ?array {
         $block = ['position' => $position];
 
         // Get block type
@@ -94,17 +102,36 @@ final class BlockExtractor
         }
         $block['type'] = $type;
 
-        // Get schema for this block type
-        $schema = $this->registry->getSchema($type);
+        // Get schema for this block type.
+        // Reads use getSchemaForRead() so blocks stored with the other family's schema
+        // (pre-existing tailwind blocks on training-detail pages) are still surfaced
+        // faithfully instead of falling through to the lossy common-property path.
+        $schema = $this->registry->getSchemaForRead($type, $family);
 
         if ($schema !== null) {
             // Properties that may be stored as multi-valued PHPCR properties
             // (Sulu admin creates these with separate <sv:value> per UUID)
             $multiValueProps = ['snippets', 'organisation'];
 
+            // Properties that are themselves nested collections, keyed property => nested type
+            // (schedule's dayOneItems/dayTwoItems). They are stored like any other nested
+            // collection, so they are read with extractNestedItems() rather than as a scalar.
+            $nestedTypes = $schema['nestedTypes'] ?? [];
+
             // Extract all properties defined in schema
             foreach ($schema['properties'] as $propName) {
-                if (in_array($propName, $multiValueProps, true)) {
+                if (isset($nestedTypes[$propName])) {
+                    $items = $this->extractNestedItems(
+                        $xpath,
+                        $prefix,
+                        $position,
+                        $propName,
+                        $schema['nestedProperties'] ?? [],
+                    );
+                    if (!empty($items)) {
+                        $block[$propName] = $items;
+                    }
+                } elseif (in_array($propName, $multiValueProps, true)) {
                     $allValues = $this->getPropertyValues($xpath, "{$prefix}-{$propName}#{$position}");
                     if (!empty($allValues)) {
                         $block[$propName] = $this->decodeMultiValueProperty($propName, $allValues);
@@ -112,16 +139,20 @@ final class BlockExtractor
                 } else {
                     $value = $this->getProperty($xpath, "{$prefix}-{$propName}#{$position}");
                     if ($value !== null) {
-                        // Handle JSON-encoded properties (image, etc.)
-                        $block[$propName] = $this->decodePropertyValue($propName, $value);
+                        // Handle JSON-encoded properties (image, pdfTarget, ...)
+                        $block[$propName] = $this->decodePropertyValue(
+                            $propName,
+                            $value,
+                            $schema['encoding'][$propName] ?? null,
+                        );
                     }
                 }
             }
 
             // Extract nested items if block type has them
-            if ($this->registry->hasNested($type)) {
-                $nestedName = $this->registry->getNestedName($type);
-                $nestedProps = $this->registry->getNestedProperties($type);
+            if (isset($schema['nested'])) {
+                $nestedName = $schema['nested'];
+                $nestedProps = $schema['nestedProperties'] ?? [];
 
                 if ($nestedName !== null) {
                     $nestedItems = $this->extractNestedItems($xpath, $prefix, $position, $nestedName, $nestedProps);
@@ -289,12 +320,14 @@ final class BlockExtractor
     /**
      * Decode property value (handles JSON-encoded properties).
      */
-    private function decodePropertyValue(string $propName, string $value): mixed
+    private function decodePropertyValue(string $propName, string $value, ?string $encoding = null): mixed
     {
-        // Properties that are JSON-encoded
+        // Schema-driven path passes the encoding from the registry (so edugate's pdfTarget is
+        // decoded as JSON too). The name list is the fallback for unknown block types, which
+        // have no schema to consult.
         $jsonProps = ['image', 'images', 'snippets', 'organisation', 'settings'];
 
-        if (in_array($propName, $jsonProps, true)) {
+        if ($encoding === 'json' || ($encoding === null && in_array($propName, $jsonProps, true))) {
             $decoded = json_decode($value, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 return $decoded;

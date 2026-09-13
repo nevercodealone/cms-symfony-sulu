@@ -66,6 +66,7 @@ class PageService
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
     private BlockValidator $blockValidator;
+    private BlockTypeRegistry $blockTypeRegistry;
 
     public function __construct(
         private Connection $connection,
@@ -83,6 +84,7 @@ class PageService
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
+        $this->blockTypeRegistry = $registry;
         $this->blockExtractor = $blockExtractor ?? new BlockExtractor($registry);
         $this->blockWriter = $blockWriter ?? new BlockWriter($registry);
         $this->blockValidator = $blockValidator ?? new BlockValidator($registry);
@@ -234,7 +236,7 @@ class PageService
         $pages = [];
         foreach ($results as $row) {
             $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
-            $template = $this->extractPropertyFromXml($row['props'], 'template');
+            $template = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-template");
             $url = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-url");
 
             if ($title !== null) {
@@ -275,9 +277,9 @@ class PageService
         }
 
         $title = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-title") ?? '';
-        $template = $this->extractPropertyFromXml($result['props'], 'template') ?? 'default';
+        $template = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-template") ?? 'default';
         $url = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-url");
-        $blocks = $this->extractBlocks($result['props'], $locale);
+        $blocks = $this->extractBlocks($result['props'], $locale, BlockTypeRegistry::familyFor($template));
         $blocks = $this->resolveSnippetReferences($blocks, $locale);
 
         // Extract excerpt data
@@ -357,12 +359,6 @@ class PageService
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
     {
-        // Validate block data before proceeding (includes path-based restrictions)
-        $validationError = $this->blockValidator->validateWithPath($block, $path);
-        if ($validationError !== null) {
-            return ['success' => false, 'message' => $validationError, 'position' => -1];
-        }
-
         try {
             $result = $this->connection->fetchAssociative(
                 "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
@@ -371,6 +367,15 @@ class PageService
 
             if (!$result) {
                 return ['success' => false, 'message' => 'Page not found', 'position' => -1];
+            }
+
+            // Validation runs AFTER the fetch: which block types are legal depends on the
+            // page's template, which is only known once the props are loaded.
+            $family = $this->resolveFamily($result['props'], $locale);
+
+            $validationError = $this->blockValidator->validateWithMessage($block, $family);
+            if ($validationError !== null) {
+                return ['success' => false, 'message' => $validationError, 'position' => -1];
             }
 
             $xml = new DOMDocument();
@@ -404,7 +409,7 @@ class PageService
             }
 
             // Use BlockWriter to add the block (supports all 32 block types)
-            $this->blockWriter->addBlock($xml, $rootNode, $locale, $insertIndex, $block);
+            $this->blockWriter->addBlock($xml, $rootNode, $locale, $insertIndex, $block, $family);
 
             // Update blocks length
             if ($lengthNodes !== false && $lengthNodes->length > 0 && $lengthNodes->item(0)) {
@@ -1162,9 +1167,48 @@ class PageService
      *
      * @return array<mixed>
      */
-    private function extractBlocks(string $xmlString, string $locale): array
+    /**
+     * Resolve the block-schema family for a page by path.
+     *
+     * Public so the MCP tool can pick the right nested-key / schema when shaping a block
+     * payload before handing it to addBlock()/updateBlock().
+     */
+    public function getPageFamily(string $path, string $locale = 'de'): string
     {
-        return $this->blockExtractor->extractBlocks($xmlString, $locale);
+        $props = $this->connection->fetchOne(
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$path]
+        );
+
+        return is_string($props)
+            ? $this->resolveFamily($props, $locale)
+            : BlockTypeRegistry::FAMILY_TAILWIND;
+    }
+
+    /**
+     * Resolve the block-schema family for a page from its stored PHPCR props.
+     *
+     * Block type names collide across the tailwind and edugate block libraries with
+     * different field sets, and storage records only the bare type string - so every
+     * read and write has to be scoped by the page's template.
+     */
+    private function resolveFamily(string $props, string $locale): string
+    {
+        return BlockTypeRegistry::familyFor(
+            $this->extractPropertyFromXml($props, "i18n:{$locale}-template")
+        );
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractBlocks(
+        string $xmlString,
+        string $locale,
+        string $family = BlockTypeRegistry::FAMILY_TAILWIND,
+        string $blockProperty = 'blocks',
+    ): array {
+        return $this->blockExtractor->extractBlocks($xmlString, $locale, $family, $blockProperty);
     }
 
     /**
@@ -1259,8 +1303,16 @@ class PageService
                 $blockType = $typeNodes->item(0)->nodeValue ?? 'hl-des';
             }
 
-            // Use BlockWriter to update the block (supports all 32 block types)
-            $this->blockWriter->updateBlock($xml, $xpath, $locale, $position, $blockType, $blockData);
+            // Use BlockWriter to update the block, scoped to the page template's schema family
+            $this->blockWriter->updateBlock(
+                $xml,
+                $xpath,
+                $locale,
+                $position,
+                $blockType,
+                $blockData,
+                $this->resolveFamily($result['props'], $locale),
+            );
 
             $updatedXml = $xml->saveXML();
 
@@ -1655,13 +1707,13 @@ class PageService
             $block = $blocks[$position];
             $blockType = $block['type'] ?? 'unknown';
 
-            // Determine the nested key based on block type
-            $nestedKey = match ($blockType) {
-                'faq' => 'faqs',
-                'table' => 'rows',
-                'image-with-flags' => 'flags',
-                default => 'items',
-            };
+            // Nested key comes from the registry, scoped to the page template's schema
+            // family. (This used to be a hand-maintained match that had already drifted -
+            // it was missing card-trio => cards.)
+            $nestedKey = $this->blockTypeRegistry->getNestedName(
+                $blockType,
+                $this->getPageFamily($path, $locale),
+            ) ?? 'items';
 
             // Get existing items
             $existingItems = $block[$nestedKey] ?? [];
