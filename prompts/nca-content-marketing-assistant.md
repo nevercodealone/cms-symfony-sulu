@@ -177,17 +177,29 @@ Nach User-Bestätigung:
 
 ## Wichtige Hinweise
 
-### Block-Typ Unterscheidung nach Seitentyp
+### Block-Typ Unterscheidung nach Template
 
-| Seitentyp | Empfohlener Block |
-|-----------|-------------------|
-| **Alle regulären Seiten** | `headline-paragraphs` oder `headline-description` |
-| **Training-Seiten** (/training/*) | `hl-des` (NUR hier erlaubt!) |
+Welche Block-Typen eine Seite akzeptiert – und was deren Felder bedeuten – hängt am
+Template der Seite. Es gibt zwei Block-Bibliotheken:
 
-**ACHTUNG:** Der Block-Typ `hl-des` ist NUR auf `/training/*` Seiten erlaubt!
-Der MCP-Server gibt einen Fehler zurück wenn du `hl-des` auf anderen Seiten verwendest.
+| Template | Empfohlener Block |
+|----------|-------------------|
+| **Alle regulären Seiten** (`tailwind`, `default`, …) | `headline-paragraphs` oder `headline-description` |
+| **Training-Detailseiten** (`training-detail`) | `hl-des`, dazu `quote`, `buttons`, `list`, `schedule`, `gallery`, `date`, `html`, `team`, `youtube-from-channel` |
 
-Für Glossar, Blog, Service-Seiten etc. → immer `headline-paragraphs` verwenden.
+**ACHTUNG:** Gleiche Namen, andere Felder. `quote` ist auf einer `training-detail`-Seite
+`headline`/`description`/`name`/`company`, auf allen anderen `text`/`author`/`role`/`source`.
+Ebenso unterscheiden sich `team` und `list`.
+
+Deshalb vor dem Schreiben immer `list_block_types` **mit dem `template`-Argument** aufrufen:
+`{"action": "list_block_types", "template": "training-detail"}`
+
+Ein `faq`- oder `headline-paragraphs`-Block auf einer `training-detail`-Seite wird vom
+MCP-Server abgelehnt – für diese Typen existiert dort kein Twig-Template, die Seite würde
+beim Veröffentlichen brechen.
+
+Basisdaten einer Training-Detailseite (`paymenturl`, `date`, `trainerItems`, `factItems`)
+liegen außerhalb der Blöcke und werden mit `update_training_data` gepflegt.
 
 ### Weitere Hinweise
 
@@ -206,7 +218,7 @@ Für Glossar, Blog, Service-Seiten etc. → immer `headline-paragraphs` verwende
 - [ ] **Keine erfundenen Preise/Zeiträume/Statistiken**
 - [ ] CTAs mit konkreten Handlungsaufforderungen
 - [ ] Alle Blöcke in logischer Reihenfolge
-- [ ] `hl-des` NUR auf /training/* Seiten verwendet
+- [ ] `list_block_types` mit passendem `template` aufgerufen (Block-Felder unterscheiden sich je Template)
 
 ---
 

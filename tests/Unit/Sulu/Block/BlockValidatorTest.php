@@ -153,74 +153,82 @@ class BlockValidatorTest extends TestCase
     }
 
     // ==========================================================================
-    // Path-Based Validation Tests
+    // Schema-Family Validation Tests
     // ==========================================================================
+    //
+    // Block type names collide across the two block libraries, so validation is scoped by
+    // the page template's schema family. This replaces the old path-prefix rule, which
+    // never matched the real content paths (/cmf/.../php-training/... has no "/training/").
 
-    public function testHlDesOnlyAllowedOnTrainingPages(): void
+    public function testTailwindOnlyTypesAreRejectedOnEdugatePages(): void
     {
-        $block = ['type' => 'hl-des', 'headline' => 'Test', 'description' => 'Content'];
+        // faq and headline-paragraphs have no templates/includes/training-detail/blocks/
+        // counterpart, so publishing one on a training-detail page renders a 500.
+        foreach (['faq', 'headline-paragraphs', 'card-trio'] as $type) {
+            $error = $this->validator->validateWithMessage(
+                ['type' => $type],
+                BlockTypeRegistry::FAMILY_EDUGATE,
+            );
 
-        // Should fail on glossar page
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/glossare/test');
-        $this->assertNotNull($error);
-        $this->assertStringContainsString('only allowed on /training/', $error);
-
-        // Should fail on root page
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents');
-        $this->assertNotNull($error);
-
-        // Should pass on training page
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
-        $this->assertNull($error);
-
-        // Should pass on nested training page
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/php/basics');
-        $this->assertNull($error);
+            $this->assertNotNull($error, "{$type} must be rejected on an edugate page");
+            $this->assertStringContainsString("not available on this page's template", $error);
+        }
     }
 
-    public function testHeadlineParagraphsAllowedOnAnyPage(): void
+    public function testEdugateOnlyTypesAreRejectedOnTailwindPages(): void
     {
-        $block = ['type' => 'headline-paragraphs', 'headline' => 'Test'];
+        foreach (['buttons', 'schedule', 'gallery'] as $type) {
+            $error = $this->validator->validateWithMessage(
+                ['type' => $type],
+                BlockTypeRegistry::FAMILY_TAILWIND,
+            );
 
-        // Should pass on glossar page
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/glossare/test');
-        $this->assertNull($error);
-
-        // Should pass on training page
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
-        $this->assertNull($error);
-
-        // Should pass on root page
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents');
-        $this->assertNull($error);
+            $this->assertNotNull($error, "{$type} must be rejected on a tailwind page");
+        }
     }
 
-    public function testValidateWithPathRunsStandardValidationFirst(): void
+    public function testEdugateTypesAreAcceptedOnEdugatePages(): void
     {
-        // Invalid block (missing type)
-        $block = ['headline' => 'Test'];
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
+        foreach (BlockTypeRegistry::EDUGATE_TYPES as $type) {
+            $error = $this->validator->validateWithMessage(
+                ['type' => $type],
+                BlockTypeRegistry::FAMILY_EDUGATE,
+            );
 
+            $this->assertNull($error, "{$type} must be accepted on an edugate page");
+        }
+    }
+
+    public function testSharedTypesAreAcceptedInBothFamilies(): void
+    {
+        // hl-des and youtube-from-channel are field-for-field identical in both libraries.
+        foreach (['hl-des', 'youtube-from-channel'] as $type) {
+            $this->assertNull($this->validator->validateWithMessage(
+                ['type' => $type],
+                BlockTypeRegistry::FAMILY_TAILWIND,
+            ));
+            $this->assertNull($this->validator->validateWithMessage(
+                ['type' => $type],
+                BlockTypeRegistry::FAMILY_EDUGATE,
+            ));
+        }
+    }
+
+    public function testFamilyDefaultsToTailwind(): void
+    {
+        // Omitting the family must keep the pre-existing behaviour for every caller.
+        $this->assertNull($this->validator->validateWithMessage(['type' => 'headline-paragraphs']));
+        $this->assertNotNull($this->validator->validateWithMessage(['type' => 'buttons']));
+    }
+
+    public function testValidationStillRejectsMissingAndUnknownTypes(): void
+    {
+        $error = $this->validator->validateWithMessage(['headline' => 'Test']);
         $this->assertNotNull($error);
         $this->assertStringContainsString('Block type is required', $error);
-    }
 
-    public function testValidateWithPathRejectsUnknownBlockTypes(): void
-    {
-        $block = ['type' => 'nonexistent-block-type'];
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/training/test');
-
+        $error = $this->validator->validateWithMessage(['type' => 'nonexistent-block-type']);
         $this->assertNotNull($error);
         $this->assertStringContainsString('Unknown block type', $error);
-    }
-
-    public function testHlDesErrorMessageSuggestsAlternatives(): void
-    {
-        $block = ['type' => 'hl-des', 'headline' => 'Test'];
-        $error = $this->validator->validateWithPath($block, '/cmf/example/contents/glossare/test');
-
-        $this->assertNotNull($error);
-        $this->assertStringContainsString('headline-description', $error);
-        $this->assertStringContainsString('headline-paragraphs', $error);
     }
 }

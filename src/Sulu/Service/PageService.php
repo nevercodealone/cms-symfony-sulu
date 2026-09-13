@@ -14,6 +14,7 @@ use App\Sulu\Service\PageReferenceScanner;
 use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
+use DOMNode;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
@@ -63,9 +64,31 @@ class PageService
      */
     private const DELETE_PROCESS_TIMEOUT = 60;
 
+    /**
+     * The only template carrying paymenturl / date / trainerItems / factItems.
+     */
+    private const TEMPLATE_TRAINING_DETAIL = 'training-detail';
+
+    /**
+     * Template assigned to a new page when the caller does not pick one.
+     */
+    public const DEFAULT_TEMPLATE = 'tailwind';
+
+    /**
+     * Templates `switch_template` may move a page between.
+     *
+     * Deliberately narrower than getAvailableTemplates(): both of these keep their content in a
+     * `blocks` collection under the same PHPCR property name, and both block vocabularies are
+     * modelled in BlockTypeRegistry, so the switch is a clean property flip. `conference` and
+     * `training` have no `blocks` collection at all, and `default` / `default-die-websprinter`
+     * use a third block set the registry does not model.
+     */
+    public const SWITCHABLE_TEMPLATES = [self::DEFAULT_TEMPLATE, self::TEMPLATE_TRAINING_DETAIL];
+
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
     private BlockValidator $blockValidator;
+    private BlockTypeRegistry $blockTypeRegistry;
 
     public function __construct(
         private Connection $connection,
@@ -83,6 +106,7 @@ class PageService
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
+        $this->blockTypeRegistry = $registry;
         $this->blockExtractor = $blockExtractor ?? new BlockExtractor($registry);
         $this->blockWriter = $blockWriter ?? new BlockWriter($registry);
         $this->blockValidator = $blockValidator ?? new BlockValidator($registry);
@@ -234,7 +258,7 @@ class PageService
         $pages = [];
         foreach ($results as $row) {
             $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
-            $template = $this->extractPropertyFromXml($row['props'], 'template');
+            $template = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-template");
             $url = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-url");
 
             if ($title !== null) {
@@ -261,7 +285,9 @@ class PageService
     /**
      * Get page content including blocks.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null, excerpt: array{title: string|null, description: string|null, images: array<mixed>|null}}|null
+     * trainingData is present only for training-detail pages.
+     *
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null, excerpt: array{title: string|null, description: string|null, images: array<mixed>|null}, trainingData?: array<string, mixed>}|null
      */
     public function getPage(string $path, string $locale = 'de'): ?array
     {
@@ -275,9 +301,9 @@ class PageService
         }
 
         $title = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-title") ?? '';
-        $template = $this->extractPropertyFromXml($result['props'], 'template') ?? 'default';
+        $template = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-template") ?? 'default';
         $url = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-url");
-        $blocks = $this->extractBlocks($result['props'], $locale);
+        $blocks = $this->extractBlocks($result['props'], $locale, BlockTypeRegistry::familyFor($template));
         $blocks = $this->resolveSnippetReferences($blocks, $locale);
 
         // Extract excerpt data
@@ -289,7 +315,7 @@ class PageService
         $liveState = $this->getLiveState($path, $locale);
         $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $liveState);
 
-        return [
+        $page = [
             'path' => $result['path'],
             'url' => $url,
             'fullUrl' => $url !== null ? '/' . $locale . $url : null,
@@ -307,12 +333,20 @@ class PageService
                 'images' => $excerptImages ? json_decode($excerptImages, true) : null,
             ],
         ];
+
+        // training-detail carries content outside the `blocks` collection; surface it so a
+        // client sees the whole page, not just its blocks.
+        if ($template === self::TEMPLATE_TRAINING_DETAIL) {
+            $page['trainingData'] = $this->getTrainingData($result['props'], $locale);
+        }
+
+        return $page;
     }
 
     /**
      * Get lightweight page structure without full block content.
      *
-     * @return array{success: bool, title: string, uuid: string|null, url: string|null, seoTitle: string|null, seoDescription: string|null, excerptTitle: string|null, excerptDescription: string|null, excerptImage: int|null, blocks_count: int, blocks: array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int}>}|null
+     * @return array<string, mixed>|null
      */
     public function getPageStructure(string $path, string $locale = 'de'): ?array
     {
@@ -328,7 +362,7 @@ class PageService
         $seoTitle = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-title") : null;
         $seoDescription = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-description") : null;
 
-        return [
+        $structure = [
             'success' => true,
             'title' => $page['title'],
             'uuid' => $this->getPageUuid($path),
@@ -341,6 +375,18 @@ class PageService
             'blocks_count' => count($page['blocks']),
             'blocks' => $this->formatCompactBlocks($page['blocks']),
         ];
+
+        if (isset($page['trainingData'])) {
+            $structure['template'] = $page['template'];
+            $structure['trainingData'] = [
+                'paymenturl' => $page['trainingData']['paymenturl'],
+                'date' => $page['trainingData']['date'],
+                'trainerItems' => $page['trainingData']['trainerItems'],
+                'factItems_count' => count($page['trainingData']['factItems']),
+            ];
+        }
+
+        return $structure;
     }
 
     /**
@@ -357,12 +403,6 @@ class PageService
      */
     public function addBlock(string $path, array $block, int $position, string $locale = 'de'): array
     {
-        // Validate block data before proceeding (includes path-based restrictions)
-        $validationError = $this->blockValidator->validateWithPath($block, $path);
-        if ($validationError !== null) {
-            return ['success' => false, 'message' => $validationError, 'position' => -1];
-        }
-
         try {
             $result = $this->connection->fetchAssociative(
                 "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
@@ -371,6 +411,15 @@ class PageService
 
             if (!$result) {
                 return ['success' => false, 'message' => 'Page not found', 'position' => -1];
+            }
+
+            // Validation runs AFTER the fetch: which block types are legal depends on the
+            // page's template, which is only known once the props are loaded.
+            $family = $this->resolveFamily($result['props'], $locale);
+
+            $validationError = $this->blockValidator->validateWithMessage($block, $family);
+            if ($validationError !== null) {
+                return ['success' => false, 'message' => $validationError, 'position' => -1];
             }
 
             $xml = new DOMDocument();
@@ -404,7 +453,7 @@ class PageService
             }
 
             // Use BlockWriter to add the block (supports all 32 block types)
-            $this->blockWriter->addBlock($xml, $rootNode, $locale, $insertIndex, $block);
+            $this->blockWriter->addBlock($xml, $rootNode, $locale, $insertIndex, $block, $family);
 
             // Update blocks length
             if ($lengthNodes !== false && $lengthNodes->length > 0 && $lengthNodes->item(0)) {
@@ -913,7 +962,7 @@ class PageService
     /**
      * Create a new page using direct SQL.
      *
-     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int} $data
+     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, template?: string} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, full_url?: string, published?: bool}
      */
     public function createPage(array $data, string $locale = 'de'): array
@@ -927,6 +976,7 @@ class PageService
         $excerptTitle = $data['excerptTitle'] ?? null;
         $excerptDescription = $data['excerptDescription'] ?? null;
         $excerptImage = $data['excerptImage'] ?? null;
+        $template = $data['template'] ?? self::DEFAULT_TEMPLATE;
 
         // Validate required fields
         if (empty($parentPath)) {
@@ -942,6 +992,14 @@ class PageService
         // Validate resourceSegment format
         if (!preg_match('#^/[a-z0-9-]+$#', $resourceSegment)) {
             return ['success' => false, 'message' => 'resourceSegment must start with / and contain only lowercase letters, numbers, and hyphens'];
+        }
+
+        $available = $this->getAvailableTemplates();
+        if (!in_array($template, $available, true)) {
+            return [
+                'success' => false,
+                'message' => "Unknown template '{$template}'. Available templates: " . implode(', ', $available),
+            ];
         }
 
         try {
@@ -984,7 +1042,7 @@ class PageService
 
             // Build XML props
             $now = (new \DateTime())->format('Y-m-d\TH:i:s.v+00:00');
-            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish, $excerptTitle, $excerptDescription, $excerptImage);
+            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish, $excerptTitle, $excerptDescription, $excerptImage, $template);
 
             // Insert into BOTH workspaces
             foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
@@ -1038,6 +1096,38 @@ class PageService
     }
 
     /**
+     * Page template keys available in this project.
+     *
+     * Read from the <key> element of config/templates/pages/*.xml, so the list cannot drift
+     * from what Sulu will actually accept. Falls back to the filename when a key is absent.
+     *
+     * @return array<int, string>
+     */
+    public function getAvailableTemplates(): array
+    {
+        $dir = ($this->projectDir ?? \dirname(__DIR__, 3)) . '/config/templates/pages';
+
+        $files = glob($dir . '/*.xml');
+        if ($files === false) {
+            return [self::DEFAULT_TEMPLATE];
+        }
+
+        $templates = [];
+        foreach ($files as $file) {
+            $contents = file_get_contents($file);
+            if ($contents !== false && preg_match('#<key>\s*([^<\s]+)\s*</key>#', $contents, $m) === 1) {
+                $templates[] = $m[1];
+            } else {
+                $templates[] = basename($file, '.xml');
+            }
+        }
+
+        sort($templates);
+
+        return array_values(array_unique($templates));
+    }
+
+    /**
      * Build XML props for a new page.
      */
     private function buildPagePropsXml(
@@ -1052,6 +1142,7 @@ class PageService
         ?string $excerptTitle = null,
         ?string $excerptDescription = null,
         ?int $excerptImage = null,
+        string $template = self::DEFAULT_TEMPLATE,
     ): string {
         $titleLen = strlen($title);
         $urlLen = strlen($url);
@@ -1077,7 +1168,9 @@ class PageService
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-blocks-length" sv:type="Long" sv:multi-valued="0"><sv:value length="1">0</sv:value></sv:property>';
 
         // Template and state
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-template" sv:type="String" sv:multi-valued="0"><sv:value length="8">tailwind</sv:value></sv:property>';
+        // The length attribute must match the value - it used to be hardcoded to 8, which is
+        // only correct for the literal 'tailwind'.
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-template" sv:type="String" sv:multi-valued="0"><sv:value length="' . strlen($template) . '">' . htmlspecialchars($template, ENT_XML1) . '</sv:value></sv:property>';
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-state" sv:type="Long" sv:multi-valued="0"><sv:value length="1">' . $state . '</sv:value></sv:property>';
 
         // Permissions
@@ -1162,9 +1255,48 @@ class PageService
      *
      * @return array<mixed>
      */
-    private function extractBlocks(string $xmlString, string $locale): array
+    /**
+     * Resolve the block-schema family for a page by path.
+     *
+     * Public so the MCP tool can pick the right nested-key / schema when shaping a block
+     * payload before handing it to addBlock()/updateBlock().
+     */
+    public function getPageFamily(string $path, string $locale = 'de'): string
     {
-        return $this->blockExtractor->extractBlocks($xmlString, $locale);
+        $props = $this->connection->fetchOne(
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$path]
+        );
+
+        return is_string($props)
+            ? $this->resolveFamily($props, $locale)
+            : BlockTypeRegistry::FAMILY_TAILWIND;
+    }
+
+    /**
+     * Resolve the block-schema family for a page from its stored PHPCR props.
+     *
+     * Block type names collide across the tailwind and edugate block libraries with
+     * different field sets, and storage records only the bare type string - so every
+     * read and write has to be scoped by the page's template.
+     */
+    private function resolveFamily(string $props, string $locale): string
+    {
+        return BlockTypeRegistry::familyFor(
+            $this->extractPropertyFromXml($props, "i18n:{$locale}-template")
+        );
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractBlocks(
+        string $xmlString,
+        string $locale,
+        string $family = BlockTypeRegistry::FAMILY_TAILWIND,
+        string $blockProperty = 'blocks',
+    ): array {
+        return $this->blockExtractor->extractBlocks($xmlString, $locale, $family, $blockProperty);
     }
 
     /**
@@ -1259,8 +1391,16 @@ class PageService
                 $blockType = $typeNodes->item(0)->nodeValue ?? 'hl-des';
             }
 
-            // Use BlockWriter to update the block (supports all 32 block types)
-            $this->blockWriter->updateBlock($xml, $xpath, $locale, $position, $blockType, $blockData);
+            // Use BlockWriter to update the block, scoped to the page template's schema family
+            $this->blockWriter->updateBlock(
+                $xml,
+                $xpath,
+                $locale,
+                $position,
+                $blockType,
+                $blockData,
+                $this->resolveFamily($result['props'], $locale),
+            );
 
             $updatedXml = $xml->saveXML();
 
@@ -1516,6 +1656,415 @@ class PageService
     }
 
     /**
+     * Change the template of an existing page.
+     *
+     * Content is left exactly as stored - no block is converted and no property is removed - so
+     * the switch is lossless and switching back restores the previous rendering exactly. This
+     * also matches Sulu's own behaviour: StructureSubscriber::mapContentToNode() writes only the
+     * new structure's properties and never purges the old ones.
+     *
+     * A page renders only the block types its new template has a Twig partial for, so
+     * `blocksNotInNewTemplate` reports what still needs fixing with add_block / update_block /
+     * remove_block. It is informational and never blocks the switch.
+     *
+     * @return array{success: bool, message: string, path?: string, from?: string, to?: string, blocks_count?: int, blocksNotInNewTemplate?: array<int, array{position: int, type: string}>}
+     */
+    public function switchTemplate(string $path, string $template, string $locale = 'de'): array
+    {
+        if (!in_array($template, self::SWITCHABLE_TEMPLATES, true)) {
+            return [
+                'success' => false,
+                'message' => "Cannot switch to template '{$template}'. Supported: "
+                    . implode(', ', self::SWITCHABLE_TEMPLATES) . '.',
+            ];
+        }
+
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $current = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-template");
+
+            if ($current === $template) {
+                return [
+                    'success' => true,
+                    'message' => "Page already uses template '{$template}', nothing changed",
+                    'path' => $path,
+                    'from' => $template,
+                    'to' => $template,
+                ];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if (!$rootNode) {
+                return ['success' => false, 'message' => 'Invalid XML structure'];
+            }
+
+            // applyFieldMap() sets the sv:value length attribute from the value, which a
+            // hand-written property write is easy to get wrong.
+            $this->applyFieldMap($xml, $xpath, $rootNode, [
+                'template' => "i18n:{$locale}-template",
+            ], ['template' => $template]);
+
+            $updatedXml = (string) $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_template_switched',
+                $path,
+                $locale,
+                ['from' => $current, 'to' => $template]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            $family = BlockTypeRegistry::familyFor($template);
+            $blocks = $this->extractBlocks($updatedXml, $locale, $family);
+
+            $notSupported = [];
+            foreach ($blocks as $block) {
+                $type = $block['type'] ?? '';
+                if (is_string($type) && $type !== '' && !$this->blockTypeRegistry->hasType($type, $family)) {
+                    $notSupported[] = ['position' => $block['position'] ?? 0, 'type' => $type];
+                }
+            }
+
+            $message = "Template switched from '" . ($current ?? 'unknown') . "' to '{$template}'";
+            if ($notSupported !== []) {
+                $message .= '. ' . count($notSupported) . ' block(s) have no template in the new'
+                    . ' layout and will not render until they are changed or removed'
+                    . ' - no content was lost, switching back restores the page';
+            }
+
+            return [
+                'success' => true,
+                'message' => $message,
+                'path' => $path,
+                'from' => $current ?? 'unknown',
+                'to' => $template,
+                'blocks_count' => count($blocks),
+                'blocksNotInNewTemplate' => $notSupported,
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Read the training-detail base data of a page.
+     *
+     * These live outside the `blocks` collection: paymenturl / date are plain
+     * i18n:{locale}-{name} String properties, trainerItems is a multi-valued String of
+     * contact refs (c<id>), and factItems is a second block collection whose storage layout
+     * is identical to `blocks` - only the property prefix differs.
+     *
+     * @return array{paymenturl: string|null, date: string|null, trainerItems: array<int, string>, factItems: array<int, array<string, mixed>>}
+     */
+    public function getTrainingData(string $props, string $locale = 'de'): array
+    {
+        return [
+            'paymenturl' => $this->extractPropertyFromXml($props, "i18n:{$locale}-paymenturl"),
+            'date' => $this->extractPropertyFromXml($props, "i18n:{$locale}-date"),
+            'trainerItems' => $this->extractMultiValueProperty($props, "i18n:{$locale}-trainerItems"),
+            'factItems' => $this->extractBlocks(
+                $props,
+                $locale,
+                BlockTypeRegistry::FAMILY_EDUGATE,
+                'factItems',
+            ),
+        ];
+    }
+
+    /**
+     * Update the training-detail base data of a page.
+     *
+     * Only valid on a training-detail page - every other template has no such fields, and
+     * writing them would produce properties the Sulu admin cannot map back to its template.
+     *
+     * @param array<string, mixed> $data any of paymenturl, date, trainerItems, factItems
+     * @return array{success: bool, message: string, trainingData?: array<string, mixed>}
+     */
+    public function updateTrainingData(string $path, array $data, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $template = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-template");
+            if ($template !== self::TEMPLATE_TRAINING_DETAIL) {
+                return [
+                    'success' => false,
+                    'message' => "Page template is '" . ($template ?? 'unknown') . "', not '"
+                        . self::TEMPLATE_TRAINING_DETAIL . "'. paymenturl, date, trainerItems and "
+                        . 'factItems only exist on training-detail pages.',
+                ];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if (!$rootNode) {
+                return ['success' => false, 'message' => 'Invalid XML structure'];
+            }
+
+            $updatedFields = $this->applyFieldMap($xml, $xpath, $rootNode, [
+                'paymenturl' => "i18n:{$locale}-paymenturl",
+                'date' => "i18n:{$locale}-date",
+            ], $data);
+
+            // trainerItems: multi-valued String of contact refs, matching what the Sulu
+            // admin writes for contact_account_selection (NOT a PHPCR Reference).
+            if (array_key_exists('trainerItems', $data)) {
+                $refs = is_array($data['trainerItems'])
+                    ? array_values(array_map(strval(...), $data['trainerItems']))
+                    : [];
+
+                $this->removeProperty($xpath, "i18n:{$locale}-trainerItems");
+                $this->blockWriter->addReferenceProperty(
+                    $xml,
+                    $rootNode,
+                    "i18n:{$locale}-trainerItems",
+                    $refs,
+                    'String',
+                );
+                $updatedFields[] = 'trainerItems';
+            }
+
+            // factItems: a block collection identical in shape to `blocks`, so it is written
+            // with the same BlockWriter under a different property prefix.
+            if (array_key_exists('factItems', $data)) {
+                $items = is_array($data['factItems']) ? array_values($data['factItems']) : [];
+
+                foreach ($items as $item) {
+                    if (!is_array($item)) {
+                        return ['success' => false, 'message' => 'Each factItems entry must be an object with headline and/or description'];
+                    }
+                }
+
+                $this->removeCollection($xpath, "i18n:{$locale}-factItems");
+
+                $this->blockWriter->addProperty(
+                    $xml,
+                    $rootNode,
+                    "i18n:{$locale}-factItems-length",
+                    (string) count($items),
+                    'Long',
+                );
+
+                foreach ($items as $index => $item) {
+                    $this->blockWriter->addBlock(
+                        $xml,
+                        $rootNode,
+                        $locale,
+                        $index,
+                        ['type' => 'factItems'] + $item,
+                        BlockTypeRegistry::FAMILY_EDUGATE,
+                        'factItems',
+                    );
+                }
+
+                $updatedFields[] = 'factItems';
+            }
+
+            if ($updatedFields === []) {
+                return [
+                    'success' => false,
+                    'message' => 'Nothing to update. Provide at least one of: paymenturl, date, trainerItems, factItems.',
+                ];
+            }
+
+            $updatedXml = (string) $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_training_data_updated',
+                $path,
+                $locale,
+                ['fields' => $updatedFields]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => 'Training data updated successfully',
+                'trainingData' => $this->getTrainingData($updatedXml, $locale),
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Remove a single property by exact name.
+     */
+    private function removeProperty(DOMXPath $xpath, string $propertyName): void
+    {
+        $nodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
+        if ($nodes === false) {
+            return;
+        }
+
+        foreach (iterator_to_array($nodes) as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+            }
+        }
+    }
+
+    /**
+     * Remove every property belonging to a block collection (its -length and all indexed
+     * entries), so the collection can be rewritten from scratch.
+     */
+    private function removeCollection(DOMXPath $xpath, string $prefix): void
+    {
+        $nodes = $xpath->query('//sv:property[starts-with(@sv:name, "' . $prefix . '")]');
+        if ($nodes === false) {
+            return;
+        }
+
+        foreach (iterator_to_array($nodes) as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+            }
+        }
+    }
+
+    /**
+     * Read a multi-valued String property as a plain list.
+     *
+     * @return array<int, string>
+     */
+    private function extractMultiValueProperty(string $props, string $propertyName): array
+    {
+        try {
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $props);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $values = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]/sv:value');
+            if ($values === false) {
+                return [];
+            }
+
+            $out = [];
+            foreach ($values as $value) {
+                $out[] = (string) $value->nodeValue;
+            }
+
+            return $out;
+        } catch (\Exception) {
+            return [];
+        }
+    }
+
+    /**
+     * Write a flat map of single-valued String properties into a PHPCR props document.
+     *
+     * Shared by updateSeo() and updateTrainingData(): both write plain
+     * i18n:{locale}-{name} String properties, creating, overwriting or (on a null value)
+     * removing them.
+     *
+     * @param array<string, string> $fieldMap data key => PHPCR property name
+     * @param array<string, mixed> $data
+     * @return array<int, string> the data keys that were actually touched
+     */
+    private function applyFieldMap(
+        DOMDocument $xml,
+        DOMXPath $xpath,
+        DOMNode $rootNode,
+        array $fieldMap,
+        array $data,
+    ): array {
+        $updatedFields = [];
+
+        foreach ($fieldMap as $dataKey => $propertyName) {
+            if (!array_key_exists($dataKey, $data)) {
+                continue;
+            }
+
+            $value = $data[$dataKey];
+            $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
+            $existing = ($existingNodes !== false && $existingNodes->length > 0)
+                ? $existingNodes->item(0)
+                : null;
+
+            if ($value === null) {
+                if ($existing !== null && $existing->parentNode) {
+                    $existing->parentNode->removeChild($existing);
+                }
+            } elseif ($existing !== null) {
+                $valueNodes = $xpath->query('sv:value', $existing);
+                if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
+                    $valueNode = $valueNodes->item(0);
+                    $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
+                    if ($valueNode instanceof \DOMElement) {
+                        $valueNode->setAttribute('length', (string) strlen((string) $value));
+                    }
+                }
+            } else {
+                $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                $property->setAttribute('sv:name', $propertyName);
+                $property->setAttribute('sv:type', 'String');
+                $property->setAttribute('sv:multi-valued', '0');
+
+                $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
+                $valueEl->setAttribute('length', (string) strlen((string) $value));
+                $valueEl->appendChild($xml->createTextNode((string) $value));
+                $property->appendChild($valueEl);
+
+                $rootNode->appendChild($property);
+            }
+
+            $updatedFields[] = $dataKey;
+        }
+
+        return $updatedFields;
+    }
+
+    /**
      * @param array<string, string|null> $data
      *
      * @return array{success: bool, message: string, seo?: array{title: string|null, description: string|null, keywords: string|null}}
@@ -1549,50 +2098,7 @@ class PageService
                 'seoKeywords' => "i18n:{$locale}-seo-keywords",
             ];
 
-            $updatedFields = [];
-
-            foreach ($fieldMap as $dataKey => $propertyName) {
-                if (!array_key_exists($dataKey, $data)) {
-                    continue;
-                }
-
-                $value = $data[$dataKey];
-                $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
-
-                if ($value === null) {
-                    if ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
-                        $node = $existingNodes->item(0);
-                        if ($node->parentNode) {
-                            $node->parentNode->removeChild($node);
-                        }
-                    }
-                    $updatedFields[] = $dataKey;
-                } elseif ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
-                    $propertyNode = $existingNodes->item(0);
-                    $valueNodes = $xpath->query('sv:value', $propertyNode);
-                    if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
-                        $valueNode = $valueNodes->item(0);
-                        $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
-                        if ($valueNode instanceof \DOMElement) {
-                            $valueNode->setAttribute('length', (string) strlen((string) $value));
-                        }
-                    }
-                    $updatedFields[] = $dataKey;
-                } else {
-                    $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
-                    $property->setAttribute('sv:name', $propertyName);
-                    $property->setAttribute('sv:type', 'String');
-                    $property->setAttribute('sv:multi-valued', '0');
-
-                    $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
-                    $valueEl->setAttribute('length', (string) strlen((string) $value));
-                    $valueEl->appendChild($xml->createTextNode((string) $value));
-                    $property->appendChild($valueEl);
-
-                    $rootNode->appendChild($property);
-                    $updatedFields[] = $dataKey;
-                }
-            }
+            $updatedFields = $this->applyFieldMap($xml, $xpath, $rootNode, $fieldMap, $data);
 
             $updatedXml = $xml->saveXML();
 
@@ -1655,13 +2161,13 @@ class PageService
             $block = $blocks[$position];
             $blockType = $block['type'] ?? 'unknown';
 
-            // Determine the nested key based on block type
-            $nestedKey = match ($blockType) {
-                'faq' => 'faqs',
-                'table' => 'rows',
-                'image-with-flags' => 'flags',
-                default => 'items',
-            };
+            // Nested key comes from the registry, scoped to the page template's schema
+            // family. (This used to be a hand-maintained match that had already drifted -
+            // it was missing card-trio => cards.)
+            $nestedKey = $this->blockTypeRegistry->getNestedName(
+                $blockType,
+                $this->getPageFamily($path, $locale),
+            ) ?? 'items';
 
             // Get existing items
             $existingItems = $block[$nestedKey] ?? [];
@@ -2795,7 +3301,7 @@ class PageService
      * then copies all blocks. Creates as draft first, only publishes if
      * all blocks were successfully copied and publish=true.
      *
-     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool} $data
+     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool, template?: string|null} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, blocksCopied?: int, blocksFailed?: int, errors?: array<string>}
      */
     public function copyPage(array $data, string $locale = 'de'): array
@@ -2824,6 +3330,10 @@ class PageService
             'excerptTitle' => $data['excerptTitle'] ?? $sourcePage['excerpt']['title'] ?? null,
             'excerptDescription' => $data['excerptDescription'] ?? $sourcePage['excerpt']['description'] ?? null,
             'excerptImage' => $data['excerptImage'] ?? null,
+            // Inherit the source template. Copying used to always produce a tailwind page,
+            // so copying a training-detail page silently changed its template and then
+            // failed to re-add any of its blocks.
+            'template' => $data['template'] ?? $sourcePage['template'],
             'publish' => false, // Always create as draft first
         ];
 

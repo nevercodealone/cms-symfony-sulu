@@ -50,26 +50,32 @@ final class BlockWriter
         string $locale,
         int $position,
         array $block,
+        string $family = BlockTypeRegistry::FAMILY_TAILWIND,
+        string $blockProperty = 'blocks',
     ): int {
         $type = $block['type'] ?? '';
         if (empty($type)) {
             throw new \InvalidArgumentException('Block must have a "type" property');
         }
 
-        $prefix = "i18n:{$locale}-blocks";
+        $prefix = "i18n:{$locale}-{$blockProperty}";
 
         // Add block type and settings
         $this->addProperty($xml, $rootNode, "{$prefix}-type#{$position}", $type);
         $this->addProperty($xml, $rootNode, "{$prefix}-settings#{$position}", '[]');
 
         // Get schema for this block type
-        $schema = $this->registry->getSchema($type);
+        $schema = $this->registry->getSchema($type, $family);
 
         if ($schema !== null) {
+            // Properties that are themselves nested collections (schedule's dayOneItems /
+            // dayTwoItems), keyed property => nested type.
+            $nestedTypes = $schema['nestedTypes'] ?? [];
+
             // Write all top-level properties from schema using encoding metadata
             foreach ($schema['properties'] as $propName) {
                 if (isset($block[$propName])) {
-                    $encoding = $this->registry->getPropertyEncoding($type, $propName);
+                    $encoding = $this->registry->getPropertyEncoding($type, $propName, $family);
 
                     // Reference properties: snippets, organisation, page → sv:type="Reference"
                     if ($encoding === 'reference') {
@@ -82,8 +88,9 @@ final class BlockWriter
                         $value = $this->encodePropertyValueByType($encoding, $block[$propName]);
                         $this->addProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $value);
                     } elseif (is_array($block[$propName]) && $this->isNestedArray($block[$propName])) {
-                        // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags)
-                        $nestedProps = $this->registry->getNestedProperties($type);
+                        // Handle nested arrays (e.g., card1Tags, card2Tags, card3Tags,
+                        // schedule's dayOneItems/dayTwoItems)
+                        $nestedProps = $this->registry->getNestedProperties($type, $family);
                         $this->writeNestedItems(
                             $xml,
                             $rootNode,
@@ -92,6 +99,7 @@ final class BlockWriter
                             $propName,
                             $block[$propName],
                             $nestedProps,
+                            $nestedTypes[$propName] ?? null,
                         );
                     } else {
                         $value = $this->encodePropertyValueByType($encoding, $block[$propName]);
@@ -101,9 +109,9 @@ final class BlockWriter
             }
 
             // Write nested items if block type has them (for blocks with single nested array)
-            if ($this->registry->hasNested($type)) {
-                $nestedName = $this->registry->getNestedName($type);
-                $nestedProps = $this->registry->getNestedProperties($type);
+            if ($this->registry->hasNested($type, $family)) {
+                $nestedName = $this->registry->getNestedName($type, $family);
+                $nestedProps = $this->registry->getNestedProperties($type, $family);
 
                 if ($nestedName !== null && isset($block[$nestedName]) && is_array($block[$nestedName])) {
                     $this->writeNestedItems(
@@ -116,6 +124,7 @@ final class BlockWriter
                         $nestedProps,
                         null,
                         $type,  // Pass block type for registry lookup
+                        $family,
                     );
                 }
             }
@@ -141,8 +150,10 @@ final class BlockWriter
         int $position,
         string $type,
         array $blockData,
+        string $family = BlockTypeRegistry::FAMILY_TAILWIND,
+        string $blockProperty = 'blocks',
     ): void {
-        $prefix = "i18n:{$locale}-blocks";
+        $prefix = "i18n:{$locale}-{$blockProperty}";
         $rootNode = $xpath->query('/sv:node')->item(0);
 
         if (!$rootNode) {
@@ -150,7 +161,8 @@ final class BlockWriter
         }
 
         // Get schema for this block type
-        $schema = $this->registry->getSchema($type);
+        $schema = $this->registry->getSchema($type, $family);
+        $nestedTypes = $schema['nestedTypes'] ?? [];
 
         foreach ($blockData as $key => $value) {
             // Skip type - it shouldn't be changed
@@ -159,10 +171,31 @@ final class BlockWriter
             }
 
             // Check if this is the nested items key
-            if ($schema !== null && $this->registry->hasNested($type)) {
-                $nestedName = $this->registry->getNestedName($type);
+            // A property that is itself a nested collection (schedule's dayOneItems /
+            // dayTwoItems) is rewritten wholesale, same as the single nested key below.
+            if ($schema !== null && isset($nestedTypes[$key]) && is_array($value)) {
+                $nestedProps = $this->registry->getNestedProperties($type, $family);
+                $this->removeNestedItems($xpath, $prefix, $position, $key);
+                $this->writeNestedItems(
+                    $xml,
+                    $rootNode,
+                    $prefix,
+                    $position,
+                    $key,
+                    $value,
+                    $nestedProps,
+                    $nestedTypes[$key],
+                    $type,
+                    $family,
+                );
+
+                continue;
+            }
+
+            if ($schema !== null && $this->registry->hasNested($type, $family)) {
+                $nestedName = $this->registry->getNestedName($type, $family);
                 if ($key === $nestedName && is_array($value)) {
-                    $nestedProps = $this->registry->getNestedProperties($type);
+                    $nestedProps = $this->registry->getNestedProperties($type, $family);
                     $this->removeNestedItems($xpath, $prefix, $position, $nestedName);
                     $this->writeNestedItems($xml, $rootNode, $prefix, $position, $nestedName, $value, $nestedProps, null, $type);
                     continue;
@@ -177,7 +210,7 @@ final class BlockWriter
             }
 
             // Schema-driven property handling: skip unknown properties
-            if ($schema !== null && !$this->registry->isValidProperty($type, $key)) {
+            if ($schema !== null && !$this->registry->isValidProperty($type, $key, $family)) {
                 continue;
             }
 
@@ -185,7 +218,7 @@ final class BlockWriter
             $propName = "{$prefix}-{$key}#{$position}";
 
             // Get encoding from schema (defaults to 'string' for unknown types)
-            $encoding = $schema !== null ? $this->registry->getPropertyEncoding($type, $key) : 'string';
+            $encoding = $schema !== null ? $this->registry->getPropertyEncoding($type, $key, $family) : 'string';
 
             // Reference properties: snippets, organisation, page → sv:type="Reference"
             if ($encoding === 'reference') {
@@ -203,9 +236,9 @@ final class BlockWriter
     /**
      * Remove all properties for a block at given position.
      */
-    public function removeBlockProperties(DOMXPath $xpath, string $locale, int $position): void
+    public function removeBlockProperties(DOMXPath $xpath, string $locale, int $position, string $blockProperty = 'blocks'): void
     {
-        $prefix = "i18n:{$locale}-blocks";
+        $prefix = "i18n:{$locale}-{$blockProperty}";
         $pattern = "#{$position}";
 
         // Find all properties that contain this position marker
@@ -242,13 +275,14 @@ final class BlockWriter
         array $nestedProps,
         ?string $defaultType = null,
         ?string $blockType = null,
+        string $family = BlockTypeRegistry::FAMILY_TAILWIND,
     ): void {
         // Write length
         $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-length", (string) count($items), 'Long');
 
         // Get nested type from registry first, then fall back to naming convention
         $typeDefault = $defaultType
-            ?? ($blockType !== null ? $this->registry->getNestedType($blockType) : null)
+            ?? ($blockType !== null ? $this->registry->getNestedType($blockType, $family) : null)
             ?? match ($nestedName) {
                 'cards' => 'card',
                 'tags' => 'tag',
@@ -277,7 +311,7 @@ final class BlockWriter
                 if ($sourceKey !== null && isset($item[$sourceKey])) {
                     // Get nested encoding if available
                     $encoding = $blockType !== null
-                        ? $this->registry->getNestedPropertyEncoding($blockType, $propName)
+                        ? $this->registry->getNestedPropertyEncoding($blockType, $propName, $family)
                         : 'string';
                     $value = $this->encodePropertyValueByType($encoding, $item[$sourceKey]);
                     $this->addProperty($xml, $rootNode, "{$prefix}-{$nestedName}#{$blockPosition}-{$propName}#{$itemIndex}", $value);
@@ -432,10 +466,13 @@ final class BlockWriter
         DOMNode $rootNode,
         string $name,
         array $uuids,
+        string $svType = 'Reference',
     ): void {
         $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
         $property->setAttribute('sv:name', $name);
-        $property->setAttribute('sv:type', 'Reference');
+        // contact_account_selection (trainerItems, edugate team.organisation) is written by
+        // the Sulu admin as a multi-valued String of c<id> refs, not as a PHPCR Reference.
+        $property->setAttribute('sv:type', $svType);
         $property->setAttribute('sv:multi-valued', '1');
 
         foreach ($uuids as $uuid) {

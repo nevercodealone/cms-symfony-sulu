@@ -61,7 +61,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -104,7 +104,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -272,7 +272,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'date',
                 type: PropertyType::STRING,
-                description: 'For quote block: Publication date, e.g. "28. Januar 2026"',
+                description: 'For quote block: Publication date, e.g. "28. Januar 2026". For update_training_data action (training-detail pages only): the rich-text scheduling note, e.g. "12. bis 13. Maerz 2026, 09:00-17:00 Uhr". Pass null to clear.',
                 required: false
             ),
             new SchemaProperty(
@@ -297,6 +297,30 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'blockTypeName',
                 type: PropertyType::STRING,
                 description: 'For get_block_schema action: name of the block type to get schema for (e.g. "faq", "headline-paragraphs")',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'paymenturl',
+                type: PropertyType::STRING,
+                description: 'For update_training_data action (training-detail pages only): booking/payment URL. Pass null to clear.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'trainerItems',
+                type: PropertyType::STRING,
+                description: 'For update_training_data action (training-detail pages only): JSON array of trainer contact refs, e.g. ["c1","c38"]. Bare numeric ids are prefixed with "c" automatically. Replaces the whole list.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'factItems',
+                type: PropertyType::STRING,
+                description: 'For update_training_data action (training-detail pages only): JSON array of fact entries, e.g. [{"headline":"Teilnehmer","description":"Max. 6 Personen"}]. description is rich text. Replaces the whole list.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'template',
+                type: PropertyType::STRING,
+                description: 'Optional page template, default "tailwind". For create_page: which template the new page gets. For switch_template: the template to move an existing page to (required there; only "tailwind" and "training-detail" are supported, and the switch is lossless - blocks and template-specific fields are kept, so switching back restores the page). For copy_page: overrides the source template, which is otherwise inherited. For list_block_types and get_block_schema: which template\'s block set to describe. Block type NAMES are reused across templates with DIFFERENT fields - on a "training-detail" page, quote is headline/description/name/company, not text/author/source - so pass template="training-detail" before editing a training page. Block-editing actions detect the page template automatically.',
                 required: false
             ),
             new SchemaProperty(
@@ -469,6 +493,8 @@ class SuluPagesTool implements StreamableToolInterface
             'update_page_title' => $this->updatePageTitleAction($arguments, $locale),
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
             'update_seo' => $this->updateSeoAction($arguments, $locale),
+            'update_training_data' => $this->updateTrainingDataAction($arguments, $locale),
+            'switch_template' => $this->switchTemplateAction($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
             'append_to_block' => $this->appendToBlock($arguments, $locale),
@@ -481,8 +507,8 @@ class SuluPagesTool implements StreamableToolInterface
             'list_references' => $this->listReferencesAction($arguments, $locale),
             'publish' => $this->publishPage($arguments['path'] ?? '', $locale),
             'unpublish' => $this->unpublishPage($arguments['path'] ?? '', $locale),
-            'list_block_types' => $this->listBlockTypes(),
-            'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? ''),
+            'list_block_types' => $this->listBlockTypes($arguments['template'] ?? null),
+            'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? '', $arguments['template'] ?? null),
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
             'list_media' => $this->listMedia($arguments, $locale),
             'upload_media' => $this->uploadMedia($arguments, $locale),
@@ -577,6 +603,11 @@ class SuluPagesTool implements StreamableToolInterface
             'excerptImage' => isset($arguments['excerptImage']) ? (int) $arguments['excerptImage'] : null,
         ];
 
+        // Optional - omitting it keeps the previous tailwind-only behaviour.
+        if (!empty($arguments['template'])) {
+            $data['template'] = (string) $arguments['template'];
+        }
+
         $result = $this->pageService->createPage($data, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
@@ -592,6 +623,8 @@ class SuluPagesTool implements StreamableToolInterface
         $data = [
             'sourcePath' => $arguments['sourcePath'] ?? $arguments['path'] ?? '',
             'parentPath' => $arguments['parentPath'] ?? null,
+            // Omitted: copyPage() inherits the source page's template.
+            'template' => !empty($arguments['template']) ? (string) $arguments['template'] : null,
             'title' => $arguments['title'] ?? '',
             'resourceSegment' => $arguments['resourceSegment'] ?? '',
             'seoTitle' => $arguments['seoTitle'] ?? null,
@@ -657,6 +690,111 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->pageService->updateExcerpt($path, $data, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Change the template of an existing page.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function switchTemplateAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $template = $arguments['template'] ?? '';
+        if (empty($template)) {
+            return new TextToolResult(
+                'Error: template is required. Supported: '
+                . implode(', ', PageService::SWITCHABLE_TEMPLATES)
+            );
+        }
+
+        $result = $this->pageService->switchTemplate($path, (string) $template, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Update the base data of a training-detail page: the fields that live outside the
+     * `blocks` collection.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function updateTrainingDataAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $data = [];
+
+        foreach (['paymenturl', 'date'] as $field) {
+            if (array_key_exists($field, $arguments)) {
+                $value = $arguments[$field];
+                $data[$field] = $value === null ? null : $this->unescapeUnicode((string) $value);
+            }
+        }
+
+        // trainerItems: JSON array of contact refs, e.g. ["c1","c38"]. Bare ids are accepted
+        // and prefixed, since the admin stores contacts as c<id>.
+        if (array_key_exists('trainerItems', $arguments)) {
+            $decoded = $this->decodeJsonArgument($arguments['trainerItems'], 'trainerItems');
+            if ($decoded instanceof ToolResultInterface) {
+                return $decoded;
+            }
+
+            $data['trainerItems'] = array_map(
+                static fn ($ref) => is_numeric($ref) ? 'c' . $ref : (string) $ref,
+                $decoded,
+            );
+        }
+
+        // factItems: JSON array of {headline, description}
+        if (array_key_exists('factItems', $arguments)) {
+            $decoded = $this->decodeJsonArgument($arguments['factItems'], 'factItems');
+            if ($decoded instanceof ToolResultInterface) {
+                return $decoded;
+            }
+
+            $data['factItems'] = $decoded;
+        }
+
+        if (empty($data)) {
+            return new TextToolResult(
+                'Error: at least one of paymenturl, date, trainerItems, factItems is required'
+            );
+        }
+
+        $result = $this->pageService->updateTrainingData($path, $data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Decode a JSON array argument, returning an error result instead on bad input.
+     *
+     * @return array<mixed>|ToolResultInterface
+     */
+    private function decodeJsonArgument(mixed $raw, string $name): array|ToolResultInterface
+    {
+        if (is_array($raw)) {
+            return $raw;
+        }
+
+        $decoded = json_decode((string) $raw, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            return new TextToolResult(
+                "Error: {$name} must be a valid JSON array. "
+                . 'JSON error: ' . json_last_error_msg()
+                . '. First 200 chars: ' . mb_substr((string) $raw, 0, 200)
+            );
+        }
+
+        return $decoded;
     }
 
     /**
@@ -763,14 +901,12 @@ class SuluPagesTool implements StreamableToolInterface
                 return $item;
             }, $items);
 
-            // Use correct nested property name based on block type
-            $nestedKey = match ($blockType) {
-                'faq' => 'faqs',
-                'table' => 'rows',
-                'image-with-flags' => 'flags',
-                'card-trio' => 'cards',
-                default => 'items',
-            };
+            // Nested property name comes from the registry, scoped to the page template's
+            // schema family (faq => faqs, table => rows, edugate list => items, ...).
+            $nestedKey = $this->blockTypeRegistry->getNestedName(
+                $blockType,
+                $this->pageService->getPageFamily($path, $locale),
+            ) ?? 'items';
 
             $block = [
                 'type' => $blockType,
@@ -1165,14 +1301,12 @@ class SuluPagesTool implements StreamableToolInterface
                 return $item;
             }, $items);
 
-            // Use correct nested property name based on auto-detected or provided blockType
-            $nestedKey = match ($blockType) {
-                'faq' => 'faqs',
-                'table' => 'rows',
-                'image-with-flags' => 'flags',
-                'card-trio' => 'cards',
-                default => 'items',
-            };
+            // Nested property name comes from the registry, scoped to the page template's
+            // schema family (see addBlock()).
+            $nestedKey = $this->blockTypeRegistry->getNestedName(
+                $blockType,
+                $this->pageService->getPageFamily($path, $locale),
+            ) ?? 'items';
             $blockData[$nestedKey] = $normalizedItems;
         }
 
@@ -1294,53 +1428,70 @@ class SuluPagesTool implements StreamableToolInterface
     /**
      * List all block types with full schema information from BlockTypeRegistry.
      */
-    private function listBlockTypes(): ToolResultInterface
+    private function listBlockTypes(?string $template = null): ToolResultInterface
     {
+        $family = BlockTypeRegistry::familyFor($template);
+
         $types = [];
-        foreach ($this->blockTypeRegistry->getAllTypes() as $name) {
-            $schema = $this->blockTypeRegistry->getSchema($name);
+        foreach ($this->blockTypeRegistry->getAllTypes($family) as $name) {
+            $schema = $this->blockTypeRegistry->getSchema($name, $family);
             $types[] = [
                 'name' => $name,
                 'properties' => $schema['properties'] ?? [],
-                'nested' => $this->blockTypeRegistry->getNestedName($name),
-                'nestedType' => $this->blockTypeRegistry->getNestedType($name),
-                'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($name),
-                'description' => $this->blockTypeRegistry->getDescription($name),
-                'example' => $this->blockTypeRegistry->getExample($name),
+                'nested' => $this->blockTypeRegistry->getNestedName($name, $family),
+                'nestedType' => $this->blockTypeRegistry->getNestedType($name, $family),
+                'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($name, $family),
+                'description' => $this->blockTypeRegistry->getDescription($name, $family),
+                'example' => $this->blockTypeRegistry->getExample($name, $family),
             ];
         }
 
-        return new TextToolResult(json_encode(['types' => $types, 'total' => count($types)], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+        return new TextToolResult(json_encode([
+            'template' => $template ?? 'tailwind',
+            'family' => $family,
+            'types' => $types,
+            'total' => count($types),
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
     /**
      * Get detailed schema for a specific block type.
      */
-    private function getBlockSchema(string $blockType): ToolResultInterface
+    private function getBlockSchema(string $blockType, ?string $template = null): ToolResultInterface
     {
+        $family = BlockTypeRegistry::familyFor($template);
+
         if (empty($blockType)) {
             return new TextToolResult(json_encode([
                 'error' => 'blockTypeName is required',
-                'available_types' => $this->blockTypeRegistry->getAllTypes(),
+                'available_types' => $this->blockTypeRegistry->getAllTypes($family),
             ], JSON_PRETTY_PRINT));
         }
 
-        if (!$this->blockTypeRegistry->hasType($blockType)) {
+        if (!$this->blockTypeRegistry->hasType($blockType, $family)) {
+            // Distinguish "no such block type anywhere" from "exists, but belongs to the
+            // other template's block library" - the latter is the actionable mistake.
+            $error = $this->blockTypeRegistry->getSchemaForRead($blockType, $family) !== null
+                ? "Block type '{$blockType}' not found for template '"
+                    . ($template ?? 'tailwind') . "': it belongs to a different template's block set"
+                : "Block type '{$blockType}' not found";
+
             return new TextToolResult(json_encode([
-                'error' => "Block type '{$blockType}' not found",
-                'available_types' => $this->blockTypeRegistry->getAllTypes(),
+                'error' => $error,
+                'available_types' => $this->blockTypeRegistry->getAllTypes($family),
             ], JSON_PRETTY_PRINT));
         }
 
-        $schema = $this->blockTypeRegistry->getSchema($blockType);
+        $schema = $this->blockTypeRegistry->getSchema($blockType, $family);
         return new TextToolResult(json_encode([
             'name' => $blockType,
+            'family' => $family,
             'properties' => $schema['properties'] ?? [],
-            'nested' => $this->blockTypeRegistry->getNestedName($blockType),
-            'nestedType' => $this->blockTypeRegistry->getNestedType($blockType),
-            'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($blockType),
-            'description' => $this->blockTypeRegistry->getDescription($blockType),
-            'example' => $this->blockTypeRegistry->getExample($blockType),
+            'nested' => $this->blockTypeRegistry->getNestedName($blockType, $family),
+            'nestedType' => $this->blockTypeRegistry->getNestedType($blockType, $family),
+            'nestedProperties' => $this->blockTypeRegistry->getNestedProperties($blockType, $family),
+            'description' => $this->blockTypeRegistry->getDescription($blockType, $family),
+            'example' => $this->blockTypeRegistry->getExample($blockType, $family),
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
 

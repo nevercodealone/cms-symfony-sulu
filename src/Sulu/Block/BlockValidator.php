@@ -11,7 +11,7 @@ namespace App\Sulu\Block;
  * - Unknown block types
  * - Missing required fields
  * - Invalid nested item structure
- * - Path-based block type restrictions (e.g., hl-des only on /training/*)
+ * - Block types that do not belong to the page template's schema family
  *
  * This validation runs BEFORE attempting XML writes, providing clear error
  * messages to MCP clients. Validation is done here (not in BlockWriter)
@@ -22,14 +22,6 @@ namespace App\Sulu\Block;
  */
 final class BlockValidator
 {
-    /**
-     * Path-based block type restrictions.
-     * Block types listed here are only allowed on pages matching the specified path prefix.
-     */
-    private const PATH_BLOCK_RULES = [
-        'hl-des' => '/training/',  // hl-des only allowed on training pages
-    ];
-
     public function __construct(
         private BlockTypeRegistry $registry
     ) {
@@ -41,7 +33,7 @@ final class BlockValidator
      * @param array<string, mixed> $block
      * @return array{valid: bool, errors: array<string>}
      */
-    public function validate(array $block): array
+    public function validate(array $block, string $family = BlockTypeRegistry::FAMILY_TAILWIND): array
     {
         $errors = [];
         $type = $block['type'] ?? null;
@@ -53,13 +45,26 @@ final class BlockValidator
         }
 
         // Check block type exists
-        if (!$this->registry->hasType($type)) {
-            $knownTypes = implode(', ', array_slice($this->registry->getAllTypes(), 0, 10)) . '...';
-            $errors[] = "Unknown block type '{$type}'. Known types include: {$knownTypes}";
+        if (!$this->registry->hasType($type, $family)) {
+            $known = $this->registry->getAllTypes($family);
+            $knownTypes = implode(', ', array_slice($known, 0, 10))
+                . (count($known) > 10 ? '...' : '');
+
+            // A type that exists in the OTHER family is the common mistake: adding a tailwind
+            // block (faq, headline-paragraphs, ...) to a training-detail page. There is no
+            // templates/includes/training-detail/blocks/<type>.html.twig for those, so a
+            // published page carrying one renders a 500.
+            if ($this->registry->getSchemaForRead($type, $family) !== null) {
+                $errors[] = "Block type '{$type}' is not available on this page's template "
+                    . "(schema family '{$family}'). Allowed types: {$knownTypes}";
+            } else {
+                $errors[] = "Unknown block type '{$type}'. Known types include: {$knownTypes}";
+            }
+
             return ['valid' => false, 'errors' => $errors];
         }
 
-        $schema = $this->registry->getSchema($type);
+        $schema = $this->registry->getSchema($type, $family);
         if ($schema === null) {
             return ['valid' => true, 'errors' => []]; // No schema = no validation
         }
@@ -114,9 +119,9 @@ final class BlockValidator
      *
      * @param array<string, mixed> $block
      */
-    public function validateWithMessage(array $block): ?string
+    public function validateWithMessage(array $block, string $family = BlockTypeRegistry::FAMILY_TAILWIND): ?string
     {
-        $result = $this->validate($block);
+        $result = $this->validate($block, $family);
         if ($result['valid']) {
             return null;
         }
@@ -124,64 +129,21 @@ final class BlockValidator
     }
 
     /**
-     * Validate block including path-based restrictions.
-     *
-     * Some block types are restricted to specific page paths.
-     * For example, 'hl-des' is only allowed on /training/* pages.
-     *
-     * @param array<string, mixed> $block
-     * @param string $path The PHPCR path of the page
-     */
-    public function validateWithPath(array $block, string $path): ?string
-    {
-        // Run standard validation first
-        $error = $this->validateWithMessage($block);
-        if ($error !== null) {
-            return $error;
-        }
-
-        // Check path-based restrictions
-        $type = $block['type'] ?? null;
-        if (is_string($type)) {
-            return $this->validateBlockTypeForPath($type, $path);
-        }
-
-        return null;
-    }
-
-    /**
-     * Check if a block type is allowed on the given path.
-     */
-    private function validateBlockTypeForPath(string $blockType, string $path): ?string
-    {
-        if (!isset(self::PATH_BLOCK_RULES[$blockType])) {
-            return null; // No path restriction for this block type
-        }
-
-        $requiredPath = self::PATH_BLOCK_RULES[$blockType];
-        if (!str_contains($path, $requiredPath)) {
-            return "Block type '{$blockType}' is only allowed on {$requiredPath}* pages. Use 'headline-description' or 'headline-paragraphs' instead.";
-        }
-
-        return null;
-    }
-
-    /**
      * Get suggested fields for a block type.
      *
      * @return array{properties: array<string>, nested?: string, nestedProperties?: array<string>}|null
      */
-    public function getSuggestedFields(string $type): ?array
+    public function getSuggestedFields(string $type, string $family = BlockTypeRegistry::FAMILY_TAILWIND): ?array
     {
-        return $this->registry->getSchema($type);
+        return $this->registry->getSchema($type, $family);
     }
 
     /**
      * Check if a block type exists.
      */
-    public function isValidType(string $type): bool
+    public function isValidType(string $type, string $family = BlockTypeRegistry::FAMILY_TAILWIND): bool
     {
-        return $this->registry->hasType($type);
+        return $this->registry->hasType($type, $family);
     }
 
     /**
@@ -189,8 +151,8 @@ final class BlockValidator
      *
      * Helps avoid common mistakes like using 'items' instead of 'faqs' for FAQ blocks.
      */
-    public function getNestedKey(string $type): ?string
+    public function getNestedKey(string $type, string $family = BlockTypeRegistry::FAMILY_TAILWIND): ?string
     {
-        return $this->registry->getNestedName($type);
+        return $this->registry->getNestedName($type, $family);
     }
 }

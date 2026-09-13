@@ -635,29 +635,267 @@ final class BlockTypeRegistry
     ];
 
     /**
+     * Block-schema families.
+     *
+     * Block type NAMES collide across the two block libraries shipped in this repo with
+     * DIFFERENT field sets (quote, team and list mean different things), and PHPCR storage
+     * only records the bare type string. Schemas must therefore be resolved per page template.
+     *
+     * - FAMILY_TAILWIND: config/templates/includes/tailwind/blocks/*.xml  (SCHEMAS)
+     * - FAMILY_EDUGATE:  config/templates/includes/edugate/blocks/*.xml   (EDUGATE_OVERRIDES)
+     */
+    public const FAMILY_TAILWIND = 'tailwind';
+    public const FAMILY_EDUGATE = 'edugate';
+
+    /**
+     * Page template -> schema family. Everything not listed uses FAMILY_TAILWIND.
+     */
+    private const TEMPLATE_FAMILY = [
+        'training-detail' => self::FAMILY_EDUGATE,
+    ];
+
+    /**
+     * The ONLY block types a training-detail page may contain.
+     *
+     * Matches the <type> list of config/templates/includes/edugate/blocks-training-detail.xml.
+     * Used as an allow-list on write so tailwind-only types (faq, headline-paragraphs, ...)
+     * cannot be added to a training-detail page: there is no
+     * templates/includes/training-detail/blocks/<type>.html.twig for them, so publishing such a
+     * block renders a 500.
+     */
+    public const EDUGATE_TYPES = [
+        'hl-des', 'quote', 'buttons', 'list', 'schedule',
+        'gallery', 'date', 'html', 'team', 'youtube-from-channel',
+    ];
+
+    /**
+     * Types that live in their own collection rather than in `blocks`, so they are valid
+     * schemas but must never be offered as a `blocks` entry.
+     */
+    public const EDUGATE_COLLECTION_TYPES = ['factItems'];
+
+    /**
+     * Edugate schemas that DIFFER from the tailwind entry of the same name.
+     *
+     * 'hl-des' and 'youtube-from-channel' are deliberately absent: they are field-for-field
+     * identical to their tailwind counterparts, so they resolve to SCHEMAS via schema().
+     */
+    public const EDUGATE_OVERRIDES = [
+        // Not part of the `blocks` collection: factItems is training-detail's own block
+        // collection, stored under the i18n:{locale}-factItems prefix.
+        'factItems' => [
+            'properties' => ['headline', 'description'],
+        ],
+        // tailwind's quote is text/author/role/source/date/url - completely different.
+        'quote' => [
+            'properties' => ['headline', 'description', 'name', 'company'],
+        ],
+        'buttons' => [
+            'properties' => ['buttonText', 'pdfTarget', 'downloadText'],
+            'encoding' => ['pdfTarget' => 'json'],
+        ],
+        'gallery' => [
+            'properties' => ['headline', 'image'],
+            'encoding' => ['image' => 'json'],
+        ],
+        // 'date' here is a rich-text field, not a date literal.
+        'date' => [
+            'properties' => ['headline', 'date'],
+        ],
+        'html' => [
+            'properties' => ['html'],
+            'encoding' => ['html' => 'raw'],
+        ],
+        // tailwind's team uses 'description'; edugate uses 'subline'.
+        'team' => [
+            'properties' => ['subline', 'headline', 'organisation'],
+            'encoding' => ['organisation' => 'contact'],
+        ],
+        // tailwind's list is subline/headline/description with different nesting.
+        'list' => [
+            'properties' => ['headline'],
+            'nested' => 'items',
+            'nestedType' => 'single_item',  // XML type name - NOT 'items'!
+            'nestedProperties' => ['description'],
+        ],
+        // dayOneItems/dayTwoItems are nested collections written through the same
+        // top-level isNestedArray path as card-trio's card1Tags/card2Tags/card3Tags.
+        // Both share nestedProperties because their inner types are identical.
+        'schedule' => [
+            'properties' => [
+                'headline',
+                'dayOneHeadline', 'dayOneItems',
+                'dayTwoHeadline', 'dayTwoItems',
+            ],
+            'nestedProperties' => ['title', 'status'],
+            'nestedTypes' => ['dayOneItems' => 'dayOneItems', 'dayTwoItems' => 'dayTwoItems'],
+        ],
+    ];
+
+    /**
+     * Descriptions for the edugate family (training-detail pages).
+     *
+     * Only types whose meaning differs from the tailwind entry of the same name are listed;
+     * the rest fall through to DESCRIPTIONS.
+     */
+    public const EDUGATE_DESCRIPTIONS = [
+        'hl-des' => 'Headline plus rich-text description. The default block of a training-detail page, and the one the page builds its table of contents from.',
+        'quote' => 'Testimonial. headline and description (rich text) carry the quote, name and company the attribution. NOTE: unrelated to the tailwind quote block, which uses text/author/source.',
+        'buttons' => 'Call-to-action row. buttonText is the booking label; pdfTarget selects a PDF from the media library and downloadText labels that download.',
+        'gallery' => 'Headline plus an image gallery (media_selection, multiple images).',
+        'date' => 'Headline plus a rich-text date/scheduling note. date is RICH TEXT, not a date literal.',
+        'html' => 'Raw HTML block, stored verbatim. Used for embeds.',
+        'team' => 'Trainer/team section: subline, headline and a contact selection. NOTE: uses subline where the tailwind team block uses description.',
+        'list' => 'Headline plus items[], each item a single rich-text description. NOTE: unrelated to the tailwind list block.',
+        'schedule' => 'Two-day agenda. headline, then dayOneHeadline + dayOneItems[] and dayTwoHeadline + dayTwoItems[]. Each item has title (plain text) and status, which MUST be one of: theory, team, live.',
+        'youtube-from-channel' => 'YouTube playlist section: headline, subline and playlistid.',
+    ];
+
+    /**
+     * Examples for the edugate family, surfaced by list_block_types/get_block_schema.
+     */
+    public const EDUGATE_EXAMPLES = [
+        'hl-des' => [
+            'type' => 'hl-des',
+            'headline' => 'Was du lernst',
+            'description' => 'Du schreibst ab Tag eins eigene Tests und bekommst direktes Feedback.',
+        ],
+        'quote' => [
+            'type' => 'quote',
+            'headline' => 'Bestes Training seit Jahren',
+            'description' => 'Das Team hat sofort umsetzen koennen, was wir gelernt haben.',
+            'name' => 'Maria Schmidt',
+            'company' => 'Beispiel GmbH',
+        ],
+        'buttons' => [
+            'type' => 'buttons',
+            'buttonText' => 'Jetzt Platz sichern',
+            'downloadText' => 'Agenda als PDF',
+            'pdfTarget' => ['ids' => [123]],
+        ],
+        'gallery' => [
+            'type' => 'gallery',
+            'headline' => 'Impressionen',
+            'image' => ['ids' => [492, 483]],
+        ],
+        'date' => [
+            'type' => 'date',
+            'headline' => 'Termine',
+            'date' => '12. bis 13. Maerz 2026, jeweils 09:00 bis 17:00 Uhr',
+        ],
+        'html' => [
+            'type' => 'html',
+            'html' => '<iframe src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>',
+        ],
+        'team' => [
+            'type' => 'team',
+            'subline' => 'Deine Trainer',
+            'headline' => 'Wer dich begleitet',
+            'organisation' => ['c1', 'c38'],
+        ],
+        'list' => [
+            'type' => 'list',
+            'headline' => 'Voraussetzungen',
+            'items' => [
+                ['description' => 'Grundkenntnisse in PHP'],
+                ['description' => 'Ein eigener Laptop mit Docker'],
+            ],
+        ],
+        'schedule' => [
+            'type' => 'schedule',
+            'headline' => 'Ablauf',
+            'dayOneHeadline' => 'Tag 1',
+            'dayOneItems' => [
+                ['title' => 'Setup und erste Tests', 'status' => 'theory'],
+                ['title' => 'Pair Programming', 'status' => 'team'],
+            ],
+            'dayTwoHeadline' => 'Tag 2',
+            'dayTwoItems' => [
+                ['title' => 'Refactoring am eigenen Code', 'status' => 'live'],
+            ],
+        ],
+        'youtube-from-channel' => [
+            'type' => 'youtube-from-channel',
+            'headline' => 'Reviews',
+            'subline' => 'Stimmen aus vergangenen Schulungen',
+            'playlistid' => 'PLKrKzhBjw2Y88YH-UCWs6irEQfiGdzD2X',
+        ],
+    ];
+
+    /**
+     * Resolve the schema family for a page template.
+     */
+    public static function familyFor(?string $template): string
+    {
+        return self::TEMPLATE_FAMILY[$template ?? ''] ?? self::FAMILY_TAILWIND;
+    }
+
+    /**
+     * Single resolution point for every schema lookup in this class.
+     *
+     * READ vs WRITE asymmetry is deliberate. For an edugate page this returns the edugate
+     * schema, falling back to the identical tailwind entry for hl-des/youtube-from-channel.
+     * For a type that is not part of the family at all it returns null, which makes
+     * BlockValidator reject it on write. Reading such a block is handled by
+     * schemaForRead(), so pre-existing out-of-family blocks stay visible and repairable.
+     *
+     * @return array{properties: array<string>, nested?: string, nestedType?: string, nestedProperties?: array<string>, encoding?: array<string, string>, nestedEncoding?: array<string, string>, nestedTypes?: array<string, string>}|null
+     */
+    private function schema(string $type, string $family): ?array
+    {
+        if ($family === self::FAMILY_EDUGATE) {
+            if (!in_array($type, self::EDUGATE_TYPES, true)
+                && !in_array($type, self::EDUGATE_COLLECTION_TYPES, true)
+            ) {
+                return null;
+            }
+
+            return self::EDUGATE_OVERRIDES[$type] ?? self::SCHEMAS[$type] ?? null;
+        }
+
+        return self::SCHEMAS[$type] ?? null;
+    }
+
+    /**
+     * Schema to use when READING stored content.
+     *
+     * Two published training-detail pages already carry tailwind blocks (faq,
+     * headline-paragraphs) that were written before family validation existed. Reading them
+     * through the strict family resolver would silently drop their content, so reads fall back
+     * to the other family and surface what is actually stored. Writes stay strict.
+     *
+     * @return array{properties: array<string>, nested?: string, nestedType?: string, nestedProperties?: array<string>, encoding?: array<string, string>, nestedEncoding?: array<string, string>, nestedTypes?: array<string, string>}|null
+     */
+    public function getSchemaForRead(string $type, string $family = self::FAMILY_TAILWIND): ?array
+    {
+        return $this->schema($type, $family)
+            ?? $this->schema($type, $family === self::FAMILY_EDUGATE ? self::FAMILY_TAILWIND : self::FAMILY_EDUGATE);
+    }
+
+    /**
      * Get full schema for a block type.
      *
-     * @return array{properties: array<string>, nested?: string, nestedType?: string, nestedProperties?: array<string>, encoding?: array<string, string>, nestedEncoding?: array<string, string>}|null
+     * @return array{properties: array<string>, nested?: string, nestedType?: string, nestedProperties?: array<string>, encoding?: array<string, string>, nestedEncoding?: array<string, string>, nestedTypes?: array<string, string>}|null
      */
-    public function getSchema(string $type): ?array
+    public function getSchema(string $type, string $family = self::FAMILY_TAILWIND): ?array
     {
-        return self::SCHEMAS[$type] ?? null;
+        return $this->schema($type, $family);
     }
 
     /**
      * Check if block type has nested items.
      */
-    public function hasNested(string $type): bool
+    public function hasNested(string $type, string $family = self::FAMILY_TAILWIND): bool
     {
-        return isset(self::SCHEMAS[$type]['nested']);
+        return isset($this->schema($type, $family)['nested']);
     }
 
     /**
      * Get the name of the nested block array (e.g., 'items', 'faqs', 'rows').
      */
-    public function getNestedName(string $type): ?string
+    public function getNestedName(string $type, string $family = self::FAMILY_TAILWIND): ?string
     {
-        return self::SCHEMAS[$type]['nested'] ?? null;
+        return $this->schema($type, $family)['nested'] ?? null;
     }
 
     /**
@@ -666,9 +904,9 @@ final class BlockTypeRegistry
      * This matches the default-type in the XML config and is used by BlockWriter
      * to set the correct type value when writing nested block items.
      */
-    public function getNestedType(string $type): ?string
+    public function getNestedType(string $type, string $family = self::FAMILY_TAILWIND): ?string
     {
-        return self::SCHEMAS[$type]['nestedType'] ?? null;
+        return $this->schema($type, $family)['nestedType'] ?? null;
     }
 
     /**
@@ -676,9 +914,9 @@ final class BlockTypeRegistry
      *
      * @return array<string>
      */
-    public function getProperties(string $type): array
+    public function getProperties(string $type, string $family = self::FAMILY_TAILWIND): array
     {
-        return self::SCHEMAS[$type]['properties'] ?? [];
+        return $this->schema($type, $family)['properties'] ?? [];
     }
 
     /**
@@ -686,9 +924,9 @@ final class BlockTypeRegistry
      *
      * @return array<string>
      */
-    public function getNestedProperties(string $type): array
+    public function getNestedProperties(string $type, string $family = self::FAMILY_TAILWIND): array
     {
-        return self::SCHEMAS[$type]['nestedProperties'] ?? [];
+        return $this->schema($type, $family)['nestedProperties'] ?? [];
     }
 
     /**
@@ -696,32 +934,46 @@ final class BlockTypeRegistry
      *
      * @return array<string>
      */
-    public function getAllTypes(): array
+    public function getAllTypes(string $family = self::FAMILY_TAILWIND): array
     {
-        return array_keys(self::SCHEMAS);
+        return $family === self::FAMILY_EDUGATE
+            ? self::EDUGATE_TYPES
+            : array_keys(self::SCHEMAS);
     }
 
     /**
      * Check if a block type is registered.
      */
-    public function hasType(string $type): bool
+    public function hasType(string $type, string $family = self::FAMILY_TAILWIND): bool
     {
-        return isset(self::SCHEMAS[$type]);
+        // Collection-only types (factItems) have a schema so their own collection can be
+        // read and written, but they are not valid entries of the `blocks` collection.
+        if (in_array($type, self::EDUGATE_COLLECTION_TYPES, true)) {
+            return false;
+        }
+
+        return $this->schema($type, $family) !== null;
     }
 
     /**
      * Get count of registered block types.
      */
-    public function count(): int
+    public function count(string $family = self::FAMILY_TAILWIND): int
     {
-        return count(self::SCHEMAS);
+        return $family === self::FAMILY_EDUGATE
+            ? count(self::EDUGATE_TYPES)
+            : count(self::SCHEMAS);
     }
 
     /**
      * Get human-readable description of a block type.
      */
-    public function getDescription(string $type): ?string
+    public function getDescription(string $type, string $family = self::FAMILY_TAILWIND): ?string
     {
+        if ($family === self::FAMILY_EDUGATE) {
+            return self::EDUGATE_DESCRIPTIONS[$type] ?? self::DESCRIPTIONS[$type] ?? null;
+        }
+
         return self::DESCRIPTIONS[$type] ?? null;
     }
 
@@ -730,8 +982,12 @@ final class BlockTypeRegistry
      *
      * @return array<string, mixed>|null
      */
-    public function getExample(string $type): ?array
+    public function getExample(string $type, string $family = self::FAMILY_TAILWIND): ?array
     {
+        if ($family === self::FAMILY_EDUGATE) {
+            return self::EDUGATE_EXAMPLES[$type] ?? null;
+        }
+
         return self::EXAMPLES[$type] ?? null;
     }
 
@@ -760,9 +1016,9 @@ final class BlockTypeRegistry
      *
      * @return string One of: 'string' (default), 'json', 'reference', 'code', 'raw'
      */
-    public function getPropertyEncoding(string $type, string $property): string
+    public function getPropertyEncoding(string $type, string $property, string $family = self::FAMILY_TAILWIND): string
     {
-        return self::SCHEMAS[$type]['encoding'][$property] ?? 'string';
+        return $this->schema($type, $family)['encoding'][$property] ?? 'string';
     }
 
     /**
@@ -770,42 +1026,42 @@ final class BlockTypeRegistry
      *
      * @return string One of: 'string' (default), 'json', 'reference', 'code', 'raw'
      */
-    public function getNestedPropertyEncoding(string $type, string $property): string
+    public function getNestedPropertyEncoding(string $type, string $property, string $family = self::FAMILY_TAILWIND): string
     {
-        return self::SCHEMAS[$type]['nestedEncoding'][$property] ?? 'string';
+        return $this->schema($type, $family)['nestedEncoding'][$property] ?? 'string';
     }
 
     /**
      * Check if a top-level property uses PHPCR Reference type.
      */
-    public function isReferenceProperty(string $type, string $property): bool
+    public function isReferenceProperty(string $type, string $property, string $family = self::FAMILY_TAILWIND): bool
     {
-        return $this->getPropertyEncoding($type, $property) === 'reference';
+        return $this->getPropertyEncoding($type, $property, $family) === 'reference';
     }
 
     /**
      * Check if a top-level property should be JSON-encoded.
      */
-    public function isJsonProperty(string $type, string $property): bool
+    public function isJsonProperty(string $type, string $property, string $family = self::FAMILY_TAILWIND): bool
     {
-        return $this->getPropertyEncoding($type, $property) === 'json';
+        return $this->getPropertyEncoding($type, $property, $family) === 'json';
     }
 
     /**
      * Check if a top-level property should be stored raw (no transformation).
      */
-    public function isRawProperty(string $type, string $property): bool
+    public function isRawProperty(string $type, string $property, string $family = self::FAMILY_TAILWIND): bool
     {
-        return $this->getPropertyEncoding($type, $property) === 'raw';
+        return $this->getPropertyEncoding($type, $property, $family) === 'raw';
     }
 
     /**
      * Check if a top-level property is valid for a block type.
      * Returns true if the property is in the schema's properties list.
      */
-    public function isValidProperty(string $type, string $property): bool
+    public function isValidProperty(string $type, string $property, string $family = self::FAMILY_TAILWIND): bool
     {
-        $schema = self::SCHEMAS[$type] ?? null;
+        $schema = $this->schema($type, $family);
         if ($schema === null) {
             return false;
         }

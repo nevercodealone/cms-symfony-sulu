@@ -1799,4 +1799,248 @@ class SuluPagesToolTest extends TestCase
         $this->assertCount(1, $data['references']);
         $this->assertSame('page-teaser', $data['references'][0]['blockType']);
     }
+
+    // ==========================================================================
+    // update_training_data + template-aware discovery
+    // ==========================================================================
+
+    public function testUpdateTrainingDataRequiresPath(): void
+    {
+        $result = $this->tool->execute(['action' => 'update_training_data']);
+
+        $this->assertStringContainsString('path is required', $result->getSanitizedResult()['text']);
+    }
+
+    public function testUpdateTrainingDataRequiresAtLeastOneField(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'update_training_data',
+            'path' => '/cmf/example/contents/php-training/x',
+        ]);
+
+        $this->assertStringContainsString('at least one of', $result->getSanitizedResult()['text']);
+    }
+
+    public function testUpdateTrainingDataPassesScalarsThrough(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('updateTrainingData')
+            ->with('/p', ['paymenturl' => 'https://shop.test/x'], 'de')
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'update_training_data',
+            'path' => '/p',
+            'paymenturl' => 'https://shop.test/x',
+        ]);
+    }
+
+    public function testUpdateTrainingDataDecodesJsonArguments(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('updateTrainingData')
+            ->with('/p', [
+                'trainerItems' => ['c38'],
+                'factItems' => [['headline' => 'Dauer', 'description' => '2 Tage']],
+            ], 'de')
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'update_training_data',
+            'path' => '/p',
+            'trainerItems' => '["c38"]',
+            'factItems' => '[{"headline":"Dauer","description":"2 Tage"}]',
+        ]);
+    }
+
+    public function testUpdateTrainingDataPrefixesBareContactIds(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('updateTrainingData')
+            ->with('/p', ['trainerItems' => ['c38', 'c1']], 'de')
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'update_training_data',
+            'path' => '/p',
+            'trainerItems' => '[38, "c1"]',
+        ]);
+    }
+
+    public function testUpdateTrainingDataReportsInvalidJson(): void
+    {
+        $this->pageService->expects($this->never())->method('updateTrainingData');
+
+        $result = $this->tool->execute([
+            'action' => 'update_training_data',
+            'path' => '/p',
+            'factItems' => 'not json',
+        ]);
+
+        $this->assertStringContainsString('must be a valid JSON array', $result->getSanitizedResult()['text']);
+    }
+
+    public function testListBlockTypesDefaultsToTailwind(): void
+    {
+        $result = json_decode($this->tool->execute(['action' => 'list_block_types'])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('tailwind', $result['family']);
+        $names = array_column($result['types'], 'name');
+        $this->assertContains('faq', $names);
+        $this->assertNotContains('buttons', $names);
+    }
+
+    public function testListBlockTypesForTrainingDetailReturnsTheEdugateSet(): void
+    {
+        $result = json_decode($this->tool->execute([
+            'action' => 'list_block_types',
+            'template' => 'training-detail',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('edugate', $result['family']);
+        $names = array_column($result['types'], 'name');
+        sort($names);
+        $expected = BlockTypeRegistry::EDUGATE_TYPES;
+        sort($expected);
+        $this->assertSame($expected, $names);
+    }
+
+    public function testGetBlockSchemaResolvesPerTemplate(): void
+    {
+        $tailwind = json_decode($this->tool->execute([
+            'action' => 'get_block_schema',
+            'blockTypeName' => 'quote',
+        ])->getSanitizedResult()['text'], true);
+
+        $edugate = json_decode($this->tool->execute([
+            'action' => 'get_block_schema',
+            'blockTypeName' => 'quote',
+            'template' => 'training-detail',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertSame(['text', 'author', 'role', 'source', 'date', 'url'], $tailwind['properties']);
+        $this->assertSame(['headline', 'description', 'name', 'company'], $edugate['properties']);
+    }
+
+    public function testGetBlockSchemaExplainsWrongFamilyTypes(): void
+    {
+        $result = json_decode($this->tool->execute([
+            'action' => 'get_block_schema',
+            'blockTypeName' => 'faq',
+            'template' => 'training-detail',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertStringContainsString("belongs to a different template", $result['error']);
+    }
+
+    public function testCreatePageOmitsTemplateWhenNotGiven(): void
+    {
+        // Regression guard: the service then applies its tailwind default.
+        $this->pageService->expects($this->once())
+            ->method('createPage')
+            ->with(
+                $this->logicalNot($this->arrayHasKey('template')),
+                'de',
+            )
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'create_page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'T',
+            'resourceSegment' => '/t',
+        ]);
+    }
+
+    public function testCreatePagePassesAnExplicitTemplateThrough(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('createPage')
+            ->with(
+                $this->callback(static fn (array $d): bool => ($d['template'] ?? null) === 'training-detail'),
+                'de',
+            )
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'create_page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'T',
+            'resourceSegment' => '/t',
+            'template' => 'training-detail',
+        ]);
+    }
+
+    public function testCopyPageLeavesTemplateNullSoTheSourceIsInherited(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('copyPage')
+            ->with(
+                $this->callback(static fn (array $d): bool => array_key_exists('template', $d) && $d['template'] === null),
+                'de',
+            )
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'copy_page',
+            'sourcePath' => '/cmf/example/contents/a',
+            'title' => 'B',
+            'resourceSegment' => '/b',
+        ]);
+    }
+
+    // ==========================================================================
+    // switch_template
+    // ==========================================================================
+
+    public function testSwitchTemplateRequiresPath(): void
+    {
+        $result = $this->tool->execute(['action' => 'switch_template', 'template' => 'tailwind']);
+
+        $this->assertStringContainsString('path is required', $result->getSanitizedResult()['text']);
+    }
+
+    public function testSwitchTemplateRequiresTemplate(): void
+    {
+        $result = $this->tool->execute(['action' => 'switch_template', 'path' => '/p']);
+
+        $text = $result->getSanitizedResult()['text'];
+        $this->assertStringContainsString('template is required', $text);
+        $this->assertStringContainsString('training-detail', $text);
+    }
+
+    public function testSwitchTemplatePassesArgumentsThrough(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('switchTemplate')
+            ->with('/cmf/example/contents/php-training/x', 'training-detail', 'de')
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'switch_template',
+            'path' => '/cmf/example/contents/php-training/x',
+            'template' => 'training-detail',
+        ]);
+    }
+
+    public function testSwitchTemplateReturnsTheServiceResult(): void
+    {
+        $this->pageService->method('switchTemplate')->willReturn([
+            'success' => true,
+            'message' => 'Template switched',
+            'from' => 'tailwind',
+            'to' => 'training-detail',
+            'blocksNotInNewTemplate' => [['position' => 1, 'type' => 'faq']],
+        ]);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'switch_template',
+            'path' => '/p',
+            'template' => 'training-detail',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertSame('tailwind', $data['from']);
+        $this->assertSame('faq', $data['blocksNotInNewTemplate'][0]['type']);
+    }
 }
