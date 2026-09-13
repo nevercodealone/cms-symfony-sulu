@@ -61,7 +61,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -104,7 +104,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -272,7 +272,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'date',
                 type: PropertyType::STRING,
-                description: 'For quote block: Publication date, e.g. "28. Januar 2026"',
+                description: 'For quote block: Publication date, e.g. "28. Januar 2026". For update_training_data action (training-detail pages only): the rich-text scheduling note, e.g. "12. bis 13. Maerz 2026, 09:00-17:00 Uhr". Pass null to clear.',
                 required: false
             ),
             new SchemaProperty(
@@ -297,6 +297,24 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'blockTypeName',
                 type: PropertyType::STRING,
                 description: 'For get_block_schema action: name of the block type to get schema for (e.g. "faq", "headline-paragraphs")',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'paymenturl',
+                type: PropertyType::STRING,
+                description: 'For update_training_data action (training-detail pages only): booking/payment URL. Pass null to clear.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'trainerItems',
+                type: PropertyType::STRING,
+                description: 'For update_training_data action (training-detail pages only): JSON array of trainer contact refs, e.g. ["c1","c38"]. Bare numeric ids are prefixed with "c" automatically. Replaces the whole list.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'factItems',
+                type: PropertyType::STRING,
+                description: 'For update_training_data action (training-detail pages only): JSON array of fact entries, e.g. [{"headline":"Teilnehmer","description":"Max. 6 Personen"}]. description is rich text. Replaces the whole list.',
                 required: false
             ),
             new SchemaProperty(
@@ -475,6 +493,7 @@ class SuluPagesTool implements StreamableToolInterface
             'update_page_title' => $this->updatePageTitleAction($arguments, $locale),
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
             'update_seo' => $this->updateSeoAction($arguments, $locale),
+            'update_training_data' => $this->updateTrainingDataAction($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
             'append_to_block' => $this->appendToBlock($arguments, $locale),
@@ -663,6 +682,86 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->pageService->updateExcerpt($path, $data, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Update the base data of a training-detail page: the fields that live outside the
+     * `blocks` collection.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function updateTrainingDataAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $data = [];
+
+        foreach (['paymenturl', 'date'] as $field) {
+            if (array_key_exists($field, $arguments)) {
+                $value = $arguments[$field];
+                $data[$field] = $value === null ? null : $this->unescapeUnicode((string) $value);
+            }
+        }
+
+        // trainerItems: JSON array of contact refs, e.g. ["c1","c38"]. Bare ids are accepted
+        // and prefixed, since the admin stores contacts as c<id>.
+        if (array_key_exists('trainerItems', $arguments)) {
+            $decoded = $this->decodeJsonArgument($arguments['trainerItems'], 'trainerItems');
+            if ($decoded instanceof ToolResultInterface) {
+                return $decoded;
+            }
+
+            $data['trainerItems'] = array_map(
+                static fn ($ref) => is_numeric($ref) ? 'c' . $ref : (string) $ref,
+                $decoded,
+            );
+        }
+
+        // factItems: JSON array of {headline, description}
+        if (array_key_exists('factItems', $arguments)) {
+            $decoded = $this->decodeJsonArgument($arguments['factItems'], 'factItems');
+            if ($decoded instanceof ToolResultInterface) {
+                return $decoded;
+            }
+
+            $data['factItems'] = $decoded;
+        }
+
+        if (empty($data)) {
+            return new TextToolResult(
+                'Error: at least one of paymenturl, date, trainerItems, factItems is required'
+            );
+        }
+
+        $result = $this->pageService->updateTrainingData($path, $data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Decode a JSON array argument, returning an error result instead on bad input.
+     *
+     * @return array<mixed>|ToolResultInterface
+     */
+    private function decodeJsonArgument(mixed $raw, string $name): array|ToolResultInterface
+    {
+        if (is_array($raw)) {
+            return $raw;
+        }
+
+        $decoded = json_decode((string) $raw, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            return new TextToolResult(
+                "Error: {$name} must be a valid JSON array. "
+                . 'JSON error: ' . json_last_error_msg()
+                . '. First 200 chars: ' . mb_substr((string) $raw, 0, 200)
+            );
+        }
+
+        return $decoded;
     }
 
     /**

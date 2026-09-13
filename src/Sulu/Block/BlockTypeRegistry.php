@@ -669,12 +669,23 @@ final class BlockTypeRegistry
     ];
 
     /**
+     * Types that live in their own collection rather than in `blocks`, so they are valid
+     * schemas but must never be offered as a `blocks` entry.
+     */
+    public const EDUGATE_COLLECTION_TYPES = ['factItems'];
+
+    /**
      * Edugate schemas that DIFFER from the tailwind entry of the same name.
      *
      * 'hl-des' and 'youtube-from-channel' are deliberately absent: they are field-for-field
      * identical to their tailwind counterparts, so they resolve to SCHEMAS via schema().
      */
     public const EDUGATE_OVERRIDES = [
+        // Not part of the `blocks` collection: factItems is training-detail's own block
+        // collection, stored under the i18n:{locale}-factItems prefix.
+        'factItems' => [
+            'properties' => ['headline', 'description'],
+        ],
         // tailwind's quote is text/author/role/source/date/url - completely different.
         'quote' => [
             'properties' => ['headline', 'description', 'name', 'company'],
@@ -833,7 +844,9 @@ final class BlockTypeRegistry
     private function schema(string $type, string $family): ?array
     {
         if ($family === self::FAMILY_EDUGATE) {
-            if (!in_array($type, self::EDUGATE_TYPES, true)) {
+            if (!in_array($type, self::EDUGATE_TYPES, true)
+                && !in_array($type, self::EDUGATE_COLLECTION_TYPES, true)
+            ) {
                 return null;
             }
 
@@ -933,6 +946,12 @@ final class BlockTypeRegistry
      */
     public function hasType(string $type, string $family = self::FAMILY_TAILWIND): bool
     {
+        // Collection-only types (factItems) have a schema so their own collection can be
+        // read and written, but they are not valid entries of the `blocks` collection.
+        if (in_array($type, self::EDUGATE_COLLECTION_TYPES, true)) {
+            return false;
+        }
+
         return $this->schema($type, $family) !== null;
     }
 

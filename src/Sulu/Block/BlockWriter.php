@@ -466,10 +466,13 @@ final class BlockWriter
         DOMNode $rootNode,
         string $name,
         array $uuids,
+        string $svType = 'Reference',
     ): void {
         $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
         $property->setAttribute('sv:name', $name);
-        $property->setAttribute('sv:type', 'Reference');
+        // contact_account_selection (trainerItems, edugate team.organisation) is written by
+        // the Sulu admin as a multi-valued String of c<id> refs, not as a PHPCR Reference.
+        $property->setAttribute('sv:type', $svType);
         $property->setAttribute('sv:multi-valued', '1');
 
         foreach ($uuids as $uuid) {

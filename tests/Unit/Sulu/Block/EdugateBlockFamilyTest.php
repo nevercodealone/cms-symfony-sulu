@@ -196,6 +196,15 @@ class EdugateBlockFamilyTest extends TestCase
         $this->assertSame('faqs', $schema['nested']);
     }
 
+    public function testFactItemsIsAResolvableSchemaButNotAValidBlocksEntry(): void
+    {
+        // factItems is training-detail's own collection (i18n:de-factItems-*), not an entry
+        // of the `blocks` collection - so it must have a schema but fail hasType().
+        $this->assertNotNull($this->registry->getSchema('factItems', self::E));
+        $this->assertFalse($this->registry->hasType('factItems', self::E));
+        $this->assertNotContains('factItems', $this->registry->getAllTypes(self::E));
+    }
+
     /**
      * @param array<string, mixed> $block
      * @return array<string, mixed>

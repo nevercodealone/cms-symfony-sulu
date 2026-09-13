@@ -14,6 +14,7 @@ use App\Sulu\Service\PageReferenceScanner;
 use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
+use DOMNode;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
@@ -62,6 +63,11 @@ class PageService
      * transport timeout in the MCP layer.
      */
     private const DELETE_PROCESS_TIMEOUT = 60;
+
+    /**
+     * The only template carrying paymenturl / date / trainerItems / factItems.
+     */
+    private const TEMPLATE_TRAINING_DETAIL = 'training-detail';
 
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
@@ -263,7 +269,9 @@ class PageService
     /**
      * Get page content including blocks.
      *
-     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null, excerpt: array{title: string|null, description: string|null, images: array<mixed>|null}}|null
+     * trainingData is present only for training-detail pages.
+     *
+     * @return array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, blocks: array<mixed>, published: bool, state: string, publishedAt: string|null, createdAt: string|null, modifiedAt: string|null, excerpt: array{title: string|null, description: string|null, images: array<mixed>|null}, trainingData?: array<string, mixed>}|null
      */
     public function getPage(string $path, string $locale = 'de'): ?array
     {
@@ -291,7 +299,7 @@ class PageService
         $liveState = $this->getLiveState($path, $locale);
         $pubMeta = $this->extractPublicationMeta($result['props'], $locale, $liveState);
 
-        return [
+        $page = [
             'path' => $result['path'],
             'url' => $url,
             'fullUrl' => $url !== null ? '/' . $locale . $url : null,
@@ -309,12 +317,20 @@ class PageService
                 'images' => $excerptImages ? json_decode($excerptImages, true) : null,
             ],
         ];
+
+        // training-detail carries content outside the `blocks` collection; surface it so a
+        // client sees the whole page, not just its blocks.
+        if ($template === self::TEMPLATE_TRAINING_DETAIL) {
+            $page['trainingData'] = $this->getTrainingData($result['props'], $locale);
+        }
+
+        return $page;
     }
 
     /**
      * Get lightweight page structure without full block content.
      *
-     * @return array{success: bool, title: string, uuid: string|null, url: string|null, seoTitle: string|null, seoDescription: string|null, excerptTitle: string|null, excerptDescription: string|null, excerptImage: int|null, blocks_count: int, blocks: array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int}>}|null
+     * @return array<string, mixed>|null
      */
     public function getPageStructure(string $path, string $locale = 'de'): ?array
     {
@@ -330,7 +346,7 @@ class PageService
         $seoTitle = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-title") : null;
         $seoDescription = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-description") : null;
 
-        return [
+        $structure = [
             'success' => true,
             'title' => $page['title'],
             'uuid' => $this->getPageUuid($path),
@@ -343,6 +359,18 @@ class PageService
             'blocks_count' => count($page['blocks']),
             'blocks' => $this->formatCompactBlocks($page['blocks']),
         ];
+
+        if (isset($page['trainingData'])) {
+            $structure['template'] = $page['template'];
+            $structure['trainingData'] = [
+                'paymenturl' => $page['trainingData']['paymenturl'],
+                'date' => $page['trainingData']['date'],
+                'trainerItems' => $page['trainingData']['trainerItems'],
+                'factItems_count' => count($page['trainingData']['factItems']),
+            ];
+        }
+
+        return $structure;
     }
 
     /**
@@ -1568,6 +1596,299 @@ class PageService
     }
 
     /**
+     * Read the training-detail base data of a page.
+     *
+     * These live outside the `blocks` collection: paymenturl / date are plain
+     * i18n:{locale}-{name} String properties, trainerItems is a multi-valued String of
+     * contact refs (c<id>), and factItems is a second block collection whose storage layout
+     * is identical to `blocks` - only the property prefix differs.
+     *
+     * @return array{paymenturl: string|null, date: string|null, trainerItems: array<int, string>, factItems: array<int, array<string, mixed>>}
+     */
+    public function getTrainingData(string $props, string $locale = 'de'): array
+    {
+        return [
+            'paymenturl' => $this->extractPropertyFromXml($props, "i18n:{$locale}-paymenturl"),
+            'date' => $this->extractPropertyFromXml($props, "i18n:{$locale}-date"),
+            'trainerItems' => $this->extractMultiValueProperty($props, "i18n:{$locale}-trainerItems"),
+            'factItems' => $this->extractBlocks(
+                $props,
+                $locale,
+                BlockTypeRegistry::FAMILY_EDUGATE,
+                'factItems',
+            ),
+        ];
+    }
+
+    /**
+     * Update the training-detail base data of a page.
+     *
+     * Only valid on a training-detail page - every other template has no such fields, and
+     * writing them would produce properties the Sulu admin cannot map back to its template.
+     *
+     * @param array<string, mixed> $data any of paymenturl, date, trainerItems, factItems
+     * @return array{success: bool, message: string, trainingData?: array<string, mixed>}
+     */
+    public function updateTrainingData(string $path, array $data, string $locale = 'de'): array
+    {
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $template = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-template");
+            if ($template !== self::TEMPLATE_TRAINING_DETAIL) {
+                return [
+                    'success' => false,
+                    'message' => "Page template is '" . ($template ?? 'unknown') . "', not '"
+                        . self::TEMPLATE_TRAINING_DETAIL . "'. paymenturl, date, trainerItems and "
+                        . 'factItems only exist on training-detail pages.',
+                ];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if (!$rootNode) {
+                return ['success' => false, 'message' => 'Invalid XML structure'];
+            }
+
+            $updatedFields = $this->applyFieldMap($xml, $xpath, $rootNode, [
+                'paymenturl' => "i18n:{$locale}-paymenturl",
+                'date' => "i18n:{$locale}-date",
+            ], $data);
+
+            // trainerItems: multi-valued String of contact refs, matching what the Sulu
+            // admin writes for contact_account_selection (NOT a PHPCR Reference).
+            if (array_key_exists('trainerItems', $data)) {
+                $refs = is_array($data['trainerItems'])
+                    ? array_values(array_map(strval(...), $data['trainerItems']))
+                    : [];
+
+                $this->removeProperty($xpath, "i18n:{$locale}-trainerItems");
+                $this->blockWriter->addReferenceProperty(
+                    $xml,
+                    $rootNode,
+                    "i18n:{$locale}-trainerItems",
+                    $refs,
+                    'String',
+                );
+                $updatedFields[] = 'trainerItems';
+            }
+
+            // factItems: a block collection identical in shape to `blocks`, so it is written
+            // with the same BlockWriter under a different property prefix.
+            if (array_key_exists('factItems', $data)) {
+                $items = is_array($data['factItems']) ? array_values($data['factItems']) : [];
+
+                foreach ($items as $item) {
+                    if (!is_array($item)) {
+                        return ['success' => false, 'message' => 'Each factItems entry must be an object with headline and/or description'];
+                    }
+                }
+
+                $this->removeCollection($xpath, "i18n:{$locale}-factItems");
+
+                $this->blockWriter->addProperty(
+                    $xml,
+                    $rootNode,
+                    "i18n:{$locale}-factItems-length",
+                    (string) count($items),
+                    'Long',
+                );
+
+                foreach ($items as $index => $item) {
+                    $this->blockWriter->addBlock(
+                        $xml,
+                        $rootNode,
+                        $locale,
+                        $index,
+                        ['type' => 'factItems'] + $item,
+                        BlockTypeRegistry::FAMILY_EDUGATE,
+                        'factItems',
+                    );
+                }
+
+                $updatedFields[] = 'factItems';
+            }
+
+            if ($updatedFields === []) {
+                return [
+                    'success' => false,
+                    'message' => 'Nothing to update. Provide at least one of: paymenturl, date, trainerItems, factItems.',
+                ];
+            }
+
+            $updatedXml = (string) $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_training_data_updated',
+                $path,
+                $locale,
+                ['fields' => $updatedFields]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            return [
+                'success' => true,
+                'message' => 'Training data updated successfully',
+                'trainingData' => $this->getTrainingData($updatedXml, $locale),
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Remove a single property by exact name.
+     */
+    private function removeProperty(DOMXPath $xpath, string $propertyName): void
+    {
+        $nodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
+        if ($nodes === false) {
+            return;
+        }
+
+        foreach (iterator_to_array($nodes) as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+            }
+        }
+    }
+
+    /**
+     * Remove every property belonging to a block collection (its -length and all indexed
+     * entries), so the collection can be rewritten from scratch.
+     */
+    private function removeCollection(DOMXPath $xpath, string $prefix): void
+    {
+        $nodes = $xpath->query('//sv:property[starts-with(@sv:name, "' . $prefix . '")]');
+        if ($nodes === false) {
+            return;
+        }
+
+        foreach (iterator_to_array($nodes) as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+            }
+        }
+    }
+
+    /**
+     * Read a multi-valued String property as a plain list.
+     *
+     * @return array<int, string>
+     */
+    private function extractMultiValueProperty(string $props, string $propertyName): array
+    {
+        try {
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $props);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $values = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]/sv:value');
+            if ($values === false) {
+                return [];
+            }
+
+            $out = [];
+            foreach ($values as $value) {
+                $out[] = (string) $value->nodeValue;
+            }
+
+            return $out;
+        } catch (\Exception) {
+            return [];
+        }
+    }
+
+    /**
+     * Write a flat map of single-valued String properties into a PHPCR props document.
+     *
+     * Shared by updateSeo() and updateTrainingData(): both write plain
+     * i18n:{locale}-{name} String properties, creating, overwriting or (on a null value)
+     * removing them.
+     *
+     * @param array<string, string> $fieldMap data key => PHPCR property name
+     * @param array<string, mixed> $data
+     * @return array<int, string> the data keys that were actually touched
+     */
+    private function applyFieldMap(
+        DOMDocument $xml,
+        DOMXPath $xpath,
+        DOMNode $rootNode,
+        array $fieldMap,
+        array $data,
+    ): array {
+        $updatedFields = [];
+
+        foreach ($fieldMap as $dataKey => $propertyName) {
+            if (!array_key_exists($dataKey, $data)) {
+                continue;
+            }
+
+            $value = $data[$dataKey];
+            $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
+            $existing = ($existingNodes !== false && $existingNodes->length > 0)
+                ? $existingNodes->item(0)
+                : null;
+
+            if ($value === null) {
+                if ($existing !== null && $existing->parentNode) {
+                    $existing->parentNode->removeChild($existing);
+                }
+            } elseif ($existing !== null) {
+                $valueNodes = $xpath->query('sv:value', $existing);
+                if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
+                    $valueNode = $valueNodes->item(0);
+                    $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
+                    if ($valueNode instanceof \DOMElement) {
+                        $valueNode->setAttribute('length', (string) strlen((string) $value));
+                    }
+                }
+            } else {
+                $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
+                $property->setAttribute('sv:name', $propertyName);
+                $property->setAttribute('sv:type', 'String');
+                $property->setAttribute('sv:multi-valued', '0');
+
+                $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
+                $valueEl->setAttribute('length', (string) strlen((string) $value));
+                $valueEl->appendChild($xml->createTextNode((string) $value));
+                $property->appendChild($valueEl);
+
+                $rootNode->appendChild($property);
+            }
+
+            $updatedFields[] = $dataKey;
+        }
+
+        return $updatedFields;
+    }
+
+    /**
      * @param array<string, string|null> $data
      *
      * @return array{success: bool, message: string, seo?: array{title: string|null, description: string|null, keywords: string|null}}
@@ -1601,50 +1922,7 @@ class PageService
                 'seoKeywords' => "i18n:{$locale}-seo-keywords",
             ];
 
-            $updatedFields = [];
-
-            foreach ($fieldMap as $dataKey => $propertyName) {
-                if (!array_key_exists($dataKey, $data)) {
-                    continue;
-                }
-
-                $value = $data[$dataKey];
-                $existingNodes = $xpath->query('//sv:property[@sv:name="' . $propertyName . '"]');
-
-                if ($value === null) {
-                    if ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
-                        $node = $existingNodes->item(0);
-                        if ($node->parentNode) {
-                            $node->parentNode->removeChild($node);
-                        }
-                    }
-                    $updatedFields[] = $dataKey;
-                } elseif ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
-                    $propertyNode = $existingNodes->item(0);
-                    $valueNodes = $xpath->query('sv:value', $propertyNode);
-                    if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
-                        $valueNode = $valueNodes->item(0);
-                        $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
-                        if ($valueNode instanceof \DOMElement) {
-                            $valueNode->setAttribute('length', (string) strlen((string) $value));
-                        }
-                    }
-                    $updatedFields[] = $dataKey;
-                } else {
-                    $property = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
-                    $property->setAttribute('sv:name', $propertyName);
-                    $property->setAttribute('sv:type', 'String');
-                    $property->setAttribute('sv:multi-valued', '0');
-
-                    $valueEl = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
-                    $valueEl->setAttribute('length', (string) strlen((string) $value));
-                    $valueEl->appendChild($xml->createTextNode((string) $value));
-                    $property->appendChild($valueEl);
-
-                    $rootNode->appendChild($property);
-                    $updatedFields[] = $dataKey;
-                }
-            }
+            $updatedFields = $this->applyFieldMap($xml, $xpath, $rootNode, $fieldMap, $data);
 
             $updatedXml = $xml->saveXML();
 
