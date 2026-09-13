@@ -1932,4 +1932,60 @@ class SuluPagesToolTest extends TestCase
 
         $this->assertStringContainsString("belongs to a different template", $result['error']);
     }
+
+    public function testCreatePageOmitsTemplateWhenNotGiven(): void
+    {
+        // Regression guard: the service then applies its tailwind default.
+        $this->pageService->expects($this->once())
+            ->method('createPage')
+            ->with(
+                $this->logicalNot($this->arrayHasKey('template')),
+                'de',
+            )
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'create_page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'T',
+            'resourceSegment' => '/t',
+        ]);
+    }
+
+    public function testCreatePagePassesAnExplicitTemplateThrough(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('createPage')
+            ->with(
+                $this->callback(static fn (array $d): bool => ($d['template'] ?? null) === 'training-detail'),
+                'de',
+            )
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'create_page',
+            'parentPath' => '/cmf/example/contents',
+            'title' => 'T',
+            'resourceSegment' => '/t',
+            'template' => 'training-detail',
+        ]);
+    }
+
+    public function testCopyPageLeavesTemplateNullSoTheSourceIsInherited(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('copyPage')
+            ->with(
+                $this->callback(static fn (array $d): bool => array_key_exists('template', $d) && $d['template'] === null),
+                'de',
+            )
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'copy_page',
+            'sourcePath' => '/cmf/example/contents/a',
+            'title' => 'B',
+            'resourceSegment' => '/b',
+        ]);
+    }
 }

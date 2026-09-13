@@ -276,7 +276,7 @@ Copy a page with all blocks to a new location. Inherits excerpt data from source
 - Creates as **draft first**, only publishes if `publish: true` AND all blocks copied successfully
 - **Excerpt inheritance**: excerpt title, description, and image are copied from source unless explicitly overridden
 - **Shared media**: media IDs are copied as-is (references same media, no duplication)
-- **Block validation**: each block is validated for the target path (e.g., `hl-des` restriction to `/training/*` still applies)
+- **Block validation**: each block is validated against the target page's template (see "Page Templates and Block Families")
 - **Block media**: All media references (images, image) in blocks are preserved with their IDs and displayOption
 - **Full fidelity**: Every block field (text, URLs, settings, nested items, media) is copied 1:1 from source
 - **Partial failure**: if some blocks fail validation, the page is still created with successful blocks
@@ -1554,7 +1554,7 @@ Use these pages as templates with `copy_page` to quickly create new content:
 | PHP Glossar | `/cmf/example/contents/glossare/nca-php-glossar/phpunit` | PHP glossary entry with standard structure |
 | KI Tools | `/cmf/example/contents/ki-tools` | KI/AI tool pages |
 | Accessibility | `/cmf/example/contents/barrierefreiheit` | Accessibility content pages |
-| Training | `/cmf/example/contents/training` | Training course pages (uses `hl-des` blocks) |
+| Training | `/cmf/example/contents/php-training/phpunit-workshop` | Training course page (`training-detail` template, edugate blocks) |
 
 ### Standard Content Workflow
 
@@ -1579,15 +1579,74 @@ Use these pages as templates with `copy_page` to quickly create new content:
 
 ---
 
+## Page Templates and Block Families
+
+A page's template decides which block types it accepts **and what their fields mean**. Two
+block libraries are in use, and some type names appear in both with *different* fields:
+
+| Template | Block family | Block types |
+|----------|--------------|-------------|
+| `tailwind` (and `default`, `homepage`, ...) | tailwind | `headline-paragraphs`, `faq`, `table`, `hero*`, `card-trio`, ... |
+| `training-detail` | edugate | `hl-des`, `quote`, `buttons`, `list`, `schedule`, `gallery`, `date`, `html`, `team`, `youtube-from-channel` |
+
+Colliding names - **check the family before writing**:
+
+| Type | tailwind fields | edugate fields |
+|------|-----------------|----------------|
+| `quote` | `text`, `author`, `role`, `source`, `date`, `url` | `headline`, `description`, `name`, `company` |
+| `team` | `headline`, `description`, `organisation` | `subline`, `headline`, `organisation` |
+| `list` | `subline`, `headline`, `description` | `headline`, `items[].description` |
+
+`hl-des` and `youtube-from-channel` are identical in both.
+
+Use `list_block_types` / `get_block_schema` with the `template` argument to see the right set:
+
+```json
+{"action": "list_block_types", "template": "training-detail"}
+{"action": "get_block_schema", "blockTypeName": "quote", "template": "training-detail"}
+```
+
+Block-editing actions (`add_block`, `update_block`, `append_to_block`, ...) detect the page's
+template automatically - you do not pass `template` to them.
+
+### Creating and copying with a template
+
+`create_page` defaults to `tailwind`; pass `template` for anything else. `copy_page` inherits
+the source page's template.
+
+```json
+{"action": "create_page", "parentPath": "/cmf/example/contents/php-training", "title": "Neuer Workshop", "resourceSegment": "/neuer-workshop", "template": "training-detail"}
+```
+
+### training-detail base data
+
+`training-detail` pages carry content **outside** the `blocks` collection. `get` and
+`get_structure` return it as `trainingData`; `update_training_data` writes it:
+
+| Field | Meaning |
+|-------|---------|
+| `paymenturl` | Booking/payment URL |
+| `date` | Rich-text scheduling note (not a date literal) |
+| `trainerItems` | JSON array of trainer contact refs, e.g. `["c1","c38"]` |
+| `factItems` | JSON array of `{headline, description}`; `description` is rich text |
+
+`trainerItems` and `factItems` replace the whole list. Pass `null` to `paymenturl`/`date` to clear.
+
+```json
+{"action": "update_training_data", "path": "/cmf/example/contents/php-training/phpunit-workshop", "paymenturl": "https://shop.example/buy", "factItems": "[{\"headline\":\"Teilnehmer\",\"description\":\"Max. 6 Personen\"}]"}
+```
+
+---
+
 ## Common Mistakes to Avoid
 
-### Mistake 0: Using hl-des on non-training pages
+### Mistake 0: Using a block type from the wrong template family
 ```json
-{"blockType": "hl-des", "path": "/cmf/example/contents/glossare/php"}
+{"action": "add_block", "blockType": "faq", "path": "/cmf/example/contents/php-training/phpunit-workshop"}
 ```
-**Error:** `Block type 'hl-des' is only allowed on /training/* pages. Use 'headline-description' or 'headline-paragraphs' instead.`
+**Error:** `Block type 'faq' is not available on this page's template (schema family 'edugate'). Allowed types: hl-des, quote, buttons, list, schedule, gallery, date, html, team, youtube-from-channel`
 
-**Fix:** Use `headline-paragraphs` for glossar, blog, and other content pages. `hl-des` is restricted to `/training/*` pages only.
+**Fix:** Call `list_block_types` with `template` set to the page's template first. Block types are not interchangeable across templates - a `training-detail` page has no Twig template for `faq`, so publishing one would break the page.
 
 ### Mistake 1: Using wrong nested block name for FAQ
 ```json

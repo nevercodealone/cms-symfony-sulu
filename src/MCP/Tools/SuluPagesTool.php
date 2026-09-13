@@ -320,7 +320,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'template',
                 type: PropertyType::STRING,
-                description: 'Optional page template, default "tailwind". For list_block_types and get_block_schema: which template\'s block set to describe. Block type NAMES are reused across templates with DIFFERENT fields - on a "training-detail" page, quote is headline/description/name/company, not text/author/source - so pass template="training-detail" before editing a training page. Editing actions detect the template automatically.',
+                description: 'Optional page template, default "tailwind". For create_page: which template the new page gets. For copy_page: overrides the source template, which is otherwise inherited. For list_block_types and get_block_schema: which template\'s block set to describe. Block type NAMES are reused across templates with DIFFERENT fields - on a "training-detail" page, quote is headline/description/name/company, not text/author/source - so pass template="training-detail" before editing a training page. Block-editing actions detect the page template automatically.',
                 required: false
             ),
             new SchemaProperty(
@@ -602,6 +602,11 @@ class SuluPagesTool implements StreamableToolInterface
             'excerptImage' => isset($arguments['excerptImage']) ? (int) $arguments['excerptImage'] : null,
         ];
 
+        // Optional - omitting it keeps the previous tailwind-only behaviour.
+        if (!empty($arguments['template'])) {
+            $data['template'] = (string) $arguments['template'];
+        }
+
         $result = $this->pageService->createPage($data, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
@@ -617,6 +622,8 @@ class SuluPagesTool implements StreamableToolInterface
         $data = [
             'sourcePath' => $arguments['sourcePath'] ?? $arguments['path'] ?? '',
             'parentPath' => $arguments['parentPath'] ?? null,
+            // Omitted: copyPage() inherits the source page's template.
+            'template' => !empty($arguments['template']) ? (string) $arguments['template'] : null,
             'title' => $arguments['title'] ?? '',
             'resourceSegment' => $arguments['resourceSegment'] ?? '',
             'seoTitle' => $arguments['seoTitle'] ?? null,

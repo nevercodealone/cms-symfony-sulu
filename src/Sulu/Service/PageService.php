@@ -69,6 +69,11 @@ class PageService
      */
     private const TEMPLATE_TRAINING_DETAIL = 'training-detail';
 
+    /**
+     * Template assigned to a new page when the caller does not pick one.
+     */
+    public const DEFAULT_TEMPLATE = 'tailwind';
+
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
     private BlockValidator $blockValidator;
@@ -946,7 +951,7 @@ class PageService
     /**
      * Create a new page using direct SQL.
      *
-     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int} $data
+     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, template?: string} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, full_url?: string, published?: bool}
      */
     public function createPage(array $data, string $locale = 'de'): array
@@ -960,6 +965,7 @@ class PageService
         $excerptTitle = $data['excerptTitle'] ?? null;
         $excerptDescription = $data['excerptDescription'] ?? null;
         $excerptImage = $data['excerptImage'] ?? null;
+        $template = $data['template'] ?? self::DEFAULT_TEMPLATE;
 
         // Validate required fields
         if (empty($parentPath)) {
@@ -975,6 +981,14 @@ class PageService
         // Validate resourceSegment format
         if (!preg_match('#^/[a-z0-9-]+$#', $resourceSegment)) {
             return ['success' => false, 'message' => 'resourceSegment must start with / and contain only lowercase letters, numbers, and hyphens'];
+        }
+
+        $available = $this->getAvailableTemplates();
+        if (!in_array($template, $available, true)) {
+            return [
+                'success' => false,
+                'message' => "Unknown template '{$template}'. Available templates: " . implode(', ', $available),
+            ];
         }
 
         try {
@@ -1017,7 +1031,7 @@ class PageService
 
             // Build XML props
             $now = (new \DateTime())->format('Y-m-d\TH:i:s.v+00:00');
-            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish, $excerptTitle, $excerptDescription, $excerptImage);
+            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish, $excerptTitle, $excerptDescription, $excerptImage, $template);
 
             // Insert into BOTH workspaces
             foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
@@ -1071,6 +1085,38 @@ class PageService
     }
 
     /**
+     * Page template keys available in this project.
+     *
+     * Read from the <key> element of config/templates/pages/*.xml, so the list cannot drift
+     * from what Sulu will actually accept. Falls back to the filename when a key is absent.
+     *
+     * @return array<int, string>
+     */
+    public function getAvailableTemplates(): array
+    {
+        $dir = ($this->projectDir ?? \dirname(__DIR__, 3)) . '/config/templates/pages';
+
+        $files = glob($dir . '/*.xml');
+        if ($files === false) {
+            return [self::DEFAULT_TEMPLATE];
+        }
+
+        $templates = [];
+        foreach ($files as $file) {
+            $contents = file_get_contents($file);
+            if ($contents !== false && preg_match('#<key>\s*([^<\s]+)\s*</key>#', $contents, $m) === 1) {
+                $templates[] = $m[1];
+            } else {
+                $templates[] = basename($file, '.xml');
+            }
+        }
+
+        sort($templates);
+
+        return array_values(array_unique($templates));
+    }
+
+    /**
      * Build XML props for a new page.
      */
     private function buildPagePropsXml(
@@ -1085,6 +1131,7 @@ class PageService
         ?string $excerptTitle = null,
         ?string $excerptDescription = null,
         ?int $excerptImage = null,
+        string $template = self::DEFAULT_TEMPLATE,
     ): string {
         $titleLen = strlen($title);
         $urlLen = strlen($url);
@@ -1110,7 +1157,9 @@ class PageService
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-blocks-length" sv:type="Long" sv:multi-valued="0"><sv:value length="1">0</sv:value></sv:property>';
 
         // Template and state
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-template" sv:type="String" sv:multi-valued="0"><sv:value length="8">tailwind</sv:value></sv:property>';
+        // The length attribute must match the value - it used to be hardcoded to 8, which is
+        // only correct for the literal 'tailwind'.
+        $xml .= '<sv:property sv:name="i18n:' . $locale . '-template" sv:type="String" sv:multi-valued="0"><sv:value length="' . strlen($template) . '">' . htmlspecialchars($template, ENT_XML1) . '</sv:value></sv:property>';
         $xml .= '<sv:property sv:name="i18n:' . $locale . '-state" sv:type="Long" sv:multi-valued="0"><sv:value length="1">' . $state . '</sv:value></sv:property>';
 
         // Permissions
@@ -3125,7 +3174,7 @@ class PageService
      * then copies all blocks. Creates as draft first, only publishes if
      * all blocks were successfully copied and publish=true.
      *
-     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool} $data
+     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool, template?: string|null} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, blocksCopied?: int, blocksFailed?: int, errors?: array<string>}
      */
     public function copyPage(array $data, string $locale = 'de'): array
@@ -3154,6 +3203,10 @@ class PageService
             'excerptTitle' => $data['excerptTitle'] ?? $sourcePage['excerpt']['title'] ?? null,
             'excerptDescription' => $data['excerptDescription'] ?? $sourcePage['excerpt']['description'] ?? null,
             'excerptImage' => $data['excerptImage'] ?? null,
+            // Inherit the source template. Copying used to always produce a tailwind page,
+            // so copying a training-detail page silently changed its template and then
+            // failed to re-add any of its blocks.
+            'template' => $data['template'] ?? $sourcePage['template'],
             'publish' => false, // Always create as draft first
         ];
 
