@@ -1988,4 +1988,59 @@ class SuluPagesToolTest extends TestCase
             'resourceSegment' => '/b',
         ]);
     }
+
+    // ==========================================================================
+    // switch_template
+    // ==========================================================================
+
+    public function testSwitchTemplateRequiresPath(): void
+    {
+        $result = $this->tool->execute(['action' => 'switch_template', 'template' => 'tailwind']);
+
+        $this->assertStringContainsString('path is required', $result->getSanitizedResult()['text']);
+    }
+
+    public function testSwitchTemplateRequiresTemplate(): void
+    {
+        $result = $this->tool->execute(['action' => 'switch_template', 'path' => '/p']);
+
+        $text = $result->getSanitizedResult()['text'];
+        $this->assertStringContainsString('template is required', $text);
+        $this->assertStringContainsString('training-detail', $text);
+    }
+
+    public function testSwitchTemplatePassesArgumentsThrough(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('switchTemplate')
+            ->with('/cmf/example/contents/php-training/x', 'training-detail', 'de')
+            ->willReturn(['success' => true, 'message' => 'ok']);
+
+        $this->tool->execute([
+            'action' => 'switch_template',
+            'path' => '/cmf/example/contents/php-training/x',
+            'template' => 'training-detail',
+        ]);
+    }
+
+    public function testSwitchTemplateReturnsTheServiceResult(): void
+    {
+        $this->pageService->method('switchTemplate')->willReturn([
+            'success' => true,
+            'message' => 'Template switched',
+            'from' => 'tailwind',
+            'to' => 'training-detail',
+            'blocksNotInNewTemplate' => [['position' => 1, 'type' => 'faq']],
+        ]);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'switch_template',
+            'path' => '/p',
+            'template' => 'training-detail',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertSame('tailwind', $data['from']);
+        $this->assertSame('faq', $data['blocksNotInNewTemplate'][0]['type']);
+    }
 }

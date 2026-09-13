@@ -1609,6 +1609,25 @@ Use `list_block_types` / `get_block_schema` with the `template` argument to see 
 Block-editing actions (`add_block`, `update_block`, `append_to_block`, ...) detect the page's
 template automatically - you do not pass `template` to them.
 
+### Switching the template of an existing page
+
+`switch_template` moves a page between `tailwind` and `training-detail`. It is **lossless**: only
+the template property changes, so blocks and template-specific fields (`paymenturl`, `date`,
+`trainerItems`, `factItems`) stay in storage and switching back restores the page exactly. This
+matches Sulu's own behaviour, which also never purges properties of the old template.
+
+```json
+{"action": "switch_template", "path": "/cmf/example/contents/php-training/my-workshop", "template": "tailwind"}
+```
+
+The result reports `blocksNotInNewTemplate` - blocks whose type has no partial in the new layout
+and which therefore will not render until you change or remove them with `update_block` /
+`remove_block`. Nothing is lost either way; switching back is always available.
+
+Only `tailwind` and `training-detail` are supported: both keep their content in a `blocks`
+collection under the same property name. `conference` and `training` have no `blocks` collection at
+all, and `default` uses a third block set.
+
 ### Creating and copying with a template
 
 `create_page` defaults to `tailwind`; pass `template` for anything else. `copy_page` inherits

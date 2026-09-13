@@ -74,6 +74,17 @@ class PageService
      */
     public const DEFAULT_TEMPLATE = 'tailwind';
 
+    /**
+     * Templates `switch_template` may move a page between.
+     *
+     * Deliberately narrower than getAvailableTemplates(): both of these keep their content in a
+     * `blocks` collection under the same PHPCR property name, and both block vocabularies are
+     * modelled in BlockTypeRegistry, so the switch is a clean property flip. `conference` and
+     * `training` have no `blocks` collection at all, and `default` / `default-die-websprinter`
+     * use a third block set the registry does not model.
+     */
+    public const SWITCHABLE_TEMPLATES = [self::DEFAULT_TEMPLATE, self::TEMPLATE_TRAINING_DETAIL];
+
     private BlockExtractor $blockExtractor;
     private BlockWriter $blockWriter;
     private BlockValidator $blockValidator;
@@ -1637,6 +1648,122 @@ class PageService
                     'description' => $excerptDescription,
                     'images' => $excerptImages ? json_decode($excerptImages, true) : null,
                 ],
+            ];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Change the template of an existing page.
+     *
+     * Content is left exactly as stored - no block is converted and no property is removed - so
+     * the switch is lossless and switching back restores the previous rendering exactly. This
+     * also matches Sulu's own behaviour: StructureSubscriber::mapContentToNode() writes only the
+     * new structure's properties and never purges the old ones.
+     *
+     * A page renders only the block types its new template has a Twig partial for, so
+     * `blocksNotInNewTemplate` reports what still needs fixing with add_block / update_block /
+     * remove_block. It is informational and never blocks the switch.
+     *
+     * @return array{success: bool, message: string, path?: string, from?: string, to?: string, blocks_count?: int, blocksNotInNewTemplate?: array<int, array{position: int, type: string}>}
+     */
+    public function switchTemplate(string $path, string $template, string $locale = 'de'): array
+    {
+        if (!in_array($template, self::SWITCHABLE_TEMPLATES, true)) {
+            return [
+                'success' => false,
+                'message' => "Cannot switch to template '{$template}'. Supported: "
+                    . implode(', ', self::SWITCHABLE_TEMPLATES) . '.',
+            ];
+        }
+
+        try {
+            $result = $this->connection->fetchAssociative(
+                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+                [$path]
+            );
+
+            if (!$result) {
+                return ['success' => false, 'message' => 'Page not found'];
+            }
+
+            $current = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-template");
+
+            if ($current === $template) {
+                return [
+                    'success' => true,
+                    'message' => "Page already uses template '{$template}', nothing changed",
+                    'path' => $path,
+                    'from' => $template,
+                    'to' => $template,
+                ];
+            }
+
+            $xml = new DOMDocument();
+            $this->loadXmlSecurely($xml, $result['props']);
+
+            $xpath = new DOMXPath($xml);
+            $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+            $rootNode = $xpath->query('/sv:node')->item(0);
+            if (!$rootNode) {
+                return ['success' => false, 'message' => 'Invalid XML structure'];
+            }
+
+            // applyFieldMap() sets the sv:value length attribute from the value, which a
+            // hand-written property write is easy to get wrong.
+            $this->applyFieldMap($xml, $xpath, $rootNode, [
+                'template' => "i18n:{$locale}-template",
+            ], ['template' => $template]);
+
+            $updatedXml = (string) $xml->saveXML();
+
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+            );
+            $this->connection->executeStatement(
+                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
+                [$updatedXml, $path, self::WORKSPACE_LIVE]
+            );
+
+            $this->activityLogger->logMcpAction(
+                'mcp_template_switched',
+                $path,
+                $locale,
+                ['from' => $current, 'to' => $template]
+            );
+
+            $this->invalidatePageCache($path, $locale);
+
+            $family = BlockTypeRegistry::familyFor($template);
+            $blocks = $this->extractBlocks($updatedXml, $locale, $family);
+
+            $notSupported = [];
+            foreach ($blocks as $block) {
+                $type = $block['type'] ?? '';
+                if (is_string($type) && $type !== '' && !$this->blockTypeRegistry->hasType($type, $family)) {
+                    $notSupported[] = ['position' => $block['position'] ?? 0, 'type' => $type];
+                }
+            }
+
+            $message = "Template switched from '" . ($current ?? 'unknown') . "' to '{$template}'";
+            if ($notSupported !== []) {
+                $message .= '. ' . count($notSupported) . ' block(s) have no template in the new'
+                    . ' layout and will not render until they are changed or removed'
+                    . ' - no content was lost, switching back restores the page';
+            }
+
+            return [
+                'success' => true,
+                'message' => $message,
+                'path' => $path,
+                'from' => $current ?? 'unknown',
+                'to' => $template,
+                'blocks_count' => count($blocks),
+                'blocksNotInNewTemplate' => $notSupported,
             ];
 
         } catch (\Exception $e) {

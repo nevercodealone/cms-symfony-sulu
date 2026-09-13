@@ -61,7 +61,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -104,7 +104,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -320,7 +320,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'template',
                 type: PropertyType::STRING,
-                description: 'Optional page template, default "tailwind". For create_page: which template the new page gets. For copy_page: overrides the source template, which is otherwise inherited. For list_block_types and get_block_schema: which template\'s block set to describe. Block type NAMES are reused across templates with DIFFERENT fields - on a "training-detail" page, quote is headline/description/name/company, not text/author/source - so pass template="training-detail" before editing a training page. Block-editing actions detect the page template automatically.',
+                description: 'Optional page template, default "tailwind". For create_page: which template the new page gets. For switch_template: the template to move an existing page to (required there; only "tailwind" and "training-detail" are supported, and the switch is lossless - blocks and template-specific fields are kept, so switching back restores the page). For copy_page: overrides the source template, which is otherwise inherited. For list_block_types and get_block_schema: which template\'s block set to describe. Block type NAMES are reused across templates with DIFFERENT fields - on a "training-detail" page, quote is headline/description/name/company, not text/author/source - so pass template="training-detail" before editing a training page. Block-editing actions detect the page template automatically.',
                 required: false
             ),
             new SchemaProperty(
@@ -494,6 +494,7 @@ class SuluPagesTool implements StreamableToolInterface
             'update_excerpt' => $this->updateExcerptAction($arguments, $locale),
             'update_seo' => $this->updateSeoAction($arguments, $locale),
             'update_training_data' => $this->updateTrainingDataAction($arguments, $locale),
+            'switch_template' => $this->switchTemplateAction($arguments, $locale),
             'add_block' => $this->addBlock($arguments, $locale),
             'update_block' => $this->updateBlock($arguments, $locale),
             'append_to_block' => $this->appendToBlock($arguments, $locale),
@@ -687,6 +688,31 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updateExcerpt($path, $data, $locale);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Change the template of an existing page.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function switchTemplateAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = $arguments['path'] ?? '';
+        if (empty($path)) {
+            return new TextToolResult('Error: path is required');
+        }
+
+        $template = $arguments['template'] ?? '';
+        if (empty($template)) {
+            return new TextToolResult(
+                'Error: template is required. Supported: '
+                . implode(', ', PageService::SWITCHABLE_TEMPLATES)
+            );
+        }
+
+        $result = $this->pageService->switchTemplate($path, (string) $template, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
