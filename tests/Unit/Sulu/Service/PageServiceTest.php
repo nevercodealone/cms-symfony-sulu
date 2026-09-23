@@ -411,7 +411,7 @@ XML;
             ['headline' => 'New Head', 'content' => 'New description'],
             'de'
         );
-        $this->assertTrue($result['success'], $result['message'] ?? '');
+        $this->assertTrue($result['success'], $result['message']);
 
         $page = $this->pageService->getPage('/cmf/example/contents/test', 'de');
         $this->assertNotNull($page);

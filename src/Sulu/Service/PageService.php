@@ -425,7 +425,7 @@ class PageService
             // Same alias mapping as updateBlock(): content and items[].description
             // become the description field for schema'd types that have one
             // (e.g. hl-des created via add_block with items).
-            $block = $this->normalizeDescriptionAliases($block, (string) ($block['type'] ?? ''), $family);
+            $block = $this->normalizeDescriptionAliases($block, $block['type'], $family);
 
             $xml = new DOMDocument();
             $this->loadXmlSecurely($xml, $result['props']);
