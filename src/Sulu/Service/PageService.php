@@ -422,6 +422,11 @@ class PageService
                 return ['success' => false, 'message' => $validationError, 'position' => -1];
             }
 
+            // Same alias mapping as updateBlock(): content and items[].description
+            // become the description field for schema'd types that have one
+            // (e.g. hl-des created via add_block with items).
+            $block = $this->normalizeDescriptionAliases($block, (string) ($block['type'] ?? ''), $family);
+
             $xml = new DOMDocument();
             $this->loadXmlSecurely($xml, $result['props']);
 
@@ -1391,7 +1396,19 @@ class PageService
                 $blockType = $typeNodes->item(0)->nodeValue ?? 'hl-des';
             }
 
-            // Use BlockWriter to update the block, scoped to the page template's schema family
+            // Map generic aliases (content, items[].description) onto the
+            // description field for schema'd block types that have one
+            // (hl-des and friends), scoped to the page template's schema family.
+            $family = $this->resolveFamily($result['props'], $locale);
+            $blockData = $this->normalizeDescriptionAliases($blockData, $blockType, $family);
+
+            // No silent discard: reject fields the writer would skip, naming them.
+            $persistError = $this->validatePersistableFields($blockData, $blockType, $family);
+            if ($persistError !== null) {
+                return ['success' => false, 'message' => $persistError];
+            }
+
+            // Use BlockWriter to update the block
             $this->blockWriter->updateBlock(
                 $xml,
                 $xpath,
@@ -1399,7 +1416,7 @@ class PageService
                 $position,
                 $blockType,
                 $blockData,
-                $this->resolveFamily($result['props'], $locale),
+                $family,
             );
 
             $updatedXml = $xml->saveXML();
@@ -1437,6 +1454,133 @@ class PageService
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Map the generic aliases `content` and `items[].description` onto the
+     * description field for block types whose schema has one.
+     *
+     * Covers hl-des on training-detail pages (and every other schema'd type
+     * with a description property): the MCP actions add_block, update_block
+     * and update_blocks accept `content` or an items array of description
+     * entries, but storage only has the single `description` property.
+     * Multiple description items are joined with newlines into that one
+     * rich-text field.
+     *
+     * An explicitly passed description always wins; aliases are then dropped.
+     * items are only mapped when the block type has no nested collection of
+     * its own, and only when every entry is a pure description item —
+     * anything else (e.g. code items) stays untouched so
+     * validatePersistableFields() rejects it instead of silently discarding it.
+     *
+     * @param array<string, mixed> $blockData
+     * @return array<string, mixed>
+     */
+    private function normalizeDescriptionAliases(array $blockData, string $blockType, string $family): array
+    {
+        $schema = $this->blockTypeRegistry->getSchema($blockType, $family);
+        if ($schema === null || !in_array('description', $schema['properties'], true)) {
+            return $blockData;
+        }
+
+        // Explicit description wins; drop the aliases instead of overriding it.
+        if (isset($blockData['description'])) {
+            unset($blockData['content'], $blockData['items']);
+            return $blockData;
+        }
+
+        $parts = [];
+
+        if (array_key_exists('content', $blockData) && is_string($blockData['content'])) {
+            $parts[] = $blockData['content'];
+            unset($blockData['content']);
+        }
+
+        if (isset($blockData['items'])
+            && is_array($blockData['items'])
+            && !$this->blockTypeRegistry->hasNested($blockType, $family)
+            && $this->isPureDescriptionItems($blockData['items'])
+        ) {
+            foreach ($blockData['items'] as $item) {
+                if (is_string($item['description'] ?? null) && $item['description'] !== '') {
+                    $parts[] = $item['description'];
+                }
+            }
+            unset($blockData['items']);
+        }
+
+        if ($parts !== []) {
+            $blockData['description'] = implode("\n", $parts);
+        }
+
+        return $blockData;
+    }
+
+    /**
+     * True when every entry only carries a description (optionally with the
+     * structural "type": "description" marker). Anything else — code items,
+     * headlines, unknown keys — makes the items unmappable.
+     *
+     * @param array<int, mixed> $items
+     */
+    private function isPureDescriptionItems(array $items): bool
+    {
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                return false;
+            }
+            $type = $item['type'] ?? null;
+            if ($type !== null && $type !== 'description') {
+                return false;
+            }
+            foreach (array_keys($item) as $key) {
+                if ($key !== 'type' && $key !== 'description') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * No-silent-discard check for block updates.
+     *
+     * Every key in blockData must be a field BlockWriter will persist for this
+     * block type. Anything else returns an error naming the offending field(s)
+     * instead of reporting success while skipping them. Legacy blocks whose
+     * type has no schema in the page's family keep the lenient fallback.
+     *
+     * @param array<string, mixed> $blockData
+     */
+    private function validatePersistableFields(array $blockData, string $blockType, string $family): ?string
+    {
+        $schema = $this->blockTypeRegistry->getSchema($blockType, $family);
+        if ($schema === null) {
+            return null;
+        }
+
+        $allowed = $schema['properties'];
+        if (isset($schema['nested'])) {
+            $allowed[] = $schema['nested'];
+        }
+        foreach (array_keys($schema['nestedTypes'] ?? []) as $nestedKey) {
+            $allowed[] = $nestedKey;
+        }
+        $allowed[] = 'type';
+
+        $ignored = array_values(array_diff(array_keys($blockData), array_unique($allowed)));
+        if ($ignored === []) {
+            return null;
+        }
+
+        return sprintf(
+            "Field%s not persisted for block type '%s': %s. Persistable fields: %s",
+            count($ignored) > 1 ? 's' : '',
+            $blockType,
+            implode(', ', $ignored),
+            implode(', ', array_unique($allowed)),
+        );
     }
 
     /**
@@ -2161,12 +2305,26 @@ class PageService
             $block = $blocks[$position];
             $blockType = $block['type'] ?? 'unknown';
 
+            $family = $this->getPageFamily($path, $locale);
+
+            // A schema'd block without a nested collection (e.g. hl-des) has
+            // nothing to append items to — updateBlock() would map the items
+            // onto the description and overwrite it. Refuse instead of
+            // silently succeeding (or clobbering the description).
+            $schema = $this->blockTypeRegistry->getSchema($blockType, $family);
+            if ($schema !== null && !isset($schema['nested'])) {
+                return [
+                    'success' => false,
+                    'message' => "Block type '{$blockType}' has no items collection; use update_block with content/description instead of append_to_block",
+                ];
+            }
+
             // Nested key comes from the registry, scoped to the page template's schema
             // family. (This used to be a hand-maintained match that had already drifted -
             // it was missing card-trio => cards.)
             $nestedKey = $this->blockTypeRegistry->getNestedName(
                 $blockType,
-                $this->getPageFamily($path, $locale),
+                $family,
             ) ?? 'items';
 
             // Get existing items
