@@ -146,7 +146,13 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'content',
                 type: PropertyType::STRING,
-                description: 'Simple block content (HTML). Use "items" instead for blocks with mixed text and code',
+                description: 'Simple block content (HTML). Use "items" instead for blocks with mixed text and code. For blocks with a description field (hl-des, hero, feature, ...) this is stored as the description',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'description',
+                type: PropertyType::STRING,
+                description: 'Rich-text description of a block (add_block, update_block). For hl-des and other description blocks this is the field content maps to',
                 required: false
             ),
             new SchemaProperty(
