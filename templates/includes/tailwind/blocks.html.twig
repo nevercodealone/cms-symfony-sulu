@@ -27,7 +27,12 @@
               isFirstHeadline: isFirstHeadline
   } only %}
 
-          {% if block.type == 'headline-paragraphs' and isFirstHeadline %}
+          {# latest-articles renders its (non-empty) headline through the same
+             headline include, so it must consume the flag too — otherwise the
+             first headline-paragraphs below it becomes a second h1. #}
+          {% set consumesFirstHeadline = (block.type == 'headline-paragraphs')
+            or (block.type == 'latest-articles' and block.headline|default('') is not empty) %}
+          {% if consumesFirstHeadline and isFirstHeadline %}
             {% set isFirstHeadline = false %}
           {% endif %}
 {% if hasContainer %}
