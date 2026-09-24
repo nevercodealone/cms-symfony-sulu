@@ -54,6 +54,36 @@ class PageServiceTest extends TestCase
 </sv:node>
 XML;
 
+    private const TRAINING_DETAIL_PHPCR_XML = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">
+    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0">
+        <sv:value length="9">Test Page</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-template" sv:type="String" sv:multi-valued="0">
+        <sv:value length="15">training-detail</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0">
+        <sv:value length="1">2</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">hl-des</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-headline#0" sv:type="String" sv:multi-valued="0">
+        <sv:value length="8">Block One</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-type#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="6">hl-des</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-headline#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="9">Block Two</sv:value>
+    </sv:property>
+    <sv:property sv:name="i18n:de-blocks-description#1" sv:type="String" sv:multi-valued="0">
+        <sv:value length="16">Some description</sv:value>
+    </sv:property>
+</sv:node>
+XML;
+
     protected function setUp(): void
     {
         $this->connection = $this->createMock(Connection::class);
@@ -342,6 +372,51 @@ XML;
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('out of range', $result['message']);
+    }
+
+    /**
+     * fix-hl-des-description-update: on training-detail pages the hl-des
+     * description must be writable via the content alias, and fields that
+     * cannot be persisted must fail loudly instead of reporting success.
+     */
+    public function testUpdateBlockPersistsHlDesDescriptionOrErrors(): void
+    {
+        $props = self::TRAINING_DETAIL_PHPCR_XML;
+        $this->connection->method('fetchAssociative')
+            ->willReturnCallback(function () use (&$props): array {
+                return ['path' => '/cmf/example/contents/test', 'props' => $props];
+            });
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function (string $sql, array $params) use (&$props): int {
+                $props = $params[0];
+
+                return 1;
+            });
+
+        // Phase A - no silent discard: an unpersistable field must fail and be named.
+        $result = $this->pageService->updateBlock(
+            '/cmf/example/contents/test',
+            1,
+            ['headline' => 'X', 'content' => 'Y', 'bogus' => 'Z'],
+            'de'
+        );
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('bogus', $result['message']);
+
+        // Phase B - acceptance scenario: headline + content update the hl-des
+        // block at position 1, and reading it back returns the new description.
+        $result = $this->pageService->updateBlock(
+            '/cmf/example/contents/test',
+            1,
+            ['headline' => 'New Head', 'content' => 'New description'],
+            'de'
+        );
+        $this->assertTrue($result['success'], $result['message']);
+
+        $page = $this->pageService->getPage('/cmf/example/contents/test', 'de');
+        $this->assertNotNull($page);
+        $this->assertSame('New Head', $page['blocks'][1]['headline']);
+        $this->assertSame('New description', $page['blocks'][1]['description']);
     }
 
     public function testMoveBlockSuccess(): void

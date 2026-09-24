@@ -166,12 +166,15 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 
 ### Block Management
 - `add_block` - Add a block
-- `update_block` - Update a block
-- `append_to_block` - Append items to existing block
+- `update_block` - Update a block. For blocks with a description field (hl-des on training-detail pages, hero, feature, ...): the `content` parameter, the `description` parameter and `items` of the form `[{"type":"description","description":"..."}]` (multiple entries are joined with newlines) all write the description. Fields that cannot be persisted for the block type return `success: false` naming the field instead of being silently dropped.
+- `update_blocks` - Update up to 10 blocks in one call. Each update object takes `position` plus any persistable field of the block at that position (headline, description, content, items, organisation, date, ...) — the same field rules as update_block apply, including the loud failure on unpersisted fields.
+- `append_to_block` - Append items to existing block (only for block types with an items collection; rejected for e.g. hl-des)
 - `move_block` - Move a block
 - `remove_block` - Remove a block
 - `list_block_types` - List all 34 block types with descriptions & examples
 - `get_block_schema` - Get detailed schema for a specific block type
+
+Team/consultant blocks reference contacts via `organisation`: a JSON array of contact refs like `["c7","c41"]` (bare numeric ids are automatically prefixed with `c`). `get_block` returns the stored refs.
 
 ### Media & Snippets
 - `list_media` - Search/list media with pagination

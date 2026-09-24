@@ -146,7 +146,13 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'content',
                 type: PropertyType::STRING,
-                description: 'Simple block content (HTML). Use "items" instead for blocks with mixed text and code',
+                description: 'Simple block content (HTML). Use "items" instead for blocks with mixed text and code. For blocks with a description field (hl-des, hero, feature, ...) this is stored as the description',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'description',
+                type: PropertyType::STRING,
+                description: 'Rich-text description of a block (add_block, update_block). For hl-des and other description blocks this is the field content maps to',
                 required: false
             ),
             new SchemaProperty(
@@ -237,6 +243,12 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'snippets',
                 type: PropertyType::STRING,
                 description: 'For contact block: JSON array of snippet UUIDs to reference, e.g. ["uuid1", "uuid2"]',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'organisation',
+                type: PropertyType::STRING,
+                description: 'For team/consultant blocks: JSON array of contact refs, e.g. ["c7","c41"]. Bare numeric ids are automatically prefixed with c.',
                 required: false
             ),
             new SchemaProperty(
@@ -881,6 +893,15 @@ class SuluPagesTool implements StreamableToolInterface
             return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
         }
 
+        // Schema family of the page — required so edugate-only types (date,
+        // team, quote, ...) resolve their schema instead of silently getting
+        // no fields at all.
+        $family = $this->pageService->getPageFamily($path, $locale);
+
+        // Only include fields the caller actually passed — the service rejects
+        // unpersisted fields, so auto-injected empty keys would fail the write.
+        $hasHeadline = $headline !== '';
+
         // Check if items parameter is provided (for structured blocks)
         if (isset($arguments['items'])) {
             $items = json_decode($arguments['items'], true);
@@ -903,16 +924,13 @@ class SuluPagesTool implements StreamableToolInterface
 
             // Nested property name comes from the registry, scoped to the page template's
             // schema family (faq => faqs, table => rows, edugate list => items, ...).
-            $nestedKey = $this->blockTypeRegistry->getNestedName(
-                $blockType,
-                $this->pageService->getPageFamily($path, $locale),
-            ) ?? 'items';
+            $nestedKey = $this->blockTypeRegistry->getNestedName($blockType, $family) ?? 'items';
 
-            $block = [
-                'type' => $blockType,
-                'headline' => $headline,
-                $nestedKey => $normalizedItems,
-            ];
+            $block = ['type' => $blockType];
+            if ($hasHeadline) {
+                $block['headline'] = $headline;
+            }
+            $block[$nestedKey] = $normalizedItems;
 
             // Also merge flat properties from content parameter if provided
             $content = $arguments['content'] ?? '';
@@ -935,10 +953,10 @@ class SuluPagesTool implements StreamableToolInterface
                 $decoded = json_decode($content, true);
                 // If it's an associative array (object), spread properties onto block
                 if (is_array($decoded) && !isset($decoded[0])) {
-                    $block = [
-                        'type' => $blockType,
-                        'headline' => $headline,
-                    ];
+                    $block = ['type' => $blockType];
+                    if ($hasHeadline) {
+                        $block['headline'] = $headline;
+                    }
                     foreach ($decoded as $key => $value) {
                         $block[$key] = $value;
                     }
@@ -974,7 +992,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         // Pass all schema-defined properties for the block type
-        $schema = $this->blockTypeRegistry->getSchema($blockType);
+        $schema = $this->blockTypeRegistry->getSchema($blockType, $family);
         if ($schema !== null) {
             foreach ($schema['properties'] as $propName) {
                 if (isset($arguments[$propName]) && !isset($block[$propName])) {
@@ -1076,33 +1094,29 @@ class SuluPagesTool implements StreamableToolInterface
                 ], JSON_PRETTY_PRINT) ?: '{}');
             }
 
+            // Pass every declared field through — the service normalizes aliases
+            // (content, items[].description) and rejects unpersisted fields
+            // loudly, so nothing may be dropped here.
             $blockData = [];
-            if (isset($update['headline'])) {
-                $blockData['headline'] = $update['headline'];
-            }
-            if (isset($update['content'])) {
-                $blockData['content'] = $update['content'];
-            }
-
-            // Handle nested arrays by block type key
-            foreach (['items', 'faqs', 'rows', 'flags', 'cards'] as $nestedKey) {
-                if (isset($update[$nestedKey])) {
-                    $items = $update[$nestedKey];
-                    // Normalize items: content -> description (except code items)
-                    if (is_array($items)) {
-                        $items = array_map(function ($item) {
-                            if (($item['type'] ?? '') === 'code') {
-                                return $item;
-                            }
-                            if (isset($item['content']) && !isset($item['description'])) {
-                                $item['description'] = $item['content'];
-                                unset($item['content']);
-                            }
-                            return $item;
-                        }, $items);
-                    }
-                    $blockData[$nestedKey] = $items;
+            foreach ($update as $key => $value) {
+                if ($key === 'position') {
+                    continue;
                 }
+                // Normalize item arrays: content -> description (except code items)
+                if (is_array($value)) {
+                    $value = array_map(function ($item) {
+                        if (!is_array($item) || ($item['type'] ?? '') === 'code') {
+                            return $item;
+                        }
+                        if (isset($item['content']) && !isset($item['description'])) {
+                            $item['description'] = $item['content'];
+                            unset($item['content']);
+                        }
+
+                        return $item;
+                    }, $value);
+                }
+                $blockData[$key] = $value;
             }
 
             if (empty($blockData)) {
@@ -1273,6 +1287,11 @@ class SuluPagesTool implements StreamableToolInterface
             }
         }
 
+        // Schema family of the page — required so edugate-only types (date,
+        // team, quote, ...) resolve their schema instead of silently getting
+        // no fields at all.
+        $family = $this->pageService->getPageFamily($path, $locale);
+
         $blockData = [];
         if (isset($arguments['headline'])) {
             $blockData['headline'] = $this->unescapeUnicode($arguments['headline']);
@@ -1303,16 +1322,13 @@ class SuluPagesTool implements StreamableToolInterface
 
             // Nested property name comes from the registry, scoped to the page template's
             // schema family (see addBlock()).
-            $nestedKey = $this->blockTypeRegistry->getNestedName(
-                $blockType,
-                $this->pageService->getPageFamily($path, $locale),
-            ) ?? 'items';
+            $nestedKey = $this->blockTypeRegistry->getNestedName($blockType, $family) ?? 'items';
             $blockData[$nestedKey] = $normalizedItems;
         }
 
         // Pass all schema-defined properties for the block type
         if ($blockType !== null) {
-            $schema = $this->blockTypeRegistry->getSchema($blockType);
+            $schema = $this->blockTypeRegistry->getSchema($blockType, $family);
             if ($schema !== null) {
                 foreach ($schema['properties'] as $propName) {
                     if (isset($arguments[$propName]) && !isset($blockData[$propName])) {
@@ -1714,47 +1730,65 @@ class SuluPagesTool implements StreamableToolInterface
         $faqBlocks = ['faq'];
 
         if (in_array($type, $descriptionBlocks, true)) {
-            return [
-                'type' => $type,
-                'headline' => $headline,
-                'description' => $content,
-            ];
+            $block = ['type' => $type];
+            if ($headline !== '') {
+                $block['headline'] = $headline;
+            }
+            if ($content !== '') {
+                $block['description'] = $content;
+            }
+
+            return $block;
         }
 
         if (in_array($type, $itemsBlocks, true)) {
-            return [
-                'type' => $type,
-                'headline' => $headline,
-                'items' => [
+            $block = ['type' => $type];
+            if ($headline !== '') {
+                $block['headline'] = $headline;
+            }
+            if ($content !== '') {
+                $block['items'] = [
                     ['type' => 'description', 'description' => $content],
-                ],
-            ];
+                ];
+            }
+
+            return $block;
         }
 
         if (in_array($type, $faqBlocks, true)) {
-            return [
-                'type' => $type,
-                'faqs' => [
+            $block = ['type' => $type];
+            if ($headline !== '' || $content !== '') {
+                $block['faqs'] = [
                     ['headline' => $headline, 'subline' => $content],
-                ],
-            ];
+                ];
+            }
+
+            return $block;
         }
 
         // Quote block: content → text, headline → author
         if ($type === 'quote') {
-            return [
-                'type' => $type,
-                'text' => $content,
-                'author' => $headline,
-            ];
+            $block = ['type' => $type];
+            if ($content !== '') {
+                $block['text'] = $content;
+            }
+            if ($headline !== '') {
+                $block['author'] = $headline;
+            }
+
+            return $block;
         }
 
         // For all other block types, preserve the type and use common properties
-        return [
-            'type' => $type,
-            'headline' => $headline,
-            'description' => $content,
-        ];
+        $block = ['type' => $type];
+        if ($headline !== '') {
+            $block['headline'] = $headline;
+        }
+        if ($content !== '') {
+            $block['description'] = $content;
+        }
+
+        return $block;
     }
 
     /**

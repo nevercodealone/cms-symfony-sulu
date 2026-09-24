@@ -494,10 +494,10 @@ class BlockTypeRegistryTest extends TestCase
         $this->assertEquals('reference', $this->registry->getPropertyEncoding('related-content-by-page-tag', 'snippets'));
     }
 
-    public function testGetPropertyEncodingReturnsReferenceForOrganisation(): void
+    public function testGetPropertyEncodingReturnsContactForOrganisation(): void
     {
-        $this->assertEquals('reference', $this->registry->getPropertyEncoding('team', 'organisation'));
-        $this->assertEquals('reference', $this->registry->getPropertyEncoding('consultant', 'organisation'));
+        $this->assertEquals('contact', $this->registry->getPropertyEncoding('team', 'organisation'));
+        $this->assertEquals('contact', $this->registry->getPropertyEncoding('consultant', 'organisation'));
     }
 
     public function testGetPropertyEncodingReturnsRawForHtmlRaw(): void
@@ -535,10 +535,12 @@ class BlockTypeRegistryTest extends TestCase
         $this->assertTrue($this->registry->isReferenceProperty('highlights', 'snippets'));
     }
 
-    public function testIsReferencePropertyReturnsTrueForOrganisation(): void
+    public function testIsReferencePropertyReturnsFalseForOrganisation(): void
     {
-        $this->assertTrue($this->registry->isReferenceProperty('team', 'organisation'));
-        $this->assertTrue($this->registry->isReferenceProperty('consultant', 'organisation'));
+        // organisation is contact_account_selection (multi-valued String of
+        // c<id> refs), not a PHPCR Reference — only snippets are References.
+        $this->assertFalse($this->registry->isReferenceProperty('team', 'organisation'));
+        $this->assertFalse($this->registry->isReferenceProperty('consultant', 'organisation'));
     }
 
     public function testIsReferencePropertyReturnsFalseForOtherProperties(): void

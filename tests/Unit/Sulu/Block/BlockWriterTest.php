@@ -521,7 +521,7 @@ XML);
         $this->assertSame($uuids[2], $valueNodes->item(2)->nodeValue);
     }
 
-    public function testAddConsultantBlockWritesOrganisationAsReference(): void
+    public function testAddConsultantBlockWritesOrganisationAsContactRefs(): void
     {
         $xml = $this->createEmptyBlocksXml();
         $xpath = $this->getXpath($xml);
@@ -529,47 +529,42 @@ XML);
 
         $this->writer->addBlock($xml, $rootNode, 'de', 0, [
             'type' => 'consultant',
-            'organisation' => ['a1b2c3d4-e5f6-7890-abcd-ef1234567890'],
+            'organisation' => ['c7'],
             'description' => '<p>Our consultant.</p>',
         ]);
 
-        // Verify raw XML: Reference type
+        // Verify raw XML: contact_account_selection is a multi-valued String
         $prop = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]')->item(0);
-        $this->assertSame('Reference', $prop->getAttribute('sv:type'));
+        $this->assertSame('String', $prop->getAttribute('sv:type'));
         $this->assertSame('1', $prop->getAttribute('sv:multi-valued'));
 
         $valueNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]/sv:value');
         $this->assertSame(1, $valueNodes->length);
-        $this->assertSame('a1b2c3d4-e5f6-7890-abcd-ef1234567890', $valueNodes->item(0)->nodeValue);
+        $this->assertSame('c7', $valueNodes->item(0)->nodeValue);
     }
 
-    public function testAddTeamBlockWritesOrganisationAsReference(): void
+    public function testAddTeamBlockWritesOrganisationAsContactRefs(): void
     {
         $xml = $this->createEmptyBlocksXml();
         $xpath = $this->getXpath($xml);
         $rootNode = $xpath->query('/sv:node')->item(0);
 
-        $orgUuids = [
-            'aaaa1111-bbbb-2222-cccc-333344445555',
-            'ffff6666-eeee-7777-dddd-888899990000',
-        ];
-
         $this->writer->addBlock($xml, $rootNode, 'de', 0, [
             'type' => 'team',
             'headline' => 'Our Team',
             'description' => '<p>Meet the team.</p>',
-            'organisation' => $orgUuids,
+            'organisation' => ['c7', 'c41'],
         ]);
 
-        // Verify Reference type with 2 values
+        // Verify multi-valued String with one contact ref per value
         $prop = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]')->item(0);
-        $this->assertSame('Reference', $prop->getAttribute('sv:type'));
+        $this->assertSame('String', $prop->getAttribute('sv:type'));
         $this->assertSame('1', $prop->getAttribute('sv:multi-valued'));
 
         $valueNodes = $xpath->query('//sv:property[@sv:name="i18n:de-blocks-organisation#0"]/sv:value');
         $this->assertSame(2, $valueNodes->length);
-        $this->assertSame($orgUuids[0], $valueNodes->item(0)->nodeValue);
-        $this->assertSame($orgUuids[1], $valueNodes->item(1)->nodeValue);
+        $this->assertSame('c7', $valueNodes->item(0)->nodeValue);
+        $this->assertSame('c41', $valueNodes->item(1)->nodeValue);
     }
 
     public function testUpdateBlockUpdatesSnippetsAsReference(): void
