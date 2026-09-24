@@ -1231,6 +1231,54 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * fix-silent-field-drops: update_blocks must pass description and
+     * organisation through to the service, and update_block must pick up
+     * family-scoped schema fields like date of date blocks — no declared
+     * field may be silently dropped on its way to updateBlock().
+     */
+    public function testBlockWritesPassDeclaredFields(): void
+    {
+        $captured = [];
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function (string $path, int $position, array $blockData) use (&$captured): array {
+                $captured[$position] = $blockData;
+
+                return ['success' => true, 'message' => 'Block updated successfully', 'blocks' => []];
+            });
+        $this->pageService->method('getPageFamily')->willReturn('edugate');
+        $this->pageService->method('getPage')->willReturn(['blocks' => []]);
+        $this->pageService->method('formatCompactBlocks')->willReturn([]);
+
+        $updates = json_encode([
+            ['position' => 1, 'headline' => 'Was du lernst', 'description' => 'Neue Beschreibung'],
+            ['position' => 6, 'organisation' => ['c7', 'c41']],
+        ]);
+
+        $result = $this->tool->execute([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'updates' => $updates,
+            'locale' => 'de',
+        ]);
+
+        $data = json_decode($result->getSanitizedResult()['text'], true);
+        $this->assertTrue($data['success'], $data['message'] ?? '');
+        $this->assertSame('Neue Beschreibung', $captured[1]['description']);
+        $this->assertSame(['c7', 'c41'], $captured[6]['organisation']);
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'position' => 0,
+            'blockType' => 'date',
+            'date' => '12. bis 13. Maerz 2026, jeweils 09:00 bis 17:00 Uhr',
+            'locale' => 'de',
+        ]);
+
+        $this->assertSame('12. bis 13. Maerz 2026, jeweils 09:00 bis 17:00 Uhr', $captured[0]['date']);
+    }
+
+    /**
      * Test description includes new actions and efficiency guidelines.
      */
     public function testDescriptionIncludesNewActions(): void
