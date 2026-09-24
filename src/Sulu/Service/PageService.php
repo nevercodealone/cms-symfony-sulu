@@ -427,6 +427,13 @@ class PageService
             // (e.g. hl-des created via add_block with items).
             $block = $this->normalizeDescriptionAliases($block, $block['type'], $family);
 
+            // No silent discard on add either: reject fields the writer would
+            // skip, naming them.
+            $persistError = $this->validatePersistableFields($block, $block['type'], $family);
+            if ($persistError !== null) {
+                return ['success' => false, 'message' => $persistError, 'position' => -1];
+            }
+
             $xml = new DOMDocument();
             $this->loadXmlSecurely($xml, $result['props']);
 

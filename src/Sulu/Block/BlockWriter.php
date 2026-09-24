@@ -77,11 +77,23 @@ final class BlockWriter
                 if (isset($block[$propName])) {
                     $encoding = $this->registry->getPropertyEncoding($type, $propName, $family);
 
-                    // Reference properties: snippets, organisation, page → sv:type="Reference"
+                    // Reference properties: snippets → sv:type="Reference"
                     if ($encoding === 'reference') {
                         $refValue = is_array($block[$propName]) ? $block[$propName] : [$block[$propName]];
                         if (!empty($refValue)) {
                             $this->addReferenceProperty($xml, $rootNode, "{$prefix}-{$propName}#{$position}", $refValue);
+                        }
+                    } elseif ($encoding === 'contact') {
+                        // contact_account_selection: multi-valued String of c<id> refs
+                        $refValue = is_array($block[$propName]) ? $block[$propName] : [$block[$propName]];
+                        if (!empty($refValue)) {
+                            $this->addReferenceProperty(
+                                $xml,
+                                $rootNode,
+                                "{$prefix}-{$propName}#{$position}",
+                                $this->normalizeContactRefs($refValue),
+                                'String',
+                            );
                         }
                     } elseif ($encoding === 'json' && is_array($block[$propName])) {
                         // JSON properties must ALWAYS be encoded as JSON strings, never as nested items
@@ -220,10 +232,17 @@ final class BlockWriter
             // Get encoding from schema (defaults to 'string' for unknown types)
             $encoding = $schema !== null ? $this->registry->getPropertyEncoding($type, $key, $family) : 'string';
 
-            // Reference properties: snippets, organisation, page → sv:type="Reference"
+            // Reference properties: snippets → sv:type="Reference";
+            // contact refs (team/consultant organisation) → multi-valued String
             if ($encoding === 'reference') {
                 $refValue = is_array($value) ? $value : [$value];
                 $this->updateOrAddReferenceProperty($xml, $xpath, $rootNode, $propName, $refValue);
+                continue;
+            }
+
+            if ($encoding === 'contact') {
+                $refValue = is_array($value) ? $value : [$value];
+                $this->updateOrAddReferenceProperty($xml, $xpath, $rootNode, $propName, $this->normalizeContactRefs($refValue), 'String');
                 continue;
             }
 
@@ -499,6 +518,7 @@ final class BlockWriter
         DOMNode $rootNode,
         string $name,
         array $uuids,
+        string $svType = 'Reference',
     ): void {
         // Remove existing property node (regardless of old type: String or Reference)
         $existingProps = $xpath->query('//sv:property[@sv:name="' . $name . '"]');
@@ -512,8 +532,27 @@ final class BlockWriter
 
         // Write fresh Reference property (skip if empty)
         if (!empty($uuids)) {
-            $this->addReferenceProperty($xml, $rootNode, $name, $uuids);
+            $this->addReferenceProperty($xml, $rootNode, $name, $uuids, $svType);
         }
+    }
+
+    /**
+     * Normalize contact refs for contact_account_selection storage: bare
+     * numeric ids get the c prefix ("7" → "c7"), anything else passes through.
+     *
+     * @param array<mixed> $values
+     * @return array<int, string>
+     */
+    private function normalizeContactRefs(array $values): array
+    {
+        return array_map(
+            static function (mixed $value): string {
+                $value = strval($value);
+
+                return preg_match('/^\d+$/', $value) === 1 ? 'c' . $value : $value;
+            },
+            $values,
+        );
     }
 
     /**

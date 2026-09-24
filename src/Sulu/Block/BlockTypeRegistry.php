@@ -347,11 +347,11 @@ final class BlockTypeRegistry
             'type' => 'team',
             'headline' => 'Our Team',
             'description' => 'Meet the experts.',
-            'organisation' => 'Example Company',
+            'organisation' => ['c1', 'c38'],
         ],
         'consultant' => [
             'type' => 'consultant',
-            'organisation' => 'Consulting Firm',
+            'organisation' => ['c7'],
             'description' => 'Expert consulting services.',
         ],
         'contact' => [
@@ -439,7 +439,8 @@ final class BlockTypeRegistry
      * Encoding types:
      * - 'string' (default): Plain string storage
      * - 'json': JSON-encoded array (image, images, settings)
-     * - 'reference': PHPCR multi-valued Reference (snippets, organisation)
+     * - 'reference': PHPCR multi-valued Reference (snippets)
+     * - 'contact': multi-valued String of c<id> contact refs (team/consultant organisation)
      * - 'code': HTML entity encoded for text_editor (code fields)
      * - 'raw': Store as-is without transformation (html)
      */
@@ -574,11 +575,13 @@ final class BlockTypeRegistry
         // === CONTACT BLOCKS ===
         'team' => [
             'properties' => ['headline', 'description', 'organisation'],
-            'encoding' => ['organisation' => 'reference'],
+            // contact_account_selection: multi-valued String of c<id> refs,
+            // NOT a PHPCR Reference (see team.xml / consultant.xml).
+            'encoding' => ['organisation' => 'contact'],
         ],
         'consultant' => [
             'properties' => ['organisation', 'description'],
-            'encoding' => ['organisation' => 'reference'],
+            'encoding' => ['organisation' => 'contact'],
         ],
         'contact' => [
             'properties' => ['snippets', 'description'],
