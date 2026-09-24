@@ -4,6 +4,18 @@
 
 @import "flowbite/src/themes/default";
 
+/* Self-hosted Material Symbols Outlined (Google Fonts v374, variable
+   wght 100-700 + FILL 0-1) — no fonts.googleapis.com request. Copied and
+   versioned by Encore via the relative url(). font-display: block avoids
+   flashing raw ligature text (e.g. "arrow_forward") while loading. */
+@font-face {
+    font-family: 'Material Symbols Outlined';
+    font-style: normal;
+    font-weight: 100 700;
+    font-display: block;
+    src: url('../fonts/material-symbols-outlined.woff2') format('woff2');
+}
+
 dialog#nca-mobile-menu {
     margin: 0;
     margin-left: auto;
