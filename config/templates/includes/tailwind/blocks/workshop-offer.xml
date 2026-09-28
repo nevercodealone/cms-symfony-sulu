@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="workshop-offer" minOccurs="0">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+        <types>
+            <type name="workshop-offer">
+                <meta>
+                    <title lang="en">Workshop Offer</title>
+                    <title lang="de">Workshop-Angebot</title>
+                </meta>
+                <properties>
+                    <property name="offer" type="single_snippet_selection" mandatory="true">
+                        <meta>
+                            <title lang="en">Offer</title>
+                            <title lang="de">Angebot</title>
+                        </meta>
+                        <params>
+                            <param name="types" value="workshop_offer"/>
+                        </params>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

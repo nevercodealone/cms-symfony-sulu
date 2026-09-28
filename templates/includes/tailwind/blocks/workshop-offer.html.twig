@@ -1,0 +1,121 @@
+<!-- workshop-offer.html.twig -->
+{% set offer = content.offer is defined ? content.offer : null %}
+{% if offer is not empty %}
+    {# Target unpublished -> render nothing (sulu_content_load resolves the published page only) #}
+    {% set target = offer.targetPage is defined and offer.targetPage is not empty
+        ? sulu_content_load(offer.targetPage, {'title': 'title'})
+        : null %}
+    {% if target is not null %}
+        {% set factsSnippet = sulu_snippet_load_by_area('workshop_facts') %}
+        {% set facts = factsSnippet is not null ? factsSnippet.content : null %}
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white border-2 border-green-700 shadow-[0_32px_64px_-12px_rgba(0,107,44,0.08)]">
+            {# === LEFT: workshop offer (full width when no facts snippet is assigned) === #}
+            <div class="{{ facts is not null ? 'md:col-span-8' : 'md:col-span-12' }} p-8 md:p-12 lg:p-16">
+                <header class="mb-8">
+                    <div class="text-sm font-mono tracking-[0.3em] font-bold flex items-center gap-2 text-gray-900 mb-3">
+                        <span class="w-8 h-px bg-gray-500"></span>
+                        {{ offer.eyebrow }}
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">{{ offer.headline }}</h2>
+                    {% if offer.text is defined and offer.text is not empty %}
+                        <div class="text-gray-600 leading-relaxed">{{ offer.text|raw }}</div>
+                    {% endif %}
+                </header>
+
+                {% if offer.steps is defined and offer.steps is not empty %}
+                    <ol class="list-none p-0 m-0 space-y-6 mb-10">
+                        {% for step in offer.steps %}
+                            <li class="flex items-start gap-6 {{ step.optional ? 'opacity-50' }}">
+                                <div class="z-10 w-10 h-10 bg-green-700 text-white flex items-center justify-center font-mono font-bold shadow-[0_0_20px_rgba(0,107,44,0.2)] shrink-0">{{ loop.index }}</div>
+                                <div class="min-w-0">
+                                    <div class="font-bold text-sm tracking-tight text-gray-900 mb-1">
+                                        {{ step.title }}
+                                        {% if step.optional %}
+                                            <span class="ml-2 font-mono text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 bg-gray-100 rounded text-gray-600">optional</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-gray-600 leading-relaxed">{{ step.text }}</div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                {% endif %}
+
+                {% set contact = offer.contact is defined ? offer.contact : null %}
+                {% if contact is not null %}
+                    <div class="flex items-center gap-4 mb-8 bg-gray-50 border border-gray-200 p-5">
+                        {% set avatar = sulu_resolve_media(contact.avatar, app.request.locale) %}
+                        {% if avatar is not null and avatar.thumbnails['400x400'] is defined and avatar.thumbnails['400x400'] is not empty %}
+                            <img class="w-14 h-14 object-cover border border-gray-300 shrink-0"
+                                 src="{{ avatar.thumbnails['400x400'] }}"
+                                 alt="{{ contact.fullName }}">
+                        {% endif %}
+                        <div class="min-w-0">
+                            <div class="font-bold text-gray-900">{{ contact.fullName }}</div>
+                            {% if contact.position is not null and contact.position.position is not empty %}
+                                <div class="text-sm text-gray-600">{{ contact.position.position }}</div>
+                            {% endif %}
+                            {% if contact.mainEmail is not empty %}
+                                <a href="mailto:{{ contact.mainEmail }}"
+                                   class="text-sm text-green-700 font-mono hover:underline break-all">{{ contact.mainEmail }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <sulu-link href="{{ offer.targetPage }}"
+                           class="inline-flex items-center justify-center gap-2 bg-green-700 text-white text-sm font-mono font-bold px-8 py-4 hover:bg-green-800 transition-colors duration-200 no-underline hover:no-underline">
+                    {{ offer.buttonText }}
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </sulu-link>
+            </div>
+
+            {# === RIGHT: workshop facts from the default snippet (only when assigned) === #}
+            {% if facts is not null %}
+                <aside class="md:col-span-4 bg-green-50 border-t-2 md:border-t-0 md:border-l-2 border-green-700 p-8 md:p-12">
+                    <div class="md:sticky md:top-24">
+                        {% if facts.headline is defined and facts.headline is not empty %}
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-8 h-8 rounded-full bg-green-700/10 flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined text-green-700 text-xl">analytics</span>
+                                </div>
+                                <div class="font-bold text-sm tracking-widest text-gray-900">{{ facts.headline }}</div>
+                            </div>
+                        {% endif %}
+
+                        {% if facts.facts is defined and facts.facts is not empty %}
+                            <ul class="list-none p-0 m-0 space-y-4">
+                                {% for fact in facts.facts %}
+                                    <li class="flex items-start gap-3">
+                                        <span class="w-8 h-8 rounded-full bg-green-700/10 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-green-700 text-xl">{{ fact.icon|default('check_circle') }}</span>
+                                        </span>
+                                        <span class="text-sm text-gray-800 leading-relaxed pt-1">{{ fact.text }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+
+                        {% if facts.variants is defined and facts.variants is not empty %}
+                            {# page_selection items are resolved page arrays (uuid, path, title),
+                               already filtered to published pages — no sulu_content_load needed #}
+                            <ul class="list-none p-0 m-0 mt-8 pt-6 border-t border-green-700/20 space-y-3">
+                                {% for variant in facts.variants %}
+                                    <li>
+                                        <sulu-link href="{{ variant.uuid }}"
+                                                   class="flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-800 no-underline hover:underline">
+                                            {{ variant.title }}
+                                            <span class="material-symbols-outlined text-base">arrow_forward</span>
+                                        </sulu-link>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </aside>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+<!-- end workshop-offer.html.twig -->

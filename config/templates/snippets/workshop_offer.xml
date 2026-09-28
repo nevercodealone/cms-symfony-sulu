@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+  <key>workshop_offer</key>
+
+  <meta>
+    <title lang="en">Workshop Offer</title>
+    <title lang="de">Workshop-Angebot</title>
+  </meta>
+
+  <properties>
+    <property name="title" type="text_line" mandatory="true">
+      <meta>
+        <title lang="en">Title</title>
+        <title lang="de">Titel</title>
+      </meta>
+      <tag name="sulu.node.name"/>
+    </property>
+    <property name="eyebrow" type="text_line" mandatory="true">
+      <meta>
+        <title lang="en">Eyebrow</title>
+        <title lang="de">Kicker</title>
+      </meta>
+    </property>
+    <property name="headline" type="text_line" mandatory="true">
+      <meta>
+        <title lang="en">Headline</title>
+        <title lang="de">Überschrift</title>
+      </meta>
+      <params>
+        <param name="headline" value="true"/>
+      </params>
+    </property>
+    <property name="text" type="text_editor" mandatory="true">
+      <meta>
+        <title lang="en">Text</title>
+        <title lang="de">Text</title>
+      </meta>
+      <params>
+        <param name="table" value="false"/>
+        <param name="link" value="true"/>
+      </params>
+    </property>
+    <block name="steps" default-type="step" minOccurs="2" maxOccurs="4">
+      <meta>
+        <title lang="en">Steps</title>
+        <title lang="de">Schritte</title>
+      </meta>
+      <types>
+        <type name="step">
+          <meta>
+            <title lang="en">Step</title>
+            <title lang="de">Schritt</title>
+          </meta>
+          <properties>
+            <property name="title" type="text_line" mandatory="true">
+              <meta>
+                <title lang="en">Title</title>
+                <title lang="de">Titel</title>
+              </meta>
+            </property>
+            <property name="text" type="text_line" mandatory="true">
+              <meta>
+                <title lang="en">Text</title>
+                <title lang="de">Text</title>
+              </meta>
+            </property>
+            <property name="optional" type="checkbox">
+              <meta>
+                <title lang="en">Optional</title>
+                <title lang="de">Optional</title>
+              </meta>
+            </property>
+          </properties>
+        </type>
+      </types>
+    </block>
+    <property name="contact" type="single_contact_selection" mandatory="true">
+      <meta>
+        <title lang="en">Contact</title>
+        <title lang="de">Kontakt</title>
+      </meta>
+    </property>
+    <property name="targetPage" type="single_page_selection" mandatory="true">
+      <meta>
+        <title lang="en">Target page</title>
+        <title lang="de">Zielseite</title>
+      </meta>
+    </property>
+    <property name="buttonText" type="text_line" mandatory="true">
+      <meta>
+        <title lang="en">Button text</title>
+        <title lang="de">Buttontext</title>
+      </meta>
+    </property>
+  </properties>
+</template>

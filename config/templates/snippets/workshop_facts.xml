@@ -1,0 +1,110 @@
+<?xml version="1.0" ?>
+<template xmlns="http://schemas.sulu.io/template/template"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+
+  <key>workshop_facts</key>
+
+  <meta>
+    <title lang="en">Workshop Facts</title>
+    <title lang="de">Workshop-Fakten</title>
+  </meta>
+
+  <properties>
+    <property name="title" type="text_line" mandatory="true">
+      <meta>
+        <title lang="en">Title</title>
+        <title lang="de">Titel</title>
+      </meta>
+      <tag name="sulu.node.name"/>
+    </property>
+    <property name="headline" type="text_line">
+      <meta>
+        <title lang="en">Headline</title>
+        <title lang="de">Überschrift</title>
+      </meta>
+      <params>
+        <param name="headline" value="true"/>
+      </params>
+    </property>
+    <block name="facts" default-type="fact" minOccurs="0">
+      <meta>
+        <title lang="en">Facts</title>
+        <title lang="de">Fakten</title>
+      </meta>
+      <types>
+        <type name="fact">
+          <meta>
+            <title lang="en">Fact</title>
+            <title lang="de">Fakt</title>
+          </meta>
+          <properties>
+            <property name="icon" type="single_select">
+              <meta>
+                <title lang="en">Icon</title>
+                <title lang="de">Icon</title>
+              </meta>
+              <params>
+                <param name="default_value" value="check_circle"/>
+                <param name="values" type="collection">
+                  <param name="check_circle">
+                    <meta>
+                      <title>Check Circle</title>
+                    </meta>
+                  </param>
+                  <param name="bolt">
+                    <meta>
+                      <title>Bolt</title>
+                    </meta>
+                  </param>
+                  <param name="groups">
+                    <meta>
+                      <title>Groups</title>
+                    </meta>
+                  </param>
+                  <param name="code">
+                    <meta>
+                      <title>Code</title>
+                    </meta>
+                  </param>
+                  <param name="school">
+                    <meta>
+                      <title>School</title>
+                    </meta>
+                  </param>
+                  <param name="rocket_launch">
+                    <meta>
+                      <title>Rocket Launch</title>
+                    </meta>
+                  </param>
+                  <param name="schedule">
+                    <meta>
+                      <title>Schedule</title>
+                    </meta>
+                  </param>
+                  <param name="star">
+                    <meta>
+                      <title>Star</title>
+                    </meta>
+                  </param>
+                </param>
+              </params>
+            </property>
+            <property name="text" type="text_line">
+              <meta>
+                <title lang="en">Text</title>
+                <title lang="de">Text</title>
+              </meta>
+            </property>
+          </properties>
+        </type>
+      </types>
+    </block>
+    <property name="variants" type="page_selection">
+      <meta>
+        <title lang="en">Variant pages</title>
+        <title lang="de">Varianten-Seiten</title>
+      </meta>
+    </property>
+  </properties>
+</template>

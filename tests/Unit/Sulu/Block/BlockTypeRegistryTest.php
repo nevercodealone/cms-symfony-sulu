@@ -345,6 +345,7 @@ class BlockTypeRegistryTest extends TestCase
             'card-trio' => ['card-trio'],
             'page-teaser' => ['page-teaser'],
             'quote' => ['quote'],
+            'workshop-offer' => ['workshop-offer'],
         ];
     }
 
