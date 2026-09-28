@@ -19,6 +19,7 @@ cypress_full_test_preview_stage:
     strategy: depend
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    RECORD_TRIGGER: "true"
     TESTS_FAILED_cypress_full_test_preview_stage: $CI_JOB_STATUS == 'success'
 
 cypress_custom_tests_preview_stage:
@@ -29,6 +30,7 @@ cypress_custom_tests_preview_stage:
     strategy: depend
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    RECORD_TRIGGER: "true"
     TESTS_FAILED_cypress_custom_tests_preview_stage: $CI_JOB_STATUS == 'success'
 
 validate_html_stage:
@@ -204,6 +206,7 @@ cypress_internal_links_test_live:
   variables:
     CYPRESS_BASE_URL: https://$URL
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
+    RECORD_TRIGGER: "true"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: on_success
