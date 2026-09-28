@@ -42,9 +42,6 @@ services:
       - GEMINI_MODEL=$GEMINI_MODEL
       - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
       - HUGGINGFACE_KEY=$HUGGINGFACE_KEY
-      - CHROMADB_HOST=$SHORTCODE1-chromadb
-      - CHROMADB_PORT=8000
-      - CHROMADB_DATABASE=$CHROMADB_DATABASE
       - MCP_PROJECT_PASSWORD=$MCP_PROJECT_PASSWORD
       - MCP_PROJECT_NAME=$MCP_PROJECT_NAME
       - MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME
@@ -60,18 +57,6 @@ services:
       - TELEGRAM_DEFAULT_CHAT_ID=$TELEGRAM_DEFAULT_CHAT_ID
       - CORS_ALLOW_ORIGIN=^https?://.*\.nevercodealone\.de$$
       - APP_URL=https://$URL
-  chromadb:
-    container_name: $SHORTCODE1-chromadb
-    image: chromadb/chroma:0.5.23
-    restart: unless-stopped
-    networks:
-      - db
-    volumes:
-      - chromadb_data:/chroma/chroma
-    environment:
-      - IS_PERSISTENT=TRUE
-      - CHROMA_SERVER_HOST=0.0.0.0
-      - CHROMA_SERVER_HTTP_PORT=8000
 networks:
   proxy:
     external: true
@@ -79,4 +64,3 @@ networks:
     external: true
 volumes:
   var:
-  chromadb_data:
