@@ -2475,6 +2475,35 @@ XML;
         $this->assertEquals('abc-123-uuid', $compact[0]['linked_page_uuid']);
     }
 
+    public function testFormatCompactBlocksIncludesWorkshopOfferSnippet(): void
+    {
+        $snippetService = $this->createMock(SnippetService::class);
+        $snippetService->method('getSnippet')
+            ->with('offer-uuid', 'de')
+            ->willReturn(['uuid' => 'offer-uuid', 'title' => 'KI Workshop', 'type' => 'workshop_offer', 'template' => 'workshop_offer', 'path' => '/cmf/snippets/workshop_offer/ki']);
+
+        $pageService = new PageService($this->connection, $this->activityLogger, snippetService: $snippetService);
+
+        $compact = $pageService->formatCompactBlocks([
+            ['position' => 0, 'type' => 'workshop-offer', 'offer' => 'offer-uuid'],
+            ['position' => 1, 'type' => 'workshop-offer', 'offer' => ''],
+        ], 'de');
+
+        $this->assertSame('offer-uuid', $compact[0]['offer_snippet_uuid']);
+        $this->assertSame('KI Workshop', $compact[0]['offer_snippet_title']);
+        $this->assertNull($compact[1]['offer_snippet_uuid']);
+        $this->assertNull($compact[1]['offer_snippet_title']);
+    }
+
+    public function testInvalidateCacheTagsInvalidatesAndFlushes(): void
+    {
+        $pageService = $this->createPageServiceWithCache();
+        $this->cacheManager->expects($this->exactly(2))->method('invalidateTag');
+        $this->fosCacheManager->expects($this->once())->method('flush');
+
+        $this->assertTrue($pageService->invalidateCacheTags(['snippet-uuid', 'snippet_area-workshop_facts']));
+    }
+
     public function testFormatCompactBlocksIncludesContactSnippetUuid(): void
     {
         $blocks = [
