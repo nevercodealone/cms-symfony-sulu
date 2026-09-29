@@ -7,6 +7,10 @@ services:
     Codewithkyrian\ChromaDB\Client:
         factory: ['@chroma.factory', 'connect']
         public: true
+        # The client's constructor performs a tenant HTTP call (initDatabaseAndTenant).
+        # Lazy so instantiating the AI profiler/stores never triggers a connection -
+        # without a running ChromaDB this would 500 every profiled dev request.
+        lazy: true
 
     chroma.factory:
         class: Codewithkyrian\ChromaDB\Factory
