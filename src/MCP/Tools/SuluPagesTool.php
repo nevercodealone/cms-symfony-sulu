@@ -61,7 +61,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, create_snippet, update_snippet, assign_snippet_area, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -83,7 +83,10 @@ class SuluPagesTool implements StreamableToolInterface
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
             'UPDATE MEDIA: update_media + mediaId + title. Updates the alt-text/title of an existing media item. Use list_media to find IDs. ' .
-            'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
+            'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter. ' .
+            'CREATE SNIPPET: create_snippet + snippetType + title + data (JSON object). Scalars keyed by name, blocks as item arrays: {"eyebrow":"Workshop","text":"<p>…</p>","contact":41,"targetPage":"uuid","steps":[{"type":"step","title":"Setup","text":"…","optional":false}]}. Optional publish (default true), locale. ' .
+            'UPDATE SNIPPET: update_snippet + uuid (or snippet path) + data (JSON object, same shape; blocks are replaced wholesale). Optional publish (default true), locale. Use list_snippets to read current content first. ' .
+            'ASSIGN SNIPPET AREA: assign_snippet_area + area + uuid. Sets a snippet as the webspace default for a snippet area (e.g. workshop_facts). Snippet template must match the area key.';
     }
 
     /**
@@ -104,7 +107,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, create_snippet, update_snippet, assign_snippet_area, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -479,6 +482,24 @@ class SuluPagesTool implements StreamableToolInterface
                 description: 'REQUIRED for delete_pages. JSON array of PHPCR paths, max 10. Example: "[\"/cmf/example/contents/a\",\"/cmf/example/contents/a/b\"]". Sorted deepest-first internally. A path is deletable in the batch only when every direct child is also listed.',
                 required: false
             ),
+            new SchemaProperty(
+                name: 'uuid',
+                type: PropertyType::STRING,
+                description: 'For update_snippet / assign_snippet_area: UUID (or PHPCR path, e.g. /cmf/snippets/workshop_offer/my-snippet) of the target snippet. Use list_snippets to find UUIDs.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'data',
+                type: PropertyType::STRING,
+                description: 'For create_snippet / update_snippet: JSON object of snippet property values. Scalars keyed by name (title, eyebrow, headline, text, contact (id), targetPage (page UUID), buttonText, variants (JSON array of page UUIDs)), blocks as item arrays: "steps": [{"type":"step","title":"…","text":"…","optional":false}]. Blocks are replaced wholesale on update.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'area',
+                type: PropertyType::STRING,
+                description: 'For assign_snippet_area: snippet area key (equals the snippet template key, e.g. workshop_facts). The snippet is set as the webspace default for this area.',
+                required: false
+            ),
         );
     }
 
@@ -522,6 +543,9 @@ class SuluPagesTool implements StreamableToolInterface
             'list_block_types' => $this->listBlockTypes($arguments['template'] ?? null),
             'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? '', $arguments['template'] ?? null),
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
+            'create_snippet' => $this->createSnippetAction($arguments, $locale),
+            'update_snippet' => $this->updateSnippetAction($arguments, $locale),
+            'assign_snippet_area' => $this->assignSnippetAreaAction($arguments),
             'list_media' => $this->listMedia($arguments, $locale),
             'upload_media' => $this->uploadMedia($arguments, $locale),
             'update_media' => $this->updateMedia($arguments, $locale),
@@ -1519,6 +1543,90 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->snippetService->listSnippets($snippetType, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function createSnippetAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $snippetType = trim((string) ($arguments['snippetType'] ?? ''));
+        $title = trim((string) ($arguments['title'] ?? ''));
+
+        if ($snippetType === '' || $title === '') {
+            return new TextToolResult('Error: snippetType and title are required');
+        }
+
+        $data = $this->decodeSnippetData($arguments);
+        if ($data === null) {
+            return new TextToolResult('Error: data must be a JSON object, e.g. {"eyebrow":"Workshop","steps":[]}');
+        }
+
+        $publish = ($arguments['publish'] ?? 'true') === 'true' || ($arguments['publish'] ?? false) === true;
+
+        $result = $this->snippetService->createSnippet($snippetType, $title, $data, $locale, $publish);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateSnippetAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $uuid = trim((string) ($arguments['uuid'] ?? ''));
+
+        if ($uuid === '') {
+            return new TextToolResult('Error: uuid (or snippet path) is required');
+        }
+
+        $data = $this->decodeSnippetData($arguments);
+        if ($data === null || $data === []) {
+            return new TextToolResult('Error: data must be a non-empty JSON object, e.g. {"headline":"Neu"}');
+        }
+
+        $publish = ($arguments['publish'] ?? 'true') === 'true' || ($arguments['publish'] ?? false) === true;
+
+        $result = $this->snippetService->updateSnippet($uuid, $data, $locale, $publish);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function assignSnippetAreaAction(array $arguments): ToolResultInterface
+    {
+        $area = trim((string) ($arguments['area'] ?? ''));
+        $uuid = trim((string) ($arguments['uuid'] ?? ''));
+
+        if ($area === '' || $uuid === '') {
+            return new TextToolResult('Error: area and uuid are required');
+        }
+
+        $result = $this->snippetService->assignSnippetArea($area, $uuid);
+
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     *
+     * @return array<string, mixed>|null
+     */
+    private function decodeSnippetData(array $arguments): ?array
+    {
+        if (!isset($arguments['data']) || !is_string($arguments['data'])) {
+            return null;
+        }
+
+        $decoded = json_decode($arguments['data'], true);
+
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        return $decoded;
     }
 
     /**
