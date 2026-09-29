@@ -51,7 +51,7 @@
             </ul>
           {% endif %}
           {% if plan.url is defined and plan.url is not empty %}
-            <a href="{{ plan.url }}" class="mt-8 block w-full rounded-md bg-green-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-green-500">
+            <a href="{{ plan.url }}" class="cta cta-primary mt-8 w-full">
               {{ plan.buttonText|default('Get started') }}
             </a>
           {% endif %}
