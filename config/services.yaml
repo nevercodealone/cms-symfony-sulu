@@ -244,10 +244,16 @@ services:
             $connection: '@doctrine.dbal.default_connection'
         public: true
 
+    # Sulu Snippet Schema Reader - parses config/templates/snippets/*.xml
+    App\Sulu\Service\SnippetSchemaReader:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     # Sulu Snippet Service - Direct SQL for snippet operations
     App\Sulu\Service\SnippetService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+            $schemaReader: '@App\Sulu\Service\SnippetSchemaReader'
         public: true
 
     # Latest Articles Service - Direct SQL for fetching most recently created pages
