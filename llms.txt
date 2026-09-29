@@ -180,7 +180,14 @@ Team/consultant blocks reference contacts via `organisation`: a JSON array of co
 - `list_media` - Search/list media with pagination
 - `upload_media` - Upload image from URL or local file path into a collection
 - `list_collections` - List all media collections with titles, hierarchy, and media counts
-- `list_snippets` - List snippets with diagnostic info
+- `list_snippets` - List snippets with diagnostic info, each entry includes full `content` (scalars + block items)
+- `get_snippet_schema` - Fields, required flags, block limits and select options of a snippet type (snippetType)
+- `create_snippet` - Create a snippet (snippetType, title, data JSON, publish, locale)
+- `update_snippet` - Update a snippet by uuid or path (data JSON, publish, locale)
+- `publish_snippet` - Publish a draft snippet (uuid)
+- `delete_snippet` - Delete an unreferenced snippet (uuid, confirm, dryRun)
+- `list_snippet_areas` - Webspace snippet areas with the assigned snippet
+- `set_default_snippet` - Assign or clear the default snippet of an area (area, uuid or null)
 
 ## Page Discovery
 
@@ -421,7 +428,7 @@ If a snippet UUID cannot be resolved, `title` will be `null`.
 
 ---
 
-## Block Type User Stories (34 Types)
+## Block Type User Stories (35 Types)
 
 **As a content editor**, understand what each block accomplishes:
 
@@ -470,9 +477,14 @@ If a snippet UUID cannot be resolved, `title` will be `null`.
 | **subpages-overview** | I want to automatically list all child pages |
 | **table-of-contents** | I want an auto-generated TOC from page headings |
 
+### Workshop Blocks
+| Block | User Story |
+|-------|-----------|
+| **workshop-offer** | I want to present a workshop offer with numbered steps, a contact person and a facts sidebar, so visitors can understand and book the workshop |
+
 ---
 
-## Complete Block Type Reference (34 Types)
+## Complete Block Type Reference (35 Types)
 
 All blocks are defined in `config/templates/includes/tailwind/blocks/*.xml` and render via `templates/includes/tailwind/blocks/*.html.twig`.
 
@@ -1183,6 +1195,30 @@ Fetches and displays WordPress posts.
 
 ---
 
+#### 33. workshop-offer (Workshop Offer Section)
+
+Two-column workshop offer rendered from snippets. Left column comes from a `workshop_offer` snippet (eyebrow, headline, text, 2-4 numbered steps, contact person card, button to target page). Right column comes from the `workshop_facts` default snippet assigned to the `workshop_facts` snippet area in the webspace (headline, facts with icons, links to variant pages). Contains no form. Renders nothing when the offer's target page is unpublished or the offer snippet cannot be resolved. Without an assigned facts snippet the left column renders full width.
+
+**XML:** `config/templates/includes/tailwind/blocks/workshop-offer.xml`
+**Twig:** `templates/includes/tailwind/blocks/workshop-offer.html.twig`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `offer` | single_snippet_selection (mandatory, types=workshop_offer) | UUID of a workshop_offer snippet |
+
+**Related snippet templates:**
+- `config/templates/snippets/workshop_offer.xml` — key `workshop_offer`: title, eyebrow, headline, text (rich text), steps[] (block `step`: title, text, optional checkbox; 2-4 items), contact (single_contact_selection), targetPage (single_page_selection), buttonText
+- `config/templates/snippets/workshop_facts.xml` — key `workshop_facts` (auto-registers the `workshop_facts` snippet area): title, headline, facts[] (block `fact`: icon single_select — check_circle|bolt|groups|code|school|rocket_launch|schedule|star — and text), variants (page_selection, multiple)
+
+```json
+{
+  "blockType": "workshop-offer",
+  "offer": "uuid-of-workshop-offer-snippet"
+}
+```
+
+---
+
 ## Block Categories Summary
 
 | Category | Block Types |
@@ -1193,9 +1229,10 @@ Fetches and displays WordPress posts.
 | **Feature** | feature, feature-default, feature-with-icons, formats |
 | **Card** | card-trio |
 | **Image** | image, image-gallery, images-with-heading-and-description, image-with-flags, logo-gallary, excerpt-image |
-| **Contact** | team, consultant, contact, chat |
+| **Contact** | team, consultant, contact, chat, qualified-contact |
 | **Navigation** | highlights, related-content-by-page-tag, subpages-overview, table-of-contents |
 | **External** | html-raw, youtube-from-channel, wordpressposts |
+| **Workshop** | workshop-offer |
 
 ---
 
@@ -1430,7 +1467,11 @@ Response (with snippets):
       "title": "Main Contact",
       "type": "contact",
       "template": "contact",
-      "path": "/cmf/example/snippets/contact/main"
+      "path": "/cmf/example/snippets/contact/main",
+      "content": {
+        "title": "Main Contact",
+        "description": "<p>Hello</p>"
+      }
     }
   ]
 }
@@ -1445,6 +1486,154 @@ Response (no snippets - with diagnostic):
     "workspaces_checked": ["default", "default_live"],
     "hint": "No snippets found at this path. Create snippets in Sulu admin under 'Snippets' section."
   }
+}
+```
+
+### Snippet workflow
+
+1. `get_snippet_schema` to read the fields of the type
+2. `create_snippet` with `publish: "false"` to create a draft
+3. `publish_snippet` to go live
+4. `set_default_snippet` for area snippets (e.g. `workshop_facts`) or
+   `add_block` with `blockType: "workshop-offer"` and `offer: <uuid>` for offers
+
+### get_snippet_schema Action
+
+Schema of a snippet type, read from `config/templates/snippets/<type>.xml`.
+Lists every property with `suluType`, `writeType`, `required` and `writable`,
+select `options`, blocks with `minOccurs`/`maxOccurs` and their item types, and
+the snippet areas the type defines. An unknown type returns `availableTypes`.
+
+```json
+{
+  "action": "get_snippet_schema",
+  "snippetType": "workshop_offer"
+}
+```
+
+Properties with `writable: false` (media, smart content, account selections,
+nested blocks) cannot be written via the MCP.
+
+### create_snippet Action
+
+Create a snippet of a given template. `data` is a JSON object: scalars keyed by
+name, blocks as item arrays. `publish` defaults to true (writes draft + live
+workspace), `"false"` creates a draft only. `data` is validated against the
+template XML: unknown properties, missing required properties, block item
+counts outside minOccurs/maxOccurs and invalid select values fail with a
+message naming the property.
+
+```json
+{
+  "action": "create_snippet",
+  "snippetType": "workshop_offer",
+  "title": "KI Workshop Developer",
+  "data": "{\"eyebrow\":\"KI Workshop Developer\",\"headline\":\"Vibe Coding für Developer\",\"text\":\"<p>Zwei Tage Hands-on.</p>\",\"contact\":41,\"targetPage\":\"3a314bdf-9b3a-45a9-9897-e867fa1099a2\",\"buttonText\":\"Jetzt Platz sichern\",\"steps\":[{\"type\":\"step\",\"title\":\"Kick-off & Toolchain-Setup\",\"text\":\"Setup von Opencode und Claude Code.\",\"optional\":false},{\"type\":\"step\",\"title\":\"Deep-Dives\",\"text\":\"Individuelle Themen.\",\"optional\":true}]}",
+  "locale": "de",
+  "publish": "false"
+}
+```
+
+Write types: text_line/url → string, text_editor → html, checkbox → boolean,
+single_contact_selection → contact id, single_page_selection → page UUID,
+page_selection → JSON array of page UUIDs, single_select → one of `options`.
+
+### update_snippet Action
+
+Update a snippet by UUID (or PHPCR path). Same `data` shape as create_snippet;
+only the given properties change, blocks are replaced wholesale. `publish`
+defaults to true (state 2 + live workspace), `"false"` keeps the change in the
+draft. The response contains the updated `content`.
+
+```json
+{
+  "action": "update_snippet",
+  "uuid": "8230bfdb-fd87-49e9-9e28-bbd9378f6df4",
+  "data": "{\"eyebrow\":\"Neuer Kicker\",\"steps\":[{\"type\":\"step\",\"title\":\"Setup\",\"text\":\"…\"},{\"type\":\"step\",\"title\":\"Praxis\",\"text\":\"…\"}]}",
+  "locale": "de"
+}
+```
+
+### publish_snippet Action
+
+Publish a draft snippet (copies the draft to the live workspace) and invalidate
+the cache of pages that use it.
+
+```json
+{
+  "action": "publish_snippet",
+  "uuid": "8230bfdb-fd87-49e9-9e28-bbd9378f6df4"
+}
+```
+
+### list_snippet_areas Action
+
+List the webspace snippet areas with their assigned default snippet. Without
+`<areas>` in the snippet templates, every snippet type is its own area.
+
+```json
+{ "action": "list_snippet_areas" }
+```
+
+Response:
+```json
+{
+  "success": true,
+  "webspace": "example",
+  "areas": [
+    { "key": "workshop_facts", "snippetType": "workshop_facts", "title": "Workshop-Fakten",
+      "snippet": { "uuid": "25d798a1-4603-4d5d-800b-fc0fe72236cf", "title": "Workshop Fakten" } },
+    { "key": "workshop_offer", "snippetType": "workshop_offer", "title": "Workshop-Angebot", "snippet": null }
+  ]
+}
+```
+
+### set_default_snippet Action
+
+Set a snippet as the webspace default for a snippet area (the same setting the
+Sulu admin manages under Webspace > Snippet areas), or clear it with
+`uuid: null`. The snippet type must match the area type, otherwise nothing
+changes. `assign_snippet_area` still works as an alias.
+
+```json
+{
+  "action": "set_default_snippet",
+  "area": "workshop_facts",
+  "uuid": "25d798a1-4603-4d5d-800b-fc0fe72236cf"
+}
+```
+
+### delete_snippet Action
+
+Delete a snippet. `confirm` must equal `uuid`. Run with `dryRun: "true"`
+first: it lists every referencing page block and area without deleting. While
+references exist the call fails with `references_present` and a `nextAction`
+hint. This is a hard delete without Sulu trash; the dry run returns the
+snippet content as backup.
+
+```json
+{
+  "action": "delete_snippet",
+  "uuid": "8230bfdb-fd87-49e9-9e28-bbd9378f6df4",
+  "confirm": "8230bfdb-fd87-49e9-9e28-bbd9378f6df4",
+  "dryRun": "true"
+}
+```
+
+### workshop-offer block
+
+`add_block`, `update_block` and `update_blocks` accept `offer` (UUID of a
+`workshop_offer` snippet). Any other snippet type is rejected before a write.
+`get_structure` returns `offer_snippet_uuid` and `offer_snippet_title` for the
+block.
+
+```json
+{
+  "action": "add_block",
+  "path": "/cmf/example/contents/workshops/ki",
+  "blockType": "workshop-offer",
+  "offer": "8230bfdb-fd87-49e9-9e28-bbd9378f6df4",
+  "position": "2"
 }
 ```
 

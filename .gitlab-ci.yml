@@ -19,6 +19,7 @@ cypress_full_test_preview_stage:
     strategy: depend
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    RECORD_TRIGGER: "true"
     TESTS_FAILED_cypress_full_test_preview_stage: $CI_JOB_STATUS == 'success'
 
 cypress_custom_tests_preview_stage:
@@ -29,6 +30,7 @@ cypress_custom_tests_preview_stage:
     strategy: depend
   variables:
     CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    RECORD_TRIGGER: "true"
     TESTS_FAILED_cypress_custom_tests_preview_stage: $CI_JOB_STATUS == 'success'
 
 validate_html_stage:
@@ -93,8 +95,7 @@ dumpfinder:
     - rm -rf /tmp/uploads /tmp/public-uploads
     - docker cp $SHORTCODE-web:/var/www/html/var/uploads /tmp/ || true
     - docker cp $SHORTCODE-web:/var/www/html/public/uploads /tmp/public-uploads || true
-    - docker exec $SHORTCODE1-chromadb tar czf /tmp/chromadb-backup.tar.gz -C /chroma/chroma . 2>/dev/null || true
-    - docker cp $SHORTCODE1-chromadb:/tmp/chromadb-backup.tar.gz /tmp/chromadb-backup.tar.gz 2>/dev/null || true
+    - du -sh /tmp/public-uploads || true
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv ||true
     - docker volume rm $SHORTCODE1"_var" ||true
   script:
@@ -102,16 +103,11 @@ dumpfinder:
     - DB_NAME=${PREFIX}_${DB_NAME} docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
     - docker cp /tmp/uploads $SHORTCODE1-web:/var/www/html/var/
     - docker cp /tmp/public-uploads/. $SHORTCODE1-web:/var/www/html/public/uploads
-    - docker cp /tmp/chromadb-backup.tar.gz $SHORTCODE1-chromadb:/tmp/chromadb-backup.tar.gz 2>/dev/null || true
-    - docker exec $SHORTCODE1-chromadb tar xzf /tmp/chromadb-backup.tar.gz -C /chroma/chroma 2>/dev/null || true
     - docker exec $SHORTCODE1-web chown -R www-data:www-data /var/www/html/var/uploads/ /var/www/html/public/uploads/ 2>/dev/null || true
     - docker exec $SHORTCODE1-web rm -rf var/cache
     - docker exec $SHORTCODE1-web sh -c 'mkdir -p var/cache && chown -R www-data:www-data var/cache' || true
     - docker exec --user www-data $SHORTCODE1-web php bin/console cache:warmup --env=prod --no-debug
     - docker exec --user www-data $SHORTCODE1-web php bin/websiteconsole cache:warmup --env=prod --no-debug
-    # Skip ChromaDB reset and indexing for stage deployments to use live data
-    - echo "Skipping ChromaDB reset and indexing for stage deployment"
-    - echo "Using existing ChromaDB data from backup/restore process"
 
 deploy_stage:
   stage: deploy_stage
@@ -131,7 +127,6 @@ deploy_stage:
     GEMINI_MODEL: $GEMINI_MODEL
     ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
     HUGGINGFACE_KEY: $HUGGINGFACE_KEY
-    CHROMADB_DATABASE: $CHROMADB_DATABASE
 
 deploy_branch:
   stage: deploy_stage
@@ -152,7 +147,6 @@ deploy_branch:
     GEMINI_MODEL: $GEMINI_MODEL
     ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
     HUGGINGFACE_KEY: $HUGGINGFACE_KEY
-    CHROMADB_DATABASE: $CHROMADB_DATABASE
 
 .deploy_live:
   stage: deploy_live
@@ -163,8 +157,12 @@ deploy_branch:
   image: docker:latest
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - rm -rf /tmp/live-public-uploads
+    - docker cp $SHORTCODE1-web:/var/www/html/public/uploads /tmp/live-public-uploads || true
   script:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
+    - docker cp /tmp/live-public-uploads/. $SHORTCODE1-web:/var/www/html/public/uploads || true
+    - docker exec $SHORTCODE1-web chown -R www-data:www-data /var/www/html/public/uploads 2>/dev/null || true
     - docker exec $SHORTCODE1-web rm -rf var/cache
     - docker exec $SHORTCODE1-web sh -c 'mkdir -p var/cache && chown -R www-data:www-data var/cache' || true
     - docker exec --user www-data $SHORTCODE1-web php bin/console cache:warmup --env=prod --no-debug
@@ -179,7 +177,6 @@ deploy_branch:
     GEMINI_MODEL: $GEMINI_MODEL
     ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
     HUGGINGFACE_KEY: $HUGGINGFACE_KEY
-    CHROMADB_DATABASE: $CHROMADB_DATABASE
 
 deploy_live:
   extends: .deploy_live
@@ -204,74 +201,10 @@ cypress_internal_links_test_live:
   variables:
     CYPRESS_BASE_URL: https://$URL
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
+    RECORD_TRIGGER: "true"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: on_success
   needs:
     - job: deploy_live
 
-# Manual job to index new videos (incremental)
-index_new_videos:
-  stage: deploy_live
-  when: manual
-  tags:
-    - docker2
-  script:
-    - echo "Indexing new videos to ChromaDB..."
-    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit ${INDEX_LIMIT:-20}
-    - echo "Indexing complete"
-  variables:
-    ENVIRONMENT: "stage-" # Change to "" for production
-    INDEX_LIMIT: "20" # Number of recent videos to check
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-
-# Manual job for full re-index (clear and rebuild)
-reindex_all_videos:
-  stage: deploy_live
-  when: manual
-  tags:
-    - docker2
-  script:
-    - echo "WARNING - This will clear and rebuild the entire video index!"
-    - echo "Clearing existing index..."
-    - docker exec --user www-data ${ENVIRONMENT}ncade-web bash -c "echo yes | php bin/console app:video:clear-index"
-    - echo "Re-indexing all videos..."
-    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:video:index PLKrKzhBjw2Y-xrgw927AuGBVVPOvNV03g --limit ${INDEX_LIMIT}
-    - echo "Full re-index complete"
-  variables:
-    ENVIRONMENT: "stage-" # Change to "" for production
-    INDEX_LIMIT: "100" # Total videos to index
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-
-# Manual job to index Sulu CMS content
-index_sulu_content:
-  stage: deploy_live
-  when: manual
-  tags:
-    - docker2
-  script:
-    - echo "Indexing Sulu CMS content to ChromaDB..."
-    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:index:sulu-content --locale=${LOCALE}
-    - echo "Sulu content indexing complete"
-  variables:
-    ENVIRONMENT: "stage-" # Change to "" for production
-    LOCALE: "de" # Locale to index (de or en)
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-
-# Manual job to reindex all Sulu content (all locales)
-reindex_all_sulu_content:
-  stage: deploy_live
-  when: manual
-  tags:
-    - docker2
-  script:
-    - echo "Re-indexing all Sulu CMS content for all locales..."
-    - docker exec --user www-data ${ENVIRONMENT}ncade-web php bin/console app:index:sulu-content --all-locales
-    - echo "Full Sulu content re-index complete"
-  variables:
-    ENVIRONMENT: "stage-" # Change to "" for production
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'

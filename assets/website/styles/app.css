@@ -72,14 +72,36 @@ pre {
   line-height: 1.5;
 }
 
-a {
-  @apply text-green-900 underline underline-offset-2;
-  opacity: unset;
+@layer base {
+  a {
+    @apply text-green-900 underline underline-offset-2;
+    opacity: unset;
+  }
+
+  a:hover,
+  a:focus {
+    @apply text-green-800 underline;
+  }
 }
 
-a:hover,
-a:focus {
-  @apply text-green-800 underline;
+@layer components {
+  .cta {
+    @apply inline-flex items-center justify-center gap-2 text-sm font-mono font-bold px-8 py-4 no-underline transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700;
+  }
+  .cta-primary {
+    @apply bg-green-700 text-white;
+  }
+  .cta-primary:hover,
+  .cta-primary:focus {
+    @apply bg-green-800 text-white no-underline;
+  }
+  .cta-outline {
+    @apply bg-white text-green-700 border-2 border-green-700;
+  }
+  .cta-outline:hover,
+  .cta-outline:focus {
+    @apply bg-green-700 text-white border-green-700 no-underline;
+  }
 }
 
 li {

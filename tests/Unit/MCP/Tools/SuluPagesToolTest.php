@@ -403,6 +403,368 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test create_snippet action dispatch.
+     */
+    public function testCreateSnippetActionDispatchesToService(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('createSnippet')
+            ->with(
+                'workshop_offer',
+                'KI Workshop',
+                ['eyebrow' => 'Workshop', 'steps' => [['type' => 'step', 'title' => 'Setup']]],
+                'de',
+                true
+            )
+            ->willReturn(['success' => true, 'uuid' => 'abc', 'path' => '/cmf/snippets/workshop_offer/ki-workshop']);
+
+        $result = $this->tool->execute([
+            'action' => 'create_snippet',
+            'snippetType' => 'workshop_offer',
+            'title' => 'KI Workshop',
+            'data' => '{"eyebrow":"Workshop","steps":[{"type":"step","title":"Setup"}]}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals('abc', $data['uuid']);
+    }
+
+    public function testCreateSnippetActionRequiresSnippetTypeAndTitle(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'create_snippet',
+            'data' => '{}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Error: snippetType and title are required', $sanitized['text']);
+    }
+
+    public function testCreateSnippetActionRejectsInvalidDataJson(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'create_snippet',
+            'snippetType' => 'workshop_offer',
+            'title' => 'X',
+            'data' => 'not-json',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Error: data must be a JSON object', $sanitized['text']);
+    }
+
+    /**
+     * Test update_snippet action dispatch.
+     */
+    public function testUpdateSnippetActionDispatchesToService(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('updateSnippet')
+            ->with('abc-123', ['headline' => 'Neu'], 'de', true)
+            ->willReturn(['success' => true, 'updated' => ['headline']]);
+
+        $result = $this->tool->execute([
+            'action' => 'update_snippet',
+            'uuid' => 'abc-123',
+            'data' => '{"headline":"Neu"}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals(['headline'], $data['updated']);
+    }
+
+    public function testUpdateSnippetActionRequiresUuidAndData(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'update_snippet',
+            'data' => '{"headline":"Neu"}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Error: uuid', $sanitized['text']);
+    }
+
+    /**
+     * Test set_default_snippet action dispatch (assign_snippet_area stays as alias).
+     */
+    public function testSetDefaultSnippetActionDispatchesToServiceAndInvalidatesCache(): void
+    {
+        $this->snippetService->expects($this->exactly(2))
+            ->method('setDefaultSnippet')
+            ->with('workshop_facts', 'abc-123')
+            ->willReturn(['success' => true, 'area' => 'workshop_facts', 'uuid' => 'abc-123']);
+        $this->pageService->expects($this->exactly(2))
+            ->method('invalidateCacheTags')
+            ->with(['abc-123', 'snippet_area-workshop_facts'])
+            ->willReturn(true);
+
+        foreach (['set_default_snippet', 'assign_snippet_area'] as $action) {
+            $data = $this->executeJson(['action' => $action, 'area' => 'workshop_facts', 'uuid' => 'abc-123']);
+
+            $this->assertTrue($data['success']);
+            $this->assertEquals('workshop_facts', $data['area']);
+            $this->assertTrue($data['cacheCleared']);
+        }
+    }
+
+    public function testSetDefaultSnippetActionClearsAreaWithNull(): void
+    {
+        $this->snippetService->expects($this->exactly(2))
+            ->method('setDefaultSnippet')
+            ->with('workshop_facts', null)
+            ->willReturn(['success' => true, 'area' => 'workshop_facts', 'uuid' => null]);
+
+        $this->executeJson(['action' => 'set_default_snippet', 'area' => 'workshop_facts', 'uuid' => null]);
+        $this->executeJson(['action' => 'set_default_snippet', 'area' => 'workshop_facts', 'uuid' => 'null']);
+    }
+
+    public function testSetDefaultSnippetActionRequiresParams(): void
+    {
+        $this->snippetService->expects($this->never())->method('setDefaultSnippet');
+
+        $this->assertStringContainsString(
+            'Error: area is required',
+            $this->executeText(['action' => 'set_default_snippet', 'uuid' => 'abc'])
+        );
+        $this->assertStringContainsString(
+            'Error: uuid is required',
+            $this->executeText(['action' => 'set_default_snippet', 'area' => 'workshop_facts'])
+        );
+    }
+
+    public function testSetDefaultSnippetActionDoesNotInvalidateCacheOnFailure(): void
+    {
+        $this->snippetService->method('setDefaultSnippet')
+            ->willReturn(['success' => false, 'message' => "Snippet template 'workshop_offer' does not match area 'workshop_facts'."]);
+        $this->pageService->expects($this->never())->method('invalidateCacheTags');
+
+        $data = $this->executeJson(['action' => 'set_default_snippet', 'area' => 'workshop_facts', 'uuid' => 'offer-uuid']);
+
+        $this->assertFalse($data['success']);
+    }
+
+    public function testListSnippetAreasActionDispatchesToService(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('listSnippetAreas')
+            ->with('de')
+            ->willReturn(['success' => true, 'webspace' => 'example', 'areas' => [
+                ['key' => 'workshop_facts', 'snippetType' => 'workshop_facts', 'title' => 'Workshop-Fakten', 'snippet' => null],
+            ]]);
+
+        $data = $this->executeJson(['action' => 'list_snippet_areas']);
+
+        $this->assertEquals('workshop_facts', $data['areas'][0]['key']);
+        $this->assertNull($data['areas'][0]['snippet']);
+    }
+
+    public function testGetSnippetSchemaActionDispatchesToService(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('getSnippetSchema')
+            ->with('workshop_offer')
+            ->willReturn(['success' => true, 'key' => 'workshop_offer']);
+
+        $data = $this->executeJson(['action' => 'get_snippet_schema', 'snippetType' => 'workshop_offer']);
+
+        $this->assertEquals('workshop_offer', $data['key']);
+        $this->assertStringContainsString(
+            'Error: snippetType is required',
+            $this->executeText(['action' => 'get_snippet_schema'])
+        );
+    }
+
+    public function testPublishSnippetActionPublishesAndInvalidatesCache(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('publishSnippet')
+            ->with('abc-123', 'de')
+            ->willReturn(['success' => true, 'uuid' => 'abc-123', 'published' => true]);
+        $this->pageService->expects($this->once())
+            ->method('invalidateCacheTags')
+            ->with(['abc-123'])
+            ->willReturn(true);
+
+        $data = $this->executeJson(['action' => 'publish_snippet', 'uuid' => 'abc-123']);
+
+        $this->assertTrue($data['published']);
+        $this->assertTrue($data['cacheCleared']);
+    }
+
+    public function testCreateSnippetDraftDoesNotInvalidateCache(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('createSnippet')
+            ->with('workshop_offer', 'Draft', ['eyebrow' => 'E'], 'de', false)
+            ->willReturn(['success' => true, 'uuid' => 'abc', 'published' => false]);
+        $this->pageService->expects($this->never())->method('invalidateCacheTags');
+
+        $data = $this->executeJson([
+            'action' => 'create_snippet',
+            'snippetType' => 'workshop_offer',
+            'title' => 'Draft',
+            'data' => '{"eyebrow":"E"}',
+            'publish' => 'false',
+        ]);
+
+        $this->assertFalse($data['published']);
+    }
+
+    public function testDeleteSnippetActionPassesDryRunAndConfirm(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('deleteSnippet')
+            ->with('abc-123', 'abc-123', true, 'de')
+            ->willReturn(['success' => true, 'dryRun' => true, 'references' => []]);
+        $this->pageService->expects($this->never())->method('invalidateCacheTags');
+
+        $data = $this->executeJson(['action' => 'delete_snippet', 'uuid' => 'abc-123', 'confirm' => 'abc-123', 'dryRun' => 'true']);
+
+        $this->assertTrue($data['dryRun']);
+    }
+
+    public function testDeleteSnippetActionReturnsReferencesPresent(): void
+    {
+        $this->snippetService->method('deleteSnippet')->willReturn([
+            'success' => false,
+            'errorCode' => 'references_present',
+            'message' => 'Snippet is still referenced',
+            'details' => ['references' => [['kind' => 'block', 'path' => '/cmf/example/contents/foo']]],
+            'nextAction' => 'remove the snippet from the listed page blocks',
+        ]);
+
+        $data = $this->executeJson(['action' => 'delete_snippet', 'uuid' => 'abc-123', 'confirm' => 'abc-123']);
+
+        $this->assertSame('references_present', $data['errorCode']);
+        $this->assertNotEmpty($data['nextAction']);
+    }
+
+    public function testDescriptionAndSchemaListSnippetActions(): void
+    {
+        $description = $this->tool->getDescription();
+        foreach (['get_snippet_schema', 'create_snippet', 'update_snippet', 'publish_snippet', 'delete_snippet', 'list_snippet_areas', 'set_default_snippet', 'workshop-offer'] as $needle) {
+            $this->assertStringContainsString($needle, $description);
+        }
+
+        $schema = json_encode($this->tool->getInputSchema()->asArray());
+        foreach (['"data"', '"uuid"', '"offer"', '"area"'] as $needle) {
+            $this->assertStringContainsString($needle, (string) $schema);
+        }
+    }
+
+    public function testAddWorkshopOfferBlockPassesOffer(): void
+    {
+        $this->snippetService->method('getSnippet')
+            ->with('offer-uuid')
+            ->willReturn(['uuid' => 'offer-uuid', 'title' => 'KI Workshop', 'type' => 'workshop_offer', 'template' => 'workshop_offer', 'path' => '/cmf/snippets/workshop_offer/ki']);
+
+        $capturedBlock = null;
+        $this->pageService->expects($this->once())
+            ->method('addBlock')
+            ->willReturnCallback(function ($path, $block, $position) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                $this->assertSame(2, $position);
+
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $this->executeJson([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'workshop-offer',
+            'offer' => 'offer-uuid',
+            'position' => '2',
+        ]);
+
+        $this->assertSame('workshop-offer', $capturedBlock['type']);
+        $this->assertSame('offer-uuid', $capturedBlock['offer']);
+    }
+
+    public function testAddWorkshopOfferBlockRejectsWrongSnippetType(): void
+    {
+        $this->snippetService->method('getSnippet')
+            ->willReturn(['uuid' => 'facts-uuid', 'title' => 'Fakten', 'type' => 'workshop_facts', 'template' => 'workshop_facts', 'path' => '/cmf/snippets/workshop_facts/f']);
+        $this->pageService->expects($this->never())->method('addBlock');
+
+        $text = $this->executeText([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'workshop-offer',
+            'offer' => 'facts-uuid',
+        ]);
+
+        $this->assertStringContainsString('must reference a workshop_offer snippet', $text);
+    }
+
+    public function testAddWorkshopOfferBlockRequiresOffer(): void
+    {
+        $this->pageService->expects($this->never())->method('addBlock');
+
+        $text = $this->executeText([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'workshop-offer',
+        ]);
+
+        $this->assertStringContainsString('workshop-offer requires offer', $text);
+    }
+
+    public function testUpdateBlockRejectsWrongOfferSnippetType(): void
+    {
+        $this->snippetService->method('getSnippet')->willReturn(null);
+        $this->pageService->expects($this->never())->method('updateBlock');
+
+        $text = $this->executeText([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'workshop-offer',
+            'position' => '0',
+            'offer' => 'missing-uuid',
+        ]);
+
+        $this->assertStringContainsString('offer snippet not found', $text);
+    }
+
+    public function testUpdateBlocksRejectsWrongOfferBeforeAnyWrite(): void
+    {
+        $this->snippetService->method('getSnippet')
+            ->willReturn(['uuid' => 'facts-uuid', 'title' => 'Fakten', 'type' => 'workshop_facts', 'template' => 'workshop_facts', 'path' => '/cmf/snippets/workshop_facts/f']);
+        $this->pageService->expects($this->never())->method('updateBlock');
+
+        $text = $this->executeText([
+            'action' => 'update_blocks',
+            'path' => '/cmf/example/contents/test',
+            'updates' => '[{"position":0,"headline":"ok"},{"position":1,"offer":"facts-uuid"}]',
+        ]);
+
+        $this->assertStringContainsString('Error at position 1', $text);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function executeText(array $arguments): string
+    {
+        return $this->tool->execute($arguments)->getSanitizedResult()['text'];
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     *
+     * @return array<string, mixed>
+     */
+    private function executeJson(array $arguments): array
+    {
+        return json_decode($this->executeText($arguments), true);
+    }
+
+    /**
      * Test add_block with JSON object content spreads properties onto block.
      * This is needed for blocks with flat properties in content parameter.
      */

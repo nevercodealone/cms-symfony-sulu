@@ -113,6 +113,33 @@ class PageService
     }
 
     /**
+     * Invalidate HTTP cache entries tagged with the given UUIDs (e.g. a snippet
+     * UUID after a snippet write) and flush immediately for the MCP process.
+     *
+     * @param array<int, string> $tags
+     */
+    public function invalidateCacheTags(array $tags): bool
+    {
+        foreach ($tags as $tag) {
+            $this->cacheManager?->invalidateTag($tag);
+        }
+
+        if ($this->fosCacheManager) {
+            try {
+                $this->fosCacheManager->flush();
+            } catch (\Exception $e) {
+                // Log but don't fail the operation
+            }
+        }
+
+        if ($this->httpCacheClearer) {
+            $this->httpCacheClearer->clear();
+        }
+
+        return $this->cacheManager !== null || $this->httpCacheClearer !== null;
+    }
+
+    /**
      * Invalidate HTTP cache for a page by its path.
      */
     private function invalidatePageCache(string $path, string $locale): void
@@ -373,7 +400,7 @@ class PageService
             'excerptDescription' => $page['excerpt']['description'] ?? null,
             'excerptImage' => $page['excerpt']['images']['ids'][0] ?? null,
             'blocks_count' => count($page['blocks']),
-            'blocks' => $this->formatCompactBlocks($page['blocks']),
+            'blocks' => $this->formatCompactBlocks($page['blocks'], $locale),
         ];
 
         if (isset($page['trainingData'])) {
@@ -3690,9 +3717,9 @@ class PageService
      * Format blocks as compact metadata (position + type + headline only).
      *
      * @param array<mixed> $blocks Full block data from getPage()
-     * @return array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int, linked_page_uuid?: string, snippet_uuid?: string, datasource_uuid?: string}>
+     * @return array<int, array{position: int, type: string, headline?: string, faqs_count?: int, rows_count?: int, items_count?: int, linked_page_uuid?: string, snippet_uuid?: string, datasource_uuid?: string, offer_snippet_uuid?: string|null, offer_snippet_title?: string|null}>
      */
-    public function formatCompactBlocks(array $blocks): array
+    public function formatCompactBlocks(array $blocks, string $locale = 'de'): array
     {
         $compact = [];
         foreach ($blocks as $index => $block) {
@@ -3721,6 +3748,15 @@ class PageService
             // contact: include first snippet UUID
             if ($block['type'] === 'contact' && isset($block['snippets']) && is_array($block['snippets'])) {
                 $entry['snippet_uuid'] = $block['snippets'][0] ?? null;
+            }
+
+            // workshop-offer: include the referenced workshop_offer snippet
+            if ($block['type'] === 'workshop-offer') {
+                $offer = is_string($block['offer'] ?? null) && $block['offer'] !== '' ? $block['offer'] : null;
+                $entry['offer_snippet_uuid'] = $offer;
+                $entry['offer_snippet_title'] = $offer !== null
+                    ? ($this->snippetService?->getSnippet($offer, $locale)['title'] ?? null)
+                    : null;
             }
 
             // subpages-overview: extract dataSource UUID from items

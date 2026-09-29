@@ -61,7 +61,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -83,7 +83,15 @@ class SuluPagesTool implements StreamableToolInterface
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
             'UPDATE MEDIA: update_media + mediaId + title. Updates the alt-text/title of an existing media item. Use list_media to find IDs. ' .
-            'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter.';
+            'LIST COLLECTIONS: list_collections returns all media collections with IDs for upload_media collectionId parameter. ' .
+            'SNIPPETS WORKFLOW: 1) get_snippet_schema 2) create_snippet publish=false (draft) 3) publish_snippet 4) set_default_snippet for area snippets or add_block blockType=workshop-offer offer=<uuid> for offers. ' .
+            'GET SNIPPET SCHEMA: get_snippet_schema + snippetType. Returns every property with suluType, writeType, required, writable, select options, blocks with minOccurs/maxOccurs and nested item types, and the snippet areas of the type. Unknown type lists availableTypes. ' .
+            'CREATE SNIPPET: create_snippet + snippetType + title + data (JSON object). Scalars keyed by name, blocks as item arrays: {"eyebrow":"Workshop","headline":"KI-Workshop","text":"<p>…</p>","contact":41,"targetPage":"page-uuid","buttonText":"Jetzt anfragen","steps":[{"type":"step","title":"Setup","text":"…","optional":false},{"title":"Praxis","text":"…"}]}. All required properties must be set; unknown, missing or invalid properties fail with a message naming the property. Optional publish ("true" default, "false" = draft only), locale. Returns uuid, path, template, published. ' .
+            'UPDATE SNIPPET: update_snippet + uuid (or snippet path) + data (JSON object, only given properties change; blocks are replaced wholesale). Optional publish ("true" default, "false" keeps the change in the draft). Returns the updated content. ' .
+            'PUBLISH SNIPPET: publish_snippet + uuid. Publishes the draft and invalidates the cache of pages that use it. ' .
+            'LIST SNIPPET AREAS: list_snippet_areas. Returns each webspace snippet area with key, snippetType, title and the assigned snippet {uuid,title} or null. ' .
+            'SET DEFAULT SNIPPET: set_default_snippet + area + uuid (snippet uuid, or null to clear). The snippet type must match the area type (e.g. area workshop_facts needs a workshop_facts snippet). ' .
+            'DELETE SNIPPET: {"action":"delete_snippet","uuid":"<uuid>","confirm":"<uuid>","dryRun":"true"} lists referencing page blocks and areas without deleting. Then repeat with "dryRun":"false". Fails with references_present (follow nextAction) while any page block or area uses the snippet. Hard delete, no trash - the dry run returns the content as backup.';
     }
 
     /**
@@ -104,7 +112,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache',
                 required: true
             ),
             new SchemaProperty(
@@ -134,7 +142,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'blockType',
                 type: PropertyType::STRING,
-                description: 'Block type for add_block. Values: headline-paragraphs (with items), hl-des, text, image, code, quote, video, html-raw',
+                description: 'Block type for add_block. Any type from list_block_types, e.g. headline-paragraphs (with items), hl-des, text, image, code, quote, video, html-raw, page-teaser, faq, workshop-offer (needs offer).',
                 required: false
             ),
             new SchemaProperty(
@@ -218,7 +226,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'publish',
                 type: PropertyType::STRING,
-                description: 'For create_page: Publish immediately after creation - "true" or "false" (default: "false")',
+                description: 'For create_page: Publish immediately after creation - "true" or "false" (default: "false"). For create_snippet / update_snippet: "true" (default) writes live, "false" keeps it as draft.',
                 required: false
             ),
             new SchemaProperty(
@@ -302,7 +310,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'snippetType',
                 type: PropertyType::STRING,
-                description: 'For list_snippets action: filter by snippet type (e.g. "contact", "team")',
+                description: 'For list_snippets: filter by snippet type (e.g. "contact", "workshop_offer"). Required for create_snippet and get_snippet_schema.',
                 required: false
             ),
             new SchemaProperty(
@@ -452,7 +460,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'confirm',
                 type: PropertyType::STRING,
-                description: 'REQUIRED for delete_page/delete_pages. Safety token. delete_page: confirm == path (e.g. confirm="/cmf/example/contents/foo"). delete_pages: confirm is a JSON array containing exactly the same paths in the same order (any valid JSON encoding accepted). Any mismatch aborts.',
+                description: 'REQUIRED for delete_page/delete_pages/delete_snippet. Safety token. delete_snippet: confirm == uuid. delete_page: confirm == path (e.g. confirm="/cmf/example/contents/foo"). delete_pages: confirm is a JSON array containing exactly the same paths in the same order (any valid JSON encoding accepted). Any mismatch aborts.',
                 required: false
             ),
             new SchemaProperty(
@@ -470,13 +478,37 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'dryRun',
                 type: PropertyType::STRING,
-                description: 'delete_page/delete_pages. Pass "true" to run every check and return the report (with nextAction hint) WITHOUT deleting anything. ALWAYS do this first. Then call again with "false" (or omit) to execute.',
+                description: 'delete_page/delete_pages/delete_snippet. Pass "true" to run every check and return the report (with nextAction hint) WITHOUT deleting anything. ALWAYS do this first. Then call again with "false" (or omit) to execute.',
                 required: false
             ),
             new SchemaProperty(
                 name: 'paths',
                 type: PropertyType::STRING,
                 description: 'REQUIRED for delete_pages. JSON array of PHPCR paths, max 10. Example: "[\"/cmf/example/contents/a\",\"/cmf/example/contents/a/b\"]". Sorted deepest-first internally. A path is deletable in the batch only when every direct child is also listed.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'uuid',
+                type: PropertyType::STRING,
+                description: 'For update_snippet / publish_snippet / delete_snippet / set_default_snippet: UUID (or PHPCR path, e.g. /cmf/snippets/workshop_offer/my-snippet) of the target snippet. set_default_snippet accepts null to clear the area. Use list_snippets to find UUIDs.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'data',
+                type: PropertyType::STRING,
+                description: 'For create_snippet / update_snippet: JSON object of snippet property values, field names from get_snippet_schema. Scalars keyed by name (text_line/text_editor: string, checkbox: bool, single_contact_selection: contact id, single_page_selection: page UUID, page_selection: JSON array of page UUIDs, single_select: one of options), blocks as item arrays: "steps": [{"type":"step","title":"…","text":"…","optional":false}]. Blocks are replaced wholesale on update.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'area',
+                type: PropertyType::STRING,
+                description: 'For set_default_snippet: snippet area key from list_snippet_areas (e.g. workshop_facts). The snippet is set as the webspace default for this area.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'offer',
+                type: PropertyType::STRING,
+                description: 'For add_block / update_block with blockType workshop-offer: UUID of a workshop_offer snippet (list_snippets snippetType=workshop_offer). Other snippet types are rejected.',
                 required: false
             ),
         );
@@ -522,6 +554,13 @@ class SuluPagesTool implements StreamableToolInterface
             'list_block_types' => $this->listBlockTypes($arguments['template'] ?? null),
             'get_block_schema' => $this->getBlockSchema($arguments['blockTypeName'] ?? '', $arguments['template'] ?? null),
             'list_snippets' => $this->listSnippets($arguments['snippetType'] ?? null, $locale),
+            'create_snippet' => $this->createSnippetAction($arguments, $locale),
+            'update_snippet' => $this->updateSnippetAction($arguments, $locale),
+            'set_default_snippet', 'assign_snippet_area' => $this->setDefaultSnippetAction($arguments),
+            'list_snippet_areas' => $this->jsonResult($this->snippetService->listSnippetAreas($locale)),
+            'get_snippet_schema' => $this->getSnippetSchemaAction($arguments),
+            'publish_snippet' => $this->publishSnippetAction($arguments, $locale),
+            'delete_snippet' => $this->deleteSnippetAction($arguments, $locale),
             'list_media' => $this->listMedia($arguments, $locale),
             'upload_media' => $this->uploadMedia($arguments, $locale),
             'update_media' => $this->updateMedia($arguments, $locale),
@@ -1021,6 +1060,13 @@ class SuluPagesTool implements StreamableToolInterface
             }
         }
 
+        if ($blockType === 'workshop-offer') {
+            $offerError = $this->validateWorkshopOffer($block['offer'] ?? null, $locale);
+            if ($offerError !== null) {
+                return new TextToolResult($offerError);
+            }
+        }
+
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
@@ -1082,6 +1128,16 @@ class SuluPagesTool implements StreamableToolInterface
         }
         if (count($updates) > 10) {
             return new TextToolResult('Error: maximum 10 updates per call');
+        }
+
+        // Validate snippet references up front so a bad offer fails the whole batch without changes
+        foreach ($updates as $update) {
+            if (is_array($update) && array_key_exists('offer', $update)) {
+                $offerError = $this->validateWorkshopOffer($update['offer'], $locale);
+                if ($offerError !== null) {
+                    return new TextToolResult('Error at position ' . ($update['position'] ?? '?') . ': ' . substr($offerError, strlen('Error: ')));
+                }
+            }
         }
 
         $updatedPositions = [];
@@ -1369,6 +1425,13 @@ class SuluPagesTool implements StreamableToolInterface
             return new TextToolResult('Error: at least one of headline, content, items, or block-specific properties is required');
         }
 
+        if (array_key_exists('offer', $blockData)) {
+            $offerError = $this->validateWorkshopOffer($blockData['offer'] ?? null, $locale);
+            if ($offerError !== null) {
+                return new TextToolResult($offerError);
+            }
+        }
+
         $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
@@ -1519,6 +1582,191 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->snippetService->listSnippets($snippetType, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function createSnippetAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $snippetType = trim((string) ($arguments['snippetType'] ?? ''));
+        $title = trim((string) ($arguments['title'] ?? ''));
+
+        if ($snippetType === '' || $title === '') {
+            return new TextToolResult('Error: snippetType and title are required. Call get_snippet_schema first to see the fields.');
+        }
+
+        $data = $this->decodeSnippetData($arguments);
+        if ($data === null) {
+            return new TextToolResult('Error: data must be a JSON object, e.g. {"eyebrow":"Workshop","steps":[]}. Call get_snippet_schema snippetType=' . $snippetType . ' for the fields.');
+        }
+
+        $publish = $this->isTrue($arguments['publish'] ?? true);
+
+        $result = $this->snippetService->createSnippet($snippetType, $title, $data, $locale, $publish);
+        if ($result['success'] && $publish) {
+            $result['cacheCleared'] = $this->pageService->invalidateCacheTags([(string) ($result['uuid'] ?? '')]);
+        }
+
+        return $this->jsonResult($result);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateSnippetAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $uuid = trim((string) ($arguments['uuid'] ?? ''));
+
+        if ($uuid === '') {
+            return new TextToolResult('Error: uuid (or snippet path) is required');
+        }
+
+        $data = $this->decodeSnippetData($arguments);
+        if ($data === null || $data === []) {
+            return new TextToolResult('Error: data must be a non-empty JSON object, e.g. {"headline":"Neu"}');
+        }
+
+        $publish = $this->isTrue($arguments['publish'] ?? true);
+
+        $result = $this->snippetService->updateSnippet($uuid, $data, $locale, $publish);
+        if ($result['success'] && $publish) {
+            $result['cacheCleared'] = $this->pageService->invalidateCacheTags([(string) ($result['uuid'] ?? $uuid)]);
+        }
+
+        return $this->jsonResult($result);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function publishSnippetAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $uuid = trim((string) ($arguments['uuid'] ?? ''));
+        if ($uuid === '') {
+            return new TextToolResult('Error: uuid (or snippet path) is required');
+        }
+
+        $result = $this->snippetService->publishSnippet($uuid, $locale);
+        if ($result['success']) {
+            $result['cacheCleared'] = $this->pageService->invalidateCacheTags([(string) ($result['uuid'] ?? $uuid)]);
+        }
+
+        return $this->jsonResult($result);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function getSnippetSchemaAction(array $arguments): ToolResultInterface
+    {
+        $snippetType = trim((string) ($arguments['snippetType'] ?? ''));
+        if ($snippetType === '') {
+            return new TextToolResult('Error: snippetType is required, e.g. workshop_offer');
+        }
+
+        return $this->jsonResult($this->snippetService->getSnippetSchema($snippetType));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function setDefaultSnippetAction(array $arguments): ToolResultInterface
+    {
+        $area = trim((string) ($arguments['area'] ?? ''));
+        if ($area === '') {
+            return new TextToolResult('Error: area is required. Use list_snippet_areas to see available areas.');
+        }
+
+        if (!array_key_exists('uuid', $arguments)) {
+            return new TextToolResult('Error: uuid is required (snippet uuid, or null to clear the area)');
+        }
+
+        $uuid = $arguments['uuid'];
+        $uuid = $uuid === null || in_array(trim((string) $uuid), ['', 'null'], true) ? null : trim((string) $uuid);
+
+        $result = $this->snippetService->setDefaultSnippet($area, $uuid);
+        if ($result['success']) {
+            $result['cacheCleared'] = $this->pageService->invalidateCacheTags(array_filter([$uuid, 'snippet_area-' . $area]));
+        }
+
+        return $this->jsonResult($result);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function deleteSnippetAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $uuid = trim((string) ($arguments['uuid'] ?? ''));
+        if ($uuid === '') {
+            return new TextToolResult('Error: uuid is required');
+        }
+
+        $dryRun = $this->isTrue($arguments['dryRun'] ?? false);
+        $result = $this->snippetService->deleteSnippet($uuid, (string) ($arguments['confirm'] ?? ''), $dryRun, $locale);
+
+        if (($result['success'] ?? false) && !$dryRun) {
+            $result['cacheCleared'] = $this->pageService->invalidateCacheTags([$uuid]);
+        }
+
+        return $this->jsonResult($result);
+    }
+
+    /**
+     * Check that an offer value references an existing workshop_offer snippet.
+     *
+     * @return string|null error message, null when valid
+     */
+    private function validateWorkshopOffer(mixed $offer, string $locale): ?string
+    {
+        if (!is_string($offer) || trim($offer) === '') {
+            return 'Error: workshop-offer requires offer (UUID of a workshop_offer snippet). Use list_snippets snippetType=workshop_offer.';
+        }
+
+        $snippet = $this->snippetService->getSnippet(trim($offer), $locale);
+        if ($snippet === null) {
+            return "Error: offer snippet not found: {$offer}. Use list_snippets snippetType=workshop_offer.";
+        }
+
+        if ($snippet['template'] !== 'workshop_offer') {
+            return "Error: offer must reference a workshop_offer snippet, got '{$snippet['template']}' ({$snippet['title']}). Nothing was changed.";
+        }
+
+        return null;
+    }
+
+    private function isTrue(mixed $value): bool
+    {
+        return $value === true || $value === 'true' || $value === '1' || $value === 1;
+    }
+
+    /**
+     * @param array<string, mixed> $result
+     */
+    private function jsonResult(array $result): ToolResultInterface
+    {
+        return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     *
+     * @return array<string, mixed>|null
+     */
+    private function decodeSnippetData(array $arguments): ?array
+    {
+        if (!isset($arguments['data']) || !is_string($arguments['data'])) {
+            return null;
+        }
+
+        $decoded = json_decode($arguments['data'], true);
+
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        return $decoded;
     }
 
     /**

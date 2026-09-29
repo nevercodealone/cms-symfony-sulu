@@ -109,6 +109,9 @@ final class BlockTypeRegistry
 
         // === QUALIFIED CONTACT ===
         'qualified-contact' => 'Multi-step qualified contact wizard (service selection → tech details → contact → success). 3 services: PHP Refactoring, Barrierefreies Webdesign, Vibe Coding für Production. Rendered via LiveComponent with mobile and desktop layouts.',
+
+        // === WORKSHOP ===
+        'workshop-offer' => 'Workshop offer section rendered from a workshop_offer snippet (offer = snippet UUID, mandatory, only workshop_offer snippets selectable). Two columns: offer (eyebrow, headline, text, 2-4 numbered steps, contact person, button to target page) and facts from the workshop_facts default snippet assigned to the workshop_facts webspace snippet area. Renders nothing when the target page is unpublished or no offer is set.',
     ];
 
     /**
@@ -422,6 +425,10 @@ final class BlockTypeRegistry
             'headline' => 'Lass uns sprechen',
             'subline' => 'Finde das passende Angebot für dein Projekt — in 3 Schritten zur maßgeschneiderten Lösung.',
         ],
+        'workshop-offer' => [
+            'type' => 'workshop-offer',
+            'offer' => 'uuid-of-workshop-offer-snippet',
+        ],
     ];
 
     /**
@@ -634,6 +641,11 @@ final class BlockTypeRegistry
         ],
         'qualified-contact' => [
             'properties' => ['headline', 'subline'],
+        ],
+
+        // === WORKSHOP ===
+        'workshop-offer' => [
+            'properties' => ['offer'],
         ],
     ];
 
