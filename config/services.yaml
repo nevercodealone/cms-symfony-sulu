@@ -246,6 +246,8 @@ services:
 
     # Sulu Snippet Service - Direct SQL for snippet operations
     App\Sulu\Service\SnippetService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
         public: true
 
     # Latest Articles Service - Direct SQL for fetching most recently created pages
