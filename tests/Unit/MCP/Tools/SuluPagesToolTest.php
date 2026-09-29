@@ -403,6 +403,128 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test create_snippet action dispatch.
+     */
+    public function testCreateSnippetActionDispatchesToService(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('createSnippet')
+            ->with(
+                'workshop_offer',
+                'KI Workshop',
+                ['eyebrow' => 'Workshop', 'steps' => [['type' => 'step', 'title' => 'Setup']]],
+                'de',
+                true
+            )
+            ->willReturn(['success' => true, 'uuid' => 'abc', 'path' => '/cmf/snippets/workshop_offer/ki-workshop']);
+
+        $result = $this->tool->execute([
+            'action' => 'create_snippet',
+            'snippetType' => 'workshop_offer',
+            'title' => 'KI Workshop',
+            'data' => '{"eyebrow":"Workshop","steps":[{"type":"step","title":"Setup"}]}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals('abc', $data['uuid']);
+    }
+
+    public function testCreateSnippetActionRequiresSnippetTypeAndTitle(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'create_snippet',
+            'data' => '{}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Error: snippetType and title are required', $sanitized['text']);
+    }
+
+    public function testCreateSnippetActionRejectsInvalidDataJson(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'create_snippet',
+            'snippetType' => 'workshop_offer',
+            'title' => 'X',
+            'data' => 'not-json',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Error: data must be a JSON object', $sanitized['text']);
+    }
+
+    /**
+     * Test update_snippet action dispatch.
+     */
+    public function testUpdateSnippetActionDispatchesToService(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('updateSnippet')
+            ->with('abc-123', ['headline' => 'Neu'], 'de', true)
+            ->willReturn(['success' => true, 'updated' => ['headline']]);
+
+        $result = $this->tool->execute([
+            'action' => 'update_snippet',
+            'uuid' => 'abc-123',
+            'data' => '{"headline":"Neu"}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals(['headline'], $data['updated']);
+    }
+
+    public function testUpdateSnippetActionRequiresUuidAndData(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'update_snippet',
+            'data' => '{"headline":"Neu"}',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Error: uuid', $sanitized['text']);
+    }
+
+    /**
+     * Test assign_snippet_area action dispatch.
+     */
+    public function testAssignSnippetAreaActionDispatchesToService(): void
+    {
+        $this->snippetService->expects($this->once())
+            ->method('assignSnippetArea')
+            ->with('workshop_facts', 'abc-123')
+            ->willReturn(['success' => true, 'area' => 'workshop_facts']);
+
+        $result = $this->tool->execute([
+            'action' => 'assign_snippet_area',
+            'area' => 'workshop_facts',
+            'uuid' => 'abc-123',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $data = json_decode($sanitized['text'], true);
+
+        $this->assertTrue($data['success']);
+        $this->assertEquals('workshop_facts', $data['area']);
+    }
+
+    public function testAssignSnippetAreaActionRequiresParams(): void
+    {
+        $result = $this->tool->execute([
+            'action' => 'assign_snippet_area',
+            'area' => 'workshop_facts',
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $this->assertStringContainsString('Error: area and uuid are required', $sanitized['text']);
+    }
+
+    /**
      * Test add_block with JSON object content spreads properties onto block.
      * This is needed for blocks with flat properties in content parameter.
      */
