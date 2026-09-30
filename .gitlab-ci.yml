@@ -116,6 +116,7 @@ deploy_stage:
   only:
     - main
   extends: .deploy
+  resource_group: stage-deploy
   environment:
     name: stage
     url: https://$URL
@@ -135,6 +136,7 @@ deploy_branch:
   except:
     - main
   extends: .deploy
+  resource_group: stage-deploy
   environment:
     name: $CI_COMMIT_BRANCH
     url: https://$URL
