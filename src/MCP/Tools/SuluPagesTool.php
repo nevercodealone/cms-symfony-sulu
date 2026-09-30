@@ -78,7 +78,7 @@ class SuluPagesTool implements StreamableToolInterface
             'HTML-RAW: blockType "html-raw", html "<iframe src=...></iframe>". For YouTube embeds, custom HTML, and iframes. ' .
             'FAQ: entries always via the items parameter (auto-mapped per block type): add_block/append_to_block/update_block with blockType "faq" take items [{"type":"items","headline":"Question?","subline":"Answer"}]. Only update_blocks accepts the faqs key directly. ' .
             'BATCH OPERATIONS: remove_blocks with positions JSON array (auto-sorted highest-first). update_blocks with updates JSON array (max 10, each with position + data). ' .
-            'SUBPAGES-OVERVIEW: dataSource (UUID of source page) is auto-detected from parent page if omitted. Optional: includeSubFolders (default true). ' .
+            'SUBPAGES-OVERVIEW: dataSource (UUID of source page) is auto-detected from parent page if omitted. Optional: includeSubFolders (default true). LOADING BEHAVIOR: default is progressive loading — load-more button "Mehr zeigen 6/24" renders the first 6 cards, each click reveals 6 more, button disappears when all are visible. Set disableLoading "true" to render all items at once without the button (recommended for overview pages). ' .
             BlockTypeRegistry::FIELD_TYPES_RULE . ' ' .
             'Languages: php, bash, javascript, html, css, xml, yaml, json. AVOID: <pre><code> in HTML, <?php tags. ' .
             'UPLOAD MEDIA: upload_media + title + sourceUrl (URL to download) or filePath (server path). Optional: collectionId (default: 1), filename (custom SEO filename with extension). Returns media ID for use in blocks/excerpts. ' .
@@ -418,7 +418,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'disableLoading',
                 type: PropertyType::STRING,
-                description: 'For subpages-overview block: "true" disables the load-more button and shows all items at once; "false" (default) keeps progressive loading',
+                description: 'For subpages-overview block: "true" disables progressive loading (load-more button "Mehr zeigen 6/24") and shows all items at once — use for overview pages; "false" (default) shows first 6 cards with the button revealing 6 more per click',
                 required: false
             ),
             new SchemaProperty(
