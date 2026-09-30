@@ -47,7 +47,21 @@ chown www-data:www-data /var/www/html/.env 2>/dev/null || true
 chown -R www-data:www-data /var/www/html/var/ 2>/dev/null || true
 chown -R www-data:www-data /var/www/html/public/uploads/ 2>/dev/null || true
 
-# Clear stale cache — Symfony rebuilds lazily on first request as www-data
-rm -rf /var/www/html/var/cache/*
+# Clear stale compiled cache but keep the warmed HTTP page cache across restarts
+CACHE_DIR="/var/www/html/var/cache"
+PRESERVE_DIR="/tmp/http_cache-preserve"
+if [ -d "$CACHE_DIR" ] && [ -n "$(find "$CACHE_DIR" -type d -name http_cache -print -quit 2>/dev/null)" ]; then
+  mkdir -p "$PRESERVE_DIR"
+  find "$CACHE_DIR" -type d -name http_cache | while read -r dir; do
+    target="$PRESERVE_DIR${dir#"$CACHE_DIR"}"
+    mkdir -p "$(dirname "$target")"
+    mv "$dir" "$target"
+  done
+fi
+rm -rf "$CACHE_DIR"/*
+if [ -d "$PRESERVE_DIR" ]; then
+  cp -a "$PRESERVE_DIR/." "$CACHE_DIR"/
+  rm -rf "$PRESERVE_DIR"
+fi
 
 exec "$@"
