@@ -30,6 +30,12 @@
                             </param>
                         </params>
                     </property>
+                    <property name="disableLoading" type="checkbox">
+                        <meta>
+                            <title lang="en">Disable Loading (show all items)</title>
+                            <title lang="de">Laden deaktivieren (alle Einträge anzeigen)</title>
+                        </meta>
+                    </property>
                 </properties>
             </type>
         </types>

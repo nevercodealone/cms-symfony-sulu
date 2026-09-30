@@ -416,6 +416,12 @@ class SuluPagesTool implements StreamableToolInterface
                 required: false
             ),
             new SchemaProperty(
+                name: 'disableLoading',
+                type: PropertyType::STRING,
+                description: 'For subpages-overview block: "true" disables the load-more button and shows all items at once; "false" (default) keeps progressive loading',
+                required: false
+            ),
+            new SchemaProperty(
                 name: 'columnheader1',
                 type: PropertyType::STRING,
                 description: 'For table block: First column header text',
@@ -926,6 +932,10 @@ class SuluPagesTool implements StreamableToolInterface
                 'type' => 'subpages-overview',
                 'items' => $smartContentConfig,
             ];
+
+            if (($arguments['disableLoading'] ?? null) !== null) {
+                $block['disableLoading'] = filter_var($arguments['disableLoading'], FILTER_VALIDATE_BOOLEAN);
+            }
 
             $result = $this->pageService->addBlock($path, $block, $position, $locale);
 

@@ -1917,6 +1917,49 @@ class SuluPagesToolTest extends TestCase
         $this->assertTrue($decoded['success']);
     }
 
+    public function testSubpagesOverviewSetsDisableLoadingWhenProvided(): void
+    {
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function (string $path, array $block, int $position, string $locale) {
+                $this->assertTrue($block['disableLoading']);
+                return ['success' => true, 'message' => 'Block added successfully', 'position' => 0, 'blocks' => []];
+            });
+
+        $result = $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/glossare/test-page',
+            'blockType' => 'subpages-overview',
+            'dataSource' => 'explicit-uuid-123',
+            'disableLoading' => 'true',
+            'position' => 0,
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $decoded = json_decode($sanitized['text'], true);
+        $this->assertTrue($decoded['success']);
+    }
+
+    public function testSubpagesOverviewOmitsDisableLoadingWhenNotProvided(): void
+    {
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function (string $path, array $block, int $position, string $locale) {
+                $this->assertArrayNotHasKey('disableLoading', $block);
+                return ['success' => true, 'message' => 'Block added successfully', 'position' => 0, 'blocks' => []];
+            });
+
+        $result = $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/glossare/test-page',
+            'blockType' => 'subpages-overview',
+            'dataSource' => 'explicit-uuid-123',
+            'position' => 0,
+        ]);
+
+        $sanitized = $result->getSanitizedResult();
+        $decoded = json_decode($sanitized['text'], true);
+        $this->assertTrue($decoded['success']);
+    }
+
     public function testUpdateMediaActionSuccess(): void
     {
         $this->mediaService->method('updateMediaTitle')
