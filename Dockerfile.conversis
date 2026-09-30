@@ -43,6 +43,7 @@ RUN pecl install imagick redis apcu && docker-php-ext-enable imagick redis apcu
 # apache config
 RUN /usr/sbin/a2enmod rewrite && /usr/sbin/a2enmod headers && /usr/sbin/a2enmod expires
 COPY ./deploy/config/www.conf /etc/apache2/sites-available/000-default.conf
+COPY ./deploy/config/mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
 
 # php config
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
