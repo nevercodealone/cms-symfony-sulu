@@ -16,7 +16,7 @@ final class Chat
 
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly AgentInterface $youtubeBotAgent,
+        private readonly AgentInterface $youtubeBot,
     ) {
     }
 
@@ -30,7 +30,7 @@ final class Chat
         $messages = $this->loadMessages();
 
         $messages->add(Message::ofUser($message));
-        $result = $this->youtubeBotAgent->call($messages);
+        $result = $this->youtubeBot->call($messages);
 
         if (!$result instanceof TextResult) {
             throw new \RuntimeException('Expected TextResult from agent, got ' . get_class($result));

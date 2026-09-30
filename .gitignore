@@ -49,6 +49,7 @@ infection.html
 # composer
 /composer.phar
 /vendor
+/auth.json
 
 # npm
 node_modules/

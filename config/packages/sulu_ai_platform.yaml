@@ -1,0 +1,15 @@
+sulu_ai_platform:
+  api_key: '%env(SULU_AI_PLATFORM_API_KEY)%'
+  contact_email: 'admin@example.com' # shown to editors when the platform refuses for account reasons
+  webhook:
+    secret: '%env(SULU_AI_WEBHOOK_SECRET)%'
+  intelligent_search:
+    enabled: true
+    # Optional: target this specific intelligent search (otherwise the project default is used).
+    identifier: '01a0f14b-eada-7e4c-8b63-b09108e5c00e'
+    example_ui:
+      enabled: true           # demo UI at /ai-search (default: false)
+    ip_rate_limit:
+      enabled: true           # default: true
+      limit: 10               # max requests per interval and IP (default: 10)
+      interval: 60            # interval in seconds (default: 60)
