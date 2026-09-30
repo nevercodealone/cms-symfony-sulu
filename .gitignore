@@ -6,6 +6,7 @@
 /var/
 /vendor/
 /uploads
+.ai/
 ###< symfony/framework-bundle ###
 
 ###> symfony/phpunit-bridge ###
