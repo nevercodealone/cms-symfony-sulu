@@ -5,7 +5,7 @@
   </div>
 {% endif %}
 <nav aria-label="table-of-contents" class="toc mb-8 description-list">
-  <ul class="space-y-2" role="list" aria-labelledby="toc-heading">
+  <ul class="ml-0 pl-0 space-y-2" role="list" aria-labelledby="toc-heading">
     {% set counter = 0 %}
     {% for section in headlines %}
       {% if section.headline|default('') is not empty %}
