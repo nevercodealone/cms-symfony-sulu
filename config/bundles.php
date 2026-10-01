@@ -51,7 +51,6 @@ return [
     Symfony\UX\TwigComponent\TwigComponentBundle::class => ['all' => true],
     Symfony\UX\StimulusBundle\StimulusBundle::class => ['all' => true],
     Symfony\UX\LiveComponent\LiveComponentBundle::class => ['all' => true],
-    Symfony\AI\AiBundle\AiBundle::class => ['all' => true],
     KLP\KlpMcpServer\KlpMcpServerBundle::class => ['all' => true],
     Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true],
     Sulu\Bundle\RedirectBundle\SuluRedirectBundle::class => ['all' => true],

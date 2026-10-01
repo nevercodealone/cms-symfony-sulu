@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<properties xmlns="http://schemas.sulu.io/template/template"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
+    <block name="blocks" default-type="hockenheim">
+        <!-- @see https://docs.sulu.io/en/2.1/reference/content-types/block.html -->
+
+        <types>
+            <type name="hockenheim">
+                <meta>
+                    <title>Hockenheimring Workshop (statisch)</title>
+                    <info_text>Statisches Slide-Deck: KI-Schulung am Hockenheimring (6 Slides). Inhalt ist im Twig-Template hinterlegt.</info_text>
+                </meta>
+                <properties>
+                    <property name="internalNote" type="text_line">
+                        <meta>
+                            <title>Interne Notiz (optional, wird nicht angezeigt)</title>
+                        </meta>
+                    </property>
+                </properties>
+            </type>
+        </types>
+    </block>
+</properties>

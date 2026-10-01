@@ -92,7 +92,7 @@ final class BlockTypeRegistry
         // === NAVIGATION BLOCKS ===
         'highlights' => 'Content highlights referencing snippets.',
         'related-content-by-page-tag' => 'Related content based on page tags.',
-        'subpages-overview' => 'List of child pages.',
+        'subpages-overview' => 'List of child pages as card grid. Default: progressive loading via load-more button "Mehr zeigen 6/24" — first 6 cards visible, each click reveals 6 more, button disappears when all shown. disableLoading (checkbox, default false): true renders all cards at once without the button (for overview pages).',
         'table-of-contents' => 'Auto-generated table of contents.',
         'latest-articles' => 'Automatically lists the 6 most recently created published pages in the webspace, rendered as a 3-column card grid (matches highlights visual style). Optional headline field. No editor data source required.',
 
@@ -380,6 +380,7 @@ final class BlockTypeRegistry
         'subpages-overview' => [
             'type' => 'subpages-overview',
             'items' => '{"dataSource":"uuid-of-source-page","includeSubFolders":true}',
+            'disableLoading' => false,
         ],
         'table-of-contents' => [
             'type' => 'table-of-contents',
@@ -608,7 +609,7 @@ final class BlockTypeRegistry
             'encoding' => ['snippets' => 'reference'],
         ],
         'subpages-overview' => [
-            'properties' => ['items'],
+            'properties' => ['items', 'disableLoading'],
             'encoding' => ['items' => 'json'],
         ],
         'table-of-contents' => [

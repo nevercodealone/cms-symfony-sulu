@@ -110,6 +110,8 @@
           <!-- ============ WORKSHOP (offer + facts) ============ -->
           <xi:include href="blocks/workshop-offer.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
+          <xi:include href="blocks/hockenheim.xml"
+                      xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/joboffer.xml"
                       xpointer="xmlns(sulu=http://schemas.sulu.io/template/template)xpointer(/sulu:properties/sulu:block/sulu:types/sulu:type)"/>
           <xi:include href="blocks/kudos.xml"

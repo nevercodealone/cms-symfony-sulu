@@ -3,19 +3,19 @@
     "app": {
       "js": [
         "/build/website/runtime.9135b120.js",
-        "/build/website/236.7abb7741.js",
-        "/build/website/154.44c11a51.js",
-        "/build/website/app.c742679b.js"
+        "/build/website/184.68be8fc6.js",
+        "/build/website/861.b5287563.js",
+        "/build/website/app.c96f39f7.js"
       ],
       "css": [
-        "/build/website/230.2645ac6e.css"
+        "/build/website/230.c1aaee9f.css"
       ]
     },
     "chat": {
       "js": [
         "/build/website/runtime.9135b120.js",
-        "/build/website/236.7abb7741.js",
-        "/build/website/chat.3301fce7.js"
+        "/build/website/184.68be8fc6.js",
+        "/build/website/chat.7f31aaa4.js"
       ]
     },
     "style": {
@@ -23,7 +23,7 @@
         "/build/website/runtime.9135b120.js"
       ],
       "css": [
-        "/build/website/230.2645ac6e.css"
+        "/build/website/230.c1aaee9f.css"
       ]
     }
   }

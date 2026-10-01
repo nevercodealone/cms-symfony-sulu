@@ -6,8 +6,8 @@
             <div class="row">
                 <div class="col-md-8 mx-auto">
                     <div class="chat-container">
-                        {{ component('chat') }}
-                        
+                        {{ include('components/chat.html.twig') }}
+
                         <footer class="py-4 text-center">
                             <small class="text-muted">
                                 Powered by <strong>Robot Golla</strong> - 
@@ -19,22 +19,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Reset chat functionality
-            const resetButton = document.querySelector('#chat-reset');
-            if (resetButton) {
-                resetButton.addEventListener('click', function() {
-                    if (confirm('Möchten Sie den Chat wirklich zurücksetzen?')) {
-                        fetch('/chat/reset', { method: 'POST' })
-                            .then(() => window.location.reload());
-                    }
-                });
-            }
-        });
-    </script>
 {% endblock %}

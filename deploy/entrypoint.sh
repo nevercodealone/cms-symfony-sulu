@@ -21,13 +21,6 @@ fi
 [ -n "$TWITTER_ACCESS_TOKEN" ] && echo "TWITTER_ACCESS_TOKEN=$TWITTER_ACCESS_TOKEN" >> .env
 [ -n "$TWITTER_ACCESS_SECRET" ] && echo "TWITTER_ACCESS_SECRET=$TWITTER_ACCESS_SECRET" >> .env
 [ -n "$DEEPL_API_KEY" ] && echo "DEEPL_API_KEY=$DEEPL_API_KEY" >> .env
-[ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> .env
-[ -n "$GEMINI_MODEL" ] && echo "GEMINI_MODEL=$GEMINI_MODEL" >> .env
-[ -n "$ANTHROPIC_API_KEY" ] && echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> .env
-[ -n "$HUGGINGFACE_KEY" ] && echo "HUGGINGFACE_KEY=$HUGGINGFACE_KEY" >> .env
-[ -n "$CHROMADB_HOST" ] && echo "CHROMADB_HOST=$CHROMADB_HOST" >> .env
-[ -n "$CHROMADB_PORT" ] && echo "CHROMADB_PORT=$CHROMADB_PORT" >> .env
-[ -n "$CHROMADB_DATABASE" ] && echo "CHROMADB_DATABASE=$CHROMADB_DATABASE" >> .env
 [ -n "$CORS_ALLOW_ORIGIN" ] && echo "CORS_ALLOW_ORIGIN=$CORS_ALLOW_ORIGIN" >> .env
 [ -n "$APP_URL" ] && echo "APP_URL=$APP_URL" >> .env
 [ -n "$MCP_PROJECT_PASSWORD" ] && echo "MCP_PROJECT_PASSWORD=$MCP_PROJECT_PASSWORD" >> .env
@@ -47,7 +40,21 @@ chown www-data:www-data /var/www/html/.env 2>/dev/null || true
 chown -R www-data:www-data /var/www/html/var/ 2>/dev/null || true
 chown -R www-data:www-data /var/www/html/public/uploads/ 2>/dev/null || true
 
-# Clear stale cache — Symfony rebuilds lazily on first request as www-data
-rm -rf /var/www/html/var/cache/*
+# Clear stale compiled cache but keep the warmed HTTP page cache across restarts
+CACHE_DIR="/var/www/html/var/cache"
+PRESERVE_DIR="/tmp/http_cache-preserve"
+if [ -d "$CACHE_DIR" ] && [ -n "$(find "$CACHE_DIR" -type d -name http_cache -print -quit 2>/dev/null)" ]; then
+  mkdir -p "$PRESERVE_DIR"
+  find "$CACHE_DIR" -type d -name http_cache | while read -r dir; do
+    target="$PRESERVE_DIR${dir#"$CACHE_DIR"}"
+    mkdir -p "$(dirname "$target")"
+    mv "$dir" "$target"
+  done
+fi
+rm -rf "$CACHE_DIR"/*
+if [ -d "$PRESERVE_DIR" ]; then
+  cp -a "$PRESERVE_DIR/." "$CACHE_DIR"/
+  rm -rf "$PRESERVE_DIR"
+fi
 
 exec "$@"
