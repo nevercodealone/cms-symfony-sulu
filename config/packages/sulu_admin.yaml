@@ -15,10 +15,6 @@ sulu_admin:
         routes:
           list: 'app.get_contact_lead_list'
           detail: 'app.get_contact_lead'
-      chat_messages:
-        routes:
-          list: 'app.get_chat_message_list'
-          detail: 'app.get_chat_message'
     field_type_options:
       selection:
         album_selection:
