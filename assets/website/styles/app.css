@@ -102,6 +102,18 @@ pre {
   .cta-outline:focus {
     @apply bg-green-700 text-white border-green-700 no-underline;
   }
+
+  /* Chip navigation alias — single source of truth for the main nav chips,
+     reused by navigation-like elements (e.g. hockenheim slide-deck tabs). */
+  .chip {
+    @apply border-2 border-green-900 text-xs font-black tracking-wide uppercase px-3 py-1.5 whitespace-nowrap transition-colors duration-150 inline-block no-underline;
+  }
+  .chip-active {
+    @apply bg-green-900 text-white;
+  }
+  .chip-idle {
+    @apply bg-white text-green-900 hover:bg-green-900 hover:text-white;
+  }
 }
 
 li {
@@ -248,6 +260,15 @@ details[open] .nav-chevron {
 }
 .animate-pulse-subtle {
     animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Slide-deck: quick tab swap — opacity-only, too fast to read as loading */
+@keyframes slide-deck-swap {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.slide-deck-swap {
+    animation: slide-deck-swap 0.15s linear;
 }
 
 /* Qualified contact: mobile service accordion */
