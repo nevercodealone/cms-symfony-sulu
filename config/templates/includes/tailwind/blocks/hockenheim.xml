@@ -9,13 +9,23 @@
             <type name="hockenheim">
                 <meta>
                     <title>Hockenheimring Workshop (statisch)</title>
-                    <info_text>Statisches Slide-Deck: KI-Schulung am Hockenheimring (6 Slides). Inhalt ist im Twig-Template hinterlegt.</info_text>
+                    <info_text>Statisches Slide-Deck: KI-Schulung am Hockenheimring (7 Slides). Inhalt ist im Twig-Template hinterlegt, die Bilder-Galerie wird aus einem Medien-Ordner geladen.</info_text>
                 </meta>
                 <properties>
                     <property name="internalNote" type="text_line">
                         <meta>
                             <title>Interne Notiz (optional, wird nicht angezeigt)</title>
                         </meta>
+                    </property>
+                    <property name="bilder" type="smart_content">
+                        <meta>
+                            <title>Bilder</title>
+                            <info_text>Medien-Ordner auswählen — alle Bilder darin werden automatisch als Galerie angezeigt.</info_text>
+                        </meta>
+                        <params>
+                            <param name="provider" value="media"/>
+                            <param name="types" value="image"/>
+                        </params>
                     </property>
                 </properties>
             </type>

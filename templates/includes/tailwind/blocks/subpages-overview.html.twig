@@ -5,7 +5,7 @@
 {% set loadMore = not content.disableLoading|default(false) and total > initialLimit %}
 <div class="py-12 sm:py-16"
      {% if loadMore %}data-controller="load-more" data-load-more-step-value="6"{% endif %}>
-  <div class="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3" data-load-more-target="grid">
+  <div class="grid grid-cols-1 gap-y-10 gap-x-6 sm:-mx-6 sm:grid-cols-2 lg:grid-cols-3" data-load-more-target="grid">
     {% for item in content.items %}
       {% set imageSrc = '' %}
       {% set imageAlt = item.title %}

@@ -108,8 +108,16 @@ pre {
   .chip {
     @apply border-2 border-green-900 text-xs font-black tracking-wide uppercase px-3 py-1.5 whitespace-nowrap transition-colors duration-150 inline-block no-underline;
   }
+  .chip:hover,
+  .chip:focus {
+    @apply no-underline;
+  }
   .chip-active {
     @apply bg-green-900 text-white;
+  }
+  .chip-active:hover,
+  .chip-active:focus {
+    @apply text-white;
   }
   .chip-idle {
     @apply bg-white text-green-900 hover:bg-green-900 hover:text-white;

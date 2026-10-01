@@ -2,7 +2,7 @@
 {% set latestArticleUuids = latestArticles(6) %}
 {% if latestArticleUuids is not empty %}
   <aside aria-label="Latest articles" class="py-4 bg-white lg:py-8 antialiased">
-    <div class="mx-auto max-w-screen-xl">
+    <div>
       {% if content.headline is defined and content.headline is not empty %}
         {% include "includes/tailwind/includes/headline.html.twig" with {
           'content': content,
@@ -10,7 +10,7 @@
           'isFirstHeadline': isFirstHeadline
         } %}
       {% endif %}
-      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid gap-8 sm:-mx-6 sm:grid-cols-2 lg:grid-cols-3">
         {% for articleUuid in latestArticleUuids %}
           {% set articlePage = sulu_content_load(articleUuid) %}
           {% if articlePage is not empty %}
