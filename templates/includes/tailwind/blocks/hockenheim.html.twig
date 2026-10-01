@@ -1,6 +1,7 @@
 <!-- hockenheim.html.twig -->
 {% set ctaHref = 'mailto:roland@nevercodealone.de?subject=Erstgespr%C3%A4ch%20KI-Schulung%20am%20Hockenheimring' %}
 {% set ctaLabel = 'Kostenloses Erstgespräch buchen' %}
+{% set bilder = content.bilder|default([]) %}
 {% set deckTabs = [
     '01 // Das Angebot',
     '02 // Die Herausforderung',
@@ -9,6 +10,9 @@
     '05 // Der NCA-Unterschied',
     '06 // Dein Einstieg',
 ] %}
+{% if bilder|length %}
+    {% set deckTabs = deckTabs|merge(['07 // Bilder']) %}
+{% endif %}
 
 <div class="bg-white"
      data-controller="slide-deck"
@@ -18,7 +22,12 @@
     {# ================================================================== #}
     {# TAB NAVIGATION                                                     #}
     {# ================================================================== #}
-    <nav class="overflow-x-auto border-b border-gray-200"
+    <nav class="overflow-x-auto border-b border-gray-200
+                [scrollbar-width:thin] [scrollbar-color:#14532d_transparent]
+                [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5
+                [&::-webkit-scrollbar-track]:bg-transparent
+                [&::-webkit-scrollbar-thumb]:bg-green-900 [&::-webkit-scrollbar-thumb]:rounded-full
+                [&::-webkit-scrollbar-thumb]:hover:bg-green-800"
          role="tablist"
          aria-label="KI-Schulung am Hockenheimring">
         <div class="flex w-max min-w-full items-center justify-center gap-1.5 px-2 py-2 mx-auto">
@@ -610,13 +619,186 @@
                 <span class="material-symbols-outlined text-base">arrow_back</span>
                 Zurück zu: 05 // Der NCA-Unterschied
             </button>
+            {% if bilder|length %}
+                <button type="button"
+                        class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                        data-action="slide-deck#next">
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    Weiter zu: 07 // Bilder
+                </button>
+            {% else %}
+                <button type="button"
+                        class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                        data-action="slide-deck#show" data-slide-deck-index_param="0">
+                    <span class="material-symbols-outlined text-base">restart_alt</span>
+                    Zurück zu: 01 // Das Angebot
+                </button>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ================================================================== #}
+    {# SLIDE 07 // BILDER (GALERIE AUS MEDIEN-ORDNER)                     #}
+    {# ================================================================== #}
+    {% if bilder|length %}
+    <section data-slide-deck-target="slide" role="tabpanel" id="hockenheim-slide-6"
+             aria-labelledby="hockenheim-tab-6" class="slide-deck-swap hidden p-6 sm:p-10"
+             data-controller="coverflow">
+        <div class="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-[0.3em] text-green-700">
+                07 // Bilder
+            </span>
+        </div>
+
+        <div class="max-w-3xl mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                Eindrücke vom Hockenheimring.
+            </h2>
+            <p class="text-gray-600 text-base mt-2 leading-relaxed">
+                Lounge, Boxengasse, Race Control und E-Kartbahn — ein erster Blick auf die Location.
+            </p>
+        </div>
+
+        {% set heroImages = bilder|slice(0, 1) %}
+        {% set sideImages = bilder|slice(1, 2) %}
+        {% set gridImages = bilder|slice(3, 4) %}
+
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {% for image in heroImages %}
+                    {% set media = image.resource %}
+                    <div class="lg:col-span-8 group relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-900 h-[320px] md:h-[400px] shadow-sm cursor-zoom-in"
+                         role="button" tabindex="0"
+                         aria-label="{{ image.title|default('Bild vergrößern') }}"
+                         data-action="click->coverflow#open"
+                         data-coverflow-index-param="{{ loop.index0 }}">
+                        <img src="{{ media.formats['hockenheim-gallery-hero'] }}"
+                             alt="{{ image.title|default('Hockenheimring') }}"
+                             loading="lazy"
+                             class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-5">
+                            <h3 class="text-xl md:text-2xl font-bold text-white tracking-tight leading-snug">{{ image.title|default('Eindrücke von der Strecke') }}</h3>
+                            {% if media.description %}
+                                <p class="text-xs md:text-sm text-gray-300 leading-relaxed max-w-xl mt-1">{{ media.description }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>01 // Location
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="lg:col-span-4 flex flex-col gap-4">
+                    {% for image in sideImages %}
+                        {% set media = image.resource %}
+                        <div class="group relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-900 h-[152px] md:h-[192px] shadow-sm cursor-zoom-in"
+                             role="button" tabindex="0"
+                             aria-label="{{ image.title|default('Bild vergrößern') }}"
+                             data-action="click->coverflow#open"
+                             data-coverflow-index-param="{{ loop.index0 + 1 }}">
+                            <img src="{{ media.formats['hockenheim-gallery-thumb'] }}"
+                                 alt="{{ image.title|default('Hockenheimring') }}"
+                                 loading="lazy"
+                                 class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-4">
+                                <h3 class="text-sm font-bold text-white tracking-tight">{{ image.title|default('Eindrücke von der Location') }}</h3>
+                                {% if media.description %}
+                                    <p class="text-xs text-gray-300 truncate">{{ media.description }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if gridImages|length %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {% for image in gridImages %}
+                        {% set media = image.resource %}
+                        <div class="group relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-900 h-[210px] shadow-sm cursor-zoom-in"
+                             role="button" tabindex="0"
+                             aria-label="{{ image.title|default('Bild vergrößern') }}"
+                             data-action="click->coverflow#open"
+                             data-coverflow-index-param="{{ loop.index0 + 3 }}">
+                            <img src="{{ media.formats['hockenheim-gallery-thumb'] }}"
+                                 alt="{{ image.title|default('Hockenheimring') }}"
+                                 loading="lazy"
+                                 class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-4">
+                                <h3 class="text-sm font-bold text-white tracking-tight leading-snug">{{ image.title|default('Eindrücke von der Location') }}</h3>
+                                {% if media.description %}
+                                    <p class="text-xs text-gray-300 truncate">{{ media.description }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 sm:p-8"
+             data-coverflow-target="popup"
+             data-action="click->coverflow#backdropClose"
+             role="dialog" aria-modal="true" aria-label="Hockenheimring Bilder">
+            <button type="button"
+                    class="absolute top-4 right-4 z-[120] w-10 h-10 flex items-center justify-center rounded-full bg-black/60 border border-white/20 text-white hover:bg-black/80 transition-colors"
+                    data-action="coverflow#close"
+                    aria-label="Schließen">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <button type="button"
+                    class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-[120] w-11 h-11 flex items-center justify-center rounded-full bg-black/60 border border-white/20 text-white hover:bg-black/80 transition-colors"
+                    data-action="coverflow#prev"
+                    aria-label="Vorheriges Bild">
+                <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+
+            <button type="button"
+                    class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-[120] w-11 h-11 flex items-center justify-center rounded-full bg-black/60 border border-white/20 text-white hover:bg-black/80 transition-colors"
+                    data-action="coverflow#next"
+                    aria-label="Nächstes Bild">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+
+            <div class="relative w-full max-w-6xl h-[55vh] md:h-[60vh] flex items-center justify-center overflow-hidden [perspective:1600px]"
+                 data-coverflow-target="stage">
+                {% for image in bilder %}
+                    {% set media = image.resource %}
+                    <figure class="absolute left-1/2 top-1/2 backface-hidden transition-all duration-300 ease-out will-change-transform"
+                            data-coverflow-target="item">
+                        <img src="{{ media.formats['hockenheim-gallery-popup'] }}"
+                             alt="{{ image.title|default('Hockenheimring') }}"
+                             class="max-h-[55vh] md:max-h-[60vh] max-w-[90vw] md:max-w-[80vw] w-auto object-contain rounded-lg shadow-2xl pointer-events-none select-none"
+                             draggable="false">
+                        {% if image.title or media.description %}
+                            <figcaption class="absolute -bottom-9 inset-x-0 text-center truncate bg-black/80 text-white text-xs px-3 py-2 rounded">
+                                {{ image.title|default('') }}{% if image.title and media.description %} — {% endif %}{{ media.description|default('') }}
+                            </figcaption>
+                        {% endif %}
+                    </figure>
+                {% endfor %}
+            </div>
+
+            <div class="mt-6 text-xs font-mono text-gray-300" data-coverflow-target="counter"></div>
+        </div>
+
+        <div class="mt-8 pt-4 border-t border-gray-200 flex items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+            <button type="button"
+                    class="font-bold text-gray-700 hover:text-gray-900 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#prev">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                Zurück zu: 06 // Dein Einstieg
+            </button>
             <button type="button"
                     class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
-                    data-action="slide-deck#show" data-slide-deck-index-param="0">
+                    data-action="slide-deck#show" data-slide-deck-index_param="0">
                 <span class="material-symbols-outlined text-base">restart_alt</span>
                 Zurück zu: 01 // Das Angebot
             </button>
         </div>
     </section>
+    {% endif %}
 </div>
 <!-- end hockenheim.html.twig -->

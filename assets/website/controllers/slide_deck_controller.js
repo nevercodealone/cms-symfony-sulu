@@ -83,6 +83,9 @@ export default class extends Controller {
         if (['INPUT', 'TEXTAREA', 'SELECT', 'DETAILS'].includes(document.activeElement.tagName)) {
             return;
         }
+        if (document.documentElement.hasAttribute('data-coverflow-open')) {
+            return;
+        }
         if (!this.isInViewport()) {
             return;
         }
