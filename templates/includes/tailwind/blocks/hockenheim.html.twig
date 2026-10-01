@@ -1,0 +1,622 @@
+<!-- hockenheim.html.twig -->
+{% set ctaHref = 'mailto:roland@nevercodealone.de?subject=Erstgespr%C3%A4ch%20KI-Schulung%20am%20Hockenheimring' %}
+{% set ctaLabel = 'Kostenloses Erstgespräch buchen' %}
+{% set deckTabs = [
+    '01 // Übersicht',
+    '02 // Herausforderung',
+    '03 // Zwei Räume',
+    '04 // Ort & Ablauf',
+    '05 // Unterschied',
+    '06 // FAQ & Einstieg',
+] %}
+
+<div class="bg-white"
+     data-controller="slide-deck"
+     data-slide-deck-tab-active-class="chip-active"
+     data-slide-deck-tab-idle-class="chip-idle">
+
+    {# ================================================================== #}
+    {# TAB NAVIGATION                                                     #}
+    {# ================================================================== #}
+    <nav class="overflow-x-auto border-b border-gray-200"
+         role="tablist"
+         aria-label="KI-Schulung am Hockenheimring">
+        <div class="flex w-max min-w-full items-center justify-center gap-1.5 px-2 py-2 mx-auto">
+        {% for tabLabel in deckTabs %}
+            <button type="button" role="tab"
+                    id="hockenheim-tab-{{ loop.index0 }}"
+                    aria-controls="hockenheim-slide-{{ loop.index0 }}"
+                    aria-selected="{{ loop.first ? 'true' : 'false' }}"
+                    tabindex="{{ loop.first ? '0' : '-1' }}"
+                    data-slide-deck-target="tab"
+                    data-action="slide-deck#select"
+                    class="shrink-0 chip {{ loop.first ? 'chip-active' : 'chip-idle' }}">
+                {{ tabLabel }}
+            </button>
+        {% endfor %}
+        </div>
+    </nav>
+
+    {# ================================================================== #}
+    {# SLIDE 01 // ÜBERSICHT                                              #}
+    {# ================================================================== #}
+    <section data-slide-deck-target="slide" role="tabpanel" id="hockenheim-slide-0"
+             aria-labelledby="hockenheim-tab-0" class="slide-deck-swap p-6 sm:p-10">
+        <div class="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-[0.3em] text-green-700">
+                KI Schulung am Hockenheimring
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div class="lg:col-span-7 space-y-6">
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                    Zwei Tage. Zwei Räume.<br>
+                    <span class="text-green-700">Ein Unternehmen, das KI kann.</span>
+                </h2>
+                <p class="text-gray-600 text-base leading-relaxed">
+                    Eure Fachabteilungen bauen eigene Tools. Eure Developer lernen Agentic Coding mit Leitplanken.
+                    Beides parallel, an der ehemaligen Formel 1 Strecke, mit zwei Übernachtungen.
+                </p>
+
+                <div class="flex flex-wrap gap-2.5 pt-1">
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded bg-gray-100 border border-gray-300 text-xs font-mono font-bold text-gray-900">
+                        <span class="material-symbols-outlined text-lg text-green-700">hotel</span>
+                        2 Übernachtungen am Ring
+                    </span>
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded bg-gray-100 border border-gray-300 text-xs font-mono font-bold text-gray-900">
+                        <span class="material-symbols-outlined text-lg text-green-700">tour</span>
+                        Führung hinter die Kulissen
+                    </span>
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded bg-gray-100 border border-gray-300 text-xs font-mono font-bold text-gray-900">
+                        <span class="material-symbols-outlined text-lg text-green-700">sports_motorsports</span>
+                        2 Stunden E-Kartbahn
+                    </span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4 pt-4">
+                    <a href="{{ ctaHref }}" class="cta cta-primary">
+                        {{ ctaLabel }}
+                        <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    </a>
+                    <button type="button" data-action="slide-deck#next" class="cta cta-outline">
+                        Die Herausforderung
+                        <span class="material-symbols-outlined text-base">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5">
+                <div class="rounded-xl border-2 border-gray-300 overflow-hidden shadow-lg group">
+                    <img src="/img/hockenheim/ki-schulung-hockenheimring-workshop.jpg"
+                         alt="KI Schulung am Hockenheimring – Praxisworkshop mit zwei Räumen"
+                         class="w-full h-80 sm:h-96 object-cover transition-transform duration-500 group-hover:scale-105"
+                         width="1376" height="768" loading="lazy">
+                    <div class="p-4 bg-green-800 border-t border-green-700 flex items-center gap-2 text-xs font-mono text-white">
+                        <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+                        <span class="font-bold">Hockenheimring Miniatur-Welt</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10 pt-5 border-t border-gray-200 flex items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+            <span>Praxisworkshop für bis zu 40 Mitarbeiter</span>
+            <button type="button"
+                    class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#next">
+                Weiter zu: 02 // Herausforderung
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </button>
+        </div>
+    </section>
+
+    {# ================================================================== #}
+    {# SLIDE 02 // HERAUSFORDERUNG                                        #}
+    {# ================================================================== #}
+    <section data-slide-deck-target="slide" role="tabpanel" id="hockenheim-slide-1"
+             aria-labelledby="hockenheim-tab-1" class="slide-deck-swap hidden p-6 sm:p-10">
+        <div class="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-[0.3em] text-green-700">
+                02 // Die Herausforderung
+            </span>
+        </div>
+
+        <div class="max-w-3xl mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                KI ist da. Aber nur bei ein paar Leuten im Haus?
+            </h2>
+            <p class="text-gray-600 text-base mt-3 leading-relaxed">
+                Tools gibt es genug. Was fehlt, ist ein gemeinsamer Stand für das ganze Unternehmen.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+            <div class="p-6 rounded-xl bg-white border-2 border-gray-200 hover:border-green-700 shadow-sm flex flex-col justify-between gap-4 transition-colors">
+                <div class="space-y-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-300 flex items-center justify-center font-mono font-bold text-gray-900">01</div>
+                    <h3 class="text-base font-bold text-gray-900">Einzelne probieren, niemand plant</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Einige Kollegen nutzen privat ChatGPT oder Copilot, während andere komplett abgehängt sind.
+                        Es fehlt eine gemeinsame Linie und echte strategische Integration.
+                    </p>
+                </div>
+                <div class="pt-3 border-t border-gray-100 font-mono text-xs text-green-700 font-bold">
+                    Status: Inselwissen statt Team-Erfolg
+                </div>
+            </div>
+
+            <div class="p-6 rounded-xl bg-white border-2 border-gray-200 hover:border-green-700 shadow-sm flex flex-col justify-between gap-4 transition-colors">
+                <div class="space-y-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-300 flex items-center justify-center font-mono font-bold text-gray-900">02</div>
+                    <h3 class="text-base font-bold text-gray-900">Entwicklung &amp; Fachbereich reden aneinander vorbei</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Fachbereiche wünschen sich schnelle Entlastung für Routineaufgaben; Developer haben Sorge um
+                        Code-Qualität, Sicherheit und Wartbarkeit von KI-Code.
+                    </p>
+                </div>
+                <div class="pt-3 border-t border-gray-100 font-mono text-xs text-green-700 font-bold">
+                    Status: Silos &amp; fehlendes Verständnis
+                </div>
+            </div>
+
+            <div class="p-6 rounded-xl bg-white border-2 border-gray-200 hover:border-green-700 shadow-sm flex flex-col justify-between gap-4 transition-colors">
+                <div class="space-y-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-300 flex items-center justify-center font-mono font-bold text-gray-900">03</div>
+                    <h3 class="text-base font-bold text-gray-900">Daten landen in fremden Chats</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Unkontrollierte Nutzung von US-Cloud-Abos ohne Data Governance. Sensible Kundendaten und
+                        Firmen-Interna fließen unbemerkt nach außen ab.
+                    </p>
+                </div>
+                <div class="pt-3 border-t border-gray-100 font-mono text-xs text-green-700 font-bold">
+                    Status: Hohes Compliance- und Kostenrisiko
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 p-6 rounded-xl bg-green-800 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)] shrink-0"></span>
+                <p class="text-sm font-medium">Lösung: Gemeinsames Praxistraining an einem neutralen Ort mit klaren Rollen.</p>
+            </div>
+            <a href="{{ ctaHref }}" class="cta bg-white text-green-800 hover:bg-green-50 hover:text-green-900 shrink-0">
+                {{ ctaLabel }}
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </a>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+            <button type="button"
+                    class="font-bold text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#prev">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                Zurück zu: Übersicht
+            </button>
+            <button type="button"
+                    class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#next">
+                Weiter zu: 03 // Zwei Räume
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </button>
+        </div>
+    </section>
+
+    {# ================================================================== #}
+    {# SLIDE 03 // ZWEI RÄUME                                             #}
+    {# ================================================================== #}
+    <section data-slide-deck-target="slide" role="tabpanel" id="hockenheim-slide-2"
+             aria-labelledby="hockenheim-tab-2" class="slide-deck-swap hidden p-6 sm:p-10">
+        <div class="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-[0.3em] text-green-700">
+                03 // Zwei Räume
+            </span>
+        </div>
+
+        <div class="max-w-3xl mb-6">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                Parallele Praxis: Fachabteilung &amp; Development
+            </h2>
+            <p class="text-gray-600 text-base mt-2">
+                Beide Gruppen arbeiten zeitgleich am Ring – mit der Methodik, die sie für ihren Arbeitsalltag wirklich brauchen.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 my-6">
+            {# RAUM 1 #}
+            <div class="p-6 sm:p-8 rounded-xl border-2 border-gray-300 bg-white hover:border-green-700 transition-colors flex flex-col justify-between gap-6">
+                <div class="space-y-4">
+                    <span class="self-start font-mono text-xs font-bold uppercase text-gray-900 bg-gray-100 px-3 py-1 rounded border border-gray-300">
+                        Raum 1 // Alle Abteilungen
+                    </span>
+                    <h3 class="text-lg font-bold text-gray-900">„Die Funktastatur kommt zu dir“</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        Roland zeigt live, wie er selbst mit KI arbeitet. Die Funktastatur wandert durch den Raum.
+                        Aus der Aufgabe, die jeden Tag nervt, wird sofort ein lauffähiges Tool.
+                        <strong class="text-gray-900">Kein Rechner nötig, keine Vorkenntnisse.</strong>
+                    </p>
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-2 text-sm text-gray-600">
+                        <div class="font-mono font-bold text-gray-900 uppercase">Danach am Montag sofort bereit:</div>
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-lg text-green-700">check_circle</span>
+                            Angebote, Mails und Social Media mit eigenem Tool erledigen
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-lg text-green-700">check_circle</span>
+                            Eigene Daten anbinden ohne IT-Abhängigkeit
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-lg text-green-700">check_circle</span>
+                            Direkte Erleichterung für Marketing, Vertrieb, HR &amp; PM
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ ctaHref }}" class="cta cta-outline w-full">
+                    {{ ctaLabel }}
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </a>
+            </div>
+
+            {# RAUM 2 #}
+            <div class="p-6 sm:p-8 rounded-xl border-2 border-gray-300 bg-white hover:border-green-700 transition-colors flex flex-col justify-between gap-6">
+                <div class="space-y-4">
+                    <span class="self-start font-mono text-xs font-bold uppercase text-gray-900 bg-gray-100 px-3 py-1 rounded border border-gray-300">
+                        Raum 2 // Developer &amp; Tester
+                    </span>
+                    <h3 class="text-lg font-bold text-gray-900">„Erst Regeln und Tests, dann schreibt die KI“</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        Benjamin zeigt, wie er täglich mit Agenten arbeitet. Ihr baut selbst
+                        <strong class="text-gray-900">am eigenen Rechner an euren echten Tickets</strong>.
+                        Der Mensch entscheidet, der Agent arbeitet deterministisch innerhalb klarer Guardrails.
+                    </p>
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-2 text-sm text-gray-600">
+                        <div class="font-mono font-bold text-gray-900 uppercase">Danach am Montag sofort bereit:</div>
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-lg text-green-700">check_circle</span>
+                            Harness bauen mit Leitplanken und strengen Unit-Tests
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-lg text-green-700">check_circle</span>
+                            Agenten von Agenten prüfen lassen (Dual-Agent Review)
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-lg text-green-700">check_circle</span>
+                            Enterprise-Standard Code ohne Code-Smell
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ ctaHref }}" class="cta cta-outline w-full">
+                    {{ ctaLabel }}
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                 </a>
+             </div>
+         </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+            <button type="button"
+                    class="font-bold text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#prev">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                Zurück zu: Herausforderung
+            </button>
+            <button type="button"
+                    class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#next">
+                Weiter zu: 04 // Hockenheimring &amp; Ablauf
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </button>
+        </div>
+    </section>
+
+    {# ================================================================== #}
+    {# SLIDE 04 // ORT & ABLAUF                                           #}
+    {# ================================================================== #}
+    <section data-slide-deck-target="slide" role="tabpanel" id="hockenheim-slide-3"
+             aria-labelledby="hockenheim-tab-3" class="slide-deck-swap hidden p-6 sm:p-10">
+        <div class="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-[0.3em] text-green-700">
+                04 // Hockenheimring &amp; Ablauf
+            </span>
+        </div>
+
+        <div class="max-w-3xl mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                Kein Seminarhotel. Der Hockenheimring.
+            </h2>
+            <p class="text-gray-600 text-base mt-2 leading-relaxed">
+                Übernachtung an der Strecke, Insider-Führung, eigene Runden auf der E-Kartbahn.
+                Am Abend tauschen die Gruppen. Danach reden Vertrieb und Entwicklung miteinander.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+            <div class="p-6 rounded-xl bg-gray-50 border-2 border-gray-200 space-y-3">
+                <span class="self-start font-mono text-xs font-bold uppercase text-gray-700 bg-white border border-gray-300 px-2.5 py-1 rounded">
+                    Schritt 1
+                </span>
+                <h3 class="text-base font-bold text-gray-900">Erstgespräch buchen</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Wir klären: Wo steht euer Team heute? Wer sitzt in welchem Raum?
+                    Welche konkreten Use-Cases und Tickets bringen eure Teams mit?
+                </p>
+            </div>
+
+            <div class="p-6 rounded-xl bg-gray-50 border-2 border-gray-200 space-y-3">
+                <span class="self-start font-mono text-xs font-bold uppercase text-gray-700 bg-white border border-gray-300 px-2.5 py-1 rounded">
+                    Schritt 2
+                </span>
+                <h3 class="text-base font-bold text-gray-900">Wunschwoche nennen</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Räume, Hotelzimmer am Ring, Vollverpflegung und gesamtes Abendprogramm
+                    (Führung &amp; Kartbahn) werden komplett von uns organisiert.
+                </p>
+            </div>
+
+            <div class="p-6 rounded-xl bg-gray-50 border-2 border-gray-200 space-y-3">
+                <span class="self-start font-mono text-xs font-bold uppercase text-gray-700 bg-white border border-gray-300 px-2.5 py-1 rounded">
+                    Schritt 3
+                </span>
+                <h3 class="text-base font-bold text-gray-900">Live am Ring umsetzen</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Anreise Dienstagabend. Voller Praxistag Mittwoch inklusive E-Kart-Rennen.
+                    Donnerstag gemeinsame Präsentation der Ergebnisse vor der Abreise.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-8 p-6 rounded-xl bg-green-800 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+                <h3 class="text-base font-bold">Sichert euch eure Wunschwoche am Hockenheimring</h3>
+                <p class="text-xs text-gray-200 mt-1">Exklusiv für euer Unternehmen, max. 40 Personen zeitgleich.</p>
+            </div>
+            <a href="{{ ctaHref }}" class="cta bg-white text-green-800 hover:bg-green-50 hover:text-green-900 shrink-0">
+                {{ ctaLabel }}
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </a>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+            <button type="button"
+                    class="font-bold text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#prev">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                Zurück zu: Zwei Räume
+            </button>
+            <button type="button"
+                    class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#next">
+                Weiter zu: 05 // Unterschied
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </button>
+        </div>
+    </section>
+
+    {# ================================================================== #}
+    {# SLIDE 05 // UNTERSCHIED                                            #}
+    {# ================================================================== #}
+    <section data-slide-deck-target="slide" role="tabpanel" id="hockenheim-slide-4"
+             aria-labelledby="hockenheim-tab-4" class="slide-deck-swap hidden p-6 sm:p-10">
+        <div class="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-[0.3em] text-green-700">
+                05 // Transparenz &amp; Mehrwert
+            </span>
+        </div>
+
+        <div class="max-w-3xl mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                Was ihr baut, läuft am Montag in der NCA-Infrastruktur direkt weiter.
+            </h2>
+            <p class="text-gray-600 text-base mt-2 leading-relaxed">
+                Fachbereiche und IT arbeiten direkt ab Montag mit ihren selbst entwickelten Tools –
+                etwa für Social Media, Content Marketing und Sales Research, bereitgestellt in der sicheren NCA-Infrastruktur.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-6">
+            {# Der echte NCA Unterschied #}
+            <div class="p-6 sm:p-8 rounded-xl bg-green-50 border-2 border-green-700 space-y-4">
+                <div class="font-mono text-xs font-bold text-green-700 uppercase tracking-[0.3em] flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-700"></span>
+                    Gebaute Tools sofort am Montag einsatzbereit
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">Bereitgestellt in der sicheren NCA-Infrastruktur</h3>
+                <ul class="space-y-3 text-sm text-gray-600 p-0 m-0">
+                    <li class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-green-700 text-xl shrink-0">check_circle</span>
+                        <span><strong class="text-gray-900">Sofort produktiv:</strong> Fertige Tools für Social Media, Content Marketing &amp; Sales Research laufen ab Tag 1 weiter.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-green-700 text-xl shrink-0">check_circle</span>
+                        <span><strong class="text-gray-900">Server in Deutschland:</strong> Eure Daten bleiben bei euch. Lokale Modelle ohne zwingendes US-Abo.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-green-700 text-xl shrink-0">check_circle</span>
+                        <span><strong class="text-gray-900">Keine IT-Zusatzlast:</strong> Hosting &amp; Bereitstellung in der NCA-Infrastruktur – ohne teure Pro-Kopf-Lizenzen.</span>
+                    </li>
+                </ul>
+            </div>
+
+            {# Wann wir falsch sind #}
+            <div class="p-6 sm:p-8 rounded-xl bg-white border-2 border-red-200 space-y-4">
+                <div class="font-mono text-xs font-bold text-red-600 uppercase tracking-[0.3em] flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    Wann wir falsch für euch sind
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">Wann ihr uns nicht buchen solltet:</h3>
+                <ul class="space-y-3 text-sm text-gray-600 p-0 m-0">
+                    <li class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-red-500 text-xl shrink-0">cancel</span>
+                        <span><strong class="text-gray-900">Alibi-Zertifikat:</strong> Wenn ihr nur eine Teilnahmebescheinigung abheften wollt, ohne den Arbeitsalltag zu ändern.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-red-500 text-xl shrink-0">cancel</span>
+                        <span><strong class="text-gray-900">Frontal-Unterricht:</strong> Wenn ihr 8 Stunden Vorträge über Token-Wahrscheinlichkeiten hören wollt.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-red-500 text-xl shrink-0">cancel</span>
+                        <span><strong class="text-gray-900">Kein Vertrauen:</strong> Wenn Teams keine Freiräume bekommen, gebaute Tools am Montag live einzusetzen.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-8 p-6 rounded-xl bg-green-800 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm font-semibold">Ihr wollt messbare Resultate ab dem ersten Tag?</p>
+            <a href="{{ ctaHref }}" class="cta bg-white text-green-800 hover:bg-green-50 hover:text-green-900 shrink-0">
+                {{ ctaLabel }}
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </a>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+            <button type="button"
+                    class="font-bold text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#prev">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                Zurück zu: Hockenheimring &amp; Ablauf
+            </button>
+            <button type="button"
+                    class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#next">
+                Weiter zu: 06 // FAQ &amp; Einstieg
+                <span class="material-symbols-outlined text-base">arrow_forward</span>
+            </button>
+        </div>
+    </section>
+
+    {# ================================================================== #}
+    {# SLIDE 06 // FAQ & EINSTIEG                                         #}
+    {# ================================================================== #}
+    <section data-slide-deck-target="slide" role="tabpanel" id="hockenheim-slide-5"
+             aria-labelledby="hockenheim-tab-5" class="slide-deck-swap hidden p-6 sm:p-10">
+        <div class="flex items-center gap-2 mb-6 pb-6 border-b border-gray-200">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-[0.3em] text-green-700">
+                06 // Dein Einstieg &amp; FAQ
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {# Einstieg / Roland #}
+            <div class="lg:col-span-5 p-6 sm:p-8 rounded-xl bg-gray-50 border-2 border-gray-300 space-y-6">
+                <div class="flex items-center gap-4">
+                    <img src="/img/hockenheim/roland-golla-gruender-never-code-alone.jpg"
+                         alt="Roland Golla, Gründer Never Code Alone"
+                         class="w-16 h-16 rounded-full object-cover border-2 border-green-700 shadow-md"
+                         width="800" height="447" loading="lazy">
+                    <div>
+                        <h3 class="font-extrabold text-lg text-gray-900">Roland Golla</h3>
+                        <p class="font-mono text-xs text-green-700 font-bold">Gründer Never Code Alone</p>
+                        <span class="inline-block mt-1 font-mono text-xs bg-gray-200 px-2 py-0.5 rounded font-semibold text-gray-700">
+                            30 Min. Erstgespräch
+                        </span>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-lg font-bold text-gray-900">Kostenloses Erstgespräch</h4>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        30 Minuten direkt mit Roland. Wir klären: Wo steht euer Team?
+                        Passt das Format zu euch? Welche Woche ist noch frei?
+                    </p>
+                </div>
+
+                <div class="p-3 bg-white rounded-lg border border-gray-200 text-xs font-mono text-gray-700 font-bold">
+                    Kein Verkaufsdruck. Kein Paket von der Stange.
+                </div>
+
+                <a href="{{ ctaHref }}" class="cta cta-primary w-full">
+                    {{ ctaLabel }}
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </a>
+            </div>
+
+            {# FAQ #}
+            <div class="lg:col-span-7 space-y-3">
+                <div class="mb-3">
+                    <h3 class="text-lg font-bold text-gray-900">Häufige Fragen (FAQ)</h3>
+                    <p class="text-xs text-gray-500 font-mono">Die wichtigsten Details auf einen Blick</p>
+                </div>
+
+                <details class="group rounded-xl border-2 border-gray-200 bg-white p-4">
+                    <summary class="flex items-center justify-between gap-3 text-left text-sm font-bold text-gray-900 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                        <span>Für wen ist das Training gedacht?</span>
+                        <span class="material-symbols-outlined text-gray-500 shrink-0 transition-transform group-open:rotate-180">expand_more</span>
+                    </summary>
+                    <div class="pt-3 mt-3 border-t border-gray-100 text-sm text-gray-600 leading-relaxed">
+                        Für Teams aus Unternehmen, die KI wirklich produktiv nutzen wollen. Bis zu 40 Personen aus einem
+                        Unternehmen, aufgeteilt in zwei spezialisierte Räume: Fachabteilungen (Marketing, Vertrieb, HR,
+                        Operations) in Raum 1 und Developer, Tester, Admins in Raum 2.
+                    </div>
+                </details>
+
+                <details class="group rounded-xl border-2 border-gray-200 bg-white p-4">
+                    <summary class="flex items-center justify-between gap-3 text-left text-sm font-bold text-gray-900 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                        <span>Brauchen die Teilnehmer aus Raum 1 Vorkenntnisse?</span>
+                        <span class="material-symbols-outlined text-gray-500 shrink-0 transition-transform group-open:rotate-180">expand_more</span>
+                    </summary>
+                    <div class="pt-3 mt-3 border-t border-gray-100 text-sm text-gray-600 leading-relaxed">
+                        Nein, überhaupt keine. Keine Programmierkenntnisse, kein eigener Rechner erforderlich.
+                        Roland zeigt live, wie er arbeitet, und die Funktastatur wandert durch den Raum.
+                        Aus deinen täglichen Aufgaben wird direkt ein Tool.
+                    </div>
+                </details>
+
+                <details class="group rounded-xl border-2 border-gray-200 bg-white p-4">
+                    <summary class="flex items-center justify-between gap-3 text-left text-sm font-bold text-gray-900 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                        <span>Wo laufen die gebauten Tools und Modelle?</span>
+                        <span class="material-symbols-outlined text-gray-500 shrink-0 transition-transform group-open:rotate-180">expand_more</span>
+                    </summary>
+                    <div class="pt-3 mt-3 border-t border-gray-100 text-sm text-gray-600 leading-relaxed">
+                        Die Tools laufen auf Servern in Deutschland mit lokalen Open-Source-Modellen, ohne US-Abo.
+                        Eure Daten bleiben vollständig bei euch, ohne Lizenzkosten pro Kopf und ohne Zusatzlast für eure IT.
+                    </div>
+                </details>
+
+                <details class="group rounded-xl border-2 border-gray-200 bg-white p-4">
+                    <summary class="flex items-center justify-between gap-3 text-left text-sm font-bold text-gray-900 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                        <span>Wie erfolgt die Abrechnung?</span>
+                        <span class="material-symbols-outlined text-gray-500 shrink-0 transition-transform group-open:rotate-180">expand_more</span>
+                    </summary>
+                    <div class="pt-3 mt-3 border-t border-gray-100 text-sm text-gray-600 leading-relaxed">
+                        Die Abrechnung erfolgt transparent und fair nach Aufwand. Im Erstgespräch klären wir Teamgröße,
+                        genaue Konstellation und Wunschwoche, und ihr erhaltet ein klares, verbindliches Angebot.
+                    </div>
+                </details>
+
+                <details class="group rounded-xl border-2 border-gray-200 bg-white p-4">
+                    <summary class="flex items-center justify-between gap-3 text-left text-sm font-bold text-gray-900 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                        <span>Kann das Training auch als Team-Event oder Kickoff gebucht werden?</span>
+                        <span class="material-symbols-outlined text-gray-500 shrink-0 transition-transform group-open:rotate-180">expand_more</span>
+                    </summary>
+                    <div class="pt-3 mt-3 border-t border-gray-100 text-sm text-gray-600 leading-relaxed">
+                        Ja, absolut. Mit zwei Übernachtungen direkt an der ehemaligen Formel-1-Strecke, Insider-Führung
+                        hinter den Kulissen und zwei Stunden E-Kartbahn für alle verbindet das Format messbare
+                        Produktiv-Ergebnisse mit einem unvergesslichen Team-Event.
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <div class="mt-8 pt-4 border-t border-gray-200 flex items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+            <button type="button"
+                    class="font-bold text-gray-700 hover:text-gray-900 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#prev">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                Zurück zu: Unterschied
+            </button>
+            <button type="button"
+                    class="font-bold text-gray-900 hover:text-green-700 inline-flex items-center gap-1 transition-colors"
+                    data-action="slide-deck#show" data-slide-deck-index-param="0">
+                <span class="material-symbols-outlined text-base">restart_alt</span>
+                Zum Anfang der Präsentation
+            </button>
+        </div>
+    </section>
+</div>
+<!-- end hockenheim.html.twig -->
