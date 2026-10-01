@@ -1,20 +1,18 @@
 <!-- table-of-contents.html.twig -->
 {% if content.headline is defined and content.headline is not empty %}
-  {% include "includes/tailwind/includes/headline.html.twig" with {
-    'content': content,
-    'loopIndex': loopIndex,
-    'isFirstHeadline': false
-  } %}
+  <div class="mb-4 text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold text-gray-900" id="toc-heading">
+    {{ content.headline }}
+  </div>
 {% endif %}
 <nav aria-label="table-of-contents" class="toc mb-8 description-list">
   <ul class="space-y-2" role="list" aria-labelledby="toc-heading">
+    {% set counter = 0 %}
     {% for section in headlines %}
-      {% if section.headline is defined %}
-        {% set htmlId = section.headline|lower
-          |replace({'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss'})
-          |replace({' ': '-'})
-          |replace({'/[^a-z0-9\\-]/': ''}) %}
-        <li>
+      {% if section.headline|default('') is not empty %}
+        {% set counter = counter + 1 %}
+        {% set htmlId = '%02d'|format(counter) ~ '-' ~ section.headline|nca_slugify %}
+        <li class="flex items-baseline gap-2">
+          <span class="text-xs font-mono font-bold text-green-700">{{ '%02d'|format(counter) }}</span>
           <a
             href="#{{ htmlId }}"
             class="text-blue-800 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded transition-colors"

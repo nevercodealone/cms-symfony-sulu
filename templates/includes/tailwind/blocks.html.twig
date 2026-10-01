@@ -1,18 +1,22 @@
 <!-- blocks.html.twig -->
 {% set seo = (extension.seo is defined) ? extension.seo : [] %}
 {% if content.blocks|default([])|length %}
-    {% set headlines = [] %}
-    {% set faqArray = [] %}
-    {% set isFirstHeadline = true %}
+{% set headlines = [] %}
+{% set faqArray = [] %}
+{% set isFirstHeadline = true %}
+{% set headlineNumber = 0 %}
 
-    {% for block in content.blocks %}
-      {% if block.type == 'headline-paragraphs' %}
-        {% set headlines = headlines|merge([block]) %}
-      {% endif %}
-    {% endfor %}
+{% for block in content.blocks %}
+  {% if block.type == 'headline-paragraphs' %}
+    {% set headlines = headlines|merge([block]) %}
+  {% endif %}
+{% endfor %}
 
-    {% for block in content.blocks %}
-    {% if block.type starts with 'hero' %}{% set hasContainer = false %}{% else %}{% set hasContainer = true %}{% endif %}
+{% for block in content.blocks %}
+{% if block.type starts with 'hero' %}{% set hasContainer = false %}{% else %}{% set hasContainer = true %}{% endif %}
+{% if block.type == 'headline-paragraphs' and block.headline|default('') is not empty %}
+    {% set headlineNumber = headlineNumber + 1 %}
+{% endif %}
 <section class="pt-4 pb-2 sm:pt-8 sm:pb-4">
 {% if hasContainer %}
   <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
@@ -24,7 +28,8 @@
               id: id,
               seo: seo,
               loopIndex: loop.index,
-              isFirstHeadline: isFirstHeadline
+              isFirstHeadline: isFirstHeadline,
+              headlineNumber: headlineNumber
   } only %}
 
           {# latest-articles renders its (non-empty) headline through the same

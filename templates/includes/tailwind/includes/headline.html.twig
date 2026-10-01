@@ -1,7 +1,7 @@
-{% set htmlId = content.headline|lower
-  |replace({'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss'})
-  |replace({' ': '-'})
-  |replace({'/[^a-z0-9\\-]/': ''}) %}
+{% set htmlId = content.headline|nca_slugify %}
+{% if headlineNumber|default(null) %}
+  {% set htmlId = '%02d'|format(headlineNumber) ~ '-' ~ htmlId %}
+{% endif %}
 
 {% if isFirstHeadline %}
   <h1 class="mb-4 text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold text-gray-900" id="{{ htmlId }}">
