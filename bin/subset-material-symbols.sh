@@ -47,6 +47,7 @@ ICONS=(
     "cancel e888"
     "check e668"
     "check_circle f0be"
+    "chevron_left e5cb"
     "chevron_right e5cc"
     "close e5cd"
     "expand_more e5cf"
