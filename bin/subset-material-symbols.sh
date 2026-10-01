@@ -15,6 +15,8 @@
 # - A new icon name is added to templates/components/qualified-contact.html.twig
 #   (hardcoded spans) or to src/ContactForm/QuestionTree.php (service icons).
 #   card-trio icons are inline SVGs and do NOT use this font.
+# - A new icon name is added to templates/includes/tailwind/blocks/*.html.twig
+#   (e.g. hockenheim.html.twig).
 # - The font itself is updated to a new Google Fonts version (re-check the
 #   codepoints when bumping the version).
 #
@@ -35,20 +37,27 @@ TARGET="assets/website/fonts/material-symbols-outlined.woff2"
 # Every icon used in this repo: name + PUA codepoint. Keep in sync with:
 #   templates/components/qualified-contact.html.twig
 #   src/ContactForm/QuestionTree.php
+#   templates/includes/tailwind/blocks/hockenheim.html.twig
 ICONS=(
     "accessibility_new e92c"
     "analytics ef3e"
     "arrow_back e5c4"
     "arrow_forward e5c8"
     "calendar_today e935"
+    "cancel e888"
     "check e668"
     "check_circle f0be"
+    "chevron_right e5cc"
     "close e5cd"
     "expand_more e5cf"
+    "hotel e549"
+    "restart_alt f053"
     "rocket_launch eb9b"
     "schedule efd6"
     "send e163"
+    "sports_motorsports ea2d"
     "terminal eb8e"
+    "tour ef75"
 )
 
 NAMES="$(printf '%s\n' "${ICONS[@]}" | awk '{printf "%s ", $1}')"
