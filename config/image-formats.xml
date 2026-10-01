@@ -169,6 +169,24 @@
       </meta>
       <scale y="250"/>
     </format>
+    <format key="hockenheim-gallery-hero">
+      <meta>
+        <title lang="en">Hockenheim Galerie Hero</title>
+      </meta>
+      <scale x="1024" y="640"/>
+    </format>
+    <format key="hockenheim-gallery-thumb">
+      <meta>
+        <title lang="en">Hockenheim Galerie Thumb</title>
+      </meta>
+      <scale x="480" y="320"/>
+    </format>
+    <format key="hockenheim-gallery-popup">
+      <meta>
+        <title lang="en">Hockenheim Galerie Popup</title>
+      </meta>
+      <scale x="1024"/>
+    </format>
     <format key="logos">
         <meta>
             <title lang="en">Logos</title>
