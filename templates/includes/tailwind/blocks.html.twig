@@ -13,14 +13,10 @@
 {% endfor %}
 
 {% for block in content.blocks %}
-{% if block.type starts with 'hero' %}{% set hasContainer = false %}{% else %}{% set hasContainer = true %}{% endif %}
 {% if block.type == 'headline-paragraphs' and block.headline|default('') is not empty %}
     {% set headlineNumber = headlineNumber + 1 %}
 {% endif %}
 <section class="pt-4 pb-2 sm:pt-8 sm:pb-4">
-{% if hasContainer %}
-  <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-{% endif %}
   {% include 'includes/tailwind/blocks/' ~ block.type ~ '.html.twig' with {
               content: block,
               headlines: headlines,
@@ -40,9 +36,6 @@
           {% if consumesFirstHeadline and isFirstHeadline %}
             {% set isFirstHeadline = false %}
           {% endif %}
-{% if hasContainer %}
-  </div>
-{% endif %}
   </section>
 
   {% if block.type == 'faq' %}
