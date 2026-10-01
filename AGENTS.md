@@ -7,4 +7,5 @@ AI Mate Summary:
 
 ## Git workflow
 
+- Commit only when the user asks; never push unless the user explicitly says "push". "Commit" alone means NO push.
 - Push only to `origin` (git.nevercodealone.de, GitLab). Never push to the `github` remote.
