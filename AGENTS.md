@@ -4,3 +4,7 @@ AI Mate Summary:
 - Required action: Read and follow `mate/AGENT_INSTRUCTIONS.md` before taking any action in this project, and prefer MCP tools over raw CLI commands whenever possible.
 - Installed extensions: symfony/ai-mate.
 <!-- END AI_MATE_INSTRUCTIONS -->
+
+## Git workflow
+
+- Push only to `origin` (git.nevercodealone.de, GitLab). Never push to the `github` remote.
