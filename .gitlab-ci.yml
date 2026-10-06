@@ -1,7 +1,7 @@
 variables:
   CI_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
   CI_DEV_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/dev/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
-  BASE_URL: https://nevercodealone.projects.nevercodealone.de
+  BASE_URL: https://nca:nca@nevercodealone.projects.nevercodealone.de
 
 stages:
   - build
@@ -18,7 +18,7 @@ cypress_full_test_preview_stage:
     branch: main
     strategy: depend
   variables:
-    CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    CYPRESS_BASE_URL: https://nca:nca@nevercodealone.projects.nevercodealone.de
     RECORD_TRIGGER: "true"
     TESTS_FAILED_cypress_full_test_preview_stage: $CI_JOB_STATUS == 'success'
 
@@ -29,7 +29,7 @@ cypress_custom_tests_preview_stage:
     branch: main
     strategy: depend
   variables:
-    CYPRESS_BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    CYPRESS_BASE_URL: https://nca:nca@nevercodealone.projects.nevercodealone.de
     RECORD_TRIGGER: "true"
     TESTS_FAILED_cypress_custom_tests_preview_stage: $CI_JOB_STATUS == 'success'
 
@@ -39,7 +39,7 @@ validate_html_stage:
   tags:
     - docker1
   variables:
-    BASE_URL: https://nevercodealone.projects.nevercodealone.de
+    BASE_URL: https://nca:nca@nevercodealone.projects.nevercodealone.de
   needs:
     - job: deploy_stage
   rules:
@@ -192,7 +192,7 @@ cypress_internal_links_test_live:
     branch: main
     strategy: depend
   variables:
-    CYPRESS_BASE_URL: https://$URL
+    CYPRESS_BASE_URL: https://nevercodealone.de
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
     RECORD_TRIGGER: "true"
   rules:
