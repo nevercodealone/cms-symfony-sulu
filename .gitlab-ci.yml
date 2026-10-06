@@ -192,7 +192,7 @@ cypress_internal_links_test_live:
     branch: main
     strategy: depend
   variables:
-    CYPRESS_BASE_URL: https://$URL
+    CYPRESS_BASE_URL: https://nevercodealone.de
     CYPRESS_SPEC: "cypress/e2e/internal-links.cy.ts"
     RECORD_TRIGGER: "true"
   rules:
