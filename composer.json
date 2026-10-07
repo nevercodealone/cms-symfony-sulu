@@ -40,7 +40,7 @@
         "sulu/ai-platform-bundle": "*",
         "sulu/headless-bundle": "^0.10.0",
         "sulu/redirect-bundle": "2.2.x-dev",
-        "sulu/sulu": "2.6.26",
+        "sulu/sulu": "2.6.27",
         "symfony/ai-anthropic-platform": "*",
         "symfony/ai-chroma-db-store": "^0.10.0",
         "symfony/ai-hugging-face-platform": "*",
