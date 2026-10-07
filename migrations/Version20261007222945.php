@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260930095008 extends AbstractMigration
+final class Version20261007222945 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -22,11 +22,8 @@ final class Version20260930095008 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE TABLE ai_experts (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, description LONGTEXT NOT NULL, options JSON DEFAULT NULL COMMENT \'(DC2Type:json)\', uuid CHAR(36) NOT NULL COMMENT \'(DC2Type:guid)\', expert_key VARCHAR(255) NOT NULL, UNIQUE INDEX UNIQ_BF96FAF7D17F50A6 (uuid), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE ai_search_feedback (id INT AUTO_INCREMENT NOT NULL, feedback VARCHAR(255) DEFAULT NULL, feedback_comment LONGTEXT DEFAULT NULL, created_at DATETIME NOT NULL COMMENT \'(DC2Type:datetime_immutable)\', feedback_at DATETIME DEFAULT NULL COMMENT \'(DC2Type:datetime_immutable)\', uuid VARCHAR(36) NOT NULL, question LONGTEXT NOT NULL, answer LONGTEXT NOT NULL, sources JSON NOT NULL COMMENT \'(DC2Type:json)\', locale VARCHAR(10) NOT NULL, request_status VARCHAR(20) NOT NULL, error_message LONGTEXT DEFAULT NULL, error_code INT DEFAULT NULL, UNIQUE INDEX UNIQ_2ECF217BD17F50A6 (uuid), INDEX idx_search_feedback_created (created_at), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE app_chat_messages (id INT AUTO_INCREMENT NOT NULL, user_ip VARCHAR(45) NOT NULL, session_id VARCHAR(255) DEFAULT NULL, question LONGTEXT NOT NULL, answer LONGTEXT NOT NULL, created_at DATETIME NOT NULL COMMENT \'(DC2Type:datetime_immutable)\', response_time INT DEFAULT NULL, locale VARCHAR(50) DEFAULT NULL, input_tokens INT DEFAULT NULL, output_tokens INT DEFAULT NULL, total_tokens INT DEFAULT NULL, blocked_reason VARCHAR(50) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('DROP TABLE client_request_refactoring');
-        $this->addSql('DROP INDEX IDX_SESSION_ID ON app_chat_messages');
-        $this->addSql('DROP INDEX IDX_CREATED_AT ON app_chat_messages');
-        $this->addSql('DROP INDEX IDX_USER_IP ON app_chat_messages');
-        $this->addSql('ALTER TABLE app_chat_messages CHANGE response_time response_time INT DEFAULT NULL, CHANGE input_tokens input_tokens INT DEFAULT NULL, CHANGE output_tokens output_tokens INT DEFAULT NULL, CHANGE total_tokens total_tokens INT DEFAULT NULL');
         $this->addSql('DROP INDEX uniq_access_token ON mcp_access_tokens');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_985B5B2D5F37A13B ON mcp_access_tokens (token)');
         $this->addSql('DROP INDEX uniq_auth_code ON mcp_auth_codes');
@@ -42,16 +39,13 @@ final class Version20260930095008 extends AbstractMigration
         $this->addSql('CREATE TABLE client_request_refactoring (id INT AUTO_INCREMENT NOT NULL, email VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`, name VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`, project_url VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, project_description LONGTEXT CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`, team VARCHAR(20) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`, contact_type VARCHAR(20) CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, additional_information LONGTEXT CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB COMMENT = \'\' ');
         $this->addSql('DROP TABLE ai_experts');
         $this->addSql('DROP TABLE ai_search_feedback');
-        $this->addSql('ALTER TABLE me_file_versions DROP origin, DROP aiDisclosureDisabled, DROP aiDisclosureIconVariant');
-        $this->addSql('DROP INDEX reference_resource_idx ON re_references');
-        $this->addSql('ALTER TABLE me_file_version_meta DROP aiDisclosureText');
+        $this->addSql('DROP TABLE app_chat_messages');
         $this->addSql('DROP INDEX uniq_5cac607d77153098 ON mcp_auth_codes');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_auth_code ON mcp_auth_codes (code)');
+        $this->addSql('ALTER TABLE me_file_version_meta DROP aiDisclosureText');
+        $this->addSql('DROP INDEX reference_resource_idx ON re_references');
         $this->addSql('DROP INDEX uniq_985b5b2d5f37a13b ON mcp_access_tokens');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_access_token ON mcp_access_tokens (token)');
-        $this->addSql('ALTER TABLE app_chat_messages CHANGE response_time response_time INT DEFAULT NULL COMMENT \'Response time in milliseconds\', CHANGE input_tokens input_tokens INT DEFAULT NULL COMMENT \'Number of input tokens\', CHANGE output_tokens output_tokens INT DEFAULT NULL COMMENT \'Number of output tokens\', CHANGE total_tokens total_tokens INT DEFAULT NULL COMMENT \'Total tokens used\'');
-        $this->addSql('CREATE INDEX IDX_SESSION_ID ON app_chat_messages (session_id)');
-        $this->addSql('CREATE INDEX IDX_CREATED_AT ON app_chat_messages (created_at)');
-        $this->addSql('CREATE INDEX IDX_USER_IP ON app_chat_messages (user_ip)');
+        $this->addSql('ALTER TABLE me_file_versions DROP origin, DROP aiDisclosureDisabled, DROP aiDisclosureIconVariant');
     }
 }
