@@ -1,0 +1,20 @@
+{% extends "base-tailwind.html.twig" %}
+
+{% block content %}
+    <section class="flex flex-col items-center justify-center py-16 sm:py-24 text-center">
+        <p class="text-7xl sm:text-8xl font-black tracking-tight text-green-900" aria-hidden="true">
+            {{ status_code }}
+        </p>
+        <h1 class="mt-4 text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+            Ein Fehler ist aufgetreten
+        </h1>
+        <p class="mt-4 max-w-xl text-base text-gray-600">
+            Beim Verarbeiten der Anfrage ist ein unerwarteter Fehler aufgetreten.
+            Bitte versuchen Sie es sp&auml;ter erneut.
+        </p>
+        <a href="{{ sulu_content_root_path() }}"
+           class="text-xs font-black tracking-widest uppercase px-4 py-3 border-2 bg-green-900 text-white border-green-900 transition-colors duration-200 no-underline hover:bg-white hover:text-green-900">
+            Zur Startseite
+        </a>
+    </section>
+{% endblock %}
