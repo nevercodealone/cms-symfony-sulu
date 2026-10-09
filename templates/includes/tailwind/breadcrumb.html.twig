@@ -1,5 +1,10 @@
 {# Breadcrumb Navigation — Preline-Style mit Border-Akzent, ab Level 2 #}
-{% set breadcrumb = sulu_breadcrumb(uuid) %}
+{# uuid ist auf Fehlerseiten nicht definiert (siehe Sulu-Doku zu Error-Templates) #}
+{% if uuid|default() %}
+  {% set breadcrumb = sulu_breadcrumb(uuid) %}
+{% else %}
+  {% set breadcrumb = [] %}
+{% endif %}
 {% if breadcrumb|length > 1 %}
   {% set items = breadcrumb|slice(1) %}
   <nav aria-label="Breadcrumb" class="border-t border-b border-gray-200 py-3">

@@ -19,6 +19,8 @@
     <templates>
         <template type="search">search/search</template>
         <template type="error">error/error</template>
+        <template type="error-404">error/error-404</template>
+        <template type="error-500">error/error-500</template>
     </templates>
 
     <navigation>
