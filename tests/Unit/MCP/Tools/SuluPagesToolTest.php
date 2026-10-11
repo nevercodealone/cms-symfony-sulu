@@ -836,6 +836,85 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test add_block with items for hockenheim maps to story key and
+     * normalizes nested media fields (image/image2) to {"ids": [...]}.
+     */
+    public function testAddBlockHockenheimStoryNormalizesNestedMedia(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $items = json_encode([
+            [
+                'type' => 'chapter',
+                'title' => 'Theorie & Qualifying',
+                'image' => ['id' => 42],
+                'image2' => '43',
+            ],
+            [
+                'type' => 'chapter',
+                'title' => 'Carrera Cup',
+                'image' => 7,
+            ],
+        ]);
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hockenheim',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('hockenheim', $capturedBlock['type']);
+        $this->assertArrayHasKey('story', $capturedBlock);
+        $this->assertCount(2, $capturedBlock['story']);
+        $this->assertEquals('chapter', $capturedBlock['story'][0]['type']);
+        $this->assertSame(['ids' => [42]], $capturedBlock['story'][0]['image']);
+        $this->assertSame(['ids' => [43]], $capturedBlock['story'][0]['image2']);
+        $this->assertSame(['ids' => [7]], $capturedBlock['story'][1]['image']);
+    }
+
+    /**
+     * Test update_block with items for hockenheim normalizes nested media too.
+     */
+    public function testUpdateBlockHockenheimStoryNormalizesNestedMedia(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function ($path, $position, $blockData) use (&$capturedData) {
+                $capturedData = $blockData;
+                return ['success' => true, 'message' => 'Block updated'];
+            });
+
+        $items = json_encode([
+            [
+                'type' => 'chapter',
+                'title' => 'Transformation',
+                'image' => ['id' => 99],
+            ],
+        ]);
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hockenheim',
+            'position' => '0',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertArrayHasKey('story', $capturedData);
+        $this->assertSame(['ids' => [99]], $capturedData['story'][0]['image']);
+    }
+
+    /**
      * Test add_block with plain string content uses buildBlock logic.
      */
     public function testAddBlockWithPlainStringContentUsesDescription(): void
