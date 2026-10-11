@@ -979,7 +979,7 @@ class SuluPagesTool implements StreamableToolInterface
             if ($hasHeadline) {
                 $block['headline'] = $headline;
             }
-            $block[$nestedKey] = $normalizedItems;
+            $block[$nestedKey] = $this->normalizeNestedMediaItems($normalizedItems);
 
             // Also merge flat properties from content parameter if provided
             $content = $arguments['content'] ?? '';
@@ -1389,7 +1389,7 @@ class SuluPagesTool implements StreamableToolInterface
             // Nested property name comes from the registry, scoped to the page template's
             // schema family (see addBlock()).
             $nestedKey = $this->blockTypeRegistry->getNestedName($blockType, $family) ?? 'items';
-            $blockData[$nestedKey] = $normalizedItems;
+            $blockData[$nestedKey] = $this->normalizeNestedMediaItems($normalizedItems);
         }
 
         // Pass all schema-defined properties for the block type
@@ -1892,6 +1892,30 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->pageService->clearCache();
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * Normalize media fields inside nested block items (e.g. hockenheim story
+     * chapters: image/image2) to {"ids": [...]} so the BlockWriter json
+     * encoding matches what MediaSelectionContentType::read() expects.
+     *
+     * @param array<int, array<string, mixed>> $items
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeNestedMediaItems(array $items): array
+    {
+        $mediaFields = ['image', 'images', 'image2'];
+
+        return array_map(function (array $item) use ($mediaFields) {
+            foreach ($mediaFields as $field) {
+                if (isset($item[$field])) {
+                    $item[$field] = $this->normalizeMediaValue($item[$field]);
+                }
+            }
+
+            return $item;
+        }, $items);
     }
 
     /**
