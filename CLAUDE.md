@@ -52,3 +52,9 @@ Three-layer flow: GitLab CI/CD vars → `docker-compose.conversis.yml` `webserve
 Do NOT forward vars in `.gitlab-ci.yml` `variables:` blocks — that causes literal `$VARNAME` strings when CI/CD vars are missing. Let them auto-propagate like `DB_HOST` and `GEMINI_API_KEY`.
 
 See `docs/env-vars.md` for the full checklist, var registry, and a `DB_HOST` trace.
+
+## Skills
+
+Reusable workflow skills live in `docs/skills/`:
+
+- `restore-uploads-from-backup.md` — replace local `var/uploads` from a live backup archive (e.g. `uploads.tar.gz`), including format-cache cleanup and verification
