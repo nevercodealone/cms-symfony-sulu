@@ -831,158 +831,107 @@
                 'purple': 'text-purple-400',
                 'cyan': 'text-cyan-400',
             } %}
-            <div class="hidden opacity-0 transition-opacity duration-300 fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6"
+            <div class="hidden opacity-0 transition-opacity duration-300 fixed inset-0 z-50 bg-black flex flex-col"
                  data-cylinder-target="popup"
                  data-action="click->cylinder#backdropClose"
-                 role="dialog" aria-modal="true" aria-label="Hockenheimring 3D Journey">
-                <div class="bg-slate-900 border border-slate-800 w-full max-w-6xl max-h-[96vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+                 role="dialog" aria-modal="true" aria-label="Hockenheimring Bildergalerie">
 
-                    <button type="button" aria-label="Schließen"
-                            class="absolute top-3 right-3 z-40 w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-slate-700"
-                            data-action="cylinder#close">
-                        <span class="material-symbols-outlined text-lg">close</span>
-                    </button>
+                <button type="button" aria-label="Schließen"
+                        class="absolute top-4 right-4 z-40 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        data-action="cylinder#close">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
 
-                    <div class="stage-viewport-3d flex-1 relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-black p-4 sm:p-6 flex flex-col items-center justify-center">
-                        <div class="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#16a34a_1px,transparent_1px)] [background-size:24px_24px]"></div>
-                        <div class="absolute top-1/2 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-green-500/20 to-transparent pointer-events-none"></div>
-
-                        <div class="cylinder-carousel-3d relative w-full max-w-4xl h-[470px] sm:h-[510px] flex items-center justify-center">
+                <div class="stage-viewport-3d flex-1 relative overflow-hidden flex items-center justify-center">
+                    <div class="cylinder-carousel-3d relative w-full h-full flex items-center justify-center">
                             {% for chapter in story %}
                                 {% set img1 = chapter.image[0]|default(null) %}
                                 {% set img2 = chapter.image2[0]|default(null) %}
-                                {% set hasImg1 = img1 and img1.formats['hockenheim-story-card'] is defined and img1.formats['hockenheim-story-card'] is not empty %}
-                                {% set hasImg2 = img2 and img2.formats['hockenheim-story-card'] is defined and img2.formats['hockenheim-story-card'] is not empty %}
+                                {% set hasImg1 = img1 and img1.formats['hockenheim-story-card-md'] is defined and img1.formats['hockenheim-story-card-md'] is not empty %}
+                                {% set hasImg2 = img2 and img2.formats['hockenheim-story-card-md'] is defined and img2.formats['hockenheim-story-card-md'] is not empty %}
                                 {% set kickerClass = accentKicker[chapter.accent|default('')]|default('text-green-400') %}
-                                {% set textSpan = hasImg1 ? 'md:col-span-5' : 'md:col-span-12' %}
+                                {% set imgSizes = hasImg2 ? '50vw' : '100vw' %}
 
-                                <div class="cylinder-card-3d absolute inset-0 w-full h-full rounded-2xl bg-slate-900/95 border border-slate-700 shadow-2xl p-4 sm:p-6 flex flex-col justify-between overflow-hidden"
+                                <div class="cylinder-card-3d absolute inset-4 sm:inset-10 md:inset-16 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black"
                                      data-cylinder-target="card">
-                                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-2">
-                                        <div class="flex items-center gap-2">
-                                            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-green-600 text-white">MEILENSTEIN {{ loop.index }}</span>
-                                            {% if chapter.time|default %}
-                                                <span class="text-xs font-mono text-slate-400">{{ chapter.time }}</span>
-                                            {% endif %}
+                                    {% if hasImg1 and hasImg2 %}
+                                        <div class="absolute inset-0 grid grid-cols-2 gap-0.5 bg-black">
+                                            <div class="relative overflow-hidden">
+                                                <img src="{{ img1.formats['hockenheim-story-card-md.webp'] }}"
+                                                     srcset="{{ img1.formats['hockenheim-story-card-sm.webp'] }} 900w, {{ img1.formats['hockenheim-story-card-md.webp'] }} 1600w, {{ img1.formats['hockenheim-story-card-lg.webp'] }} 2400w"
+                                                     sizes="{{ imgSizes }}"
+                                                     alt="{{ img1.title|default(chapter.title|default('Hockenheimring')) }}"
+                                                     loading="lazy"
+                                                     class="absolute inset-0 w-full h-full object-cover">
+                                                {% if chapter.imageBadge|default %}
+                                                    <div class="absolute bottom-3 left-3 px-2 py-0.5 rounded bg-black/75 text-white font-mono text-[10px]">{{ chapter.imageBadge }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="relative overflow-hidden">
+                                                <img src="{{ img2.formats['hockenheim-story-card-md.webp'] }}"
+                                                     srcset="{{ img2.formats['hockenheim-story-card-sm.webp'] }} 900w, {{ img2.formats['hockenheim-story-card-md.webp'] }} 1600w, {{ img2.formats['hockenheim-story-card-lg.webp'] }} 2400w"
+                                                     sizes="{{ imgSizes }}"
+                                                     alt="{{ img2.title|default(chapter.title|default('Hockenheimring')) }}"
+                                                     loading="lazy"
+                                                     class="absolute inset-0 w-full h-full object-cover">
+                                                {% if chapter.imageBadge2|default %}
+                                                    <div class="absolute bottom-3 left-3 px-2 py-0.5 rounded bg-black/75 text-white font-mono text-[10px]">{{ chapter.imageBadge2 }}</div>
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            {% if chapter.metaText|default %}
-                                                <span class="text-xs font-mono {{ kickerClass }} flex items-center gap-1">
-                                                    <span class="material-symbols-outlined text-xs">{{ chapter.metaIcon|default('flag') }}</span>
-                                                    {{ chapter.metaText }}
-                                                </span>
-                                            {% endif %}
-                                            {% if chapter.metaBadge|default %}
-                                                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-mono">{{ chapter.metaBadge }}</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+                                    {% elseif hasImg1 %}
+                                        <img src="{{ img1.formats['hockenheim-story-card-md.webp'] }}"
+                                             srcset="{{ img1.formats['hockenheim-story-card-sm.webp'] }} 900w, {{ img1.formats['hockenheim-story-card-md.webp'] }} 1600w, {{ img1.formats['hockenheim-story-card-lg.webp'] }} 2400w"
+                                             sizes="{{ imgSizes }}"
+                                             alt="{{ img1.title|default(chapter.title|default('Hockenheimring')) }}"
+                                             loading="lazy"
+                                             class="absolute inset-0 w-full h-full object-cover">
+                                    {% else %}
+                                        <div class="absolute inset-0 bg-black"></div>
+                                    {% endif %}
 
-                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 items-center">
-                                        {% if hasImg1 %}
-                                            {% if hasImg2 %}
-                                                <div class="md:col-span-7 grid grid-cols-2 gap-3 h-full max-h-[260px]">
-                                                    <div class="relative rounded-xl overflow-hidden border border-slate-800 shadow group">
-                                                        <img src="{{ img1.formats['hockenheim-story-card'] }}"
-                                                             alt="{{ img1.title|default(chapter.title|default('Hockenheimring')) }}"
-                                                             loading="lazy"
-                                                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                                        {% if chapter.imageBadge|default %}
-                                                            <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/75 text-white font-mono text-[10px]">{{ chapter.imageBadge }}</div>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="relative rounded-xl overflow-hidden border border-slate-800 shadow group">
-                                                        <img src="{{ img2.formats['hockenheim-story-card'] }}"
-                                                             alt="{{ img2.title|default(chapter.title|default('Hockenheimring')) }}"
-                                                             loading="lazy"
-                                                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                                        {% if chapter.imageBadge2|default %}
-                                                            <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/75 text-white font-mono text-[10px]">{{ chapter.imageBadge2 }}</div>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            {% else %}
-                                                <div class="md:col-span-7 h-full max-h-[260px] relative rounded-xl overflow-hidden border border-slate-800 shadow group">
-                                                    <img src="{{ img1.formats['hockenheim-story-card'] }}"
-                                                         alt="{{ img1.title|default(chapter.title|default('Hockenheimring')) }}"
-                                                         loading="lazy"
-                                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
-                                                    <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
-                                                        {% if chapter.imageBadge|default %}
-                                                            <span class="px-2 py-1 rounded bg-green-600 text-white font-mono text-xs font-bold">{{ chapter.imageBadge }}</span>
-                                                        {% endif %}
-                                                        {% if chapter.imageBadge2|default %}
-                                                            <span class="text-slate-300 font-mono text-xs">{{ chapter.imageBadge2 }}</span>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            {% endif %}
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none"></div>
+
+                                    <div class="absolute bottom-0 inset-x-0 p-5 sm:p-8 flex flex-col gap-2">
+                                        {% if chapter.kicker|default %}
+                                            <span class="text-xs sm:text-sm font-mono uppercase {{ kickerClass }} font-bold tracking-wider">{{ chapter.kicker }}</span>
                                         {% endif %}
-
-                                        <div class="{{ textSpan }} flex flex-col justify-center gap-2 pl-0 md:pl-2">
-                                            {% if chapter.kicker|default %}
-                                                <span class="text-xs font-mono uppercase {{ kickerClass }} font-bold tracking-wider">{{ chapter.kicker }}</span>
-                                            {% endif %}
-                                            {% if chapter.title|default %}
-                                                <h4 class="text-lg sm:text-xl font-bold text-white leading-snug">{{ chapter.title }}</h4>
-                                            {% endif %}
-                                            {% if chapter.description|default %}
-                                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">{{ chapter.description }}</p>
-                                            {% endif %}
-                                            {% if chapter.check1|default or chapter.check2|default %}
-                                                <div class="flex items-center flex-wrap gap-2 pt-2 text-xs font-mono text-slate-400">
-                                                    {% if chapter.check1|default %}
-                                                        <span class="flex items-center gap-1 text-slate-300">
-                                                            <span class="material-symbols-outlined text-sm text-green-500">check</span>
-                                                            {{ chapter.check1 }}
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if chapter.check2|default %}
-                                                        <span class="flex items-center gap-1 text-slate-300">
-                                                            <span class="material-symbols-outlined text-sm text-green-500">check</span>
-                                                            {{ chapter.check2 }}
-                                                        </span>
-                                                    {% endif %}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
-                                        <span>{% if chapter.focus|default %}Fokus: {{ chapter.focus }}{% endif %}</span>
-                                        <span class="text-green-400 font-semibold">{{ loop.index }} / {{ story|length }} Meilensteine</span>
+                                        {% if chapter.title|default %}
+                                            <h4 class="text-xl sm:text-3xl font-bold text-white leading-snug">{{ chapter.title }}</h4>
+                                        {% endif %}
+                                        {% if chapter.description|default %}
+                                            <p class="text-sm sm:text-base text-white/80 leading-relaxed max-w-3xl">{{ chapter.description }}</p>
+                                        {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
                         </div>
                     </div>
 
-                    <div class="p-4 sm:px-6 bg-slate-950 border-t border-slate-800 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                            <button type="button"
-                                    class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-mono text-xs font-bold flex items-center gap-1 transition-all border border-slate-700 active:scale-95 cursor-pointer"
-                                    data-action="cylinder#prev">
-                                <span class="material-symbols-outlined text-base">chevron_left</span>
-                                <span class="hidden sm:inline">Vorheriger Zeitslot</span>
-                            </button>
-                            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800">
-                                {% for chapter in story %}
-                                    <button type="button"
-                                            class="w-7 h-7 rounded-md font-mono text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
-                                            data-cylinder-target="dot"
-                                            data-action="cylinder#goTo"
-                                            data-cylinder-index-param="{{ loop.index0 }}"
-                                            aria-label="Meilenstein {{ loop.index }}">{{ loop.index }}</button>
-                                {% endfor %}
-                            </div>
-                            <button type="button"
-                                    class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-mono text-xs font-bold flex items-center gap-1 transition-all border border-slate-700 active:scale-95 cursor-pointer"
-                                    data-action="cylinder#next">
-                                <span class="hidden sm:inline">Nächster Meilenstein</span>
-                                <span class="material-symbols-outlined text-base">chevron_right</span>
-                            </button>
+                <div class="p-4 sm:px-6 bg-black border-t border-white/10 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                        <button type="button"
+                                class="px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-mono text-xs font-bold flex items-center gap-1 transition-all border border-white/10 active:scale-95 cursor-pointer"
+                                data-action="cylinder#prev">
+                            <span class="material-symbols-outlined text-base">chevron_left</span>
+                            <span class="hidden sm:inline">Vorheriger Zeitslot</span>
+                        </button>
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                            {% for chapter in story %}
+                                <button type="button"
+                                        class="w-7 h-7 rounded-md font-mono text-xs font-bold transition-all bg-white/10 text-white/60 hover:text-white cursor-pointer"
+                                        data-cylinder-target="dot"
+                                        data-action="cylinder#goTo"
+                                        data-cylinder-index-param="{{ loop.index0 }}"
+                                        aria-label="Meilenstein {{ loop.index }}">{{ loop.index }}</button>
+                            {% endfor %}
                         </div>
+                        <button type="button"
+                                class="px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-mono text-xs font-bold flex items-center gap-1 transition-all border border-white/10 active:scale-95 cursor-pointer"
+                                data-action="cylinder#next">
+                            <span class="hidden sm:inline">Nächster Meilenstein</span>
+                            <span class="material-symbols-outlined text-base">chevron_right</span>
+                        </button>
                     </div>
                 </div>
             </div>

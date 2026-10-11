@@ -111,6 +111,18 @@ export default class extends Controller {
             return;
         }
 
+        const stage = this.element.querySelector('.stage-viewport-3d');
+        const carousel = this.element.querySelector('.cylinder-carousel-3d');
+        const width = (carousel && carousel.offsetWidth) || 896;
+
+        if (stage) {
+            stage.style.perspective = `${Math.round(width * 1.6)}px`;
+        }
+
+        const sideOffset = width * 0.16;
+        const sideDepth = width * 0.245;
+        const farDepth = width * 0.5;
+
         this.cardTargets.forEach((card, index) => {
             let diff = index - this.current;
             if (diff > count / 2) {
@@ -128,13 +140,13 @@ export default class extends Controller {
                 card.style.pointerEvents = 'auto';
             } else if (Math.abs(diff) === 1) {
                 const direction = diff > 0 ? 1 : -1;
-                card.style.transform = `translate3d(${direction * 140}px, 0px, -220px) rotateY(${direction * -22}deg) scale(0.92)`;
+                card.style.transform = `translate3d(${direction * sideOffset}px, 0px, ${-sideDepth}px) rotateY(${direction * -22}deg) scale(0.92)`;
                 card.style.opacity = '0.45';
                 card.style.filter = 'blur(1px) brightness(0.7)';
                 card.style.zIndex = '20';
                 card.style.pointerEvents = 'auto';
             } else {
-                card.style.transform = 'translate3d(0px, 0px, -450px) rotateY(180deg) scale(0.8)';
+                card.style.transform = `translate3d(0px, 0px, ${-farDepth}px) rotateY(180deg) scale(0.8)`;
                 card.style.opacity = '0';
                 card.style.filter = 'blur(3px)';
                 card.style.zIndex = '10';
@@ -146,8 +158,8 @@ export default class extends Controller {
             const isActive = index === this.current;
             dot.classList.toggle('bg-green-600', isActive);
             dot.classList.toggle('text-white', isActive);
-            dot.classList.toggle('bg-slate-800', !isActive);
-            dot.classList.toggle('text-slate-400', !isActive);
+            dot.classList.toggle('bg-white/10', !isActive);
+            dot.classList.toggle('text-white/60', !isActive);
         });
     }
 }
