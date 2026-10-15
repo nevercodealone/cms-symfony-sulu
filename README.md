@@ -92,6 +92,12 @@ src/
 | `move_block` | Reorder blocks |
 | `remove_block` | Delete block |
 | `publish` / `unpublish` | Control page visibility |
+| `update_resource_locator` | Change the URL slug; the old URL becomes a 301 history route |
+| `move_page` | Move a page under another parent; old URLs become 301 history routes |
+| `route_health` / `list_history_routes` / `check_url` | Inspect routes and how the website answers a URL |
+| `list_redirects` / `create_redirect` / `update_redirect` / `delete_redirect` | Manage SuluRedirectBundle redirects (301, 302, 307, 308, 410) |
+
+Page creation, publishing, URL changes and moves run Sulu's DocumentManager in a fresh console process (`app:page:create`, `app:page:publish`, `app:page:set-url`, `app:page:move`), so Sulu writes the routes in both workspaces. Pages created by the old MCP code need a one-off repair: `bin/console nca:routes:repair --dry-run`, then without `--dry-run`, then `massive:search:reindex` and `cache:clear`.
 
 ### Local Development (Claude Code)
 

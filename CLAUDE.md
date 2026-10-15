@@ -45,6 +45,12 @@ This file does not restate them — read them there.
 - Media IDs are shared references — no media files are duplicated
 - Nested items in blocks (faqs, items, rows, cards, flags) are fully preserved
 
+## Page URLs & Routes
+
+Never write PHPCR route nodes (`/cmf/example/routes/...`) with SQL. Page create, publish, URL change and move run Sulu's DocumentManager in a fresh process (`app:page:create`, `app:page:publish`, `app:page:set-url`, `app:page:move`, spawned via `ConsoleCommandRunner`), so Sulu writes routes in both workspaces, the `phpcr_nodes_references` rows and the 301 history routes. `RouteHealthService` verifies every write.
+
+Pages created by the old MCP code (live-only routes, no reference rows) are fixed once with `bin/console nca:routes:repair --dry-run`, then without `--dry-run`, then `massive:search:reindex` (admin + website) and `cache:clear`. Deleting a page makes SuluRedirectBundle add a 410 entry for its URLs automatically.
+
 ## Environment Variables
 
 Three-layer flow: GitLab CI/CD vars → `docker-compose.conversis.yml` `webserver.environment:` → `deploy/entrypoint.sh` writes to `/var/www/html/.env`.
