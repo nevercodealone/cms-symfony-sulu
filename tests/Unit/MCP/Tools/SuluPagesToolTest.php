@@ -2628,4 +2628,76 @@ class SuluPagesToolTest extends TestCase
 
         $this->assertSame('not_found', $data['type']);
     }
+
+    public function testRouteWriteAndRedirectActionsAreListed(): void
+    {
+        $description = $this->tool->getDescription();
+        foreach (['update_resource_locator', 'move_page', 'list_redirects', 'create_redirect', 'update_redirect', 'delete_redirect'] as $action) {
+            $this->assertStringContainsString($action, $description);
+        }
+
+        $names = array_map(fn ($p) => $p->getName(), $this->tool->getInputSchema()->getProperties());
+        $this->assertSame(array_unique($names), $names, 'schema property names must be unique');
+        foreach (['targetParentPath', 'target', 'statusCode', 'id', 'redirects', 'sourcePrefix'] as $name) {
+            $this->assertContains($name, $names);
+        }
+    }
+
+    public function testMovePageActionPassesArguments(): void
+    {
+        $this->pageService->expects($this->once())->method('movePage')
+            ->with('/cmf/example/contents/a/b', '/cmf/example/contents/c', '/b-2', true, 'de')
+            ->willReturn(['success' => true]);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'move_page',
+            'path' => '/cmf/example/contents/a/b',
+            'targetParentPath' => '/cmf/example/contents/c',
+            'resourceSegment' => '/b-2',
+            'publish' => 'true',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertTrue($data['success']);
+    }
+
+    public function testMovePageActionRequiresTarget(): void
+    {
+        $data = json_decode($this->tool->execute(['action' => 'move_page', 'path' => '/x'])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('parent_not_found', $data['errorCode']);
+    }
+
+    public function testUpdateResourceLocatorActionPassesArguments(): void
+    {
+        $this->pageService->expects($this->once())->method('updateResourceLocator')
+            ->with('/cmf/example/contents/a', '/a-2', false, 'de')
+            ->willReturn(['success' => true]);
+
+        $this->tool->execute(['action' => 'update_resource_locator', 'path' => '/cmf/example/contents/a', 'resourceSegment' => '/a-2']);
+    }
+
+    public function testCreateRedirectActionSupportsSingleAndBulk(): void
+    {
+        $redirects = $this->createMock(\App\Sulu\Service\RedirectService::class);
+        $calls = [];
+        $redirects->method('createRedirects')->willReturnCallback(function (array $items) use (&$calls) {
+            $calls[] = $items;
+
+            return ['success' => true, 'created' => $items, 'failed' => []];
+        });
+        $tool = new SuluPagesTool($this->pageService, $this->blockTypeRegistry, $this->snippetService, $this->mediaService, $redirects);
+
+        $tool->execute(['action' => 'create_redirect', 'source' => '/de/a', 'target' => '/de/b', 'statusCode' => 301]);
+        $tool->execute(['action' => 'create_redirect', 'redirects' => '[{"source":"/de/c","statusCode":410}]']);
+
+        $this->assertSame([['source' => '/de/a', 'target' => '/de/b', 'statusCode' => 301]], $calls[0]);
+        $this->assertSame([['source' => '/de/c', 'statusCode' => 410]], $calls[1]);
+    }
+
+    public function testRedirectActionsWithoutServiceFailCleanly(): void
+    {
+        $data = json_decode($this->tool->execute(['action' => 'list_redirects'])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('redirects_unavailable', $data['errorCode']);
+    }
 }

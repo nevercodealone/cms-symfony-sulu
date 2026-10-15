@@ -117,6 +117,24 @@ services:
             $connection: '@doctrine.dbal.default_connection'
         public: true
 
+    # SuluRedirectBundle services for the fresh-process redirect commands
+    App\Command\RedirectSaveCommand:
+        arguments:
+            $redirectRouteManager: '@sulu_redirect.redirect_route_manager'
+
+    App\Command\RedirectDeleteCommand:
+        arguments:
+            $redirectRouteManager: '@sulu_redirect.redirect_route_manager'
+            $redirectRouteRepository: '@sulu.repository.redirect_route'
+
+    # MCP redirect management (validation + DBAL reads, writes via the commands above)
+    App\Sulu\Service\RedirectService:
+        arguments:
+            $connection: '@doctrine.dbal.default_connection'
+            $routeHealth: '@App\Sulu\Service\RouteHealthService'
+            $commandRunner: '@App\Sulu\Process\ConsoleCommandRunner'
+        public: true
+
     # Sulu Page Service - Direct SQL for content, fresh-process DocumentManager for routes
     App\Sulu\Service\PageService:
         arguments:
@@ -168,6 +186,7 @@ services:
             $blockTypeRegistry: '@App\Sulu\Block\BlockTypeRegistry'
             $snippetService: '@App\Sulu\Service\SnippetService'
             $mediaService: '@App\Sulu\Service\MediaService'
+            $redirectService: '@App\Sulu\Service\RedirectService'
         tags: ['klp_mcp_server.tool']
         public: true
 
