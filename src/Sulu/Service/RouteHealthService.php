@@ -62,7 +62,9 @@ class RouteHealthService
         $routes = $this->loadRoutesReferencing([$page['uuid']], $locale);
 
         $health = $this->buildHealth($page, $routes, $locale);
-        $health['routes'] = array_map(fn (array $r) => $this->formatRoute($r, $locale), $routes);
+        // All routes of the page incl. history routes that redirect to it
+        // (those point at the active route node, not at the page).
+        $health['routes'] = $this->listHistoryRoutes($pagePath, $locale)['routes'] ?? [];
 
         return $health;
     }

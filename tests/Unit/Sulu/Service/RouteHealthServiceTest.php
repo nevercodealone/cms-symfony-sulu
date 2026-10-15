@@ -171,7 +171,7 @@ class RouteHealthServiceTest extends TestCase
             ['draft' => 'ok', 'live' => 'ok', 'references' => 'ok', 'activeRoutes' => 1, 'healthy' => true],
             $health['routeHealth']
         );
-        $this->assertCount(2, $health['routes']);
+        $this->assertCount(4, $health['routes'], 'active + history routes of both workspaces');
     }
 
     public function testMcpCreatedPageReportsMissingDraftRouteAndReferences(): void

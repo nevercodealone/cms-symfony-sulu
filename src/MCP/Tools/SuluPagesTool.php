@@ -61,7 +61,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url, update_resource_locator, move_page. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -73,6 +73,9 @@ class SuluPagesTool implements StreamableToolInterface
             'DELETE PAGES - batch safe removal (max 10). WORKFLOW: 1) dryRun: {"action":"delete_pages","paths":"[\"/cmf/.../a\",\"/cmf/.../b\"]","confirm":"[\"/cmf/.../a\",\"/cmf/.../b\"]","dryRun":"true"} 2) read response.preconditions (all success=true) 3) execute: same paths and confirm with "dryRun":"false". REQUIRED: paths (JSON array), confirm (a JSON array containing exactly the same paths in the same order - any valid JSON encoding is accepted, escaped or unescaped slashes). RULE: a path is deletable in batch only when every direct child is also listed in paths. Paths are sorted deepest-first internally. All-or-nothing: any failure deletes nothing. ' .
             'LIST REFERENCES - incoming-reference report. {"action":"list_references","path":"/cmf/example/contents/foo"}. Returns every page/snippet that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Use before delete (to satisfy the references_present check) or before rename. ' .
             'ROUTE HEALTH: list and get_structure return draftUrl, liveUrl and routeHealth {draft, live, references, activeRoutes, healthy} per page. draft/live = ok|missing|mismatch|none (none = unpublished, no route expected). Sulu creates route nodes only on publish; a published page needs an active route in BOTH workspaces plus a reference row, otherwise child pages get a wrong URL prefix. Anything not healthy: run bin/console nca:routes:repair --dry-run first. route_health + path returns the full report with every route node. ' .
+            'URLS AND ROUTES: create_page, copy_page, publish, update_resource_locator and move_page run Sulu\'s DocumentManager in a fresh process, so Sulu writes the routes in both workspaces and keeps old URLs as 301 history routes. Each response contains draftUrl, liveUrl, routeHealth and historyRoutes; success=false with reason when the route check after the write fails. ' .
+            'UPDATE RESOURCE LOCATOR: {"action":"update_resource_locator","path":"/cmf/example/contents/glossare/nca-glossar-ki-modelle/krea","resourceSegment":"/krea-2","publish":"true"}. resourceSegment is the last URL part only (leading slash). Old URL becomes a history route (301). Fails with resource_locator_taken naming the conflicting page. Without publish only the draft changes. ' .
+            'MOVE PAGE: {"action":"move_page","path":"/cmf/example/contents/glossare/a/krea","targetParentPath":"/cmf/example/contents/glossare/b","publish":"true"}. Optional resourceSegment renames the slug in the same step. New URL is always <parent URL>/<segment>; all old URLs (draft and live) become history routes; response lists oldUrls and newUrl. Fails with parent_missing_draft_route when the target parent has no active draft route (publish the parent or run nca:routes:repair). Children move with the page. ' .
             'LIST HISTORY ROUTES: list_history_routes + path. Every route of the page in both workspaces: url, workspace, history (true = old URL answering 301 to target), target. ' .
             'CHECK URL: check_url + url (public path incl. locale, e.g. /de/glossare/krea-2). Reports how the website answers: type page (uuid, path, duplicate=true when the page has a newer URL), history_redirect (301 + target), redirect_bundle (statusCode + target from SuluRedirectBundle) or not_found. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content, canonical example (same as list_block_types): ' . $canonicalExample . '. ' .
@@ -115,7 +118,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url, update_resource_locator, move_page',
                 required: true
             ),
             new SchemaProperty(
@@ -272,6 +275,12 @@ class SuluPagesTool implements StreamableToolInterface
                 name: 'text',
                 type: PropertyType::STRING,
                 description: 'For cta-button block: Primary button text',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'targetParentPath',
+                type: PropertyType::STRING,
+                description: 'For move_page: PHPCR path of the new parent page, e.g. /cmf/example/contents/glossare/nca-glossar-ki-modelle',
                 required: false
             ),
             new SchemaProperty(
@@ -584,6 +593,8 @@ class SuluPagesTool implements StreamableToolInterface
             'route_health' => $this->routeHealthAction($arguments, $locale),
             'list_history_routes' => $this->listHistoryRoutesAction($arguments, $locale),
             'check_url' => $this->checkUrlAction($arguments),
+            'update_resource_locator' => $this->updateResourceLocatorAction($arguments, $locale),
+            'move_page' => $this->movePageAction($arguments, $locale),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -666,6 +677,7 @@ class SuluPagesTool implements StreamableToolInterface
             'resourceSegment' => $arguments['resourceSegment'] ?? '',
             'seoTitle' => $arguments['seoTitle'] ?? null,
             'seoDescription' => $arguments['seoDescription'] ?? null,
+            'seoKeywords' => $arguments['seoKeywords'] ?? null,
             'publish' => ($arguments['publish'] ?? 'false') === 'true' || ($arguments['publish'] ?? false) === true,
             'excerptTitle' => $arguments['excerptTitle'] ?? null,
             'excerptDescription' => $arguments['excerptDescription'] ?? null,
@@ -1266,6 +1278,52 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         return $this->jsonResult($this->pageService->checkUrl($url));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateResourceLocatorAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        $segment = (string) ($arguments['resourceSegment'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+        if ($segment === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'invalid_resource_segment', 'message' => 'resourceSegment is required, e.g. /krea-2']);
+        }
+
+        return $this->jsonResult($this->pageService->updateResourceLocator(
+            $path,
+            $segment,
+            self::isTruthyString($arguments['publish'] ?? false),
+            $locale
+        ));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function movePageAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        $target = (string) ($arguments['targetParentPath'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+        if ($target === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'parent_not_found', 'message' => 'targetParentPath is required']);
+        }
+        $segment = isset($arguments['resourceSegment']) && $arguments['resourceSegment'] !== '' ? (string) $arguments['resourceSegment'] : null;
+
+        return $this->jsonResult($this->pageService->movePage(
+            $path,
+            $target,
+            $segment,
+            self::isTruthyString($arguments['publish'] ?? false),
+            $locale
+        ));
     }
 
     private function publishPage(string $path, string $locale): ToolResultInterface
