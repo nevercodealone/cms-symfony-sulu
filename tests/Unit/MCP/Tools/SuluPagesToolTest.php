@@ -2575,4 +2575,57 @@ class SuluPagesToolTest extends TestCase
         $this->assertSame('tailwind', $data['from']);
         $this->assertSame('faq', $data['blocksNotInNewTemplate'][0]['type']);
     }
+
+    public function testRouteReadActionsAreListedInDescriptionAndSchema(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('route_health', $description);
+        $this->assertStringContainsString('list_history_routes', $description);
+        $this->assertStringContainsString('check_url', $description);
+
+        $propertyNames = array_map(fn ($p) => $p->getName(), $this->tool->getInputSchema()->getProperties());
+        $this->assertContains('url', $propertyNames);
+    }
+
+    public function testRouteHealthActionRequiresPath(): void
+    {
+        $data = json_decode($this->tool->execute(['action' => 'route_health'])->getSanitizedResult()['text'], true);
+
+        $this->assertFalse($data['success']);
+        $this->assertSame('page_not_found', $data['errorCode']);
+    }
+
+    public function testListHistoryRoutesActionDelegatesToService(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('listHistoryRoutes')
+            ->with('/cmf/example/contents/foo', 'de')
+            ->willReturn(['success' => true, 'routes' => []]);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'list_history_routes',
+            'path' => '/cmf/example/contents/foo',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertTrue($data['success']);
+    }
+
+    public function testCheckUrlActionRequiresUrlAndDelegates(): void
+    {
+        $missing = json_decode($this->tool->execute(['action' => 'check_url'])->getSanitizedResult()['text'], true);
+        $this->assertFalse($missing['success']);
+        $this->assertSame('invalid_url', $missing['errorCode']);
+
+        $this->pageService->expects($this->once())
+            ->method('checkUrl')
+            ->with('/de/glossare/krea-2')
+            ->willReturn(['success' => true, 'type' => 'not_found']);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'check_url',
+            'url' => '/de/glossare/krea-2',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('not_found', $data['type']);
+    }
 }

@@ -61,7 +61,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -72,6 +72,9 @@ class SuluPagesTool implements StreamableToolInterface
             'DELETE PAGE - safe removal; page goes to Sulu trash (recoverable via admin only). WORKFLOW (follow exactly): 1) dryRun: {"action":"delete_page","path":"/cmf/example/contents/foo","confirm":"/cmf/example/contents/foo","dryRun":"true"} 2) read response.checks (all "pass") and response.descendantCount 3) execute: same call with "dryRun":"false"; if descendantCount>0 add "children":"cascade","expectedChildCount":<descendantCount from step 2> or "children":"reparent". REQUIRED: path, confirm (confirm MUST byte-for-byte equal path). ERRORS return nextAction field - follow it (e.g. page_published -> unpublish first, references_present -> call list_references first). ON SUCCESS: returns uuid, trashId, cacheCleared=true. ' .
             'DELETE PAGES - batch safe removal (max 10). WORKFLOW: 1) dryRun: {"action":"delete_pages","paths":"[\"/cmf/.../a\",\"/cmf/.../b\"]","confirm":"[\"/cmf/.../a\",\"/cmf/.../b\"]","dryRun":"true"} 2) read response.preconditions (all success=true) 3) execute: same paths and confirm with "dryRun":"false". REQUIRED: paths (JSON array), confirm (a JSON array containing exactly the same paths in the same order - any valid JSON encoding is accepted, escaped or unescaped slashes). RULE: a path is deletable in batch only when every direct child is also listed in paths. Paths are sorted deepest-first internally. All-or-nothing: any failure deletes nothing. ' .
             'LIST REFERENCES - incoming-reference report. {"action":"list_references","path":"/cmf/example/contents/foo"}. Returns every page/snippet that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Use before delete (to satisfy the references_present check) or before rename. ' .
+            'ROUTE HEALTH: list and get_structure return draftUrl, liveUrl and routeHealth {draft, live, references, activeRoutes, healthy} per page. draft/live = ok|missing|mismatch|none (none = unpublished, no route expected). Sulu creates route nodes only on publish; a published page needs an active route in BOTH workspaces plus a reference row, otherwise child pages get a wrong URL prefix. Anything not healthy: run bin/console nca:routes:repair --dry-run first. route_health + path returns the full report with every route node. ' .
+            'LIST HISTORY ROUTES: list_history_routes + path. Every route of the page in both workspaces: url, workspace, history (true = old URL answering 301 to target), target. ' .
+            'CHECK URL: check_url + url (public path incl. locale, e.g. /de/glossare/krea-2). Reports how the website answers: type page (uuid, path, duplicate=true when the page has a newer URL), history_redirect (301 + target), redirect_bundle (statusCode + target from SuluRedirectBundle) or not_found. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content, canonical example (same as list_block_types): ' . $canonicalExample . '. ' .
             'OTHER BLOCKS: faq, table, feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
             'PAGE-TEASER: page (UUID of target page, required), headline maps to buttonText, content maps to showImage ("1" or "0"). Example: blockType "page-teaser", page "uuid-of-target-page". ' .
@@ -112,7 +115,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url',
                 required: true
             ),
             new SchemaProperty(
@@ -452,6 +455,12 @@ class SuluPagesTool implements StreamableToolInterface
                 required: false
             ),
             new SchemaProperty(
+                name: 'url',
+                type: PropertyType::STRING,
+                description: 'For check_url: public path including locale, e.g. /de/glossare/nca-glossar-ki-modelle/krea-2',
+                required: false
+            ),
+            new SchemaProperty(
                 name: 'positions',
                 type: PropertyType::STRING,
                 description: 'For remove_blocks: JSON array of positions to remove, e.g. [7, 5, 3]. Auto-sorted highest-first.',
@@ -572,6 +581,9 @@ class SuluPagesTool implements StreamableToolInterface
             'update_media' => $this->updateMedia($arguments, $locale),
             'list_collections' => $this->listCollections($locale),
             'clear_cache' => $this->clearCache(),
+            'route_health' => $this->routeHealthAction($arguments, $locale),
+            'list_history_routes' => $this->listHistoryRoutesAction($arguments, $locale),
+            'check_url' => $this->checkUrlAction($arguments),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -1215,6 +1227,45 @@ class SuluPagesTool implements StreamableToolInterface
         ];
 
         return new TextToolResult(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function routeHealthAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+
+        return $this->jsonResult($this->pageService->getRouteHealth($path, $locale));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function listHistoryRoutesAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+
+        return $this->jsonResult($this->pageService->listHistoryRoutes($path, $locale));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function checkUrlAction(array $arguments): ToolResultInterface
+    {
+        $url = (string) ($arguments['url'] ?? $arguments['path'] ?? '');
+        if ($url === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'invalid_url', 'message' => 'url is required (public path including locale, e.g. /de/glossare/krea-2)']);
+        }
+
+        return $this->jsonResult($this->pageService->checkUrl($url));
     }
 
     private function publishPage(string $path, string $locale): ToolResultInterface

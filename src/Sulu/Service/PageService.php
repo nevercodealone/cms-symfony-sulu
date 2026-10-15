@@ -17,8 +17,8 @@ use DOMDocument;
 use DOMNode;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
+use App\Sulu\Process\ConsoleCommandRunner;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
-use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -103,6 +103,8 @@ class PageService
         private ?SnippetService $snippetService = null,
         private ?string $projectDir = null,
         private ?PageReferenceScanner $referenceScanner = null,
+        private ?ConsoleCommandRunner $commandRunner = null,
+        private ?RouteHealthService $routeHealth = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -282,6 +284,16 @@ class PageService
             }
         }
 
+        // Route health per page in one query over the route tree.
+        $health = [];
+        if (!empty($results)) {
+            try {
+                $health = $this->routeHealth()->getRouteHealthBatch(array_column($results, 'path'), $locale);
+            } catch (\Throwable) {
+                $health = [];
+            }
+        }
+
         $pages = [];
         foreach ($results as $row) {
             $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
@@ -302,6 +314,9 @@ class PageService
                     'template' => $template ?? 'default',
                     'published' => $pubMeta['published'],
                     'state' => $pubMeta['state'],
+                    'draftUrl' => $health[$row['path']]['draftUrl'] ?? $url,
+                    'liveUrl' => $health[$row['path']]['liveUrl'] ?? null,
+                    'routeHealth' => $health[$row['path']]['routeHealth'] ?? null,
                 ];
             }
         }
@@ -389,11 +404,21 @@ class PageService
         $seoTitle = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-title") : null;
         $seoDescription = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-description") : null;
 
+        $health = null;
+        try {
+            $health = $this->routeHealth()->getRouteHealth($path, $locale);
+        } catch (\Throwable) {
+            $health = null;
+        }
+
         $structure = [
             'success' => true,
             'title' => $page['title'],
             'uuid' => $this->getPageUuid($path),
             'url' => $page['fullUrl'],
+            'draftUrl' => $health['draftUrl'] ?? $page['url'],
+            'liveUrl' => $health['liveUrl'] ?? null,
+            'routeHealth' => $health['routeHealth'] ?? null,
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
             'excerptTitle' => $page['excerpt']['title'] ?? null,
@@ -414,6 +439,46 @@ class PageService
         }
 
         return $structure;
+    }
+
+    /**
+     * Every route (active + history, both workspaces) of a page.
+     *
+     * @return array<string, mixed>
+     */
+    public function listHistoryRoutes(string $path, string $locale = 'de'): array
+    {
+        $result = $this->routeHealth()->listHistoryRoutes($path, $locale);
+        if ($result === null) {
+            return ['success' => false, 'errorCode' => 'page_not_found', 'message' => 'Page not found: ' . $path];
+        }
+
+        return $result;
+    }
+
+    /**
+     * How the website answers a public URL (page, history redirect, redirect bundle, 404).
+     *
+     * @return array<string, mixed>
+     */
+    public function checkUrl(string $publicPath): array
+    {
+        return $this->routeHealth()->checkUrl($publicPath);
+    }
+
+    /**
+     * Full route health report of a page (draft/live URL, route status, all routes).
+     *
+     * @return array<string, mixed>
+     */
+    public function getRouteHealth(string $path, string $locale = 'de'): array
+    {
+        $health = $this->routeHealth()->getRouteHealth($path, $locale);
+        if ($health === null) {
+            return ['success' => false, 'errorCode' => 'page_not_found', 'message' => 'Page not found: ' . $path];
+        }
+
+        return ['success' => true] + $health;
     }
 
     /**
@@ -2675,48 +2740,57 @@ class PageService
         // connections) - see the architecture note at the top of this class.
         // The hard timeout guarantees a structured error instead of a
         // transport-level silence.
-        $process = new Process(
-            [$this->projectDir . '/bin/console', 'app:page:delete', $identifier, '--locale=' . $locale],
-            $this->projectDir
+        return $this->commandRunner()->run(
+            ['app:page:delete', $identifier, '--locale=' . $locale],
+            self::DELETE_PROCESS_TIMEOUT
         );
-        $process->setTimeout(self::DELETE_PROCESS_TIMEOUT);
-
-        $timedOut = false;
-        try {
-            $process->run();
-        } catch (ProcessTimedOutException) {
-            $timedOut = true;
-        }
-
-        return [
-            'exitCode' => $process->getExitCode(),
-            'output' => $process->getOutput(),
-            'errorOutput' => $process->getErrorOutput(),
-            'timedOut' => $timedOut,
-        ];
     }
 
     /**
-     * Extract the command's JSON from stdout. bin/console may print banners
-     * (e.g. the Sulu context warning) before the JSON - decode the last
-     * line that parses as a JSON object.
-     *
      * @return array<string, mixed>|null
      */
     protected function parseDeleteProcessOutput(string $output): ?array
     {
-        $lines = explode("\n", trim($output));
-        for ($i = count($lines) - 1; $i >= 0; $i--) {
-            $line = trim($lines[$i]);
-            if ($line !== '' && str_starts_with($line, '{')) {
-                $decoded = json_decode($line, true);
-                if (is_array($decoded)) {
-                    return $decoded;
-                }
-            }
+        return ConsoleCommandRunner::parseJsonResult($output);
+    }
+
+    /**
+     * Runner for the DocumentManager-backed console commands. Built lazily
+     * from projectDir so existing constructor call sites keep working.
+     */
+    protected function commandRunner(): ConsoleCommandRunner
+    {
+        return $this->commandRunner ??= new ConsoleCommandRunner((string) $this->projectDir);
+    }
+
+    /**
+     * Read-only route inspection, built lazily on the same connection.
+     */
+    protected function routeHealth(): RouteHealthService
+    {
+        return $this->routeHealth ??= new RouteHealthService($this->connection);
+    }
+
+    /**
+     * Run a DocumentManager-backed console command and normalise its outcome.
+     *
+     * @param list<string> $arguments
+     *
+     * @return array<string, mixed> success (bool) plus the command's JSON, or errorCode + message
+     */
+    protected function runDocumentCommand(array $arguments, string $failureCode, int $timeoutSeconds = ConsoleCommandRunner::DEFAULT_TIMEOUT): array
+    {
+        if ($this->projectDir === null && $this->commandRunner === null) {
+            return ['success' => false, 'errorCode' => $failureCode, 'message' => 'projectDir not configured'];
         }
 
-        return null;
+        try {
+            $spawn = $this->commandRunner()->run($arguments, $timeoutSeconds);
+        } catch (\Exception $e) {
+            return ['success' => false, 'errorCode' => $failureCode, 'message' => $e->getMessage()];
+        }
+
+        return ConsoleCommandRunner::toResult($spawn, $arguments[0] ?? 'console', $timeoutSeconds, $failureCode);
     }
 
     // ==========================================================================
