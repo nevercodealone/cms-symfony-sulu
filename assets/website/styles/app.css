@@ -311,3 +311,18 @@ details[open] .nav-chevron {
     -webkit-font-smoothing: antialiased;
 }
 
+/* Hockenheim 3D cylinder modal */
+.stage-viewport-3d {
+    perspective: 1400px;
+    perspective-origin: 50% 50%;
+}
+.cylinder-carousel-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.65s cubic-bezier(0.2, 0.85, 0.32, 1.05);
+}
+.cylinder-card-3d {
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.65s cubic-bezier(0.2, 0.85, 0.32, 1.05), opacity 0.4s ease, filter 0.4s ease;
+}
+

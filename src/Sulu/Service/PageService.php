@@ -17,8 +17,8 @@ use DOMDocument;
 use DOMNode;
 use DOMXPath;
 use FOS\HttpCacheBundle\CacheManager as FOSCacheManager;
+use App\Sulu\Process\ConsoleCommandRunner;
 use Sulu\Bundle\HttpCacheBundle\Cache\CacheManagerInterface;
-use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -45,9 +45,16 @@ use Symfony\Component\Process\Process;
  * - Don't add DocumentManager->clear() for cache management
  * - Don't wrap this in Sulu's PageDocument or StructureManager
  *
- * DocumentManager deletion runs in a FRESH process (app:page:delete via
- * Symfony Process) - the in-process DocumentManager blocks indefinitely in
- * the long-lived MCP server. See deletePage() and PageDeleteCommand.
+ * ROUTES / URLS: every mutation that creates, publishes, renames or moves a
+ * page runs Sulu's DocumentManager in a FRESH process (app:page:create,
+ * app:page:publish, app:page:set-url, app:page:move, app:page:delete via
+ * ConsoleCommandRunner) - the in-process DocumentManager blocks indefinitely
+ * in the long-lived MCP server. Sulu's own subscribers then write the route
+ * nodes in BOTH workspaces, the phpcr_nodes_references rows, the history
+ * routes and the child URLs. Never write route nodes with SQL here: the old
+ * raw createRouteForPage() wrote live-only routes without reference rows,
+ * which broke child URL prefixes (repair: bin/console nca:routes:repair).
+ * Every route mutation is verified afterwards with RouteHealthService.
  *
  * @see BlockWriter For XML block writing logic
  * @see BlockExtractor For XML block reading logic
@@ -103,6 +110,8 @@ class PageService
         private ?SnippetService $snippetService = null,
         private ?string $projectDir = null,
         private ?PageReferenceScanner $referenceScanner = null,
+        private ?ConsoleCommandRunner $commandRunner = null,
+        private ?RouteHealthService $routeHealth = null,
     ) {
         // Create default instances if not provided (backwards compatibility)
         $registry = $blockTypeRegistry ?? new BlockTypeRegistry();
@@ -282,6 +291,16 @@ class PageService
             }
         }
 
+        // Route health per page in one query over the route tree.
+        $health = [];
+        if (!empty($results)) {
+            try {
+                $health = $this->routeHealth()->getRouteHealthBatch(array_column($results, 'path'), $locale);
+            } catch (\Throwable) {
+                $health = [];
+            }
+        }
+
         $pages = [];
         foreach ($results as $row) {
             $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
@@ -302,6 +321,9 @@ class PageService
                     'template' => $template ?? 'default',
                     'published' => $pubMeta['published'],
                     'state' => $pubMeta['state'],
+                    'draftUrl' => $health[$row['path']]['draftUrl'] ?? $url,
+                    'liveUrl' => $health[$row['path']]['liveUrl'] ?? null,
+                    'routeHealth' => $health[$row['path']]['routeHealth'] ?? null,
                 ];
             }
         }
@@ -389,11 +411,21 @@ class PageService
         $seoTitle = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-title") : null;
         $seoDescription = $result ? $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-seo-description") : null;
 
+        $health = null;
+        try {
+            $health = $this->routeHealth()->getRouteHealth($path, $locale);
+        } catch (\Throwable) {
+            $health = null;
+        }
+
         $structure = [
             'success' => true,
             'title' => $page['title'],
             'uuid' => $this->getPageUuid($path),
             'url' => $page['fullUrl'],
+            'draftUrl' => $health['draftUrl'] ?? $page['url'],
+            'liveUrl' => $health['liveUrl'] ?? null,
+            'routeHealth' => $health['routeHealth'] ?? null,
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
             'excerptTitle' => $page['excerpt']['title'] ?? null,
@@ -414,6 +446,46 @@ class PageService
         }
 
         return $structure;
+    }
+
+    /**
+     * Every route (active + history, both workspaces) of a page.
+     *
+     * @return array<string, mixed>
+     */
+    public function listHistoryRoutes(string $path, string $locale = 'de'): array
+    {
+        $result = $this->routeHealth()->listHistoryRoutes($path, $locale);
+        if ($result === null) {
+            return ['success' => false, 'errorCode' => 'page_not_found', 'message' => 'Page not found: ' . $path];
+        }
+
+        return $result;
+    }
+
+    /**
+     * How the website answers a public URL (page, history redirect, redirect bundle, 404).
+     *
+     * @return array<string, mixed>
+     */
+    public function checkUrl(string $publicPath): array
+    {
+        return $this->routeHealth()->checkUrl($publicPath);
+    }
+
+    /**
+     * Full route health report of a page (draft/live URL, route status, all routes).
+     *
+     * @return array<string, mixed>
+     */
+    public function getRouteHealth(string $path, string $locale = 'de'): array
+    {
+        $health = $this->routeHealth()->getRouteHealth($path, $locale);
+        if ($health === null) {
+            return ['success' => false, 'errorCode' => 'page_not_found', 'message' => 'Page not found: ' . $path];
+        }
+
+        return ['success' => true] + $health;
     }
 
     /**
@@ -761,248 +833,118 @@ class PageService
     }
 
     /**
-     * Publish page to live workspace.
+     * Publish a page via Sulu's DocumentManager in a fresh process
+     * (app:page:publish). Sulu copies the draft to live, creates or moves the
+     * route in both workspaces, turns the previous URL into a history route
+     * (301) and adapts child URLs. The result is verified against the route
+     * tree afterwards - a live route that does not match the draft URL is
+     * reported as failure instead of trusted.
      *
-     * @return array{success: bool, message: string}
+     * @return array<string, mixed>
      */
     public function publishPage(string $path, string $locale = 'de'): array
     {
-        try {
-            $result = $this->connection->fetchAssociative(
-                "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
-                [$path]
-            );
-
-            if (!$result) {
-                return ['success' => false, 'message' => 'Page not found'];
-            }
-
-            // Update state to published (2) and set published date in XML
-            $publishedProps = $this->setPublishStateInXml($result['props'], $locale);
-
-            // Update default workspace with published state
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$publishedProps, $path, self::WORKSPACE_DEFAULT]
-            );
-
-            // Copy content to live workspace
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$publishedProps, $path, self::WORKSPACE_LIVE]
-            );
-
-            // Create route if it doesn't exist
-            $this->createRouteForPage($path, $publishedProps, $locale);
-
-            $this->activityLogger->logMcpAction(
-                'mcp_page_published',
-                $path,
-                $locale
-            );
-
-            // Invalidate HTTP cache for this page
-            $this->invalidatePageCache($path, $locale);
-
-            // Full cache clear after publish to ensure all pages reflect updated state
-            $this->clearCache();
-
-            return ['success' => true, 'message' => 'Page published successfully'];
-
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        $before = $this->routeHealth()->getRouteHealth($path, $locale);
+        if ($before === null) {
+            return ['success' => false, 'errorCode' => 'page_not_found', 'message' => 'Page not found'];
         }
+
+        $result = $this->runDocumentCommand(['app:page:publish', $path, '--locale=' . $locale], 'publish_failed');
+        if (empty($result['success'])) {
+            return $result;
+        }
+
+        $after = $this->routeHealth()->getRouteHealth($path, $locale);
+        $verified = $this->verifyPublishedRoutes($after);
+
+        $this->activityLogger->logMcpAction('mcp_page_published', $path, $locale, [
+            'draftUrl' => $after['draftUrl'] ?? null,
+            'liveUrl' => $after['liveUrl'] ?? null,
+            'verified' => $verified === null,
+        ]);
+
+        $this->invalidatePageCache($path, $locale);
+        $this->clearCache();
+
+        $response = [
+            'success' => $verified === null,
+            'message' => $verified === null ? 'Page published successfully' : 'Page published but the route check failed',
+            'path' => $path,
+            'draftUrl' => $after['draftUrl'] ?? null,
+            'liveUrl' => $after['liveUrl'] ?? null,
+            'routeHealth' => $after['routeHealth'] ?? null,
+            'historyRoutes' => $this->newHistoryRoutes($before, $after),
+        ];
+        if ($verified !== null) {
+            $response['errorCode'] = 'live_route_mismatch';
+            $response['reason'] = $verified;
+            $response['nextAction'] = 'Run route_health for this path, then bin/console nca:routes:repair --dry-run.';
+        }
+
+        return $response;
     }
 
     /**
-     * Set workflow state to published (2) and add published date in PHPCR XML.
-     */
-    private function setPublishStateInXml(string $xmlString, string $locale): string
-    {
-        $xml = new DOMDocument();
-        $this->loadXmlSecurely($xml, $xmlString);
-
-        $xpath = new DOMXPath($xml);
-        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
-
-        // Set state to 2 (published)
-        $stateNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-state"]/sv:value');
-        if ($stateNodes !== false && $stateNodes->length > 0 && $stateNodes->item(0)) {
-            $stateNodes->item(0)->nodeValue = '2';
-        }
-
-        // Set published date if not already set
-        $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-published"]/sv:value');
-        $now = (new \DateTime())->format('Y-m-d\TH:i:s.vP');
-
-        if ($publishedNodes !== false && $publishedNodes->length > 0 && $publishedNodes->item(0)) {
-            $publishedNodes->item(0)->nodeValue = $now;
-        } else {
-            // Add published date property
-            $rootNode = $xpath->query('/sv:node')->item(0);
-            if ($rootNode) {
-                $prop = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:property');
-                $prop->setAttribute('sv:name', 'i18n:' . $locale . '-published');
-                $prop->setAttribute('sv:type', 'Date');
-                $prop->setAttribute('sv:multi-valued', '0');
-                $value = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value', $now);
-                $value->setAttribute('length', (string) strlen($now));
-                $prop->appendChild($value);
-                $rootNode->appendChild($prop);
-            }
-        }
-
-        return $xml->saveXML() ?: $xmlString;
-    }
-
-    /**
-     * Create route node for a page.
-     */
-    private function createRouteForPage(string $pagePath, string $pageProps, string $locale): void
-    {
-        // Extract UUID and URL from page props
-        $xml = new \DOMDocument();
-        $this->loadXmlSecurely($xml, $pageProps);
-        $xpath = new \DOMXPath($xml);
-        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
-
-        $uuidNodes = $xpath->query('//sv:property[@sv:name="jcr:uuid"]/sv:value');
-        $urlNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-url"]/sv:value');
-
-        if (!$uuidNodes || $uuidNodes->length === 0 || !$urlNodes || $urlNodes->length === 0) {
-            return;
-        }
-
-        $pageUuid = $uuidNodes->item(0)?->nodeValue ?? '';
-        $pageUrl = $urlNodes->item(0)?->nodeValue ?? '';
-
-        if (empty($pageUuid) || empty($pageUrl)) {
-            return;
-        }
-
-        // Build route path: /cmf/example/routes/{locale}/{url}
-        $routePath = '/cmf/example/routes/' . $locale . $pageUrl;
-
-        // Check if route already exists
-        $existing = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
-            [$routePath]
-        );
-
-        if ($existing) {
-            return; // Route already exists
-        }
-
-        // Get parent route node ID
-        $parentPath = dirname($routePath);
-        $parent = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
-            [$parentPath]
-        );
-
-        if (!$parent) {
-            // Create parent path recursively if needed
-            $this->ensureRouteParentExists($parentPath, $locale);
-            $parent = $this->connection->fetchAssociative(
-                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
-                [$parentPath]
-            );
-        }
-
-        if (!$parent) {
-            return; // Can't create route without parent
-        }
-
-        $routeUuid = $this->generateUuid();
-        $now = (new \DateTime())->format('Y-m-d\TH:i:s.vP');
-        $nodeName = basename($routePath);
-
-        // Build route props XML
-        $routeProps = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
-            '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" ' .
-            'xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" ' .
-            'xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">' .
-            '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>' .
-            '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="17">mix:referenceable</sv:value><sv:value length="9">sulu:path</sv:value></sv:property>' .
-            '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $routeUuid . '</sv:value></sv:property>' .
-            '<sv:property sv:name="sulu:history" sv:type="Boolean" sv:multi-valued="0"><sv:value length="0">0</sv:value></sv:property>' .
-            '<sv:property sv:name="sulu:created" sv:type="Date" sv:multi-valued="0"><sv:value length="29">' . $now . '</sv:value></sv:property>' .
-            '<sv:property sv:name="sulu:changed" sv:type="Date" sv:multi-valued="0"><sv:value length="29">' . $now . '</sv:value></sv:property>' .
-            '<sv:property sv:name="sulu:content" sv:type="Reference" sv:multi-valued="0"><sv:value length="36">' . $pageUuid . '</sv:value></sv:property>' .
-            '</sv:node>' . "\n";
-
-        // Insert route node
-        $this->connection->executeStatement(
-            "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
-            "VALUES (?, ?, ?, '', '" . self::WORKSPACE_LIVE . "', ?, 'nt:unstructured', ?, ?, ?)",
-            [$routePath, $parentPath, $nodeName, $routeUuid, $routeProps, substr_count($routePath, '/'), 0]
-        );
-    }
-
-    /**
-     * Ensure parent route path exists.
-     */
-    private function ensureRouteParentExists(string $parentPath, string $locale): void
-    {
-        $existing = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
-            [$parentPath]
-        );
-
-        if ($existing) {
-            return;
-        }
-
-        // Recursively create parent
-        $grandparent = dirname($parentPath);
-        if ($grandparent !== '/cmf/example/routes/' . $locale && $grandparent !== '/cmf/example/routes') {
-            $this->ensureRouteParentExists($grandparent, $locale);
-        }
-
-        $parent = $this->connection->fetchAssociative(
-            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_LIVE . "'",
-            [$grandparent]
-        );
-
-        if (!$parent) {
-            return;
-        }
-
-        $uuid = $this->generateUuid();
-        $nodeName = basename($parentPath);
-
-        $props = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" .
-            '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" ' .
-            'xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" ' .
-            'xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">' .
-            '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>' .
-            '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="17">mix:referenceable</sv:value></sv:property>' .
-            '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $uuid . '</sv:value></sv:property>' .
-            '</sv:node>' . "\n";
-
-        $this->connection->executeStatement(
-            "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
-            "VALUES (?, ?, ?, '', '" . self::WORKSPACE_LIVE . "', ?, 'nt:unstructured', ?, ?, ?)",
-            [$parentPath, $grandparent, $nodeName, $uuid, $props, substr_count($parentPath, '/'), 0]
-        );
-    }
-
-    /**
-     * Generate a UUID v4.
-     */
-    private function generateUuid(): string
-    {
-        $data = random_bytes(16);
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-    }
-
-    /**
-     * Create a new page using direct SQL.
+     * Null when a published page has a matching active route in both
+     * workspaces, otherwise a human readable reason.
      *
-     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, publish?: bool, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, template?: string} $data
-     * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, full_url?: string, published?: bool}
+     * @param array<string, mixed>|null $health
+     */
+    private function verifyPublishedRoutes(?array $health): ?string
+    {
+        if ($health === null) {
+            return 'page disappeared after publish';
+        }
+        $rh = $health['routeHealth'];
+        if ($health['draftUrl'] !== $health['liveUrl']) {
+            return sprintf('live URL %s does not match draft URL %s', (string) $health['liveUrl'], (string) $health['draftUrl']);
+        }
+        if ($rh['draft'] !== RouteHealthService::STATUS_OK || $rh['live'] !== RouteHealthService::STATUS_OK) {
+            return sprintf('route check draft=%s live=%s', $rh['draft'], $rh['live']);
+        }
+        if ($rh['references'] !== RouteHealthService::STATUS_OK) {
+            return 'route reference rows missing';
+        }
+        if ($rh['activeRoutes'] > 1) {
+            return $rh['activeRoutes'] . ' active routes for one page (duplicate content)';
+        }
+
+        return null;
+    }
+
+    /**
+     * URLs that turned into history routes between two health snapshots.
+     *
+     * @param array<string, mixed>|null $before
+     * @param array<string, mixed>|null $after
+     *
+     * @return list<array{url: string, workspace: string}>
+     */
+    private function newHistoryRoutes(?array $before, ?array $after): array
+    {
+        $wasHistory = [];
+        foreach ($before['routes'] ?? [] as $r) {
+            if ($r['history']) {
+                $wasHistory[$r['workspace'] . ':' . $r['url']] = true;
+            }
+        }
+        $list = [];
+        foreach ($after['routes'] ?? [] as $r) {
+            if ($r['history'] && !isset($wasHistory[$r['workspace'] . ':' . $r['url']])) {
+                $list[] = ['url' => $r['url'], 'workspace' => $r['workspace']];
+            }
+        }
+
+        return $list;
+    }
+
+    /**
+     * Create a new page via Sulu's DocumentManager in a fresh process
+     * (app:page:create), so Sulu writes the node in both workspaces and, on
+     * publish, the routes in both workspaces including reference rows.
+     *
+     * @param array{parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string|null, seoDescription?: string|null, seoKeywords?: string|null, publish?: bool, excerptTitle?: string|null, excerptDescription?: string|null, excerptImage?: int|null, template?: string} $data
+     * @return array<string, mixed>
      */
     public function createPage(array $data, string $locale = 'de'): array
     {
@@ -1011,7 +953,8 @@ class PageService
         $resourceSegment = $data['resourceSegment'] ?? '';
         $seoTitle = $data['seoTitle'] ?? null;
         $seoDescription = $data['seoDescription'] ?? null;
-        $publish = $data['publish'] ?? false;
+        $seoKeywords = $data['seoKeywords'] ?? null;
+        $publish = (bool) ($data['publish'] ?? false);
         $excerptTitle = $data['excerptTitle'] ?? null;
         $excerptDescription = $data['excerptDescription'] ?? null;
         $excerptImage = $data['excerptImage'] ?? null;
@@ -1041,97 +984,370 @@ class PageService
             ];
         }
 
-        try {
-            // Get parent info from default workspace
-            $parent = $this->connection->fetchAssociative(
-                "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
-                [$parentPath]
-            );
-
-            if (!$parent) {
-                return ['success' => false, 'message' => "Parent path does not exist: {$parentPath}"];
-            }
-
-            // Extract parent URL to build full URL
-            $parentUrl = $parent['props'] ? ($this->extractPropertyFromXml($parent['props'], "i18n:{$locale}-url") ?? '') : '';
-            $fullUrl = rtrim($parentUrl, '/') . $resourceSegment;
-
-            // Generate UUID and build path
-            $uuid = $this->generateUuid();
-            $nodeName = ltrim($resourceSegment, '/');
-            $path = $parentPath . '/' . $nodeName;
-            $depth = substr_count($path, '/');
-
-            // Check if page already exists
-            $existing = $this->connection->fetchAssociative(
-                "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
-                [$path]
-            );
-
-            if ($existing) {
-                return ['success' => false, 'message' => "Page already exists at: {$path}"];
-            }
-
-            // Get next sort order
-            $maxOrder = $this->connection->fetchOne(
-                "SELECT MAX(sort_order) FROM phpcr_nodes WHERE parent = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
-                [$parent['id']]
-            );
-            $sortOrder = ($maxOrder ?? 0) + 1;
-
-            // Build XML props
-            $now = (new \DateTime())->format('Y-m-d\TH:i:s.v+00:00');
-            $props = $this->buildPagePropsXml($uuid, $title, $fullUrl, $locale, $now, $seoTitle, $seoDescription, $publish, $excerptTitle, $excerptDescription, $excerptImage, $template);
-
-            // Insert into BOTH workspaces
-            foreach ([self::WORKSPACE_DEFAULT, self::WORKSPACE_LIVE] as $workspace) {
-                // Get parent ID for this workspace
-                $parentInWorkspace = $this->connection->fetchAssociative(
-                    "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = ?",
-                    [$parentPath, $workspace]
-                );
-
-                if (!$parentInWorkspace) {
-                    continue; // Skip if parent doesn't exist in this workspace
-                }
-
-                $this->connection->executeStatement(
-                    "INSERT INTO phpcr_nodes (path, parent, local_name, namespace, workspace_name, identifier, type, props, depth, sort_order) " .
-                    "VALUES (?, ?, ?, '', ?, ?, 'nt:unstructured', ?, ?, ?)",
-                    [$path, $parentPath, $nodeName, $workspace, $uuid, $props, $depth, $sortOrder]
-                );
-            }
-
-            // Create route if publishing
-            if ($publish) {
-                $this->createRouteForPage($path, $props, $locale);
-            }
-
-            $this->activityLogger->logMcpAction(
-                'mcp_page_created',
-                $path,
-                $locale,
-                [
-                    'title' => $title,
-                    'resourceSegment' => $resourceSegment,
-                    'published' => $publish,
-                ]
-            );
-
-
-            return [
-                'success' => true,
-                'message' => 'Page created successfully',
-                'path' => $path,
-                'uuid' => $uuid,
-                'url' => '/' . $locale . $fullUrl,
-                'full_url' => 'https://nevercodealone.de/' . $locale . $fullUrl,
-                'published' => (bool) $publish,
-            ];
-
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        $parent = $this->connection->fetchAssociative(
+            "SELECT id, path, props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$parentPath]
+        );
+        if (!$parent) {
+            return ['success' => false, 'message' => "Parent path does not exist: {$parentPath}"];
         }
+
+        $path = rtrim($parentPath, '/') . '/' . ltrim($resourceSegment, '/');
+        $existing = $this->connection->fetchAssociative(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$path]
+        );
+        if ($existing) {
+            return ['success' => false, 'message' => "Page already exists at: {$path}"];
+        }
+
+        $parentUrl = $this->extractPropertyFromXml((string) $parent['props'], "i18n:{$locale}-url") ?? '';
+        $fullUrl = rtrim($parentUrl, '/') . $resourceSegment;
+
+        // A published parent without a draft route makes Sulu generate the
+        // child URL one level too high - refuse instead of creating a broken URL.
+        $parentHealth = $this->routeHealth()->getRouteHealth($parentPath, $locale);
+        if ($parentHealth !== null && $parentHealth['published']
+            && ($parentHealth['routeHealth']['draft'] !== RouteHealthService::STATUS_OK
+                || $parentHealth['routeHealth']['references'] !== RouteHealthService::STATUS_OK)) {
+            return [
+                'success' => false,
+                'errorCode' => 'parent_missing_draft_route',
+                'message' => 'Parent page has no usable draft route; child URLs would be generated under the wrong prefix',
+                'routeHealth' => $parentHealth['routeHealth'],
+                'nextAction' => 'Run bin/console nca:routes:repair --dry-run, review, then run it without --dry-run.',
+            ];
+        }
+
+        if ($publish) {
+            $owner = $this->routeHealth()->findActiveRouteOwner($fullUrl, $locale);
+            if ($owner !== null) {
+                return [
+                    'success' => false,
+                    'errorCode' => 'resource_locator_taken',
+                    'message' => "URL {$fullUrl} is already the active route of " . ($owner['path'] ?? $owner['uuid']),
+                    'conflictingPage' => $owner['path'] ?? $owner['uuid'],
+                ];
+            }
+        }
+
+        $args = ['app:page:create', $parentPath, $title, $resourceSegment, '--locale=' . $locale, '--template=' . $template];
+        if ($publish) {
+            $args[] = '--publish';
+        }
+        foreach ([
+            'seo-title' => $seoTitle,
+            'seo-description' => $seoDescription,
+            'seo-keywords' => $seoKeywords,
+            'excerpt-title' => $excerptTitle,
+            'excerpt-description' => $excerptDescription,
+            'excerpt-image' => $excerptImage,
+        ] as $option => $value) {
+            if ($value !== null && $value !== '') {
+                $args[] = '--' . $option . '=' . $value;
+            }
+        }
+
+        $result = $this->runDocumentCommand($args, 'create_failed');
+        if (empty($result['success'])) {
+            return ['success' => false, 'message' => (string) ($result['message'] ?? 'create failed')] + $result;
+        }
+
+        $createdPath = (string) ($result['path'] ?? $path);
+        $health = $this->routeHealth()->getRouteHealth($createdPath, $locale);
+        $verified = $publish ? $this->verifyPublishedRoutes($health) : ($health === null ? 'page not found after create' : null);
+
+        $this->activityLogger->logMcpAction(
+            'mcp_page_created',
+            $createdPath,
+            $locale,
+            [
+                'title' => $title,
+                'resourceSegment' => $resourceSegment,
+                'published' => $publish,
+            ]
+        );
+
+        if ($publish) {
+            $this->invalidatePageCache($createdPath, $locale);
+        }
+
+        $url = (string) ($health['draftUrl'] ?? $result['url'] ?? $fullUrl);
+        $response = [
+            'success' => $verified === null,
+            'message' => $verified === null ? 'Page created successfully' : 'Page created but the route check failed',
+            'path' => $createdPath,
+            'uuid' => $result['uuid'] ?? null,
+            'url' => '/' . $locale . $url,
+            'full_url' => 'https://nevercodealone.de/' . $locale . $url,
+            'published' => (bool) $publish,
+            'draftUrl' => $health['draftUrl'] ?? null,
+            'liveUrl' => $health['liveUrl'] ?? null,
+            'routeHealth' => $health['routeHealth'] ?? null,
+        ];
+        if ($verified !== null) {
+            $response['errorCode'] = 'route_check_failed';
+            $response['reason'] = $verified;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Change the slug of a page (update_resource_locator). Runs
+     * app:page:set-url in a fresh process; Sulu creates the new route and turns
+     * the previous one into a history route (draft now, live with publish).
+     *
+     * @return array<string, mixed>
+     */
+    public function updateResourceLocator(string $path, string $resourceSegment, bool $publish = false, string $locale = 'de'): array
+    {
+        if (!preg_match('#^/[a-z0-9-]+$#', $resourceSegment)) {
+            return ['success' => false, 'errorCode' => 'invalid_resource_segment', 'message' => 'resourceSegment must be a single slug with leading slash, only lowercase letters, numbers and hyphens (e.g. /krea-2)'];
+        }
+
+        $before = $this->routeHealth()->getRouteHealth($path, $locale);
+        if ($before === null) {
+            return ['success' => false, 'errorCode' => 'page_not_found', 'message' => 'Page not found: ' . $path];
+        }
+
+        $parentUrl = $this->pageUrlOf(dirname($path), $locale);
+        $newUrl = rtrim($parentUrl, '/') . $resourceSegment;
+        $oldUrl = $before['draftUrl'];
+
+        if ($newUrl === $oldUrl && (!$publish || $before['liveUrl'] === $newUrl)) {
+            return ['success' => true, 'message' => 'URL unchanged', 'oldUrl' => $oldUrl, 'newUrl' => $newUrl, 'routeHealth' => $before['routeHealth'], 'historyRoutes' => []];
+        }
+
+        $conflict = $this->routeConflict($newUrl, (string) $before['uuid'], $locale);
+        if ($conflict !== null) {
+            return $conflict;
+        }
+
+        $args = ['app:page:set-url', $path, $resourceSegment, '--locale=' . $locale];
+        if ($publish) {
+            $args[] = '--publish';
+        }
+        $result = $this->runDocumentCommand($args, 'set_url_failed');
+        if (empty($result['success'])) {
+            return $result;
+        }
+
+        $currentPath = (string) ($result['path'] ?? $path);
+        $after = $this->routeHealth()->getRouteHealth($currentPath, $locale);
+        $verified = $this->verifyUrlChange($after, $newUrl, $publish);
+        if ($verified === null && $currentPath !== $path) {
+            $verified = 'page node path changed from ' . $path . ' to ' . $currentPath;
+        }
+
+        $this->activityLogger->logMcpAction('mcp_page_url_changed', $currentPath, $locale, ['oldUrl' => $oldUrl, 'newUrl' => $newUrl, 'published' => $publish]);
+        if ($publish) {
+            $this->invalidatePageCache($currentPath, $locale);
+            $this->clearCache();
+        }
+
+        return $this->routeChangeResponse($verified, 'URL changed', [
+            'path' => $currentPath,
+            'oldUrl' => $oldUrl,
+            'newUrl' => $after['draftUrl'] ?? $newUrl,
+            'published' => $publish,
+        ], $before, $after);
+    }
+
+    /**
+     * Move a page under another parent (move_page). Runs app:page:move in a
+     * fresh process; Sulu regenerates the URL from the new parent's draft route
+     * and keeps every previous URL as a history route.
+     *
+     * @return array<string, mixed>
+     */
+    public function movePage(string $path, string $targetParentPath, ?string $resourceSegment = null, bool $publish = false, string $locale = 'de'): array
+    {
+        if ($resourceSegment !== null && $resourceSegment !== '' && !preg_match('#^/[a-z0-9-]+$#', $resourceSegment)) {
+            return ['success' => false, 'errorCode' => 'invalid_resource_segment', 'message' => 'resourceSegment must be a single slug with leading slash, only lowercase letters, numbers and hyphens'];
+        }
+        if ($path === self::HOMEPAGE_PATH) {
+            return ['success' => false, 'errorCode' => 'invalid_move', 'message' => 'The homepage cannot be moved'];
+        }
+        $targetParentPath = rtrim($targetParentPath, '/');
+        if ($targetParentPath === $path || str_starts_with($targetParentPath . '/', $path . '/')) {
+            return ['success' => false, 'errorCode' => 'invalid_move', 'message' => 'A page cannot be moved into itself or its own subtree'];
+        }
+        if (dirname($path) === $targetParentPath && ($resourceSegment === null || $resourceSegment === '')) {
+            return ['success' => false, 'errorCode' => 'invalid_move', 'message' => 'Page is already under ' . $targetParentPath];
+        }
+
+        $before = $this->routeHealth()->getRouteHealth($path, $locale);
+        if ($before === null) {
+            return ['success' => false, 'errorCode' => 'page_not_found', 'message' => 'Page not found: ' . $path];
+        }
+
+        $parentExists = $this->connection->fetchOne(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$targetParentPath]
+        );
+        if ($parentExists === false || $parentExists === null) {
+            return ['success' => false, 'errorCode' => 'parent_not_found', 'message' => 'Target parent not found: ' . $targetParentPath];
+        }
+
+        if ($targetParentPath !== self::HOMEPAGE_PATH) {
+            $parentHealth = $this->routeHealth()->getRouteHealth($targetParentPath, $locale);
+            if ($parentHealth === null
+                || $parentHealth['routeHealth']['draft'] !== RouteHealthService::STATUS_OK
+                || $parentHealth['routeHealth']['references'] !== RouteHealthService::STATUS_OK) {
+                return [
+                    'success' => false,
+                    'errorCode' => 'parent_missing_draft_route',
+                    'reason' => 'parent_missing_draft_route',
+                    'message' => 'Target parent has no active draft route; Sulu would place the page one level too high',
+                    'routeHealth' => $parentHealth['routeHealth'] ?? null,
+                    'nextAction' => 'Publish the target parent, or run bin/console nca:routes:repair --dry-run and then without --dry-run.',
+                ];
+            }
+        }
+
+        $nodeName = basename($path);
+        $newPath = $targetParentPath . '/' . $nodeName;
+        $taken = $this->connection->fetchOne(
+            "SELECT id FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$newPath]
+        );
+        if ($taken !== false && $taken !== null) {
+            return ['success' => false, 'errorCode' => 'node_name_taken', 'message' => 'The target parent already has a child node named ' . $nodeName . ': ' . $newPath];
+        }
+
+        $slug = ($resourceSegment !== null && $resourceSegment !== '')
+            ? $resourceSegment
+            : '/' . basename((string) ($before['draftUrl'] ?? $nodeName));
+        $newUrl = rtrim($this->pageUrlOf($targetParentPath, $locale), '/') . $slug;
+        $conflict = $this->routeConflict($newUrl, (string) $before['uuid'], $locale);
+        if ($conflict !== null) {
+            return $conflict;
+        }
+
+        $oldUrls = array_values(array_unique(array_filter([$before['draftUrl'], $before['liveUrl']])));
+
+        $args = ['app:page:move', $path, $targetParentPath, '--locale=' . $locale];
+        if ($resourceSegment !== null && $resourceSegment !== '') {
+            $args[] = '--resource-segment=' . $resourceSegment;
+        }
+        if ($publish) {
+            $args[] = '--publish';
+        }
+        $result = $this->runDocumentCommand($args, 'move_failed', 120);
+        if (empty($result['success'])) {
+            return $result;
+        }
+
+        $movedPath = (string) ($result['path'] ?? $newPath);
+        $after = $this->routeHealth()->getRouteHealth($movedPath, $locale);
+        $verified = $this->verifyUrlChange($after, $newUrl, $publish);
+        if ($verified === null && $movedPath !== $newPath) {
+            $verified = 'page node landed at ' . $movedPath . ' instead of ' . $newPath;
+        }
+
+        $this->activityLogger->logMcpAction('mcp_page_moved', $movedPath, $locale, [
+            'oldPath' => $path,
+            'oldUrls' => $oldUrls,
+            'newUrl' => $after['draftUrl'] ?? $newUrl,
+            'published' => $publish,
+        ]);
+        $this->invalidatePageCache($movedPath, $locale);
+        $this->clearCache();
+
+        return $this->routeChangeResponse($verified, 'Page moved', [
+            'oldPath' => $path,
+            'path' => $movedPath,
+            'oldUrls' => $oldUrls,
+            'newUrl' => $after['draftUrl'] ?? $newUrl,
+            'published' => $publish,
+        ], $before, $after);
+    }
+
+    /**
+     * Resource locator of a page in the draft workspace ('/' for the homepage).
+     */
+    private function pageUrlOf(string $path, string $locale): string
+    {
+        if ($path === self::HOMEPAGE_PATH) {
+            return '/';
+        }
+        $props = $this->connection->fetchOne(
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$path]
+        );
+
+        return is_string($props) ? ($this->extractPropertyFromXml($props, "i18n:{$locale}-url") ?? '/') : '/';
+    }
+
+    /**
+     * Failure response when $url is the active route of another page in either workspace.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function routeConflict(string $url, string $ownUuid, string $locale): ?array
+    {
+        foreach ([RouteHealthService::WORKSPACE_DEFAULT, RouteHealthService::WORKSPACE_LIVE] as $workspace) {
+            $owner = $this->routeHealth()->findActiveRouteOwner($url, $locale, $workspace);
+            if ($owner !== null && $owner['uuid'] !== $ownUuid) {
+                return [
+                    'success' => false,
+                    'errorCode' => 'resource_locator_taken',
+                    'message' => "URL {$url} is already the active route of " . ($owner['path'] ?? $owner['uuid']),
+                    'conflictingPage' => $owner['path'] ?? $owner['uuid'],
+                    'nextAction' => 'Choose another resourceSegment, or move/rename the conflicting page first.',
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed>|null $health
+     */
+    private function verifyUrlChange(?array $health, string $expectedUrl, bool $published): ?string
+    {
+        if ($health === null) {
+            return 'page not found after the change';
+        }
+        if ($health['draftUrl'] !== $expectedUrl) {
+            return sprintf('draft URL is %s, expected %s', (string) $health['draftUrl'], $expectedUrl);
+        }
+        if ($published) {
+            return $this->verifyPublishedRoutes($health);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $fields
+     * @param array<string, mixed>|null $before
+     * @param array<string, mixed>|null $after
+     *
+     * @return array<string, mixed>
+     */
+    private function routeChangeResponse(?string $verified, string $message, array $fields, ?array $before, ?array $after): array
+    {
+        $response = ['success' => $verified === null, 'message' => $verified === null ? $message : $message . ' but the route check failed']
+            + $fields
+            + [
+                'draftUrl' => $after['draftUrl'] ?? null,
+                'liveUrl' => $after['liveUrl'] ?? null,
+                'routeHealth' => $after['routeHealth'] ?? null,
+                'historyRoutes' => $this->newHistoryRoutes($before, $after),
+            ];
+        if (!$fields['published']) {
+            $response['note'] = 'Draft only: the live URL changes on publish. Call publish for this path to move the live route.';
+        }
+        if ($verified !== null) {
+            $response['errorCode'] = 'route_check_failed';
+            $response['reason'] = $verified;
+            $response['nextAction'] = 'Run route_health for this path, then bin/console nca:routes:repair --dry-run.';
+        }
+
+        return $response;
     }
 
     /**
@@ -1164,100 +1380,6 @@ class PageService
         sort($templates);
 
         return array_values(array_unique($templates));
-    }
-
-    /**
-     * Build XML props for a new page.
-     */
-    private function buildPagePropsXml(
-        string $uuid,
-        string $title,
-        string $url,
-        string $locale,
-        string $now,
-        ?string $seoTitle = null,
-        ?string $seoDescription = null,
-        bool $published = false,
-        ?string $excerptTitle = null,
-        ?string $excerptDescription = null,
-        ?int $excerptImage = null,
-        string $template = self::DEFAULT_TEMPLATE,
-    ): string {
-        $titleLen = strlen($title);
-        $urlLen = strlen($url);
-        $seoTitleValue = $seoTitle ?? $title;
-        $seoTitleLen = strlen($seoTitleValue);
-        $seoDescValue = $seoDescription ?? '';
-        $seoDescLen = strlen($seoDescValue);
-        $state = $published ? '2' : '1'; // 2 = published, 1 = draft
-
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<sv:node xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:rep="internal">';
-
-        // Required PHPCR properties
-        $xml .= '<sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="9">sulu:page</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">' . $uuid . '</sv:value></sv:property>';
-
-        // Page content properties
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $titleLen . '">' . htmlspecialchars($title, ENT_XML1) . '</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-url" sv:type="String" sv:multi-valued="0"><sv:value length="' . $urlLen . '">' . htmlspecialchars($url, ENT_XML1) . '</sv:value></sv:property>';
-
-        // Empty blocks
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-blocks-length" sv:type="Long" sv:multi-valued="0"><sv:value length="1">0</sv:value></sv:property>';
-
-        // Template and state
-        // The length attribute must match the value - it used to be hardcoded to 8, which is
-        // only correct for the literal 'tailwind'.
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-template" sv:type="String" sv:multi-valued="0"><sv:value length="' . strlen($template) . '">' . htmlspecialchars($template, ENT_XML1) . '</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-state" sv:type="Long" sv:multi-valued="0"><sv:value length="1">' . $state . '</sv:value></sv:property>';
-
-        // Permissions
-        $xml .= '<sv:property sv:name="sec:permissions" sv:type="String" sv:multi-valued="0"><sv:value length="2">[]</sv:value></sv:property>';
-
-        // User tracking
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-creator" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-changer" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-author" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
-
-        // Dates
-        $nowLen = strlen($now);
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-authored" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-created" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-changed" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
-
-        // Navigation
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-navContexts" sv:type="String" sv:multi-valued="1"/>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-nodeType" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="sulu:order" sv:type="Long" sv:multi-valued="0"><sv:value length="3">100</sv:value></sv:property>';
-
-        // Published date (only if published)
-        if ($published) {
-            $xml .= '<sv:property sv:name="i18n:' . $locale . '-published" sv:type="Date" sv:multi-valued="0"><sv:value length="' . $nowLen . '">' . $now . '</sv:value></sv:property>';
-        }
-
-        // SEO extension
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoTitleLen . '">' . htmlspecialchars($seoTitleValue, ENT_XML1) . '</sv:value></sv:property>';
-        $xml .= '<sv:property sv:name="i18n:' . $locale . '-seo-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $seoDescLen . '">' . htmlspecialchars($seoDescValue, ENT_XML1) . '</sv:value></sv:property>';
-
-        // Excerpt extension
-        if ($excerptTitle !== null) {
-            $excerptTitleLen = strlen($excerptTitle);
-            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-title" sv:type="String" sv:multi-valued="0"><sv:value length="' . $excerptTitleLen . '">' . htmlspecialchars($excerptTitle, ENT_XML1) . '</sv:value></sv:property>';
-        }
-        if ($excerptDescription !== null) {
-            $excerptDescLen = strlen($excerptDescription);
-            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-description" sv:type="String" sv:multi-valued="0"><sv:value length="' . $excerptDescLen . '">' . htmlspecialchars($excerptDescription, ENT_XML1) . '</sv:value></sv:property>';
-        }
-        if ($excerptImage !== null) {
-            $imageJson = json_encode(['ids' => [$excerptImage]], JSON_UNESCAPED_SLASHES);
-            $imageLen = strlen($imageJson);
-            $xml .= '<sv:property sv:name="i18n:' . $locale . '-excerpt-images" sv:type="String" sv:multi-valued="0"><sv:value length="' . $imageLen . '">' . $imageJson . '</sv:value></sv:property>';
-        }
-
-        $xml .= '</sv:node>' . "\n";
-
-        return $xml;
     }
 
     /**
@@ -2675,48 +2797,57 @@ class PageService
         // connections) - see the architecture note at the top of this class.
         // The hard timeout guarantees a structured error instead of a
         // transport-level silence.
-        $process = new Process(
-            [$this->projectDir . '/bin/console', 'app:page:delete', $identifier, '--locale=' . $locale],
-            $this->projectDir
+        return $this->commandRunner()->run(
+            ['app:page:delete', $identifier, '--locale=' . $locale],
+            self::DELETE_PROCESS_TIMEOUT
         );
-        $process->setTimeout(self::DELETE_PROCESS_TIMEOUT);
-
-        $timedOut = false;
-        try {
-            $process->run();
-        } catch (ProcessTimedOutException) {
-            $timedOut = true;
-        }
-
-        return [
-            'exitCode' => $process->getExitCode(),
-            'output' => $process->getOutput(),
-            'errorOutput' => $process->getErrorOutput(),
-            'timedOut' => $timedOut,
-        ];
     }
 
     /**
-     * Extract the command's JSON from stdout. bin/console may print banners
-     * (e.g. the Sulu context warning) before the JSON - decode the last
-     * line that parses as a JSON object.
-     *
      * @return array<string, mixed>|null
      */
     protected function parseDeleteProcessOutput(string $output): ?array
     {
-        $lines = explode("\n", trim($output));
-        for ($i = count($lines) - 1; $i >= 0; $i--) {
-            $line = trim($lines[$i]);
-            if ($line !== '' && str_starts_with($line, '{')) {
-                $decoded = json_decode($line, true);
-                if (is_array($decoded)) {
-                    return $decoded;
-                }
-            }
+        return ConsoleCommandRunner::parseJsonResult($output);
+    }
+
+    /**
+     * Runner for the DocumentManager-backed console commands. Built lazily
+     * from projectDir so existing constructor call sites keep working.
+     */
+    protected function commandRunner(): ConsoleCommandRunner
+    {
+        return $this->commandRunner ??= new ConsoleCommandRunner((string) $this->projectDir);
+    }
+
+    /**
+     * Read-only route inspection, built lazily on the same connection.
+     */
+    protected function routeHealth(): RouteHealthService
+    {
+        return $this->routeHealth ??= new RouteHealthService($this->connection);
+    }
+
+    /**
+     * Run a DocumentManager-backed console command and normalise its outcome.
+     *
+     * @param list<string> $arguments
+     *
+     * @return array<string, mixed> success (bool) plus the command's JSON, or errorCode + message
+     */
+    protected function runDocumentCommand(array $arguments, string $failureCode, int $timeoutSeconds = ConsoleCommandRunner::DEFAULT_TIMEOUT): array
+    {
+        if ($this->projectDir === null && $this->commandRunner === null) {
+            return ['success' => false, 'errorCode' => $failureCode, 'message' => 'projectDir not configured'];
         }
 
-        return null;
+        try {
+            $spawn = $this->commandRunner()->run($arguments, $timeoutSeconds);
+        } catch (\Exception $e) {
+            return ['success' => false, 'errorCode' => $failureCode, 'message' => $e->getMessage()];
+        }
+
+        return ConsoleCommandRunner::toResult($spawn, $arguments[0] ?? 'console', $timeoutSeconds, $failureCode);
     }
 
     // ==========================================================================
@@ -3493,7 +3624,7 @@ class PageService
      * then copies all blocks. Creates as draft first, only publishes if
      * all blocks were successfully copied and publish=true.
      *
-     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool, template?: string|null} $data
+     * @param array{sourcePath?: string, parentPath?: string, title?: string, resourceSegment?: string, seoTitle?: string, seoDescription?: string, seoKeywords?: string, excerptTitle?: string, excerptDescription?: string, excerptImage?: int, publish?: bool, template?: string|null} $data
      * @return array{success: bool, message: string, path?: string, uuid?: string, url?: string, blocksCopied?: int, blocksFailed?: int, errors?: array<string>}
      */
     public function copyPage(array $data, string $locale = 'de'): array
@@ -3512,13 +3643,25 @@ class PageService
         $title = $data['title'] ?? '';
         $resourceSegment = $data['resourceSegment'] ?? '';
 
+        // SEO fields are inherited from the source unless overridden.
+        $sourceProps = (string) $this->connection->fetchOne(
+            "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
+            [$sourcePath]
+        );
+        $sourceSeo = [
+            'title' => $this->extractPropertyFromXml($sourceProps, "i18n:{$locale}-seo-title"),
+            'description' => $this->extractPropertyFromXml($sourceProps, "i18n:{$locale}-seo-description"),
+            'keywords' => $this->extractPropertyFromXml($sourceProps, "i18n:{$locale}-seo-keywords"),
+        ];
+
         // Build create data, inheriting excerpt from source unless overridden
         $createData = [
             'parentPath' => $data['parentPath'] ?? dirname($sourcePath),
             'title' => $title,
             'resourceSegment' => $resourceSegment,
-            'seoTitle' => $data['seoTitle'] ?? null,
-            'seoDescription' => $data['seoDescription'] ?? null,
+            'seoTitle' => $data['seoTitle'] ?? $sourceSeo['title'],
+            'seoDescription' => $data['seoDescription'] ?? $sourceSeo['description'],
+            'seoKeywords' => $data['seoKeywords'] ?? $sourceSeo['keywords'],
             'excerptTitle' => $data['excerptTitle'] ?? $sourcePage['excerpt']['title'] ?? null,
             'excerptDescription' => $data['excerptDescription'] ?? $sourcePage['excerpt']['description'] ?? null,
             'excerptImage' => $data['excerptImage'] ?? null,
@@ -3559,8 +3702,9 @@ class PageService
 
         // Publish only if requested AND all blocks succeeded
         $publish = $data['publish'] ?? false;
+        $publishResult = null;
         if ($publish && $blocksFailed === 0) {
-            $this->publishPage($newPath, $locale);
+            $publishResult = $this->publishPage($newPath, $locale);
         }
 
         $this->activityLogger->logMcpAction(
@@ -3586,6 +3730,20 @@ class PageService
 
         if (!empty($errors)) {
             $result['errors'] = $errors;
+        }
+
+        if ($publishResult !== null) {
+            $result['published'] = !empty($publishResult['success']);
+            $result['draftUrl'] = $publishResult['draftUrl'] ?? null;
+            $result['liveUrl'] = $publishResult['liveUrl'] ?? null;
+            $result['routeHealth'] = $publishResult['routeHealth'] ?? null;
+            if (empty($publishResult['success'])) {
+                $result['publishError'] = $publishResult;
+            }
+        } else {
+            $result['published'] = false;
+            $result['draftUrl'] = $createResult['draftUrl'] ?? null;
+            $result['routeHealth'] = $createResult['routeHealth'] ?? null;
         }
 
         return $result;

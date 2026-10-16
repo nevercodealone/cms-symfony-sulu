@@ -7,6 +7,7 @@ namespace App\MCP\Tools;
 use App\Sulu\Block\BlockTypeRegistry;
 use App\Sulu\Service\MediaService;
 use App\Sulu\Service\PageService;
+use App\Sulu\Service\RedirectService;
 use App\Sulu\Service\SnippetService;
 use KLP\KlpMcpServer\Services\ProgressService\ProgressNotifierInterface;
 use KLP\KlpMcpServer\Services\ToolService\Annotation\ToolAnnotation;
@@ -39,6 +40,7 @@ class SuluPagesTool implements StreamableToolInterface
         private readonly BlockTypeRegistry $blockTypeRegistry,
         private readonly SnippetService $snippetService,
         private readonly MediaService $mediaService,
+        private readonly ?RedirectService $redirectService = null,
     ) {
     }
 
@@ -61,7 +63,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         $canonicalExample = $this->encodeExample($this->blockTypeRegistry->getExample('headline-paragraphs'));
 
-        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache. ' .
+        return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url, update_resource_locator, move_page, list_redirects, create_redirect, update_redirect, delete_redirect. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
@@ -72,6 +74,13 @@ class SuluPagesTool implements StreamableToolInterface
             'DELETE PAGE - safe removal; page goes to Sulu trash (recoverable via admin only). WORKFLOW (follow exactly): 1) dryRun: {"action":"delete_page","path":"/cmf/example/contents/foo","confirm":"/cmf/example/contents/foo","dryRun":"true"} 2) read response.checks (all "pass") and response.descendantCount 3) execute: same call with "dryRun":"false"; if descendantCount>0 add "children":"cascade","expectedChildCount":<descendantCount from step 2> or "children":"reparent". REQUIRED: path, confirm (confirm MUST byte-for-byte equal path). ERRORS return nextAction field - follow it (e.g. page_published -> unpublish first, references_present -> call list_references first). ON SUCCESS: returns uuid, trashId, cacheCleared=true. ' .
             'DELETE PAGES - batch safe removal (max 10). WORKFLOW: 1) dryRun: {"action":"delete_pages","paths":"[\"/cmf/.../a\",\"/cmf/.../b\"]","confirm":"[\"/cmf/.../a\",\"/cmf/.../b\"]","dryRun":"true"} 2) read response.preconditions (all success=true) 3) execute: same paths and confirm with "dryRun":"false". REQUIRED: paths (JSON array), confirm (a JSON array containing exactly the same paths in the same order - any valid JSON encoding is accepted, escaped or unescaped slashes). RULE: a path is deletable in batch only when every direct child is also listed in paths. Paths are sorted deepest-first internally. All-or-nothing: any failure deletes nothing. ' .
             'LIST REFERENCES - incoming-reference report. {"action":"list_references","path":"/cmf/example/contents/foo"}. Returns every page/snippet that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Use before delete (to satisfy the references_present check) or before rename. ' .
+            'ROUTE HEALTH: list and get_structure return draftUrl, liveUrl and routeHealth {draft, live, references, activeRoutes, healthy} per page. draft/live = ok|missing|mismatch|none (none = unpublished, no route expected). Sulu creates route nodes only on publish; a published page needs an active route in BOTH workspaces plus a reference row, otherwise child pages get a wrong URL prefix. Anything not healthy: run bin/console nca:routes:repair --dry-run first. route_health + path returns the full report with every route node. ' .
+            'URLS AND ROUTES: create_page, copy_page, publish, update_resource_locator and move_page run Sulu\'s DocumentManager in a fresh process, so Sulu writes the routes in both workspaces and keeps old URLs as 301 history routes. Each response contains draftUrl, liveUrl, routeHealth and historyRoutes; success=false with reason when the route check after the write fails. ' .
+            'UPDATE RESOURCE LOCATOR: {"action":"update_resource_locator","path":"/cmf/example/contents/glossare/nca-glossar-ki-modelle/krea","resourceSegment":"/krea-2","publish":"true"}. resourceSegment is the last URL part only (leading slash). Old URL becomes a history route (301). Fails with resource_locator_taken naming the conflicting page. Without publish only the draft changes. ' .
+            'MOVE PAGE: {"action":"move_page","path":"/cmf/example/contents/glossare/a/krea","targetParentPath":"/cmf/example/contents/glossare/b","publish":"true"}. Optional resourceSegment renames the slug in the same step. New URL is always <parent URL>/<segment>; all old URLs (draft and live) become history routes; response lists oldUrls and newUrl. Fails with parent_missing_draft_route when the target parent has no active draft route (publish the parent or run nca:routes:repair). Children move with the page. ' .
+            'REDIRECTS (SuluRedirectBundle, re_redirect_routes; for URLs that no page owns any more: deleted pages, cross-section moves, external targets, 410 gone). Moving a page or changing its URL creates 301 history routes automatically - no redirect needed. list_redirects: optional sourcePrefix, target, statusCode, limit (newest first). create_redirect: source (path incl. locale, e.g. /de/glossare/old) + target (path or absolute URL) + statusCode (301 default, 302, 307, 308, 410 without target); bulk: redirects = JSON array of up to 50 {source,target,statusCode}. Valid entries are created, invalid ones come back in failed with a reason. Refused with source_is_active_route when a live page answers on source. warnings[].finalTarget appears when target is itself redirected - prefer the final target. update_redirect: id + changed fields (source, target, statusCode, enabled). delete_redirect: id + confirm (confirm must equal id). ' .
+            'LIST HISTORY ROUTES: list_history_routes + path. Every route of the page in both workspaces: url, workspace, history (true = old URL answering 301 to target), target. ' .
+            'CHECK URL: check_url + url (public path incl. locale, e.g. /de/glossare/krea-2). Reports how the website answers: type page (uuid, path, duplicate=true when the page has a newer URL), history_redirect (301 + target), redirect_bundle (statusCode + target from SuluRedirectBundle) or not_found. ' .
             'DEFAULT BLOCK: headline-paragraphs for ALL content, canonical example (same as list_block_types): ' . $canonicalExample . '. ' .
             'OTHER BLOCKS: faq, table, feature, hero, contact, cta-button, image-gallery, page-teaser. ' .
             'PAGE-TEASER: page (UUID of target page, required), headline maps to buttonText, content maps to showImage ("1" or "0"). Example: blockType "page-teaser", page "uuid-of-target-page". ' .
@@ -112,7 +121,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'action',
                 type: PropertyType::STRING,
-                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache',
+                description: 'Action to perform. Values: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url, update_resource_locator, move_page, list_redirects, create_redirect, update_redirect, delete_redirect',
                 required: true
             ),
             new SchemaProperty(
@@ -272,9 +281,57 @@ class SuluPagesTool implements StreamableToolInterface
                 required: false
             ),
             new SchemaProperty(
+                name: 'target',
+                type: PropertyType::STRING,
+                description: 'For create_redirect/update_redirect: redirect target, path incl. locale (/de/glossare/new) or absolute URL. Omit for statusCode 410. For list_redirects: filter by exact target.',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'statusCode',
+                type: PropertyType::INTEGER,
+                description: 'For create_redirect/update_redirect/list_redirects: 301 (default), 302, 307, 308 or 410 (gone, no target)',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'sourceHost',
+                type: PropertyType::STRING,
+                description: 'For create_redirect/update_redirect: optional host the redirect is limited to; omit for all hosts',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'enabled',
+                type: PropertyType::STRING,
+                description: 'For create_redirect/update_redirect: "true" (default) or "false"',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'id',
+                type: PropertyType::STRING,
+                description: 'For update_redirect/delete_redirect: redirect id from list_redirects',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'redirects',
+                type: PropertyType::STRING,
+                description: 'For create_redirect bulk mode: JSON array of up to 50 objects {"source":"/de/a","target":"/de/b","statusCode":301}',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'sourcePrefix',
+                type: PropertyType::STRING,
+                description: 'For list_redirects: only redirects whose source starts with this, e.g. /de/glossare',
+                required: false
+            ),
+            new SchemaProperty(
+                name: 'targetParentPath',
+                type: PropertyType::STRING,
+                description: 'For move_page: PHPCR path of the new parent page, e.g. /cmf/example/contents/glossare/nca-glossar-ki-modelle',
+                required: false
+            ),
+            new SchemaProperty(
                 name: 'url',
                 type: PropertyType::STRING,
-                description: 'For cta-button/quote block: Primary button URL or quote source URL',
+                description: 'For cta-button/quote block: Primary button URL or quote source URL. For check_url: public path including locale, e.g. /de/glossare/nca-glossar-ki-modelle/krea-2',
                 required: false
             ),
             new SchemaProperty(
@@ -286,7 +343,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'source',
                 type: PropertyType::STRING,
-                description: 'For quote block: Publication source, e.g. "via Business Punk"',
+                description: 'For quote block: Publication source, e.g. "via Business Punk". For create_redirect/update_redirect: source path incl. locale, e.g. /de/glossare/ki-tools-2026/krea-2',
                 required: false
             ),
             new SchemaProperty(
@@ -466,7 +523,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'confirm',
                 type: PropertyType::STRING,
-                description: 'REQUIRED for delete_page/delete_pages/delete_snippet. Safety token. delete_snippet: confirm == uuid. delete_page: confirm == path (e.g. confirm="/cmf/example/contents/foo"). delete_pages: confirm is a JSON array containing exactly the same paths in the same order (any valid JSON encoding accepted). Any mismatch aborts.',
+                description: 'REQUIRED for delete_page/delete_pages/delete_snippet/delete_redirect. Safety token. delete_snippet: confirm == uuid. delete_redirect: confirm == id. delete_page: confirm == path (e.g. confirm="/cmf/example/contents/foo"). delete_pages: confirm is a JSON array containing exactly the same paths in the same order (any valid JSON encoding accepted). Any mismatch aborts.',
                 required: false
             ),
             new SchemaProperty(
@@ -572,6 +629,15 @@ class SuluPagesTool implements StreamableToolInterface
             'update_media' => $this->updateMedia($arguments, $locale),
             'list_collections' => $this->listCollections($locale),
             'clear_cache' => $this->clearCache(),
+            'route_health' => $this->routeHealthAction($arguments, $locale),
+            'list_history_routes' => $this->listHistoryRoutesAction($arguments, $locale),
+            'check_url' => $this->checkUrlAction($arguments),
+            'update_resource_locator' => $this->updateResourceLocatorAction($arguments, $locale),
+            'move_page' => $this->movePageAction($arguments, $locale),
+            'list_redirects' => $this->listRedirectsAction($arguments),
+            'create_redirect' => $this->createRedirectAction($arguments),
+            'update_redirect' => $this->updateRedirectAction($arguments),
+            'delete_redirect' => $this->deleteRedirectAction($arguments),
             default => new TextToolResult("Unknown action: $action"),
         };
     }
@@ -654,6 +720,7 @@ class SuluPagesTool implements StreamableToolInterface
             'resourceSegment' => $arguments['resourceSegment'] ?? '',
             'seoTitle' => $arguments['seoTitle'] ?? null,
             'seoDescription' => $arguments['seoDescription'] ?? null,
+            'seoKeywords' => $arguments['seoKeywords'] ?? null,
             'publish' => ($arguments['publish'] ?? 'false') === 'true' || ($arguments['publish'] ?? false) === true,
             'excerptTitle' => $arguments['excerptTitle'] ?? null,
             'excerptDescription' => $arguments['excerptDescription'] ?? null,
@@ -979,7 +1046,7 @@ class SuluPagesTool implements StreamableToolInterface
             if ($hasHeadline) {
                 $block['headline'] = $headline;
             }
-            $block[$nestedKey] = $normalizedItems;
+            $block[$nestedKey] = $this->normalizeNestedMediaItems($normalizedItems);
 
             // Also merge flat properties from content parameter if provided
             $content = $arguments['content'] ?? '';
@@ -1217,6 +1284,178 @@ class SuluPagesTool implements StreamableToolInterface
         return new TextToolResult(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
 
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function routeHealthAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+
+        return $this->jsonResult($this->pageService->getRouteHealth($path, $locale));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function listHistoryRoutesAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+
+        return $this->jsonResult($this->pageService->listHistoryRoutes($path, $locale));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function checkUrlAction(array $arguments): ToolResultInterface
+    {
+        $url = (string) ($arguments['url'] ?? $arguments['path'] ?? '');
+        if ($url === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'invalid_url', 'message' => 'url is required (public path including locale, e.g. /de/glossare/krea-2)']);
+        }
+
+        return $this->jsonResult($this->pageService->checkUrl($url));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateResourceLocatorAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        $segment = (string) ($arguments['resourceSegment'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+        if ($segment === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'invalid_resource_segment', 'message' => 'resourceSegment is required, e.g. /krea-2']);
+        }
+
+        return $this->jsonResult($this->pageService->updateResourceLocator(
+            $path,
+            $segment,
+            self::isTruthyString($arguments['publish'] ?? false),
+            $locale
+        ));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function movePageAction(array $arguments, string $locale): ToolResultInterface
+    {
+        $path = (string) ($arguments['path'] ?? '');
+        $target = (string) ($arguments['targetParentPath'] ?? '');
+        if ($path === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
+        }
+        if ($target === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'parent_not_found', 'message' => 'targetParentPath is required']);
+        }
+        $segment = isset($arguments['resourceSegment']) && $arguments['resourceSegment'] !== '' ? (string) $arguments['resourceSegment'] : null;
+
+        return $this->jsonResult($this->pageService->movePage(
+            $path,
+            $target,
+            $segment,
+            self::isTruthyString($arguments['publish'] ?? false),
+            $locale
+        ));
+    }
+
+    private function redirects(): ?RedirectService
+    {
+        return $this->redirectService;
+    }
+
+    private function redirectsUnavailable(): ToolResultInterface
+    {
+        return $this->jsonResult(['success' => false, 'errorCode' => 'redirects_unavailable', 'message' => 'Redirect service not configured']);
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function listRedirectsAction(array $arguments): ToolResultInterface
+    {
+        $service = $this->redirects();
+        if ($service === null) {
+            return $this->redirectsUnavailable();
+        }
+
+        return $this->jsonResult($service->listRedirects(
+            isset($arguments['sourcePrefix']) ? (string) $arguments['sourcePrefix'] : null,
+            isset($arguments['target']) ? (string) $arguments['target'] : null,
+            isset($arguments['statusCode']) && $arguments['statusCode'] !== '' ? (int) $arguments['statusCode'] : null,
+            isset($arguments['limit']) ? (int) $arguments['limit'] : 100,
+        ));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function createRedirectAction(array $arguments): ToolResultInterface
+    {
+        $service = $this->redirects();
+        if ($service === null) {
+            return $this->redirectsUnavailable();
+        }
+
+        if (isset($arguments['redirects']) && $arguments['redirects'] !== '') {
+            $items = $this->decodeJsonArgument($arguments['redirects'], 'redirects');
+            if ($items instanceof ToolResultInterface) {
+                return $items;
+            }
+            if (!array_is_list($items)) {
+                $items = [$items];
+            }
+        } else {
+            $items = [array_intersect_key($arguments, array_flip(['source', 'sourceHost', 'target', 'statusCode', 'enabled']))];
+        }
+
+        return $this->jsonResult($service->createRedirects(array_values(array_filter($items, 'is_array'))));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function updateRedirectAction(array $arguments): ToolResultInterface
+    {
+        $service = $this->redirects();
+        if ($service === null) {
+            return $this->redirectsUnavailable();
+        }
+        $id = (string) ($arguments['id'] ?? '');
+        if ($id === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'redirect_not_found', 'message' => 'id is required (see list_redirects)']);
+        }
+
+        return $this->jsonResult($service->updateRedirect($id, array_intersect_key($arguments, array_flip(['source', 'sourceHost', 'target', 'statusCode', 'enabled']))));
+    }
+
+    /**
+     * @param array<string, mixed> $arguments
+     */
+    private function deleteRedirectAction(array $arguments): ToolResultInterface
+    {
+        $service = $this->redirects();
+        if ($service === null) {
+            return $this->redirectsUnavailable();
+        }
+        $id = (string) ($arguments['id'] ?? '');
+        if ($id === '') {
+            return $this->jsonResult(['success' => false, 'errorCode' => 'redirect_not_found', 'message' => 'id is required (see list_redirects)']);
+        }
+
+        return $this->jsonResult($service->deleteRedirect($id, (string) ($arguments['confirm'] ?? '')));
+    }
+
     private function publishPage(string $path, string $locale): ToolResultInterface
     {
         if (empty($path)) {
@@ -1389,7 +1628,7 @@ class SuluPagesTool implements StreamableToolInterface
             // Nested property name comes from the registry, scoped to the page template's
             // schema family (see addBlock()).
             $nestedKey = $this->blockTypeRegistry->getNestedName($blockType, $family) ?? 'items';
-            $blockData[$nestedKey] = $normalizedItems;
+            $blockData[$nestedKey] = $this->normalizeNestedMediaItems($normalizedItems);
         }
 
         // Pass all schema-defined properties for the block type
@@ -1892,6 +2131,30 @@ class SuluPagesTool implements StreamableToolInterface
         $result = $this->pageService->clearCache();
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
+    }
+
+    /**
+     * Normalize media fields inside nested block items (e.g. hockenheim story
+     * chapters: image/image2) to {"ids": [...]} so the BlockWriter json
+     * encoding matches what MediaSelectionContentType::read() expects.
+     *
+     * @param array<int, array<string, mixed>> $items
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeNestedMediaItems(array $items): array
+    {
+        $mediaFields = ['image', 'images', 'image2'];
+
+        return array_map(function (array $item) use ($mediaFields) {
+            foreach ($mediaFields as $field) {
+                if (isset($item[$field])) {
+                    $item[$field] = $this->normalizeMediaValue($item[$field]);
+                }
+            }
+
+            return $item;
+        }, $items);
     }
 
     /**

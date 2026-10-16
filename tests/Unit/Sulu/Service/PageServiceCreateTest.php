@@ -11,65 +11,105 @@ use PHPUnit\Framework\TestCase;
 
 class PageServiceCreateTest extends TestCase
 {
-    public function testCreatePageViaDirectSql(): void
+    use DocumentCommandStubsTrait;
+
+    private const PARENT_PROPS = '<?xml version="1.0"?><sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0"><sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0"><sv:value length="9">/glossare</sv:value></sv:property></sv:node>';
+
+    /**
+     * Connection where the parent exists and the target path is free.
+     */
+    private function connectionWithParent(): Connection
     {
-        // Mock Connection
         $connection = $this->createMock(Connection::class);
-
-        // Parent lookup returns valid parent with props
-        $parentProps = '<?xml version="1.0"?><sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0"><sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0"><sv:value length="9">/glossare</sv:value></sv:property></sv:node>';
-
         $connection->method('fetchAssociative')
-            ->willReturnCallback(function ($sql, $params) use ($parentProps) {
+            ->willReturnCallback(function ($sql, $params) {
                 if (str_contains($sql, 'SELECT id, path, props')) {
-                    // Parent lookup
-                    return ['id' => 123, 'path' => '/cmf/example/contents/glossare', 'props' => $parentProps];
+                    return ['id' => 123, 'path' => '/cmf/example/contents/glossare', 'props' => self::PARENT_PROPS];
                 }
-                if (str_contains($sql, 'SELECT id FROM phpcr_nodes WHERE path = ?') && str_contains($sql, 'workspace_name')) {
-                    // Check if page exists - return null (doesn't exist)
-                    if (str_contains($params[0] ?? '', 'test-page')) {
-                        return null;
-                    }
-                    // Parent in workspace lookup
-                    return ['id' => 123];
-                }
-                return null;
+
+                return false;
             });
+        $connection->expects($this->never())->method('executeStatement');
 
-        $connection->method('fetchOne')
-            ->willReturn(10); // Max sort order
+        return $connection;
+    }
 
-        // Expect INSERT statements for both workspaces
-        $connection->expects($this->exactly(2))
-            ->method('executeStatement')
-            ->with(
-                $this->stringContains('INSERT INTO phpcr_nodes'),
-                $this->anything()
-            );
-
-        $activityLogger = $this->createMock(McpActivityLogger::class);
-        $activityLogger->expects($this->once())->method('logMcpAction');
-
+    /**
+     * @param array<string, mixed> $extra
+     *
+     * @return array<string, mixed>
+     */
+    private function createWith(array $extra, ?callable $health = null): array
+    {
         $pageService = new PageService(
-            $connection,
-            $activityLogger,
-            null,
-            null
+            $this->connectionWithParent(),
+            $this->createMock(McpActivityLogger::class),
+            commandRunner: $this->stubRunner(fn (array $args) => [
+                'success' => true,
+                'path' => '/cmf/example/contents/glossare/test-page',
+                'uuid' => '11111111-2222-3333-4444-555555555555',
+                'url' => '/glossare/test-page',
+            ]),
+            routeHealth: $this->stubRouteHealth($health),
         );
 
-        $result = $pageService->createPage([
+        return $pageService->createPage($extra + [
             'parentPath' => '/cmf/example/contents/glossare',
             'title' => 'Test Page',
             'resourceSegment' => '/test-page',
             'publish' => false,
         ], 'de');
+    }
+
+    public function testCreatePageRunsTheDocumentManagerCommand(): void
+    {
+        $result = $this->createWith(
+            ['seoTitle' => 'SEO', 'excerptTitle' => 'Teaser', 'excerptImage' => 7],
+            fn (string $path) => str_ends_with($path, 'test-page')
+                ? $this->healthReport($path, '/glossare/test-page', null, false, 'none', 'none')
+                : null
+        );
 
         $this->assertTrue($result['success']);
-        $this->assertNotEmpty($result['uuid']);
-        $this->assertEquals('/cmf/example/contents/glossare/test-page', $result['path']);
-        $this->assertEquals('/de/glossare/test-page', $result['url']);
-        $this->assertEquals('https://nevercodealone.de/de/glossare/test-page', $result['full_url']);
+        $this->assertSame('11111111-2222-3333-4444-555555555555', $result['uuid']);
+        $this->assertSame('/cmf/example/contents/glossare/test-page', $result['path']);
+        $this->assertSame('/de/glossare/test-page', $result['url']);
+        $this->assertSame('https://nevercodealone.de/de/glossare/test-page', $result['full_url']);
         $this->assertFalse($result['published']);
+        $this->assertSame('none', $result['routeHealth']['draft']);
+
+        $args = $this->spawnedArgs('app:page:create');
+        $this->assertSame(['app:page:create', '/cmf/example/contents/glossare', 'Test Page', '/test-page'], array_slice($args, 0, 4));
+        $this->assertContains('--seo-title=SEO', $args);
+        $this->assertContains('--excerpt-title=Teaser', $args);
+        $this->assertContains('--excerpt-image=7', $args);
+        $this->assertNotContains('--publish', $args);
+    }
+
+    public function testCreateAndPublishFailsWhenRoutesAreNotHealthyAfterwards(): void
+    {
+        $result = $this->createWith(
+            ['publish' => true],
+            fn (string $path) => str_ends_with($path, 'test-page')
+                ? $this->healthReport($path, '/glossare/test-page', '/glossare/test-page', true, 'missing', 'ok')
+                : null
+        );
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('route_check_failed', $result['errorCode']);
+        $this->assertStringContainsString('draft=missing', $result['reason']);
+        $this->assertContains('--publish', $this->spawnedArgs('app:page:create'));
+    }
+
+    public function testCreateRefusesUnderAPublishedParentWithoutDraftRoute(): void
+    {
+        $result = $this->createWith([], fn (string $path) => $path === '/cmf/example/contents/glossare'
+            ? $this->healthReport($path, '/glossare', '/glossare', true, 'missing', 'ok')
+            : null);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('parent_missing_draft_route', $result['errorCode']);
+        $this->assertSame([], $this->spawnedCommands);
     }
 
     public function testCreatePageValidatesResourceSegment(): void
@@ -120,88 +160,31 @@ class PageServiceCreateTest extends TestCase
     // Template selection
     // ==========================================================================
 
-    /**
-     * @param array<string, mixed> $extra
-     * @return array{result: array<string, mixed>, written: array<int, string>}
-     */
-    private function createWith(array $extra): array
-    {
-        $parentProps = '<?xml version="1.0"?><sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0">'
-            . '<sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0">'
-            . '<sv:value length="9">/glossare</sv:value></sv:property></sv:node>';
-
-        $connection = $this->createMock(Connection::class);
-        $connection->method('fetchAssociative')
-            ->willReturnCallback(function ($sql, $params) use ($parentProps) {
-                if (str_contains($sql, 'SELECT id, path, props')) {
-                    return ['id' => 123, 'path' => '/cmf/example/contents/glossare', 'props' => $parentProps];
-                }
-                if (str_contains($sql, 'SELECT id FROM phpcr_nodes WHERE path = ?')) {
-                    return str_contains($params[0] ?? '', 'test-page') ? null : ['id' => 123];
-                }
-
-                return null;
-            });
-        $connection->method('fetchOne')->willReturn(10);
-
-        $written = [];
-        $connection->method('executeStatement')
-            ->willReturnCallback(function (string $sql, array $params) use (&$written): int {
-                foreach ($params as $param) {
-                    if (is_string($param) && str_contains($param, 'sv:node')) {
-                        $written[] = $param;
-                    }
-                }
-
-                return 1;
-            });
-
-        $pageService = new PageService($connection, $this->createMock(McpActivityLogger::class));
-
-        $result = $pageService->createPage($extra + [
-            'parentPath' => '/cmf/example/contents/glossare',
-            'title' => 'Test Page',
-            'resourceSegment' => '/test-page',
-            'publish' => false,
-        ], 'de');
-
-        return ['result' => $result, 'written' => $written];
-    }
-
     public function testCreatePageDefaultsToTailwindWhenNoTemplateGiven(): void
     {
         // Regression guard: every existing caller omits `template`.
-        ['result' => $result, 'written' => $written] = $this->createWith([]);
+        $result = $this->createWith([]);
 
         $this->assertTrue($result['success']);
-        $this->assertNotEmpty($written);
-        $this->assertStringContainsString(
-            '<sv:value length="8">tailwind</sv:value>',
-            $written[0],
-        );
+        $this->assertContains('--template=tailwind', $this->spawnedArgs('app:page:create'));
     }
 
     public function testCreatePageHonoursAnExplicitTemplate(): void
     {
-        ['result' => $result, 'written' => $written] = $this->createWith(['template' => 'training-detail']);
+        $result = $this->createWith(['template' => 'training-detail']);
 
         $this->assertTrue($result['success']);
-        // The length attribute must match the value - it used to be hardcoded to 8, which
-        // is only correct for the literal 'tailwind'.
-        $this->assertStringContainsString(
-            '<sv:value length="15">training-detail</sv:value>',
-            $written[0],
-        );
+        $this->assertContains('--template=training-detail', $this->spawnedArgs('app:page:create'));
     }
 
     public function testCreatePageRejectsAnUnknownTemplate(): void
     {
-        ['result' => $result, 'written' => $written] = $this->createWith(['template' => 'does-not-exist']);
+        $result = $this->createWith(['template' => 'does-not-exist']);
 
         $this->assertFalse($result['success']);
         $this->assertStringContainsString("Unknown template 'does-not-exist'", $result['message']);
         $this->assertStringContainsString('training-detail', $result['message']);
-        $this->assertSame([], $written, 'Nothing may be written for an unknown template');
+        $this->assertSame([], $this->spawnedCommands, 'Nothing may be spawned for an unknown template');
     }
 
     public function testAvailableTemplatesComeFromTheTemplateXmlKeys(): void

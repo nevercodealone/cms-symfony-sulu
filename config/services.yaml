@@ -105,7 +105,37 @@ services:
             $projectDir: '%kernel.project_dir%'
             $environment: '%kernel.environment%'
 
-    # Sulu Page Service - Direct SQL (bypasses DocumentManager for MCP compatibility)
+    # Fresh-process runner for DocumentManager-backed mutations (see PageService doc block)
+    App\Sulu\Process\ConsoleCommandRunner:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        public: true
+
+    # Read-only PHPCR route inspection (route health, history routes, check_url)
+    App\Sulu\Service\RouteHealthService:
+        arguments:
+            $connection: '@doctrine.dbal.default_connection'
+        public: true
+
+    # SuluRedirectBundle services for the fresh-process redirect commands
+    App\Command\RedirectSaveCommand:
+        arguments:
+            $redirectRouteManager: '@sulu_redirect.redirect_route_manager'
+
+    App\Command\RedirectDeleteCommand:
+        arguments:
+            $redirectRouteManager: '@sulu_redirect.redirect_route_manager'
+            $redirectRouteRepository: '@sulu.repository.redirect_route'
+
+    # MCP redirect management (validation + DBAL reads, writes via the commands above)
+    App\Sulu\Service\RedirectService:
+        arguments:
+            $connection: '@doctrine.dbal.default_connection'
+            $routeHealth: '@App\Sulu\Service\RouteHealthService'
+            $commandRunner: '@App\Sulu\Process\ConsoleCommandRunner'
+        public: true
+
+    # Sulu Page Service - Direct SQL for content, fresh-process DocumentManager for routes
     App\Sulu\Service\PageService:
         arguments:
             $cacheManager: '@?sulu_http_cache.cache_manager'
@@ -117,6 +147,8 @@ services:
             $snippetService: '@App\Sulu\Service\SnippetService'
             $referenceScanner: '@App\Sulu\Service\PageReferenceScanner'
             $projectDir: '%kernel.project_dir%'
+            $commandRunner: '@App\Sulu\Process\ConsoleCommandRunner'
+            $routeHealth: '@App\Sulu\Service\RouteHealthService'
         public: true
 
     # Sulu Page Reference Scanner - DBAL scanner for incoming page references
@@ -154,6 +186,7 @@ services:
             $blockTypeRegistry: '@App\Sulu\Block\BlockTypeRegistry'
             $snippetService: '@App\Sulu\Service\SnippetService'
             $mediaService: '@App\Sulu\Service\MediaService'
+            $redirectService: '@App\Sulu\Service\RedirectService'
         tags: ['klp_mcp_server.tool']
         public: true
 

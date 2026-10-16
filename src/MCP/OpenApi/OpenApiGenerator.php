@@ -126,6 +126,28 @@ class OpenApiGenerator
             'update_media' => 'Update the title of an existing media item',
             'list_collections' => 'List all media collections',
             'clear_cache' => 'Clear HTTP cache for pages',
+            'update_page_title' => 'Update the title of a page',
+            'update_training_data' => 'Update the training data of a training-detail page',
+            'switch_template' => 'Switch a page between tailwind and training-detail',
+            'delete_page' => 'Safely delete a page (dry run first, confirm = path)',
+            'delete_pages' => 'Safely delete up to 10 pages in one call',
+            'list_references' => 'List pages and snippets that reference a page',
+            'get_snippet_schema' => 'Get fields and rules of a snippet type',
+            'create_snippet' => 'Create a snippet',
+            'update_snippet' => 'Update a snippet',
+            'publish_snippet' => 'Publish a draft snippet',
+            'delete_snippet' => 'Delete an unreferenced snippet',
+            'list_snippet_areas' => 'List webspace snippet areas',
+            'set_default_snippet' => 'Assign the default snippet of an area',
+            'route_health' => 'Draft URL, live URL and route health of a page with all route nodes',
+            'list_history_routes' => 'List active and history routes of a page in both workspaces',
+            'check_url' => 'Report how the website answers a public URL',
+            'update_resource_locator' => 'Change the URL slug of a page, old URL becomes a 301 history route',
+            'move_page' => 'Move a page under another parent, old URLs become 301 history routes',
+            'list_redirects' => 'List SuluRedirectBundle redirects',
+            'create_redirect' => 'Create one or up to 50 redirects (301, 302, 307, 308, 410)',
+            'update_redirect' => 'Update a redirect by id',
+            'delete_redirect' => 'Delete a redirect by id (confirm = id)',
         ];
 
         return $actionDescriptions[$action] ?? "Execute the {$action} action";
@@ -194,6 +216,13 @@ class OpenApiGenerator
                 'list_block_types', 'get_block_schema',
                 'list_snippets', 'list_media', 'upload_media', 'update_media', 'list_collections',
                 'clear_cache',
+                'update_page_title', 'update_training_data', 'switch_template',
+                'delete_page', 'delete_pages', 'list_references',
+                'get_snippet_schema', 'create_snippet', 'update_snippet', 'publish_snippet',
+                'delete_snippet', 'list_snippet_areas', 'set_default_snippet',
+                'route_health', 'list_history_routes', 'check_url',
+                'update_resource_locator', 'move_page',
+                'list_redirects', 'create_redirect', 'update_redirect', 'delete_redirect',
             ];
         } elseif ($name === 'locale') {
             $enums = ['de', 'en'];

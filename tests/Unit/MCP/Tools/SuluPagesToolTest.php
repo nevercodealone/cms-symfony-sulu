@@ -836,6 +836,85 @@ class SuluPagesToolTest extends TestCase
     }
 
     /**
+     * Test add_block with items for hockenheim maps to story key and
+     * normalizes nested media fields (image/image2) to {"ids": [...]}.
+     */
+    public function testAddBlockHockenheimStoryNormalizesNestedMedia(): void
+    {
+        $capturedBlock = null;
+        $this->pageService->method('addBlock')
+            ->willReturnCallback(function ($path, $block) use (&$capturedBlock) {
+                $capturedBlock = $block;
+                return ['success' => true, 'message' => 'Block added'];
+            });
+
+        $items = json_encode([
+            [
+                'type' => 'chapter',
+                'title' => 'Theorie & Qualifying',
+                'image' => ['id' => 42],
+                'image2' => '43',
+            ],
+            [
+                'type' => 'chapter',
+                'title' => 'Carrera Cup',
+                'image' => 7,
+            ],
+        ]);
+
+        $this->tool->execute([
+            'action' => 'add_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hockenheim',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedBlock);
+        $this->assertEquals('hockenheim', $capturedBlock['type']);
+        $this->assertArrayHasKey('story', $capturedBlock);
+        $this->assertCount(2, $capturedBlock['story']);
+        $this->assertEquals('chapter', $capturedBlock['story'][0]['type']);
+        $this->assertSame(['ids' => [42]], $capturedBlock['story'][0]['image']);
+        $this->assertSame(['ids' => [43]], $capturedBlock['story'][0]['image2']);
+        $this->assertSame(['ids' => [7]], $capturedBlock['story'][1]['image']);
+    }
+
+    /**
+     * Test update_block with items for hockenheim normalizes nested media too.
+     */
+    public function testUpdateBlockHockenheimStoryNormalizesNestedMedia(): void
+    {
+        $capturedData = null;
+        $this->pageService->method('updateBlock')
+            ->willReturnCallback(function ($path, $position, $blockData) use (&$capturedData) {
+                $capturedData = $blockData;
+                return ['success' => true, 'message' => 'Block updated'];
+            });
+
+        $items = json_encode([
+            [
+                'type' => 'chapter',
+                'title' => 'Transformation',
+                'image' => ['id' => 99],
+            ],
+        ]);
+
+        $this->tool->execute([
+            'action' => 'update_block',
+            'path' => '/cmf/example/contents/test',
+            'blockType' => 'hockenheim',
+            'position' => '0',
+            'items' => $items,
+            'locale' => 'de',
+        ]);
+
+        $this->assertNotNull($capturedData);
+        $this->assertArrayHasKey('story', $capturedData);
+        $this->assertSame(['ids' => [99]], $capturedData['story'][0]['image']);
+    }
+
+    /**
      * Test add_block with plain string content uses buildBlock logic.
      */
     public function testAddBlockWithPlainStringContentUsesDescription(): void
@@ -2495,5 +2574,130 @@ class SuluPagesToolTest extends TestCase
         $this->assertTrue($data['success']);
         $this->assertSame('tailwind', $data['from']);
         $this->assertSame('faq', $data['blocksNotInNewTemplate'][0]['type']);
+    }
+
+    public function testRouteReadActionsAreListedInDescriptionAndSchema(): void
+    {
+        $description = $this->tool->getDescription();
+        $this->assertStringContainsString('route_health', $description);
+        $this->assertStringContainsString('list_history_routes', $description);
+        $this->assertStringContainsString('check_url', $description);
+
+        $propertyNames = array_map(fn ($p) => $p->getName(), $this->tool->getInputSchema()->getProperties());
+        $this->assertContains('url', $propertyNames);
+    }
+
+    public function testRouteHealthActionRequiresPath(): void
+    {
+        $data = json_decode($this->tool->execute(['action' => 'route_health'])->getSanitizedResult()['text'], true);
+
+        $this->assertFalse($data['success']);
+        $this->assertSame('page_not_found', $data['errorCode']);
+    }
+
+    public function testListHistoryRoutesActionDelegatesToService(): void
+    {
+        $this->pageService->expects($this->once())
+            ->method('listHistoryRoutes')
+            ->with('/cmf/example/contents/foo', 'de')
+            ->willReturn(['success' => true, 'routes' => []]);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'list_history_routes',
+            'path' => '/cmf/example/contents/foo',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertTrue($data['success']);
+    }
+
+    public function testCheckUrlActionRequiresUrlAndDelegates(): void
+    {
+        $missing = json_decode($this->tool->execute(['action' => 'check_url'])->getSanitizedResult()['text'], true);
+        $this->assertFalse($missing['success']);
+        $this->assertSame('invalid_url', $missing['errorCode']);
+
+        $this->pageService->expects($this->once())
+            ->method('checkUrl')
+            ->with('/de/glossare/krea-2')
+            ->willReturn(['success' => true, 'type' => 'not_found']);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'check_url',
+            'url' => '/de/glossare/krea-2',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('not_found', $data['type']);
+    }
+
+    public function testRouteWriteAndRedirectActionsAreListed(): void
+    {
+        $description = $this->tool->getDescription();
+        foreach (['update_resource_locator', 'move_page', 'list_redirects', 'create_redirect', 'update_redirect', 'delete_redirect'] as $action) {
+            $this->assertStringContainsString($action, $description);
+        }
+
+        $names = array_map(fn ($p) => $p->getName(), $this->tool->getInputSchema()->getProperties());
+        $this->assertSame(array_unique($names), $names, 'schema property names must be unique');
+        foreach (['targetParentPath', 'target', 'statusCode', 'id', 'redirects', 'sourcePrefix'] as $name) {
+            $this->assertContains($name, $names);
+        }
+    }
+
+    public function testMovePageActionPassesArguments(): void
+    {
+        $this->pageService->expects($this->once())->method('movePage')
+            ->with('/cmf/example/contents/a/b', '/cmf/example/contents/c', '/b-2', true, 'de')
+            ->willReturn(['success' => true]);
+
+        $data = json_decode($this->tool->execute([
+            'action' => 'move_page',
+            'path' => '/cmf/example/contents/a/b',
+            'targetParentPath' => '/cmf/example/contents/c',
+            'resourceSegment' => '/b-2',
+            'publish' => 'true',
+        ])->getSanitizedResult()['text'], true);
+
+        $this->assertTrue($data['success']);
+    }
+
+    public function testMovePageActionRequiresTarget(): void
+    {
+        $data = json_decode($this->tool->execute(['action' => 'move_page', 'path' => '/x'])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('parent_not_found', $data['errorCode']);
+    }
+
+    public function testUpdateResourceLocatorActionPassesArguments(): void
+    {
+        $this->pageService->expects($this->once())->method('updateResourceLocator')
+            ->with('/cmf/example/contents/a', '/a-2', false, 'de')
+            ->willReturn(['success' => true]);
+
+        $this->tool->execute(['action' => 'update_resource_locator', 'path' => '/cmf/example/contents/a', 'resourceSegment' => '/a-2']);
+    }
+
+    public function testCreateRedirectActionSupportsSingleAndBulk(): void
+    {
+        $redirects = $this->createMock(\App\Sulu\Service\RedirectService::class);
+        $calls = [];
+        $redirects->method('createRedirects')->willReturnCallback(function (array $items) use (&$calls) {
+            $calls[] = $items;
+
+            return ['success' => true, 'created' => $items, 'failed' => []];
+        });
+        $tool = new SuluPagesTool($this->pageService, $this->blockTypeRegistry, $this->snippetService, $this->mediaService, $redirects);
+
+        $tool->execute(['action' => 'create_redirect', 'source' => '/de/a', 'target' => '/de/b', 'statusCode' => 301]);
+        $tool->execute(['action' => 'create_redirect', 'redirects' => '[{"source":"/de/c","statusCode":410}]']);
+
+        $this->assertSame([['source' => '/de/a', 'target' => '/de/b', 'statusCode' => 301]], $calls[0]);
+        $this->assertSame([['source' => '/de/c', 'statusCode' => 410]], $calls[1]);
+    }
+
+    public function testRedirectActionsWithoutServiceFailCleanly(): void
+    {
+        $data = json_decode($this->tool->execute(['action' => 'list_redirects'])->getSanitizedResult()['text'], true);
+
+        $this->assertSame('redirects_unavailable', $data['errorCode']);
     }
 }

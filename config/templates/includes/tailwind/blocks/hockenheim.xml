@@ -27,6 +27,112 @@
                             <param name="types" value="image"/>
                         </params>
                     </property>
+                    <block name="story" default-type="chapter" minOccurs="0">
+                        <meta>
+                            <title>3D Story Kapitel (Cylinder Modal)</title>
+                            <info_text>Kapitel für das 3D Cylinder-Modal. Die Reihenfolge entspricht der Reihenfolge im Modal.</info_text>
+                        </meta>
+                        <types>
+                            <type name="chapter">
+                                <meta>
+                                    <title>Kapitel</title>
+                                </meta>
+                                <properties>
+                                    <property name="time" type="text_line">
+                                        <meta>
+                                            <title>Zeitfenster</title>
+                                            <info_text>z. B. "Tag 1 • 09:30 – 14:00 Uhr"</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="metaIcon" type="text_line">
+                                        <meta>
+                                            <title>Meta-Icon (Material Symbol)</title>
+                                            <info_text>Name eines Material Symbols, z. B. speed, wb_twilight, psychology, emoji_events. Fallback: flag.</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="metaText" type="text_line">
+                                        <meta>
+                                            <title>Meta-Text</title>
+                                            <info_text>z. B. "20.09s Rundenzeit"</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="metaBadge" type="text_line">
+                                        <meta>
+                                            <title>Meta-Badge</title>
+                                            <info_text>z. B. "Box 12 Paddock"</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="accent" type="text_line">
+                                        <meta>
+                                            <title>Akzentfarbe</title>
+                                            <info_text>emerald, amber, purple oder cyan. Fallback: emerald.</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="kicker" type="text_line">
+                                        <meta>
+                                            <title>Kicker</title>
+                                            <info_text>z. B. "// Highspeed &amp; Clean Architecture"</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="title" type="text_line">
+                                        <meta>
+                                            <title>Titel</title>
+                                        </meta>
+                                    </property>
+                                    <property name="description" type="text_area">
+                                        <meta>
+                                            <title>Beschreibung</title>
+                                        </meta>
+                                    </property>
+                                    <property name="image" type="media_selection">
+                                        <meta>
+                                            <title>Bild 1</title>
+                                        </meta>
+                                        <params>
+                                            <param name="types" value="image"/>
+                                        </params>
+                                    </property>
+                                    <property name="imageBadge" type="text_line">
+                                        <meta>
+                                            <title>Bild 1 Label</title>
+                                            <info_text>Eck-Label über Bild 1, z. B. "48V Drift Qualifying"</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="image2" type="media_selection">
+                                        <meta>
+                                            <title>Bild 2 (optional)</title>
+                                            <info_text>Wenn gesetzt, zeigt die Karte zwei Bilder nebeneinander.</info_text>
+                                        </meta>
+                                        <params>
+                                            <param name="types" value="image"/>
+                                        </params>
+                                    </property>
+                                    <property name="imageBadge2" type="text_line">
+                                        <meta>
+                                            <title>Bild 2 Label</title>
+                                        </meta>
+                                    </property>
+                                    <property name="check1" type="text_line">
+                                        <meta>
+                                            <title>Check 1</title>
+                                            <info_text>z. B. "Claude Code Setup"</info_text>
+                                        </meta>
+                                    </property>
+                                    <property name="check2" type="text_line">
+                                        <meta>
+                                            <title>Check 2</title>
+                                        </meta>
+                                    </property>
+                                    <property name="focus" type="text_line">
+                                        <meta>
+                                            <title>Fokus (Karten-Fußzeile)</title>
+                                            <info_text>z. B. "Prompt Injection, Test Driven AI, Paddock Telemetrie"</info_text>
+                                        </meta>
+                                    </property>
+                                </properties>
+                            </type>
+                        </types>
+                    </block>
                 </properties>
             </type>
         </types>

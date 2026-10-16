@@ -187,6 +187,24 @@
       </meta>
       <scale x="1024"/>
     </format>
+    <format key="hockenheim-story-card-sm">
+      <meta>
+        <title lang="en">Hockenheim Story Card (small)</title>
+      </meta>
+      <scale x="900" y="600"/>
+    </format>
+    <format key="hockenheim-story-card-md">
+      <meta>
+        <title lang="en">Hockenheim Story Card (medium)</title>
+      </meta>
+      <scale x="1600" y="1067"/>
+    </format>
+    <format key="hockenheim-story-card-lg">
+      <meta>
+        <title lang="en">Hockenheim Story Card (large)</title>
+      </meta>
+      <scale x="2400" y="1600"/>
+    </format>
     <format key="logos">
         <meta>
             <title lang="en">Logos</title>

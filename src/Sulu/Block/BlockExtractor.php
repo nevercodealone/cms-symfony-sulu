@@ -325,7 +325,7 @@ final class BlockExtractor
         // Schema-driven path passes the encoding from the registry (so edugate's pdfTarget is
         // decoded as JSON too). The name list is the fallback for unknown block types, which
         // have no schema to consult.
-        $jsonProps = ['image', 'images', 'snippets', 'organisation', 'settings'];
+        $jsonProps = ['image', 'images', 'image2', 'snippets', 'organisation', 'settings'];
 
         if ($encoding === 'json' || ($encoding === null && in_array($propName, $jsonProps, true))) {
             $decoded = json_decode($value, true);
