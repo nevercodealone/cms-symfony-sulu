@@ -131,14 +131,27 @@ XML;
         );
     }
 
-    public function testBothWorkspacesGetTheSameXml(): void
+    public function testOnlyTheDraftWorkspaceIsWritten(): void
     {
-        $this->givenPage(self::TAILWIND_XML);
+        $this->connection->method('fetchAssociative')->willReturn(['props' => self::TAILWIND_XML]);
+
+        $workspaces = [];
+        $this->connection->method('executeStatement')
+            ->willReturnCallback(function (string $sql, array $params) use (&$workspaces): int {
+                $workspaces[] = $params[2] ?? null;
+
+                return 1;
+            });
 
         $this->pageService->switchTemplate('/p', 'training-detail', 'de');
 
-        $this->assertCount(2, $this->written);
-        $this->assertSame($this->written[0], $this->written[1]);
+        // Draft-only write: the live workspace belongs to the real publish
+        // (app:page:publish), which copies the draft and sets the published date.
+        $this->assertSame(
+            ['default'],
+            $workspaces,
+            'only the draft workspace may be written by content edits',
+        );
     }
 
     public function testSwitchIsLosslessForBlocksAndTemplateSpecificFields(): void

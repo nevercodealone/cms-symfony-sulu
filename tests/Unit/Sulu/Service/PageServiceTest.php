@@ -153,7 +153,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -177,7 +177,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $result = $this->pageService->addBlock(
@@ -218,7 +218,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -238,7 +238,7 @@ XML;
 
         // Capture the XML that gets written
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0]; // First param is the XML
@@ -249,6 +249,7 @@ XML;
 
         $this->assertTrue($result['success']);
         $this->assertNotNull($capturedXml, 'XML should have been captured');
+        $this->assertStringContainsString('i18n:de-changed', $capturedXml, 'draft metadata must be touched on content writes');
 
         // Parse the captured XML and verify changes
         $xml = new \DOMDocument();
@@ -347,7 +348,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -426,7 +427,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -639,7 +640,7 @@ XML;
         );
     }
 
-    public function testAddBlockFlushesCache(): void
+    public function testAddBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -651,17 +652,15 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect cache invalidation calls
-        $this->cacheManager->expects($this->once())
-            ->method('invalidateTag')
-            ->with('test-uuid-123');
+        // Draft-only writes do not change the live page, so the live cache stays
+        // alone; the real publish (app:page:publish) invalidates it.
+        $this->cacheManager->expects($this->never())
+            ->method('invalidateTag');
 
-        $this->cacheManager->expects($this->once())
-            ->method('invalidatePath')
-            ->with('/de/test');
+        $this->cacheManager->expects($this->never())
+            ->method('invalidatePath');
 
-        // CRITICAL: Verify flush() is called for long-running processes
-        $this->fosCacheManager->expects($this->once())
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->addBlock(
@@ -672,7 +671,7 @@ XML;
         );
     }
 
-    public function testUpdateBlockFlushesCache(): void
+    public function testUpdateBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -684,14 +683,14 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect cache invalidation and flush
-        $this->cacheManager->expects($this->once())
+        // Draft-only write: no live content change, no cache invalidation
+        $this->cacheManager->expects($this->never())
             ->method('invalidateTag');
 
-        $this->cacheManager->expects($this->once())
+        $this->cacheManager->expects($this->never())
             ->method('invalidatePath');
 
-        $this->fosCacheManager->expects($this->once())
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->updateBlock(
@@ -702,7 +701,7 @@ XML;
         );
     }
 
-    public function testRemoveBlockFlushesCache(): void
+    public function testRemoveBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -714,8 +713,8 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect flush to be called
-        $this->fosCacheManager->expects($this->once())
+        // Draft-only write: no live content change, no cache flush
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->removeBlock('/cmf/example/contents/test', 0, 'de');
@@ -742,35 +741,34 @@ XML;
         $pageService->publishPage('/cmf/example/contents/test', 'de');
     }
 
-    public function testFlushExceptionDoesNotBreakOperation(): void
+    public function testFlushExceptionDoesNotBreakPublish(): void
     {
-        $pageService = $this->createPageServiceWithCache();
+        $this->cacheManager = $this->createMock(CacheManagerInterface::class);
+        $this->fosCacheManager = $this->createMock(FOSCacheManager::class);
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            $this->cacheManager,
+            $this->fosCacheManager,
+            commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/test', 'url' => '/test']),
+            routeHealth: $this->stubRouteHealth(fn (string $p) => $this->healthReport($p, '/test', '/test', true)),
+        );
 
         $this->connection->method('fetchAssociative')
-            ->willReturn([
-                'props' => self::SAMPLE_PHPCR_XML,
-                'identifier' => 'test-uuid-exception',
-            ]);
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML, 'identifier' => 'test-uuid-exception']);
 
-        $this->connection->method('executeStatement')->willReturn(1);
-
-        // Simulate flush() throwing an exception
+        // Cache flush failures are logged inside invalidatePageCache(), not propagated
         $this->fosCacheManager->expects($this->once())
             ->method('flush')
             ->willThrowException(new \Exception('Cache flush failed'));
 
-        // Operation should still succeed despite flush exception
-        $result = $pageService->addBlock(
-            '/cmf/example/contents/test',
-            ['type' => 'headline-paragraphs', 'headline' => 'Test'],
-            0,
-            'de'
-        );
+        // The publish should still succeed despite the flush exception
+        $result = $pageService->publishPage('/cmf/example/contents/test', 'de');
 
         $this->assertTrue($result['success']);
     }
 
-    public function testMoveBlockFlushesCache(): void
+    public function testMoveBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -782,8 +780,8 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect flush to be called
-        $this->fosCacheManager->expects($this->once())
+        // Draft-only write: no live content change, no cache flush
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->moveBlock('/cmf/example/contents/test', 0, 1, 'de');
@@ -1405,7 +1403,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1444,7 +1442,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1480,7 +1478,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1558,7 +1556,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1595,7 +1593,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1672,7 +1670,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
