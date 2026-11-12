@@ -65,6 +65,12 @@ class PageService
     private const WORKSPACE_LIVE = 'default_live';
 
     /**
+     * PHPCR Date property format as written by Sulu (see SnippetService::DATE_FORMAT),
+     * e.g. 2026-11-12T16:23:45.123+00:00.
+     */
+    private const DATE_FORMAT = 'Y-m-d\TH:i:s.vP';
+
+    /**
      * Hard server-side limit for one spawned page-deletion process.
      * Guarantees a structured delete_timeout error instead of a silent
      * transport timeout in the MCP layer.
@@ -263,7 +269,7 @@ class PageService
     /**
      * List pages under a path prefix.
      *
-     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string}>
+     * @return array<int, array{path: string, url: string|null, fullUrl: string|null, title: string, template: string, published: bool, state: string, draftUrl: string|null, liveUrl: string|null, routeHealth: array<string, mixed>|null}>
      */
     public function listPages(string $locale = 'de', string $pathPrefix = '/cmf/example/contents'): array
     {
@@ -573,17 +579,8 @@ class PageService
                 $this->blockWriter->addProperty($xml, $rootNode, "i18n:{$locale}-blocks-length", (string) ($currentLength + 1), 'Long');
             }
 
-            $updatedXml = $xml->saveXML();
-
-            // Update both workspaces
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_block_added',
@@ -595,10 +592,6 @@ class PageService
                     'position' => $insertIndex,
                 ]
             );
-
-            // Invalidate HTTP cache for this page
-            $this->invalidatePageCache($path, $locale);
-
 
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $insertIndex];
 
@@ -761,16 +754,8 @@ class PageService
             // Update blocks length
             $lengthNodes->item(0)->nodeValue = (string) ($blocksLength - 1);
 
-            $updatedXml = $xml->saveXML();
-
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_block_removed',
@@ -778,10 +763,6 @@ class PageService
                 $locale,
                 ['position' => $position]
             );
-
-            // Invalidate HTTP cache for this page
-            $this->invalidatePageCache($path, $locale);
-
 
             // Re-read page to return current state (helps with caching issues)
             $updatedPage = $this->getPage($path, $locale);
@@ -1575,17 +1556,8 @@ class PageService
                 $family,
             );
 
-            $updatedXml = $xml->saveXML();
-
-            // Update both workspaces for immediate visibility
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_block_updated',
@@ -1593,10 +1565,6 @@ class PageService
                 $locale,
                 ['position' => $position, 'fields' => array_keys($blockData)]
             );
-
-            // Invalidate HTTP cache for this page
-            $this->invalidatePageCache($path, $locale);
-
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);
@@ -1794,16 +1762,8 @@ class PageService
                 $rootNode->appendChild($property);
             }
 
-            $updatedXml = $xml->saveXML();
-
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_page_title_updated',
@@ -1811,8 +1771,6 @@ class PageService
                 $locale,
                 ['title' => $title]
             );
-
-            $this->invalidatePageCache($path, $locale);
 
             return [
                 'success' => true,
@@ -1914,17 +1872,8 @@ class PageService
                 }
             }
 
-            $updatedXml = $xml->saveXML();
-
-            // Update both workspaces
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $updatedXml = $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_excerpt_updated',
@@ -1932,8 +1881,6 @@ class PageService
                 $locale,
                 ['fields' => $updatedFields]
             );
-
-            $this->invalidatePageCache($path, $locale);
 
             // Read back the current excerpt values
             $excerptTitle = $this->extractPropertyFromXml($updatedXml, "i18n:{$locale}-excerpt-title");
@@ -2018,16 +1965,8 @@ class PageService
                 'template' => "i18n:{$locale}-template",
             ], ['template' => $template]);
 
-            $updatedXml = (string) $xml->saveXML();
-
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $updatedXml = $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_template_switched',
@@ -2035,8 +1974,6 @@ class PageService
                 $locale,
                 ['from' => $current, 'to' => $template]
             );
-
-            $this->invalidatePageCache($path, $locale);
 
             $family = BlockTypeRegistry::familyFor($template);
             $blocks = $this->extractBlocks($updatedXml, $locale, $family);
@@ -2204,16 +2141,8 @@ class PageService
                 ];
             }
 
-            $updatedXml = (string) $xml->saveXML();
-
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $updatedXml = $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_training_data_updated',
@@ -2221,8 +2150,6 @@ class PageService
                 $locale,
                 ['fields' => $updatedFields]
             );
-
-            $this->invalidatePageCache($path, $locale);
 
             return [
                 'success' => true,
@@ -2365,6 +2292,73 @@ class PageService
     }
 
     /**
+     * Persist the draft props with Sulu's draft-save semantics and return the
+     * stored XML.
+     *
+     * Touches i18n:<locale>-changed (Sulu sets this on every draft save) and
+     * flips i18n:<locale>-state from published (2) to draft (1) so the admin
+     * shows the page as having unpublished changes. Only the default
+     * (draft) workspace is written - live is exclusively owned by the real
+     * publish (app:page:publish), which copies the draft, sets
+     * i18n:<locale>-published and refreshes the routes.
+     */
+    private function persistDraftProps(string $path, string $locale, DOMDocument $xml): string
+    {
+        $this->touchDraftMetadata($xml, $locale);
+
+        $updatedXml = $xml->saveXML();
+
+        $this->connection->executeStatement(
+            'UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?',
+            [$updatedXml, $path, self::WORKSPACE_DEFAULT]
+        );
+
+        return $updatedXml;
+    }
+
+    /**
+     * Apply Sulu's draft-save metadata to the props XML: changed = now and,
+     * for a currently published page, state 2 -> 1 (WorkflowStageSubscriber
+     * does the same on Events::PERSIST). i18n:<locale>-published is
+     * deliberately NOT written here - it belongs to the publish flow.
+     */
+    private function touchDraftMetadata(DOMDocument $xml, string $locale): void
+    {
+        $now = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(self::DATE_FORMAT);
+
+        $xpath = new DOMXPath($xml);
+        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
+        $changedProperty = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-changed"]');
+
+        if ($changedProperty !== false && $changedProperty->length > 0 && $changedProperty->item(0)) {
+            $valueNodes = $xpath->query('sv:value', $changedProperty->item(0));
+
+            if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
+                $valueNodes->item(0)->nodeValue = $now;
+
+                if ($valueNodes->item(0) instanceof \DOMElement) {
+                    $valueNodes->item(0)->setAttribute('length', (string) \strlen($now));
+                }
+            }
+        } else {
+            $rootNode = $xpath->query('/sv:node')->item(0);
+
+            if ($rootNode instanceof \DOMElement) {
+                $this->blockWriter->addProperty($xml, $rootNode, "i18n:{$locale}-changed", $now, 'Date');
+            }
+        }
+
+        $stateNodes = $xpath->query('//sv:property[@sv:name="i18n:' . $locale . '-state"]/sv:value');
+
+        if ($stateNodes !== false && $stateNodes->length > 0 && $stateNodes->item(0)) {
+            if (\trim((string) $stateNodes->item(0)->nodeValue) === '2') {
+                $stateNodes->item(0)->nodeValue = '1'; // 1 = draft with unpublished changes, 2 = published
+            }
+        }
+    }
+
+    /**
      * @param array<string, string|null> $data
      *
      * @return array{success: bool, message: string, seo?: array{title: string|null, description: string|null, keywords: string|null}}
@@ -2400,16 +2394,8 @@ class PageService
 
             $updatedFields = $this->applyFieldMap($xml, $xpath, $rootNode, $fieldMap, $data);
 
-            $updatedXml = $xml->saveXML();
-
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $updatedXml = $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_seo_updated',
@@ -2417,8 +2403,6 @@ class PageService
                 $locale,
                 ['fields' => $updatedFields]
             );
-
-            $this->invalidatePageCache($path, $locale);
 
             return [
                 'success' => true,
@@ -2598,17 +2582,8 @@ class PageService
                 }
             }
 
-            $updatedXml = $xml->saveXML();
-
-            // Update both workspaces for immediate visibility
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_DEFAULT]
-            );
-            $this->connection->executeStatement(
-                "UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?",
-                [$updatedXml, $path, self::WORKSPACE_LIVE]
-            );
+            // Draft-only write; the real publish (app:page:publish) copies it to live
+            $this->persistDraftProps($path, $locale, $xml);
 
             $this->activityLogger->logMcpAction(
                 'mcp_block_moved',
@@ -2616,10 +2591,6 @@ class PageService
                 $locale,
                 ['from_position' => $fromPosition, 'to_position' => $toPosition]
             );
-
-            // Invalidate HTTP cache for this page
-            $this->invalidatePageCache($path, $locale);
-
 
             // Re-read page to return current state
             $updatedPage = $this->getPage($path, $locale);

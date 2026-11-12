@@ -85,10 +85,7 @@ class PageServiceFunctionalTest extends KernelTestCase
         echo "--- Step 1: Creating test page ---\n";
 
         // Find a parent page to create under
-        $pages = $this->pageService->listPages($this->testLocale);
-        $this->assertNotEmpty($pages, 'Need at least one existing page as parent');
-
-        $parentPath = $pages[0]['path'];
+        $parentPath = $this->healthyParentPath();
         echo "Parent page: {$parentPath}\n";
 
         $timestamp = date('YmdHis');
@@ -429,9 +426,7 @@ class PageServiceFunctionalTest extends KernelTestCase
         echo "\n=== Testing DocumentManager Cache Clearing ===\n\n";
 
         // Create a test page
-        $pages = $this->pageService->listPages($this->testLocale);
-        $this->assertNotEmpty($pages);
-        $parentPath = $pages[0]['path'];
+        $parentPath = $this->healthyParentPath();
 
         $timestamp = date('YmdHis');
         $result = $this->pageService->createPage([
@@ -483,12 +478,9 @@ class PageServiceFunctionalTest extends KernelTestCase
         echo "\n=== Testing Append To Block ===\n\n";
 
         // Create test page
-        $pages = $this->pageService->listPages($this->testLocale);
-        $this->assertNotEmpty($pages);
-
         $timestamp = date('YmdHis');
         $result = $this->pageService->createPage([
-            'parentPath' => $pages[0]['path'],
+            'parentPath' => $this->healthyParentPath(),
             'title' => 'Append Test Page ' . $timestamp,
             'resourceSegment' => '/append-test-' . $timestamp,
             'publish' => false,
@@ -551,12 +543,9 @@ class PageServiceFunctionalTest extends KernelTestCase
         echo "\n=== Testing Publish/Unpublish ===\n\n";
 
         // Create test page
-        $pages = $this->pageService->listPages($this->testLocale);
-        $this->assertNotEmpty($pages);
-
         $timestamp = date('YmdHis');
         $result = $this->pageService->createPage([
-            'parentPath' => $pages[0]['path'],
+            'parentPath' => $this->healthyParentPath(),
             'title' => 'Publish Test Page ' . $timestamp,
             'resourceSegment' => '/publish-test-' . $timestamp,
             'publish' => false,
@@ -588,5 +577,165 @@ class PageServiceFunctionalTest extends KernelTestCase
         $this->testPagePath = '';
 
         echo "\n=== Publish/Unpublish Test Complete ===\n";
+    }
+
+    /**
+     * Draft-only contract of content writes plus the real publish:
+     * writes touch only the draft workspace (changed + state flip) and the
+     * publish copies the draft to live, setting the published date.
+     */
+    public function testDraftOnlyWritesAndRealPublish(): void
+    {
+        echo "\n=== Testing Draft-Only Writes + Real Publish ===\n";
+
+        $pages = $this->pageService->listPages($this->testLocale);
+        $this->assertNotEmpty($pages);
+
+        $timestamp = date('YmdHis');
+        $result = $this->pageService->createPage([
+            'parentPath' => $this->healthyParentPath(),
+            'title' => 'Draft Test Page ' . $timestamp,
+            'resourceSegment' => '/draft-test-' . $timestamp,
+            'publish' => false,
+        ], $this->testLocale);
+
+        $this->assertTrue($result['success'], 'Create page failed: ' . $result['message']);
+        $this->testPagePath = $result['path'];
+        echo "✓ Created unpublished page\n";
+
+        // Draft write on the unpublished page
+        $addResult = $this->pageService->addBlock(
+            $this->testPagePath,
+            [
+                'type' => 'headline-paragraphs',
+                'headline' => 'Draft only',
+                'items' => [['type' => 'description', 'description' => '<p>draft</p>']],
+            ],
+            0,
+            $this->testLocale
+        );
+        $this->assertTrue($addResult['success'], $addResult['message']);
+
+        $todayUtc = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d');
+
+        $draftProps = $this->fetchProps($this->testPagePath, 'default');
+        $this->assertNotNull($draftProps, 'draft node must exist');
+        $this->assertStringContainsString('i18n:de-blocks-length', $draftProps, 'draft must contain the block');
+        $this->assertStringContainsString('i18n:de-changed', $draftProps, 'draft write must touch i18n:de-changed');
+        $this->assertStringContainsString($todayUtc, $draftProps, 'draft changed date must be now');
+        $this->assertSame(1, $this->blocksLength($draftProps), 'draft must have 1 block');
+        echo "✓ Draft write touched changed + blocks, live untouched\n";
+
+        $liveProps = $this->fetchProps($this->testPagePath, 'default_live');
+        $this->assertDoesNotMatchRegularExpression(
+            '/i18n:de-blocks-length/',
+            (string) $liveProps,
+            'unpublished page: live workspace must not contain the draft block'
+        );
+        echo "✓ Live workspace has no block content before publish\n";
+
+        // Real publish: copies the draft to live and sets the published date
+        $publishResult = $this->pageService->publishPage($this->testPagePath, $this->testLocale);
+        $this->assertTrue($publishResult['success'], (string) ($publishResult['message'] ?? ''));
+        echo "✓ Published page\n";
+
+        $liveProps = $this->fetchProps($this->testPagePath, 'default_live');
+        $this->assertNotNull($liveProps, 'live node must exist after publish');
+        $this->assertStringContainsString('i18n:de-blocks-length', $liveProps, 'publish must copy draft blocks to live');
+        $this->assertStringContainsString('i18n:de-published', $liveProps, 'publish must set i18n:de-published');
+        $this->assertStringContainsString($todayUtc, $liveProps, 'published date must be now');
+        $this->assertSame('2', $this->stateValue($liveProps), 'live state must be published');
+        $this->assertSame('2', $this->stateValue($this->fetchProps($this->testPagePath, 'default') ?? ''), 'draft state must be published after publish');
+        echo "✓ Publish copied draft to live, published date + state correct\n";
+
+        // Draft write on the now-published page: state flips to draft, live stays
+        $secondAdd = $this->pageService->addBlock(
+            $this->testPagePath,
+            [
+                'type' => 'headline-paragraphs',
+                'headline' => 'Second draft change',
+                'items' => [['type' => 'description', 'description' => '<p>still draft</p>']],
+            ],
+            1,
+            $this->testLocale
+        );
+        $this->assertTrue($secondAdd['success'], $secondAdd['message']);
+
+        $draftPropsAfter = $this->fetchProps($this->testPagePath, 'default');
+        $livePropsAfter = $this->fetchProps($this->testPagePath, 'default_live');
+
+        $this->assertSame(2, $this->blocksLength($draftPropsAfter), 'draft must have 2 blocks');
+        $this->assertSame(1, $this->blocksLength($livePropsAfter), 'live must still have 1 block after draft write');
+        $this->assertSame('1', $this->stateValue($draftPropsAfter), 'draft state must flip to 1 on a draft write');
+        $this->assertSame('2', $this->stateValue($livePropsAfter), 'live state must stay 2 after a draft write');
+        echo "✓ Draft write on published page: draft state=1, live untouched\n";
+
+        // Publish again: live catches up
+        $secondPublish = $this->pageService->publishPage($this->testPagePath, $this->testLocale);
+        $this->assertTrue($secondPublish['success'], (string) ($secondPublish['message'] ?? ''));
+
+        $livePropsFinal = $this->fetchProps($this->testPagePath, 'default_live');
+        $this->assertSame(2, $this->blocksLength($livePropsFinal), 'publish must copy the second draft to live');
+        $this->assertSame('2', $this->stateValue($this->fetchProps($this->testPagePath, 'default') ?? ''), 'draft state must be 2 after publish');
+        echo "✓ Second publish copied draft to live\n";
+
+        // Cleanup content node + routes in both workspaces
+        $this->connection->executeStatement(
+            'DELETE FROM phpcr_nodes WHERE path = ?',
+            [$this->testPagePath]
+        );
+        $this->connection->executeStatement(
+            'DELETE FROM phpcr_nodes WHERE path LIKE ?',
+            ['%/draft-test-' . $timestamp]
+        );
+        $this->testPagePath = '';
+
+        echo "\n=== Draft/Publish Test Complete ===\n";
+    }
+
+    private function fetchProps(string $path, string $workspace): ?string
+    {
+        $props = $this->connection->fetchOne(
+            'SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = ?',
+            [$path, $workspace]
+        );
+
+        return $props === false || $props === null ? null : (string) $props;
+    }
+
+    /**
+     * Path of a page with a healthy draft route, usable as createPage() parent
+     * (createPage rejects parents without a usable route).
+     */
+    private function healthyParentPath(): string
+    {
+        $pages = $this->pageService->listPages($this->testLocale);
+        $this->assertNotEmpty($pages, 'Need at least one existing page as parent');
+
+        foreach ($pages as $page) {
+            if (($page['routeHealth']['draft'] ?? null) === 'ok') {
+                return $page['path'];
+            }
+        }
+
+        $this->fail('Need at least one page with a healthy draft route as parent');
+    }
+
+    private function blocksLength(?string $props): int
+    {
+        if ($props === null || !preg_match('/i18n:de-blocks-length"[^>]*>\s*<sv:value[^>]*>(\d+)/s', $props, $matches)) {
+            return 0;
+        }
+
+        return (int) $matches[1];
+    }
+
+    private function stateValue(?string $props): string
+    {
+        if ($props === null || !preg_match('/i18n:de-state"[^>]*>\s*<sv:value[^>]*>(\d+)/s', $props, $matches)) {
+            return '0';
+        }
+
+        return $matches[1];
     }
 }

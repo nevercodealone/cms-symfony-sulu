@@ -14,7 +14,7 @@ FROM composer AS composer-dev
 RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
 
 # Build actual image
-FROM php:8.2-apache AS webserver
+FROM php:8.2.35-apache AS webserver
 
 WORKDIR /var/www/html
 
@@ -38,7 +38,8 @@ RUN docker-php-ext-configure intl && docker-php-ext-install -j$(nproc) \
         opcache \
         zip
 
-RUN pecl install imagick redis apcu && docker-php-ext-enable imagick redis apcu
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions imagick redis apcu
 
 # apache config
 RUN /usr/sbin/a2enmod rewrite && /usr/sbin/a2enmod headers && /usr/sbin/a2enmod expires
