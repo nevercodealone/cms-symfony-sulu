@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional;
 
 use App\Sulu\Service\PageService;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -272,6 +273,36 @@ class PageServiceFunctionalTest extends KernelTestCase
     private function cleanupTestPage(): void
     {
         try {
+            // Route nodes of the test page in all workspaces; a failed run can
+            // leave them behind after the content node is gone (they reference
+            // the page via phpcr_nodes_references, keyed by the node id).
+            $nodeIds = $this->connection->fetchFirstColumn(
+                'SELECT id FROM phpcr_nodes WHERE path = ?',
+                [$this->testPagePath]
+            );
+
+            if ($nodeIds !== []) {
+                $routeRows = $this->connection->fetchAllAssociative(
+                    'SELECT id, path FROM phpcr_nodes
+                     WHERE id IN (SELECT source_id FROM phpcr_nodes_references WHERE target_id IN (:ids))',
+                    ['ids' => $nodeIds],
+                    ['ids' => ArrayParameterType::INTEGER],
+                );
+
+                foreach ($routeRows as $route) {
+                    $this->connection->executeStatement(
+                        'DELETE FROM phpcr_nodes WHERE path = ? OR path LIKE ?',
+                        [$route['path'], $route['path'] . '/%']
+                    );
+                }
+
+                $this->connection->executeStatement(
+                    'DELETE FROM phpcr_nodes_references WHERE source_id IN (:ids) OR target_id IN (:ids)',
+                    ['ids' => $nodeIds],
+                    ['ids' => ArrayParameterType::INTEGER],
+                );
+            }
+
             $this->connection->executeStatement(
                 "DELETE FROM phpcr_nodes WHERE path = ? OR path LIKE ?",
                 [$this->testPagePath, $this->testPagePath . '/%']
