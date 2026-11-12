@@ -66,6 +66,7 @@ class SuluPagesTool implements StreamableToolInterface
         return 'Sulu CMS pages. Actions: list, get, get_structure, get_block, create_page, copy_page, update_page_title, update_excerpt, update_seo, update_training_data, switch_template, add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, delete_page, delete_pages, list_references, publish, unpublish, list_block_types, get_block_schema, list_snippets, get_snippet_schema, create_snippet, update_snippet, publish_snippet, delete_snippet, list_snippet_areas, set_default_snippet, list_media, upload_media, update_media, list_collections, clear_cache, route_health, list_history_routes, check_url, update_resource_locator, move_page, list_redirects, create_redirect, update_redirect, delete_redirect. ' .
             'RESPONSE CONTROL: All write actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks) return compact block metadata only (position, type, headline). No full block content in write responses. ' .
             'READ ACTIONS: get returns full page with all block content. get_structure returns lightweight page metadata + block overview without content. get_block returns single block at given position with full content. ' .
+            'DRAFT/PUBLISH WORKFLOW: Content edit actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, update_page_title, update_excerpt, update_seo, update_training_data, switch_template) write the DRAFT workspace only: they touch i18n:<locale>-changed and mark the page as having unpublished changes, but the live website is untouched. Pass publish:"true" on the edit to run Sulu\'s real publish afterwards, or call action=publish separately once all edits are done - the publish copies the draft to live, sets the published date and refreshes routes. Draft-only responses contain published:false and a nextAction hint; the website shows changes only after publish. ' .
             'EFFICIENCY: 1) Start with get_structure to understand page layout. 2) Use get_block to read specific blocks. 3) Use update_blocks for multiple changes in one call. 4) Use remove_blocks for multiple deletions. 5) Only use full get when you need complete page content. ' .
             'CREATE PAGE: parentPath, title, resourceSegment required. Optional: seoTitle, seoDescription, excerptTitle, excerptDescription, excerptImage (media ID), publish. Fails with "Page already exists at: <path>" when the resource segment is taken — run list with pathPrefix set to the parent path first and inspect the result instead of retrying. ' .
             'COPY PAGE: sourcePath + title + resourceSegment. Copies all blocks and inherits excerpt from source. ' .
@@ -235,7 +236,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'publish',
                 type: PropertyType::STRING,
-                description: 'For create_page: Publish immediately after creation - "true" or "false" (default: "false"). For create_snippet / update_snippet: "true" (default) writes live, "false" keeps it as draft.',
+                description: 'For create_page: Publish immediately after creation - "true" or "false" (default: "false"). For content edit actions (add_block, update_block, update_blocks, append_to_block, move_block, remove_block, remove_blocks, update_page_title, update_excerpt, update_seo, update_training_data, switch_template): "true" runs Sulu\'s real publish after the edit; "false" (default) keeps the change in the draft - call action=publish separately to go live. For create_snippet / update_snippet: "true" (default) writes live, "false" keeps it as draft.',
                 required: false
             ),
             new SchemaProperty(
@@ -780,6 +781,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updatePageTitle($path, $title, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
@@ -812,6 +814,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updateExcerpt($path, $data, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
@@ -837,6 +840,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->switchTemplate($path, (string) $template, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
@@ -894,6 +898,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updateTrainingData($path, $data, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
@@ -947,8 +952,51 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updateSeo($path, $data, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
+    }
+
+    /**
+     * Content writes update the DRAFT workspace only. Honour the publish flag
+     * on write actions: without it, annotate the result with a nextAction
+     * hint; with publish="true", run the real Sulu publish (app:page:publish
+     * via DocumentManager in a fresh process), which copies the draft to the
+     * live workspace, sets i18n:<locale>-published and refreshes the routes.
+     *
+     * @param array<string, mixed> $writeResult
+     * @param array<string, mixed> $arguments
+     *
+     * @return array<string, mixed>
+     */
+    private function applyPublishFlag(array $writeResult, array $arguments, string $locale): array
+    {
+        if (empty($writeResult['success'])) {
+            return $writeResult;
+        }
+
+        $path = (string) ($arguments['path'] ?? '');
+
+        if (($arguments['publish'] ?? 'false') !== 'true') {
+            $writeResult['published'] = false;
+            $writeResult['nextAction'] = 'draft saved only - pass publish:"true" on this action or call action=publish to make it live';
+
+            return $writeResult;
+        }
+
+        $publishResult = $this->pageService->publishPage($path, $locale);
+        $writeResult['published'] = (bool) ($publishResult['success'] ?? false);
+        $writeResult['liveUrl'] = $publishResult['liveUrl'] ?? null;
+        $writeResult['routeHealth'] = $publishResult['routeHealth'] ?? null;
+
+        if (empty($publishResult['success'])) {
+            $writeResult['message'] = ($writeResult['message'] ?? 'Write succeeded')
+                . ' - but publish failed: ' . ($publishResult['message'] ?? 'unknown error');
+            $writeResult['nextAction'] = $publishResult['nextAction']
+                ?? 'run route_health for this path, then bin/console nca:routes:repair --dry-run.';
+        }
+
+        return $writeResult;
     }
 
     /**
@@ -1005,6 +1053,7 @@ class SuluPagesTool implements StreamableToolInterface
             }
 
             $result = $this->pageService->addBlock($path, $block, $position, $locale);
+            $result = $this->applyPublishFlag($result, $arguments, $locale);
 
             return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
         }
@@ -1145,6 +1194,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->addBlock($path, $block, $position, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
@@ -1162,6 +1212,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->removeBlock($path, $position, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
@@ -1184,6 +1235,7 @@ class SuluPagesTool implements StreamableToolInterface
 
         $positions = array_map('intval', $positions);
         $result = $this->pageService->removeBlocks($path, $positions, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
@@ -1280,6 +1332,8 @@ class SuluPagesTool implements StreamableToolInterface
             'blocks_remaining' => $updatedPage ? count($updatedPage['blocks']) : 0,
             'blocks' => $this->pageService->formatCompactBlocks($updatedPage['blocks'] ?? []),
         ];
+
+        $response = $this->applyPublishFlag($response, $arguments, $locale);
 
         return new TextToolResult(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
     }
@@ -1682,6 +1736,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->updateBlock($path, $position, $blockData, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
@@ -1725,6 +1780,7 @@ class SuluPagesTool implements StreamableToolInterface
         }, $items);
 
         $result = $this->pageService->appendToBlock($path, $position, $normalizedItems, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
@@ -1749,6 +1805,7 @@ class SuluPagesTool implements StreamableToolInterface
         }
 
         $result = $this->pageService->moveBlock($path, $fromPosition, $toPosition, $locale);
+        $result = $this->applyPublishFlag($result, $arguments, $locale);
 
         return new TextToolResult(json_encode($result, JSON_PRETTY_PRINT) ?: '{}');
     }
