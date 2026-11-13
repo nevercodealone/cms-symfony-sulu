@@ -1,0 +1,165 @@
+{#
+    NCA override of the Sulu AI Platform demo UI (route: /ai-search).
+    Rendered by ExampleIntelligentSearchController with: defaultLocale, availableLocales,
+    availableWebspaces, availableBuckets, maxCommentLength.
+    Behaviour lives in assets/website/controllers/ai_search_controller.js.
+#}
+{% extends "base-tailwind.html.twig" %}
+
+{% set content = { title: 'KI-Suche | Never Code Alone' } %}
+{% set searchLocale = defaultLocale in availableLocales ? defaultLocale : (availableLocales|first|default(defaultLocale)) %}
+{% set searchWebspace = request.webspaceKey|default(availableWebspaces|length == 1 ? (availableWebspaces|first).key : '') %}
+{% set initialQuestion = app.request.query.get('q', '')|trim %}
+{% set exampleQuestions = [
+    'Welche Schulungen bietet Never Code Alone an?',
+    'Wie hilft mir Never Code Alone beim PHP-Refactoring?',
+    'Was ist Vibe Coding?',
+] %}
+
+{% block content %}
+    <section class="mx-auto max-w-3xl py-10 sm:py-16"
+             data-controller="ai-search"
+             data-ai-search-endpoint-value="{{ path('sulu_ai_platform_public_intelligent_search') }}"
+             data-ai-search-feedback-endpoint-value="{{ path('sulu_ai_platform_public_intelligent_search_feedback') }}"
+             data-ai-search-locale-value="{{ searchLocale }}"
+             data-ai-search-webspace-value="{{ searchWebspace }}">
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-900">
+            Frag die KI-Suche
+        </h1>
+        <p class="mt-4 text-base text-gray-600">
+            Stell deine Frage in ganzen S&auml;tzen. Die Antwort entsteht aus den Inhalten dieser
+            Website, die Quellen stehen direkt darunter.
+        </p>
+
+        <form class="mt-8"
+              method="get"
+              action="{{ path('sulu_ai_platform_public_intelligent_search_example') }}"
+              novalidate
+              data-ai-search-target="form"
+              data-action="submit->ai-search#submit">
+            <label for="ai-search-question" class="block text-sm font-bold text-gray-900">
+                Deine Frage
+            </label>
+            <textarea id="ai-search-question"
+                      name="q"
+                      rows="3"
+                      maxlength="500"
+                      required
+                      autocomplete="off"
+                      enterkeyhint="search"
+                      aria-describedby="ai-search-hint ai-search-error"
+                      class="mt-2 block w-full border-2 border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder-gray-500 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-700 aria-[invalid=true]:border-red-700"
+                      placeholder="z. B. Welche KI-Schulungen gibt es?"
+                      data-ai-search-target="question"
+                      data-action="keydown->ai-search#submitOnEnter input->ai-search#clearError">{{ initialQuestion }}</textarea>
+            <p id="ai-search-error" class="mt-2 text-sm font-bold text-red-700" hidden
+               data-ai-search-target="error"></p>
+
+            <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p id="ai-search-hint" class="text-sm text-gray-600">
+                    Enter sendet die Frage, Umschalt + Enter macht eine neue Zeile.
+                </p>
+                <button type="submit" class="cta cta-primary shrink-0 disabled:cursor-not-allowed disabled:opacity-60"
+                        data-ai-search-target="submit">
+                    Frage stellen
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-8" data-ai-search-target="examples">
+            <h2 class="text-sm font-bold text-gray-900">Zum Ausprobieren</h2>
+            <ul class="mt-3 flex list-none flex-col gap-2 pl-0 sm:flex-row sm:flex-wrap">
+                {% for example in exampleQuestions %}
+                    <li class="my-0">
+                        <button type="button"
+                                class="w-full border-2 border-green-900 bg-white px-3 py-2 text-left text-sm font-bold text-green-900 transition-colors duration-150 hover:bg-green-900 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 sm:w-auto"
+                                data-action="ai-search#useExample"
+                                data-ai-search-question-param="{{ example }}">
+                            {{ example }}
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <p class="mt-8 text-sm font-bold text-gray-700" role="status" aria-live="polite"
+           data-ai-search-target="status"></p>
+
+        <div class="mt-4" hidden data-ai-search-target="result">
+            <article class="border-2 border-gray-200 bg-white p-4 sm:p-6">
+                <p class="text-xs font-black uppercase tracking-widest text-gray-600">Deine Frage</p>
+                <p class="mt-1 text-base font-bold text-gray-900 break-words" data-ai-search-target="asked"></p>
+
+                <h2 class="mt-6 text-xs font-black uppercase tracking-widest text-green-900 focus:outline-none"
+                    tabindex="-1" data-ai-search-target="heading">
+                    Antwort
+                </h2>
+                <div class="mt-2 text-base leading-relaxed text-gray-900 break-words [&_a]:text-green-800 [&_a]:underline [&_code]:bg-gray-100 [&_code]:px-1 [&_h1]:mt-6 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mt-4 [&_h3]:font-bold [&_p]:mb-4 [&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:bg-gray-100 [&_pre]:p-3 [&_table]:mb-4 [&_td]:border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:px-2 [&_th]:py-1"
+                     aria-busy="false"
+                     data-ai-search-target="answer"></div>
+
+                <div class="mt-6 border-t-2 border-gray-200 pt-4" hidden data-ai-search-target="sourcesWrap">
+                    <h2 class="text-xs font-black uppercase tracking-widest text-gray-600">Quellen</h2>
+                    <ol class="mt-3 grid list-none grid-cols-1 gap-3 pl-0 sm:grid-cols-2"
+                        data-ai-search-target="sources"></ol>
+                </div>
+
+                <div class="mt-6 border-t-2 border-gray-200 pt-4" hidden data-ai-search-target="feedback">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <p class="text-sm font-bold text-gray-900" id="ai-search-feedback-label">
+                            War die Antwort hilfreich?
+                        </p>
+                        <div class="flex gap-2" role="group" aria-labelledby="ai-search-feedback-label">
+                            <button type="button"
+                                    class="border-2 border-green-900 bg-white px-4 py-2 text-sm font-bold text-green-900 transition-colors duration-150 hover:bg-green-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+                                    data-ai-search-target="feedbackButton"
+                                    data-action="ai-search#feedbackUp">
+                                Ja
+                            </button>
+                            <button type="button"
+                                    class="border-2 border-green-900 bg-white px-4 py-2 text-sm font-bold text-green-900 transition-colors duration-150 hover:bg-green-900 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
+                                    aria-expanded="false"
+                                    aria-controls="ai-search-feedback-comment"
+                                    data-ai-search-target="feedbackButton feedbackDown"
+                                    data-action="ai-search#feedbackDown">
+                                Nein
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="ai-search-feedback-comment" class="mt-4" hidden
+                         data-ai-search-target="feedbackComment">
+                        <label for="ai-search-feedback-text" class="block text-sm font-bold text-gray-900">
+                            Was hat gefehlt oder war falsch? <span class="font-normal text-gray-600">(optional)</span>
+                        </label>
+                        <textarea id="ai-search-feedback-text"
+                                  rows="3"
+                                  maxlength="{{ maxCommentLength }}"
+                                  class="mt-2 block w-full border-2 border-gray-300 bg-white px-3 py-2 text-base text-gray-900 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-700"
+                                  data-ai-search-target="feedbackText"></textarea>
+                        <div class="mt-3 flex flex-wrap items-center gap-4">
+                            <button type="button" class="cta cta-outline px-4 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+                                    data-ai-search-target="feedbackButton"
+                                    data-action="ai-search#sendFeedbackComment">
+                                Feedback senden
+                            </button>
+                            <button type="button" class="text-sm font-bold text-gray-700 underline"
+                                    data-action="ai-search#cancelFeedbackComment">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="mt-3 text-sm font-bold" role="status" aria-live="polite"
+                       data-ai-search-target="feedbackStatus"></p>
+                </div>
+            </article>
+        </div>
+
+        <p class="mt-8 text-sm text-gray-600">
+            Die Antworten erzeugt eine KI und sie k&ouml;nnen Fehler enthalten. Pr&uuml;f wichtige
+            Angaben in den Quellen. Deine Frage wird gespeichert, damit wir die Suche verbessern k&ouml;nnen.
+            Gib deshalb keine pers&ouml;nlichen Daten ein.
+        </p>
+    </section>
+{% endblock %}

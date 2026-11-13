@@ -2,28 +2,28 @@
   "entrypoints": {
     "app": {
       "js": [
-        "/build/website/runtime.9135b120.js",
+        "/build/website/runtime.fcc8f0f5.js",
         "/build/website/184.68be8fc6.js",
         "/build/website/861.b5287563.js",
-        "/build/website/app.5a03b93c.js"
+        "/build/website/app.98ccd95e.js"
       ],
       "css": [
-        "/build/website/230.4802e62a.css"
+        "/build/website/230.b031973e.css"
       ]
     },
     "chat": {
       "js": [
-        "/build/website/runtime.9135b120.js",
+        "/build/website/runtime.fcc8f0f5.js",
         "/build/website/184.68be8fc6.js",
         "/build/website/chat.7f31aaa4.js"
       ]
     },
     "style": {
       "js": [
-        "/build/website/runtime.9135b120.js"
+        "/build/website/runtime.fcc8f0f5.js"
       ],
       "css": [
-        "/build/website/230.4802e62a.css"
+        "/build/website/230.b031973e.css"
       ]
     }
   }
