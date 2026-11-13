@@ -1,3 +1,9 @@
+parameters:
+  # Empty defaults: a missing key must not take down every request (test env, CI, first deploy).
+  # Search then answers with an error until the real values are set (see docs/env-vars.md).
+  env(SULU_AI_PLATFORM_API_KEY): ''
+  env(SULU_AI_WEBHOOK_SECRET): ''
+
 sulu_ai_platform:
   api_key: '%env(SULU_AI_PLATFORM_API_KEY)%'
   contact_email: '%env(SULU_ADMIN_EMAIL)%' # shown to editors when the platform refuses for account reasons
