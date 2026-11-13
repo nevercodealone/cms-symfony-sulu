@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM composer AS composer
 
 WORKDIR /var/www/html
@@ -7,11 +8,22 @@ COPY composer.* /var/www/html/
 FROM composer AS composer-live
 
 # Application docker
-RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
+# The Sulu AI bundles come from the private repo sulu.repo.packagist.com. The token is passed as a
+# BuildKit secret (docker build --secret id=sulu_composer_token,...) and only lives in this RUN step:
+# it is not written to any image layer.
+RUN --mount=type=secret,id=sulu_composer_token \
+    if [ -s /run/secrets/sulu_composer_token ]; then \
+        export COMPOSER_AUTH="{\"http-basic\":{\"sulu.repo.packagist.com\":{\"username\":\"token\",\"password\":\"$(cat /run/secrets/sulu_composer_token)\"}}}"; \
+    fi; \
+    composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs --no-dev
 
 FROM composer AS composer-dev
 
-RUN composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
+RUN --mount=type=secret,id=sulu_composer_token \
+    if [ -s /run/secrets/sulu_composer_token ]; then \
+        export COMPOSER_AUTH="{\"http-basic\":{\"sulu.repo.packagist.com\":{\"username\":\"token\",\"password\":\"$(cat /run/secrets/sulu_composer_token)\"}}}"; \
+    fi; \
+    composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
 
 # Build actual image
 FROM php:8.2.35-apache AS webserver
