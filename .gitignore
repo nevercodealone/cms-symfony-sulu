@@ -170,3 +170,6 @@ phpstan.neon
 ###< phpunit/phpunit ###
 .mcp.json
 .crew/
+
+# uploads backup archive
+/uploads.tar.gz

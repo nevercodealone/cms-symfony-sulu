@@ -175,7 +175,6 @@ export class ChatHandler {
      * Initialize chat functionality
      */
     init() {
-        this.loadChatHistory();
         this.chatSubmit.addEventListener('click', (e) => {
             e.preventDefault();
             this.sendMessage();
@@ -189,42 +188,9 @@ export class ChatHandler {
     }
 
     /**
-     * Load chat history from API
-     */
-    async loadChatHistory() {
-        try {
-            const response = await fetch('/api/chat/history');
-            const data = await response.json();
-
-            if (data.success && data.messages && data.messages.length > 0) {
-                const welcome = document.getElementById('welcome');
-                if (welcome) welcome.remove();
-
-                data.messages.forEach(msg => {
-                    this.appendUserMessage(msg.question);
-                    this.appendBotMessage(msg.answer);
-
-                    if (msg.answer.includes('schlafen komm morgen wieder')) {
-                        this.setRateLimited();
-                    }
-                });
-
-                const separator = document.createElement('div');
-                separator.className = 'chat-history-separator text-center text-xs text-gray-400 my-3';
-                separator.innerHTML = '<hr class="border-gray-200 mb-2"><span class="bg-white px-2">Chat-Verlauf geladen</span>';
-                this.chatBody.appendChild(separator);
-
-                this.scrollToBottom();
-            }
-        } catch (error) {
-            console.error('Error loading chat history:', error);
-        }
-    }
-
-    /**
      * Send message to API
      */
-    async sendMessage() {
+    sendMessage() {
         const message = this.chatInput.value.trim();
         if (!message) return;
 
@@ -235,31 +201,10 @@ export class ChatHandler {
         if (separator) separator.remove();
 
         this.appendUserMessage(message);
-        const loadingDiv = this.showLoadingMessage();
         this.chatInput.value = '';
 
-        try {
-            const response = await fetch('/api/chat/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.replaceLoadingWithMessage(loadingDiv, data.response);
-
-                if (data.response.includes('schlafen komm morgen wieder')) {
-                    this.setRateLimited();
-                }
-            } else {
-                this.showError(loadingDiv);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNetworkError(loadingDiv);
-        }
+        this.appendBotMessage('Robot Golla ist gerade offline und kommt bald mit Symfony AI zurück.');
+        this.scrollToBottom();
     }
 
     /**

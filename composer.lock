@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dbd9e60e162d6b12b7faf47fe44f0f52",
+    "content-hash": "5bcc4dee1c593184074785deb8d1ff85",
     "packages": [
         {
             "name": "brick/math",
@@ -132,67 +132,6 @@
                 }
             ],
             "time": "2026-07-03T22:45:34+00:00"
-        },
-        {
-            "name": "codewithkyrian/chromadb-php",
-            "version": "1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CodeWithKyrian/chromadb-php.git",
-                "reference": "a27f4153e5f6a33bbf3c1a591885ac86941b0a5f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CodeWithKyrian/chromadb-php/zipball/a27f4153e5f6a33bbf3c1a591885ac86941b0a5f",
-                "reference": "a27f4153e5f6a33bbf3c1a591885ac86941b0a5f",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^8.1",
-                "php-http/discovery": "^1.20",
-                "psr/http-client": "^1.0",
-                "psr/http-factory": "^1.1"
-            },
-            "require-dev": {
-                "guzzlehttp/guzzle": "^7.10",
-                "mockery/mockery": "^1.6",
-                "pestphp/pest": "^2.19",
-                "symfony/process": "^6.4 || ^7.3 || ^8.0",
-                "symfony/var-dumper": "^6.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Codewithkyrian\\ChromaDB\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kyrian Obikwelu",
-                    "email": "kyrianobikwelu@gmail.com"
-                }
-            ],
-            "description": "A PHP client for the Chroma Open Source Embedding Database",
-            "keywords": [
-                "chroma",
-                "chromadb",
-                "database",
-                "embedding",
-                "open-source",
-                "php",
-                "search",
-                "semantic",
-                "vectors"
-            ],
-            "support": {
-                "issues": "https://github.com/CodeWithKyrian/chromadb-php/issues",
-                "source": "https://github.com/CodeWithKyrian/chromadb-php/tree/1.0.0"
-            },
-            "time": "2025-12-06T20:09:07+00:00"
         },
         {
             "name": "contao/imagine-svg",
@@ -7756,95 +7695,6 @@
                 }
             ],
             "time": "2026-06-16T07:10:08+00:00"
-        },
-        {
-            "name": "symfony/ai-chroma-db-store",
-            "version": "v0.10.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/ai-chroma-db-store.git",
-                "reference": "c0fffa0547ee8573dc044e57b67c61c2dbc626d9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/ai-chroma-db-store/zipball/c0fffa0547ee8573dc044e57b67c61c2dbc626d9",
-                "reference": "c0fffa0547ee8573dc044e57b67c61c2dbc626d9",
-                "shasum": ""
-            },
-            "require": {
-                "codewithkyrian/chromadb-php": "^1.0",
-                "php": ">=8.2",
-                "symfony/ai-platform": "^0.10",
-                "symfony/ai-store": "^0.10",
-                "symfony/uid": "^7.3|^8.0"
-            },
-            "require-dev": {
-                "nyholm/psr7": "^1.8",
-                "phpstan/phpstan": "^2.1",
-                "phpstan/phpstan-phpunit": "^2.0",
-                "phpstan/phpstan-strict-rules": "^2.0",
-                "phpunit/phpunit": "^11.5.53"
-            },
-            "type": "symfony-ai-store",
-            "extra": {
-                "thanks": {
-                    "url": "https://github.com/symfony/ai",
-                    "name": "symfony/ai"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Symfony\\AI\\Store\\Bridge\\ChromaDb\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Christopher Hertel",
-                    "email": "mail@christopher-hertel.de"
-                },
-                {
-                    "name": "Oskar Stark",
-                    "email": "oskarstark@googlemail.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "ChromaDB vector store bridge for Symfony AI",
-            "keywords": [
-                "Bridge",
-                "ai",
-                "chromadb",
-                "store",
-                "vector"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/ai-chroma-db-store/tree/v0.10.0"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/nicolas-grekas",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2026-06-15T22:48:31+00:00"
         },
         {
             "name": "symfony/ai-hugging-face-platform",

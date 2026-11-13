@@ -61,7 +61,7 @@
         itemscope itemtype="https://schema.org/SiteNavigationElement">
 
   {# ══ LOGO + CHIP NAV + HAMBURGER (single row on desktop) ══ #}
-  <div class="bg-white px-4 py-3 flex items-center max-w-screen-xl mx-auto">
+  <div class="bg-white px-4 sm:px-6 lg:px-8 py-3 flex items-center max-w-screen-xl mx-auto">
     <a href="{{ sulu_content_root_path() }}"
        aria-label="Zur Startseite – Never Code Alone"
        title="Link zur Startseite auf dem Logo"
@@ -77,12 +77,11 @@
         {% for item in navItems %}
           {% set url = sulu_content_path(item.url) %}
           <li class="flex-shrink-0" style="padding:0;margin:0">
-            <a href="{{ url }}"
-               title="{{ item.title }}"
-               class="border-2 border-green-900 text-xs font-black tracking-wide uppercase px-3 py-1.5 whitespace-nowrap transition-colors duration-150 inline-block no-underline
-                 {{ app.request.uri starts with url ? 'bg-green-900 text-white' : 'bg-white text-green-900 hover:bg-green-900 hover:text-white' }}">
-               {{ item.title }}
-            </a>
+             <a href="{{ url }}"
+                title="{{ item.title }}"
+                class="chip {{ app.request.uri starts with url ? 'chip-active' : 'chip-idle' }}">
+                {{ item.title }}
+             </a>
           </li>
         {% endfor %}
       </ul>

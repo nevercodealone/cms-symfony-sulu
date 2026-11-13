@@ -9,7 +9,12 @@
   </div>
 {% endif %}
 
-<div class="relative overflow-x-auto">
+<div class="relative overflow-x-auto
+            [scrollbar-width:thin] [scrollbar-color:#14532d_transparent]
+            [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5
+            [&::-webkit-scrollbar-track]:bg-transparent
+            [&::-webkit-scrollbar-thumb]:bg-green-900 [&::-webkit-scrollbar-thumb]:rounded-full
+            [&::-webkit-scrollbar-thumb]:hover:bg-green-800">
   <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
     {% if content.columnheader1 or content.columnheader2 or content.columnheader3 %}
       <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">

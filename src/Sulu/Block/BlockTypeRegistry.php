@@ -92,7 +92,7 @@ final class BlockTypeRegistry
         // === NAVIGATION BLOCKS ===
         'highlights' => 'Content highlights referencing snippets.',
         'related-content-by-page-tag' => 'Related content based on page tags.',
-        'subpages-overview' => 'List of child pages.',
+        'subpages-overview' => 'List of child pages as card grid. Default: progressive loading via load-more button "Mehr zeigen 6/24" — first 6 cards visible, each click reveals 6 more, button disappears when all shown. disableLoading (checkbox, default false): true renders all cards at once without the button (for overview pages).',
         'table-of-contents' => 'Auto-generated table of contents.',
         'latest-articles' => 'Automatically lists the 6 most recently created published pages in the webspace, rendered as a 3-column card grid (matches highlights visual style). Optional headline field. No editor data source required.',
 
@@ -112,6 +112,9 @@ final class BlockTypeRegistry
 
         // === WORKSHOP ===
         'workshop-offer' => 'Workshop offer section rendered from a workshop_offer snippet (offer = snippet UUID, mandatory, only workshop_offer snippets selectable). Two columns: offer (eyebrow, headline, text, 2-4 numbered steps, contact person, button to target page) and facts from the workshop_facts default snippet assigned to the workshop_facts webspace snippet area. Renders nothing when the target page is unpublished or no offer is set.',
+
+        // === EVENT ===
+        'hockenheim' => 'Hockenheimring workshop slide deck: 6 static content slides plus an optional gallery slide fed by the bilder smart_content (media folder, managed via admin UI). Optional nested story chapters render a hidden 3D cylinder modal (cylinder_controller). Chapters are passed via the items parameter on add_block/append_to_block/update_block; stored as story[]. Chapter fields: time, metaIcon (Material Symbol name, e.g. speed), metaText, metaBadge, accent (emerald, amber, purple or cyan), kicker, title, description, image and image2 (media, image2 optional — one image renders full width, two side by side; accept a media ID (42), {"id":42} or {"ids":[42]} and are stored as {"ids":[...]}), imageBadge, imageBadge2, check1, check2, focus. MEILENSTEIN numbering and the n / N counter are generated automatically.',
     ];
 
     /**
@@ -380,6 +383,7 @@ final class BlockTypeRegistry
         'subpages-overview' => [
             'type' => 'subpages-overview',
             'items' => '{"dataSource":"uuid-of-source-page","includeSubFolders":true}',
+            'disableLoading' => false,
         ],
         'table-of-contents' => [
             'type' => 'table-of-contents',
@@ -428,6 +432,29 @@ final class BlockTypeRegistry
         'workshop-offer' => [
             'type' => 'workshop-offer',
             'offer' => 'uuid-of-workshop-offer-snippet',
+        ],
+        'hockenheim' => [
+            'type' => 'hockenheim',
+            'story' => [
+                [
+                    'type' => 'chapter',
+                    'time' => 'Tag 1 • 09:30 – 14:00 Uhr',
+                    'metaIcon' => 'speed',
+                    'metaText' => '20.09s Rundenzeit',
+                    'metaBadge' => 'Box 12 Paddock',
+                    'accent' => 'emerald',
+                    'kicker' => '// Highspeed & Clean Architecture',
+                    'title' => 'Theorie, Setup & Ideallinie im Qualifying',
+                    'description' => 'Vormittags intensives Vibe Coding & MCP Architecture in Box 12. Nachmittags Qualifying mit 48V Elektro-Karts auf dem LED Timing-Tower.',
+                    'image' => ['id' => 1],
+                    'imageBadge' => '48V Drift Qualifying',
+                    'image2' => ['id' => 2],
+                    'imageBadge2' => 'LED Tower',
+                    'check1' => 'Claude Code Setup',
+                    'check2' => 'Instant Torque',
+                    'focus' => 'Prompt Injection, Test Driven AI',
+                ],
+            ],
         ],
     ];
 
@@ -483,6 +510,15 @@ final class BlockTypeRegistry
         ],
         'quote' => [
             'properties' => ['text', 'author', 'role', 'source', 'date', 'url'],
+        ],
+
+        // === EVENT ===
+        'hockenheim' => [
+            'properties' => ['internalNote'],
+            'nested' => 'story',
+            'nestedType' => 'chapter',  // XML default-type
+            'nestedProperties' => ['type', 'time', 'metaIcon', 'metaText', 'metaBadge', 'accent', 'kicker', 'title', 'description', 'image', 'imageBadge', 'image2', 'imageBadge2', 'check1', 'check2', 'focus'],
+            'nestedEncoding' => ['image' => 'json', 'image2' => 'json'],
         ],
 
         // === HERO BLOCKS ===
@@ -608,7 +644,7 @@ final class BlockTypeRegistry
             'encoding' => ['snippets' => 'reference'],
         ],
         'subpages-overview' => [
-            'properties' => ['items'],
+            'properties' => ['items', 'disableLoading'],
             'encoding' => ['items' => 'json'],
         ],
         'table-of-contents' => [

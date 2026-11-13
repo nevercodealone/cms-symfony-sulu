@@ -111,6 +111,38 @@ class BlockTypeRegistryTest extends TestCase
         $this->assertEmpty($props);
     }
 
+    // === Hockenheim Block Tests (uses 'story' not 'items') ===
+
+    public function testHockenheimBlockHasCorrectNestedName(): void
+    {
+        $this->assertEquals('story', $this->registry->getNestedName('hockenheim'));
+    }
+
+    public function testHockenheimBlockHasCorrectNestedProperties(): void
+    {
+        $nestedProps = $this->registry->getNestedProperties('hockenheim');
+
+        $this->assertContains('time', $nestedProps);
+        $this->assertContains('title', $nestedProps);
+        $this->assertContains('image', $nestedProps);
+        $this->assertContains('image2', $nestedProps);
+        $this->assertNotContains('items', $nestedProps);
+    }
+
+    public function testHockenheimNestedImagesUseJsonEncoding(): void
+    {
+        $this->assertEquals('json', $this->registry->getNestedPropertyEncoding('hockenheim', 'image'));
+        $this->assertEquals('json', $this->registry->getNestedPropertyEncoding('hockenheim', 'image2'));
+    }
+
+    public function testHockenheimExampleUsesStoryKey(): void
+    {
+        $example = $this->registry->getExample('hockenheim');
+
+        $this->assertArrayHasKey('story', $example);
+        $this->assertArrayNotHasKey('items', $example);
+    }
+
     // === Table Block Tests (uses 'rows' not 'items') ===
 
     public function testTableBlockHasCorrectNestedName(): void
@@ -346,6 +378,7 @@ class BlockTypeRegistryTest extends TestCase
             'page-teaser' => ['page-teaser'],
             'quote' => ['quote'],
             'workshop-offer' => ['workshop-offer'],
+            'hockenheim' => ['hockenheim'],
         ];
     }
 

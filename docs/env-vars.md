@@ -61,7 +61,8 @@ DATABASE_URL=mysql://...     ← from entrypoint, real value
 | `MAILER_DSN` `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` | compose+entrypoint | msmtp config |
 | `CONTACT_LEAD_EMAIL` | compose+entrypoint | recipient |
 | `GEMINI_API_KEY` `GEMINI_MODEL` | compose+entrypoint | AI |
-| `ANTHROPIC_API_KEY` `HUGGINGFACE_KEY` `DEEPL_API_KEY` | compose+entrypoint | AI |
+| `ANTHROPIC_API_KEY` `HUGGINGFACE_API_KEY` `DEEPL_API_KEY` | compose+entrypoint | AI |
+| `SULU_AI_PLATFORM_API_KEY` `SULU_AI_WEBHOOK_SECRET` | compose+entrypoint | sulu.ai platform: intelligent search (`/ai-search`) and webhook |
 | `GOOGLE_API_KEY` | compose+entrypoint | YouTube API |
 | `TWITTER_API_KEY` `TWITTER_API_SECRET` `TWITTER_ACCESS_TOKEN` `TWITTER_ACCESS_SECRET` | compose+entrypoint | social |
 | `CHROMADB_HOST` `CHROMADB_PORT` `CHROMADB_DATABASE` | compose+entrypoint | vector store |

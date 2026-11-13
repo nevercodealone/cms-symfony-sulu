@@ -476,18 +476,6 @@
     "symfony/ai-bundle": {
         "version": "dev-main"
     },
-    "symfony/ai-chroma-db-store": {
-        "version": "0.10",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "0.1",
-            "ref": "70b5179ede32bb6faf93f7f521570d3740f5230e"
-        },
-        "files": [
-            "config/packages/ai_chroma_db_store.yaml"
-        ]
-    },
     "symfony/ai-hugging-face-platform": {
         "version": "0.10",
         "recipe": {

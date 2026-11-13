@@ -17,6 +17,16 @@ DirectoryIndex index.php
     Options -MultiViews
 </IfModule>
 
+# Everything that is not the live domain requires HTTP Basic Auth (nca:nca).
+# Keeps staging environments (*.projects.nevercodealone.de) out of search indexes.
+AuthType Basic
+AuthName "NCA"
+AuthUserFile /var/www/html/public/.htpasswd
+<RequireAny>
+    Require expr "%{HTTP_HOST} =~ m#^nevercodealone\.de$#i"
+    Require valid-user
+</RequireAny>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 

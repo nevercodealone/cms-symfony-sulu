@@ -9,7 +9,10 @@
         {% set factsSnippet = sulu_snippet_load_by_area('workshop_facts') %}
         {% set facts = factsSnippet is not null ? factsSnippet.content : null %}
 
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white border-2 border-green-700 shadow-[0_32px_64px_-12px_rgba(0,107,44,0.08)]">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white border-2 border-green-700 shadow-[0_32px_64px_-12px_rgba(0,107,44,0.08)]"
+             data-track-content
+             data-content-name="workshop-offer"
+             data-content-piece="{{ offer.title }}">
             {# === LEFT: workshop offer (full width when no facts snippet is assigned) === #}
             <div class="{{ facts is not null ? 'md:col-span-8' : 'md:col-span-12' }} p-8 md:p-12 lg:p-16">
                 <header class="mb-8">

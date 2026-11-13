@@ -41,14 +41,14 @@ class PageMetaTest extends TestCase
         );
     }
 
-    public function test_updateDateFallsBackFromPublishedToChangedToCreated(): void
+    public function test_updateDatePrefersChangedOverPublished(): void
     {
         $template = $this->getTemplateContent();
 
         $this->assertStringContainsString(
-            '(published is defined and published) ? published : ((changed is defined and changed) ? changed : created)',
+            '(changed is defined and changed) ? changed : ((published is defined and published) ? published : created)',
             $template,
-            'Because the "Aktualisiert" block now always renders, updateDate must prefer published and fall back to changed or created.'
+            'Sulu only sets `published` once (first publish) and never refreshes it on re-publish, so the last content update lives in `changed` - updateDate must prefer it and fall back to published or created.'
         );
     }
 

@@ -182,9 +182,9 @@ XML;
 
         $this->assertTrue($result['success'], $result['message']);
 
-        // Both workspaces get the same XML.
-        $this->assertCount(2, $written);
-        $this->assertSame($written[0], $written[1]);
+        // Draft workspace only: one write; the real publish copies it to live.
+        $this->assertCount(1, $written);
+        $this->assertStringContainsString('i18n:de-changed', $written[0], 'draft metadata must be touched');
 
         $data = $result['trainingData'];
         $this->assertSame('https://shop.test/new', $data['paymenturl']);

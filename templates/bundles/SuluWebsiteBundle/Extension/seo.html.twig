@@ -76,16 +76,8 @@
 {%- endblock -%}
 
 {%- block urls -%}
-    {#- when only one language do not show alternative -#}
-    {%- if localizations|length > 1 -%}
-        {%- for localization in localizations -%}
-            {%- if localization.alternate is not defined or localization.alternate -%}
-                <link rel="alternate" href="{{ localization.url }}" hreflang="{{ localization.locale|replace({'_': '-'}) }}">
-            {%- endif -%}
-        {%- endfor -%}
-        {%- if localizations[defaultLocale|default('de')]|default() -%}
-            <link rel="alternate" href="{{ localizations[defaultLocale|default('de')].url }}" hreflang="x-default">
-        {%- endif -%}
+    {%- if localizations['de']|default() -%}
+        <link rel="alternate" href="{{ localizations['de'].url }}" hreflang="de">
     {%- endif -%}
 {%- endblock -%}
 

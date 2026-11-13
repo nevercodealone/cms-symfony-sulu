@@ -161,8 +161,18 @@ The Sulu MCP Server enables managing CMS pages via these actions:
 - `create_page` - Create a new page
 - `copy_page` - Copy a page with all blocks to a new location
 - `update_excerpt` - Update excerpt (title, description, image) on an existing page
-- `publish` - Publish page
+- `publish` - Publish page (Sulu moves the live route; the previous URL becomes a 301 history route)
 - `unpublish` - Unpublish page
+
+### URLs, Routes & Redirects
+- `update_resource_locator` - Change the slug of a page (path, resourceSegment, publish). Old URL becomes a 301 history route. Fails with `resource_locator_taken` naming the conflicting page.
+- `move_page` - Move a page under another parent (path, targetParentPath, optional resourceSegment, publish). New URL is always `<parent URL>/<segment>`; old URLs become 301 history routes. Fails with `parent_missing_draft_route` when the target parent has no draft route.
+- `route_health` - draftUrl, liveUrl, routeHealth `{draft, live, references, activeRoutes, healthy}` and all route nodes of a page. `list` and `get_structure` include the same fields per page.
+- `list_history_routes` - Every active and history route of a page in both workspaces
+- `check_url` - How the website answers a public URL: `page`, `history_redirect`, `redirect_bundle` or `not_found` (`duplicate: true` when an outdated URL still serves the page)
+- `list_redirects`, `create_redirect` (single or bulk up to 50), `update_redirect`, `delete_redirect` (confirm = id) - SuluRedirectBundle redirects. Use them for URLs no page owns any more; moves and slug changes create history routes on their own.
+
+Every write that touches a URL returns draftUrl, liveUrl, routeHealth and historyRoutes, and `success: false` with a `reason` when the route check after the write fails.
 
 ### Block Management
 - `add_block` - Add a block

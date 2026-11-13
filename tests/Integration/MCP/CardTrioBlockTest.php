@@ -5,18 +5,43 @@ declare(strict_types=1);
 namespace App\Tests\Integration\MCP;
 
 use App\MCP\Tools\SuluPagesTool;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class CardTrioBlockTest extends KernelTestCase
 {
     private SuluPagesTool $tool;
+    private Connection $connection;
     private string $testPath = '/cmf/example/contents/die-websprinter';
+    private string $originalDraftProps = '';
 
     protected function setUp(): void
     {
         self::bootKernel();
         $container = static::getContainer();
         $this->tool = $container->get(SuluPagesTool::class);
+        $this->connection = $container->get(Connection::class);
+
+        // The block actions write the DRAFT workspace only (changed + state 2->1),
+        // and this test writes to a real page: restore the original draft props
+        // in tearDown() so no "unpublished changes" residue is left behind.
+        $props = $this->connection->fetchOne(
+            'SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = ?',
+            [$this->testPath, 'default'],
+        );
+        $this->originalDraftProps = \is_string($props) ? $props : '';
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->originalDraftProps !== '') {
+            $this->connection->executeStatement(
+                'UPDATE phpcr_nodes SET props = ? WHERE path = ? AND workspace_name = ?',
+                [$this->originalDraftProps, $this->testPath, 'default'],
+            );
+        }
+
+        parent::tearDown();
     }
 
     public function testAddCardTrioBlockWithCards(): void

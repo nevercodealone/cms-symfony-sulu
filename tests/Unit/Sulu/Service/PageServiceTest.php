@@ -18,6 +18,8 @@ use Sulu\Component\DocumentManager\DocumentManagerInterface;
 
 class PageServiceTest extends TestCase
 {
+    use DocumentCommandStubsTrait;
+
     private Connection&MockObject $connection;
     private McpActivityLogger&MockObject $activityLogger;
     private PageService $pageService;
@@ -151,7 +153,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -175,7 +177,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $result = $this->pageService->addBlock(
@@ -216,7 +218,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -236,7 +238,7 @@ XML;
 
         // Capture the XML that gets written
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0]; // First param is the XML
@@ -247,6 +249,7 @@ XML;
 
         $this->assertTrue($result['success']);
         $this->assertNotNull($capturedXml, 'XML should have been captured');
+        $this->assertStringContainsString('i18n:de-changed', $capturedXml, 'draft metadata must be touched on content writes');
 
         // Parse the captured XML and verify changes
         $xml = new \DOMDocument();
@@ -345,7 +348,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -424,7 +427,7 @@ XML;
         $this->connection->method('fetchAssociative')
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement');
 
         $this->activityLogger->expects($this->once())
@@ -461,31 +464,83 @@ XML;
 
     public function testPublishPageSuccess(): void
     {
-        $this->connection->method('fetchAssociative')
-            ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
-
-        $this->connection->expects($this->exactly(2))
-            ->method('executeStatement');
+        $health = $this->stubRouteHealth(fn (string $p) => $this->healthReport($p, '/test', '/test', true));
+        $service = new PageService($this->connection, $this->activityLogger, commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/test', 'url' => '/test']), routeHealth: $health);
 
         $this->activityLogger->expects($this->once())
             ->method('logMcpAction')
             ->with('mcp_page_published', '/cmf/example/contents/test', 'de');
 
-        $result = $this->pageService->publishPage('/cmf/example/contents/test', 'de');
+        $result = $service->publishPage('/cmf/example/contents/test', 'de');
 
         $this->assertTrue($result['success']);
         $this->assertEquals('Page published successfully', $result['message']);
+        $this->assertSame('/test', $result['liveUrl']);
+        $this->assertSame(['app:page:publish', '/cmf/example/contents/test', '--locale=de'], $this->spawnedArgs('app:page:publish'));
+    }
+
+    public function testPublishPageReportsMovedRouteAndNewHistoryRoutes(): void
+    {
+        $calls = 0;
+        $health = $this->stubRouteHealth(function (string $p) use (&$calls) {
+            $calls++;
+
+            return $calls === 1
+                ? $this->healthReport($p, '/glossare/ki/krea-2', '/glossare/krea-2', true, 'ok', 'mismatch', [
+                    ['url' => '/glossare/ki/krea-2', 'workspace' => 'default', 'history' => false],
+                    ['url' => '/glossare/krea-2', 'workspace' => 'default_live', 'history' => false],
+                ])
+                : $this->healthReport($p, '/glossare/ki/krea-2', '/glossare/ki/krea-2', true, 'ok', 'ok', [
+                    ['url' => '/glossare/ki/krea-2', 'workspace' => 'default', 'history' => false],
+                    ['url' => '/glossare/ki/krea-2', 'workspace' => 'default_live', 'history' => false],
+                    ['url' => '/glossare/krea-2', 'workspace' => 'default_live', 'history' => true],
+                ]);
+        });
+        $service = new PageService($this->connection, $this->activityLogger, commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/test', 'url' => '/test']), routeHealth: $health);
+
+        $result = $service->publishPage('/cmf/example/contents/test', 'de');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('/glossare/ki/krea-2', $result['liveUrl']);
+        $this->assertSame([['url' => '/glossare/krea-2', 'workspace' => 'default_live']], $result['historyRoutes']);
+    }
+
+    public function testPublishPageFailsWhenLiveRouteDoesNotMatchDraft(): void
+    {
+        $health = $this->stubRouteHealth(fn (string $p) => $this->healthReport($p, '/glossare/ki/krea-2', '/glossare/krea-2', true, 'ok', 'mismatch'));
+        $service = new PageService($this->connection, $this->activityLogger, commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/test', 'url' => '/test']), routeHealth: $health);
+
+        $result = $service->publishPage('/cmf/example/contents/test', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('live_route_mismatch', $result['errorCode']);
+        $this->assertSame('/glossare/ki/krea-2', $result['draftUrl']);
+        $this->assertSame('/glossare/krea-2', $result['liveUrl']);
+        $this->assertStringContainsString('does not match', $result['reason']);
+    }
+
+    public function testPublishPagePassesCommandFailureThrough(): void
+    {
+        $health = $this->stubRouteHealth(fn (string $p) => $this->healthReport($p, '/test', null, false, 'none', 'none'));
+        $runner = $this->stubRunner(['success' => false, 'errorCode' => 'publish_failed', 'message' => 'boom']);
+        $service = new PageService($this->connection, $this->activityLogger, commandRunner: $runner, routeHealth: $health);
+
+        $result = $service->publishPage('/cmf/example/contents/test', 'de');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('publish_failed', $result['errorCode']);
+        $this->assertSame('boom', $result['message']);
     }
 
     public function testPublishPageFailsForNonexistentPage(): void
     {
-        $this->connection->method('fetchAssociative')
-            ->willReturn(false);
+        $service = new PageService($this->connection, $this->activityLogger, commandRunner: $this->stubRunner(), routeHealth: $this->stubRouteHealth(fn () => null));
 
-        $result = $this->pageService->publishPage('/nonexistent', 'de');
+        $result = $service->publishPage('/nonexistent', 'de');
 
         $this->assertFalse($result['success']);
         $this->assertEquals('Page not found', $result['message']);
+        $this->assertSame([], $this->spawnedCommands);
     }
 
     public function testUnpublishPageSuccess(): void
@@ -585,7 +640,7 @@ XML;
         );
     }
 
-    public function testAddBlockFlushesCache(): void
+    public function testAddBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -597,17 +652,15 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect cache invalidation calls
-        $this->cacheManager->expects($this->once())
-            ->method('invalidateTag')
-            ->with('test-uuid-123');
+        // Draft-only writes do not change the live page, so the live cache stays
+        // alone; the real publish (app:page:publish) invalidates it.
+        $this->cacheManager->expects($this->never())
+            ->method('invalidateTag');
 
-        $this->cacheManager->expects($this->once())
-            ->method('invalidatePath')
-            ->with('/de/test');
+        $this->cacheManager->expects($this->never())
+            ->method('invalidatePath');
 
-        // CRITICAL: Verify flush() is called for long-running processes
-        $this->fosCacheManager->expects($this->once())
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->addBlock(
@@ -618,7 +671,7 @@ XML;
         );
     }
 
-    public function testUpdateBlockFlushesCache(): void
+    public function testUpdateBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -630,14 +683,14 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect cache invalidation and flush
-        $this->cacheManager->expects($this->once())
+        // Draft-only write: no live content change, no cache invalidation
+        $this->cacheManager->expects($this->never())
             ->method('invalidateTag');
 
-        $this->cacheManager->expects($this->once())
+        $this->cacheManager->expects($this->never())
             ->method('invalidatePath');
 
-        $this->fosCacheManager->expects($this->once())
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->updateBlock(
@@ -648,7 +701,7 @@ XML;
         );
     }
 
-    public function testRemoveBlockFlushesCache(): void
+    public function testRemoveBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -660,8 +713,8 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect flush to be called
-        $this->fosCacheManager->expects($this->once())
+        // Draft-only write: no live content change, no cache flush
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->removeBlock('/cmf/example/contents/test', 0, 'de');
@@ -669,52 +722,53 @@ XML;
 
     public function testPublishPageFlushesCache(): void
     {
-        $pageService = $this->createPageServiceWithCache();
+        $this->cacheManager = $this->createMock(CacheManagerInterface::class);
+        $this->fosCacheManager = $this->createMock(FOSCacheManager::class);
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            $this->cacheManager,
+            $this->fosCacheManager,
+            commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/test', 'url' => '/test']),
+            routeHealth: $this->stubRouteHealth(fn (string $p) => $this->healthReport($p, '/test', '/test', true)),
+        );
 
         $this->connection->method('fetchAssociative')
-            ->willReturn([
-                'props' => self::SAMPLE_PHPCR_XML,
-                'identifier' => 'test-uuid-publish',
-            ]);
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML, 'identifier' => 'test-uuid-publish']);
 
-        $this->connection->method('executeStatement')->willReturn(1);
-
-        // Expect flush to be called
-        $this->fosCacheManager->expects($this->once())
-            ->method('flush');
+        $this->fosCacheManager->expects($this->once())->method('flush');
 
         $pageService->publishPage('/cmf/example/contents/test', 'de');
     }
 
-    public function testFlushExceptionDoesNotBreakOperation(): void
+    public function testFlushExceptionDoesNotBreakPublish(): void
     {
-        $pageService = $this->createPageServiceWithCache();
+        $this->cacheManager = $this->createMock(CacheManagerInterface::class);
+        $this->fosCacheManager = $this->createMock(FOSCacheManager::class);
+        $pageService = new PageService(
+            $this->connection,
+            $this->activityLogger,
+            $this->cacheManager,
+            $this->fosCacheManager,
+            commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/test', 'url' => '/test']),
+            routeHealth: $this->stubRouteHealth(fn (string $p) => $this->healthReport($p, '/test', '/test', true)),
+        );
 
         $this->connection->method('fetchAssociative')
-            ->willReturn([
-                'props' => self::SAMPLE_PHPCR_XML,
-                'identifier' => 'test-uuid-exception',
-            ]);
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML, 'identifier' => 'test-uuid-exception']);
 
-        $this->connection->method('executeStatement')->willReturn(1);
-
-        // Simulate flush() throwing an exception
+        // Cache flush failures are logged inside invalidatePageCache(), not propagated
         $this->fosCacheManager->expects($this->once())
             ->method('flush')
             ->willThrowException(new \Exception('Cache flush failed'));
 
-        // Operation should still succeed despite flush exception
-        $result = $pageService->addBlock(
-            '/cmf/example/contents/test',
-            ['type' => 'headline-paragraphs', 'headline' => 'Test'],
-            0,
-            'de'
-        );
+        // The publish should still succeed despite the flush exception
+        $result = $pageService->publishPage('/cmf/example/contents/test', 'de');
 
         $this->assertTrue($result['success']);
     }
 
-    public function testMoveBlockFlushesCache(): void
+    public function testMoveBlockDoesNotFlushLiveCacheForDraftWrite(): void
     {
         $pageService = $this->createPageServiceWithCache();
 
@@ -726,8 +780,8 @@ XML;
 
         $this->connection->method('executeStatement')->willReturn(1);
 
-        // Expect flush to be called
-        $this->fosCacheManager->expects($this->once())
+        // Draft-only write: no live content change, no cache flush
+        $this->fosCacheManager->expects($this->never())
             ->method('flush');
 
         $pageService->moveBlock('/cmf/example/contents/test', 0, 1, 'de');
@@ -1349,7 +1403,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1388,7 +1442,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1424,7 +1478,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1502,7 +1556,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1539,7 +1593,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1616,7 +1670,7 @@ XML;
             ->willReturn(['props' => self::SAMPLE_PHPCR_XML]);
 
         $capturedXml = null;
-        $this->connection->expects($this->exactly(2))
+        $this->connection->expects($this->exactly(1))
             ->method('executeStatement')
             ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
                 $capturedXml = $params[0];
@@ -1799,6 +1853,58 @@ XML;
 </sv:node>
 XML;
 
+    /**
+     * Service whose create/publish commands and route checks are stubbed.
+     */
+    private function copyService(): PageService
+    {
+        return new PageService(
+            $this->connection,
+            $this->activityLogger,
+            commandRunner: $this->stubRunner(fn (array $args) => [
+                'success' => true,
+                'path' => $args[1] . '/' . ltrim($args[3] ?? 'x', '/'),
+                'uuid' => 'new-uuid',
+                'url' => '/' . ltrim($args[3] ?? 'x', '/'),
+            ]),
+            routeHealth: $this->stubRouteHealth(),
+        );
+    }
+
+    public function testCopyPageInheritsSeoFieldsFromSource(): void
+    {
+        $sourceProps = str_replace(
+            '</sv:node>',
+            '<sv:property sv:name="i18n:de-seo-title" sv:type="String" sv:multi-valued="0"><sv:value length="9">Seo Title</sv:value></sv:property>'
+            . '<sv:property sv:name="i18n:de-seo-keywords" sv:type="String" sv:multi-valued="0"><sv:value length="7">php,mcp</sv:value></sv:property></sv:node>',
+            self::SAMPLE_PHPCR_XML_WITH_EXCERPT
+        );
+        $this->connection->method('fetchAssociative')->willReturnCallback(function ($sql) use ($sourceProps) {
+            if (str_contains($sql, 'SELECT id, path, props')) {
+                return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => $sourceProps];
+            }
+            if (str_contains($sql, 'SELECT id FROM')) {
+                return false;
+            }
+
+            return ['path' => '/cmf/example/contents/source', 'props' => $sourceProps];
+        });
+        $this->connection->method('fetchOne')->willReturn($sourceProps);
+        $this->connection->method('executeStatement')->willReturn(1);
+
+        $result = $this->copyService()->copyPage([
+            'sourcePath' => '/cmf/example/contents/source',
+            'title' => 'Copy',
+            'resourceSegment' => '/copy',
+            'seoTitle' => 'Own Title',
+        ], 'de');
+
+        $this->assertTrue($result['success']);
+        $args = $this->spawnedArgs('app:page:create');
+        $this->assertContains('--seo-title=Own Title', $args, 'explicit SEO title wins');
+        $this->assertContains('--seo-keywords=php,mcp', $args, 'keywords inherited from source');
+    }
+
     public function testCopyPageRequiresSourcePath(): void
     {
         $result = $this->pageService->copyPage(['title' => 'Test', 'resourceSegment' => '/test'], 'de');
@@ -1845,9 +1951,6 @@ XML;
                     return false;
                 }
                 // Fifth call: get max sort order
-                if ($callCount === 5) {
-                    return false; // no max
-                }
                 // Remaining calls: addBlock operations
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
             });
@@ -1861,7 +1964,7 @@ XML;
         $this->activityLogger->expects($this->atLeastOnce())
             ->method('logMcpAction');
 
-        $result = $this->pageService->copyPage([
+        $result = $this->copyService()->copyPage([
             'sourcePath' => '/cmf/example/contents/source-page',
             'parentPath' => '/cmf/example/contents',
             'title' => 'Copied Page',
@@ -1904,7 +2007,7 @@ XML;
 
         // We verify the excerpt is inherited by checking the activity log
         // The copyPage method passes excerpt data through createPage
-        $result = $this->pageService->copyPage([
+        $result = $this->copyService()->copyPage([
             'sourcePath' => '/cmf/example/contents/source-page',
             'parentPath' => '/cmf/example/contents',
             'title' => 'Copied',
@@ -1944,7 +2047,7 @@ XML;
                 return true;
             });
 
-        $this->pageService->copyPage([
+        $this->copyService()->copyPage([
             'sourcePath' => '/cmf/example/contents/source',
             'parentPath' => '/cmf/example/contents',
             'title' => 'Copy',
@@ -1983,9 +2086,6 @@ XML;
                 if ($callCount === 4) {
                     return false;
                 }
-                if ($callCount === 5) {
-                    return false;
-                }
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
             });
 
@@ -2003,7 +2103,7 @@ XML;
                 return 1;
             });
 
-        $result = $this->pageService->copyPage([
+        $result = $this->copyService()->copyPage([
             'sourcePath' => '/cmf/example/contents/image-page',
             'parentPath' => '/cmf/example/contents',
             'title' => 'Copied Image Page',
@@ -2050,9 +2150,6 @@ XML;
                 if ($callCount === 4) {
                     return false;
                 }
-                if ($callCount === 5) {
-                    return false;
-                }
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
             });
 
@@ -2070,7 +2167,7 @@ XML;
                 return 1;
             });
 
-        $result = $this->pageService->copyPage([
+        $result = $this->copyService()->copyPage([
             'sourcePath' => '/cmf/example/contents/image-page',
             'parentPath' => '/cmf/example/contents',
             'title' => 'Copied With Excerpt',
@@ -2079,27 +2176,11 @@ XML;
 
         $this->assertTrue($result['success']);
 
-        // Find the createPage INSERT XML (contains excerpt data from buildPagePropsXml)
-        $createXml = null;
-        foreach ($capturedXmlStatements as $entry) {
-            if (str_starts_with($entry['sql'], 'INSERT') && str_contains($entry['xml'], 'excerpt-title')) {
-                $createXml = $entry['xml'];
-                break;
-            }
-        }
-
-        $this->assertNotNull($createXml, 'Should have captured createPage INSERT XML with excerpt data');
-
-        // Verify excerpt-title inherited from source
-        $this->assertStringContainsString('Source Teaser', $createXml, 'excerpt-title should be "Source Teaser" inherited from source');
-
-        // Verify excerpt-description inherited from source
-        $this->assertStringContainsString('excerpt-description', $createXml, 'excerpt-description should be present');
-        $this->assertStringContainsString('Source Description', $createXml, 'excerpt-description should be "Source Description" inherited from source');
-
-        // Verify excerpt-images inherited from source
-        $this->assertStringContainsString('excerpt-images', $createXml, 'excerpt-images should be present');
-        $this->assertStringContainsString('"ids":[993]', $createXml, 'excerpt-images should contain source image id 993');
+        // The excerpt is handed to app:page:create, inherited from the source.
+        $args = $this->spawnedArgs('app:page:create');
+        $this->assertContains('--excerpt-title=Source Teaser', $args, 'excerpt-title should be inherited from source');
+        $this->assertContains('--excerpt-description=Source Description', $args, 'excerpt-description should be inherited from source');
+        $this->assertContains('--excerpt-image=993', $args, 'excerpt image id 993 should be inherited from source');
     }
 
     public function testCopyPageExcerptOverrideReplacesSourceValues(): void
@@ -2122,9 +2203,6 @@ XML;
                 if ($callCount === 4) {
                     return false;
                 }
-                if ($callCount === 5) {
-                    return false;
-                }
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
             });
 
@@ -2141,7 +2219,7 @@ XML;
                 return 1;
             });
 
-        $result = $this->pageService->copyPage([
+        $result = $this->copyService()->copyPage([
             'sourcePath' => '/cmf/example/contents/image-page',
             'parentPath' => '/cmf/example/contents',
             'title' => 'Override Excerpt Page',
@@ -2152,27 +2230,11 @@ XML;
 
         $this->assertTrue($result['success']);
 
-        // Find the createPage INSERT XML (built by buildPagePropsXml, contains excerpt)
-        $createXml = null;
-        foreach ($capturedXmlStatements as $entry) {
-            if (str_starts_with($entry['sql'], 'INSERT') && str_contains($entry['xml'], 'excerpt-title')) {
-                $createXml = $entry['xml'];
-                break;
-            }
-        }
-
-        $this->assertNotNull($createXml, 'Should have captured createPage INSERT XML with excerpt data');
-
-        // Verify overridden excerpt-title
-        $this->assertStringContainsString('Override Title', $createXml, 'excerpt-title should be overridden to "Override Title"');
-        $this->assertStringNotContainsString('Source Teaser', $createXml, 'Source excerpt-title should NOT be present');
-
-        // Verify overridden excerpt-images with id 999
-        $this->assertStringContainsString('"ids":[999]', $createXml, 'excerpt-images should contain overridden image id 999');
-        $this->assertStringNotContainsString('"ids":[993]', $createXml, 'Source excerpt-images id 993 should NOT be present');
-
-        // Verify excerpt-description is still inherited from source (not overridden)
-        $this->assertStringContainsString('Source Description', $createXml, 'excerpt-description should still be inherited from source');
+        $args = $this->spawnedArgs('app:page:create');
+        $this->assertContains('--excerpt-title=Override Title', $args, 'excerpt-title should be overridden');
+        $this->assertContains('--excerpt-image=999', $args, 'excerpt image should be overridden to 999');
+        $this->assertNotContains('--excerpt-image=993', $args);
+        $this->assertContains('--excerpt-description=Source Description', $args, 'excerpt-description should still be inherited');
     }
 
     // ==========================================================================
@@ -2232,7 +2294,9 @@ null,
 null,
 null,
 null,
-$snippetService);
+$snippetService,
+commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/copied-contact', 'uuid' => 'new-uuid', 'url' => '/copied-contact']),
+routeHealth: $this->stubRouteHealth());
 
         $this->connection->method('fetchAssociative')
             ->willReturnCallback(function ($sql, $params) use (&$callCount) {
@@ -2248,9 +2312,6 @@ $snippetService);
                 }
                 if ($callCount === 4) {
                     return false; // page doesn't exist
-                }
-                if ($callCount === 5) {
-                    return false; // max sort order
                 }
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS];
             });
@@ -2291,97 +2352,6 @@ $snippetService);
         $this->assertTrue($foundBothSnippets, 'Both snippet UUIDs (uuid-contact-111, uuid-contact-222) should be preserved in the copied page XML');
     }
 
-    // === Publish Tests ===
-
-    private const DRAFT_PAGE_XML = <<<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0">
-    <sv:property sv:name="jcr:primaryType" sv:type="Name" sv:multi-valued="0"><sv:value length="15">nt:unstructured</sv:value></sv:property>
-    <sv:property sv:name="jcr:mixinTypes" sv:type="Name" sv:multi-valued="1"><sv:value length="9">sulu:page</sv:value></sv:property>
-    <sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value length="36">b381e0d7-ffcc-4e3f-84b8-d28fd9a47fb1</sv:value></sv:property>
-    <sv:property sv:name="i18n:de-title" sv:type="String" sv:multi-valued="0"><sv:value length="9">Test Page</sv:value></sv:property>
-    <sv:property sv:name="i18n:de-url" sv:type="String" sv:multi-valued="0"><sv:value length="10">/test-page</sv:value></sv:property>
-    <sv:property sv:name="i18n:de-state" sv:type="Long" sv:multi-valued="0"><sv:value length="1">1</sv:value></sv:property>
-    <sv:property sv:name="i18n:de-blocks-length" sv:type="Long" sv:multi-valued="0"><sv:value length="1">0</sv:value></sv:property>
-</sv:node>
-XML;
-
-    /**
-     * Bug 1: Publish must set state to 2 (published) in the XML before copying to live.
-     */
-    public function testPublishPageSetsStateTo2InXml(): void
-    {
-        $capturedXml = null;
-        $this->connection->method('fetchAssociative')
-            ->willReturnCallback(function ($sql, $params) {
-                // Default workspace: return draft page
-                if (str_contains($sql, 'workspace_name') && isset($params[0]) && $params[0] === '/cmf/example/contents/test') {
-                    return ['props' => self::DRAFT_PAGE_XML];
-                }
-                // Route check: no existing route
-                return false;
-            });
-
-        $this->connection->method('executeStatement')
-            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
-                // Capture the XML written to live workspace
-                if (str_contains($sql, 'UPDATE') && isset($params[2]) && $params[2] === 'default_live') {
-                    $capturedXml = $params[0];
-                }
-                return 1;
-            });
-
-        $result = $this->pageService->publishPage('/cmf/example/contents/test', 'de');
-
-        $this->assertTrue($result['success']);
-        $this->assertNotNull($capturedXml, 'XML should be written to live workspace');
-
-        // Parse the XML and verify state is 2
-        $xml = new \DOMDocument();
-        $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
-        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
-
-        $stateNodes = $xpath->query('//sv:property[@sv:name="i18n:de-state"]/sv:value');
-        $this->assertSame(1, $stateNodes->length);
-        $this->assertSame('2', $stateNodes->item(0)->nodeValue, 'State must be 2 (published) after publish');
-    }
-
-    /**
-     * Bug 1: Publish must set i18n:{locale}-published date.
-     */
-    public function testPublishPageSetsPublishedDate(): void
-    {
-        $capturedXml = null;
-        $this->connection->method('fetchAssociative')
-            ->willReturnCallback(function ($sql, $params) {
-                if (str_contains($sql, 'workspace_name') && isset($params[0]) && $params[0] === '/cmf/example/contents/test') {
-                    return ['props' => self::DRAFT_PAGE_XML];
-                }
-                return false;
-            });
-
-        $this->connection->method('executeStatement')
-            ->willReturnCallback(function ($sql, $params) use (&$capturedXml) {
-                if (str_contains($sql, 'UPDATE') && isset($params[2]) && $params[2] === 'default_live') {
-                    $capturedXml = $params[0];
-                }
-                return 1;
-            });
-
-        $this->pageService->publishPage('/cmf/example/contents/test', 'de');
-
-        $this->assertNotNull($capturedXml);
-
-        $xml = new \DOMDocument();
-        $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
-        $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
-
-        $publishedNodes = $xpath->query('//sv:property[@sv:name="i18n:de-published"]/sv:value');
-        $this->assertSame(1, $publishedNodes->length, 'Published date must be set');
-        $this->assertNotEmpty($publishedNodes->item(0)->nodeValue, 'Published date must have a value');
-    }
 
     // ==========================================================================
     // Cache Clear Tests
@@ -2437,15 +2407,12 @@ XML;
             $this->connection,
             $this->activityLogger,
             projectDir: '/tmp/test-project',
+            commandRunner: $this->stubRunner(['success' => true, 'path' => '/cmf/example/contents/test', 'url' => '/test']),
+            routeHealth: $this->stubRouteHealth(fn (string $p) => $this->healthReport($p, '/test', '/test', true)),
         );
 
         $this->connection->method('fetchAssociative')
-            ->willReturn([
-                'props' => self::SAMPLE_PHPCR_XML,
-                'identifier' => 'test-uuid',
-            ]);
-
-        $this->connection->method('executeStatement')->willReturn(1);
+            ->willReturn(['props' => self::SAMPLE_PHPCR_XML, 'identifier' => 'test-uuid']);
 
         // clearCache logs 'mcp_cache_cleared', publishPage logs 'mcp_page_published'
         $this->activityLogger->expects($this->exactly(2))

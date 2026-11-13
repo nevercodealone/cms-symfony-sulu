@@ -32,6 +32,10 @@ class NcaTwigExtension extends AbstractExtension
                 'nca_canonical_url',
                 [$this, 'canonicalUrl']
             ),
+            new TwigFilter(
+                'nca_slugify',
+                [$this, 'slugify']
+            ),
         ];
     }
 
@@ -67,6 +71,20 @@ class NcaTwigExtension extends AbstractExtension
         }
 
         return 'https://nevercodealone.de' . $path;
+    }
+
+    /**
+     * Convert a text into a clean ASCII anchor slug (German transliteration).
+     */
+    public function slugify(string $text): string
+    {
+        $slug = mb_strtolower(trim($text));
+        $slug = str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'oe', 'ue', 'ss'], $slug);
+        $slug = (string) preg_replace('/[^a-z0-9 -]/', '', $slug);
+        $slug = str_replace(' ', '-', $slug);
+        $slug = (string) preg_replace('/-+/', '-', $slug);
+
+        return trim($slug, '-');
     }
 
   /**

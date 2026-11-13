@@ -30,7 +30,7 @@
             {% set d = 'M448 209.91a210.06 210.06 0 01-122.77-39.25v178.72A162.55 162.55 0 11185 188.31v89.89a74.62 74.62 0 1052.23 71.18V0h88a121.18 121.18 0 00122.77 121.33z' %}
         {% endif %}
         {% if d is defined %}
-            <a href="{{ socialLink }}" target="_blank" title="{{ (social|slice(0, 1)|upper) ~ social|slice(1) }} Profil von {{ fullName }}" class="text-green-800 hover:text-green-700">
+            <a href="{{ socialLink }}" target="_blank" rel="noopener" title="{{ (social|slice(0, 1)|upper) ~ social|slice(1) }} Profil von {{ fullName }}" class="text-green-800 hover:text-green-700">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="{{ viewBox }}" class="w-6 h-6">
                     <path fill="currentColor" d="{{ d }}"/>
                 </svg>

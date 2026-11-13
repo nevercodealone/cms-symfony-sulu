@@ -29,8 +29,48 @@ class NcaTwigExtensionTest extends TestCase
     {
         $filters = $this->extension->getFilters();
 
-        $this->assertCount(1, $filters);
+        $this->assertCount(2, $filters);
         $this->assertSame('nca_canonical_url', $filters[0]->getName());
+        $this->assertSame('nca_slugify', $filters[1]->getName());
+    }
+
+    /**
+     * @dataProvider provideSlugify
+     */
+    public function test_slugifyCreatesCleanAnchorSlugs(
+        string $input,
+        string $expected,
+    ): void {
+        $this->assertSame($expected, $this->extension->slugify($input));
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function provideSlugify(): array
+    {
+        return [
+            'german umlauts are transliterated' => [
+                'Schulungen für Entwickler',
+                'schulungen-fuer-entwickler',
+            ],
+            'punctuation is stripped' => [
+                'Tools, Tipps & More 2026',
+                'tools-tipps-more-2026',
+            ],
+            'multiple dashes collapse' => [
+                'Vibe Coding -- Modelle',
+                'vibe-coding-modelle',
+            ],
+            'leading and trailing dashes are trimmed' => [
+                ' Was ist Vibe Coding? ',
+                'was-ist-vibe-coding',
+            ],
+            'empty text stays empty' => [
+                '',
+                '',
+            ],
+        ];
     }
 
     /**

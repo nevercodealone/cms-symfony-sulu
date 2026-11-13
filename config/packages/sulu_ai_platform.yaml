@@ -1,6 +1,6 @@
 sulu_ai_platform:
   api_key: '%env(SULU_AI_PLATFORM_API_KEY)%'
-  contact_email: 'admin@example.com' # shown to editors when the platform refuses for account reasons
+  contact_email: '%env(SULU_ADMIN_EMAIL)%' # shown to editors when the platform refuses for account reasons
   webhook:
     secret: '%env(SULU_AI_WEBHOOK_SECRET)%'
   intelligent_search:

@@ -9,7 +9,7 @@
     
     <coverage processUncoveredFiles="true">
         <include>
-            <directory suffix=".php">./src/Command/AI</directory>
+            <directory suffix=".php">./src</directory>
         </include>
     </coverage>
     
@@ -25,7 +25,5 @@
         <server name="SHELL_VERBOSITY" value="-1" />
         <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
         <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" />
-        <env name="GEMINI_API_KEY" value="test-key" />
-        <env name="GEMINI_MODEL" value="gemini-1.5-flash" />
     </php>
 </phpunit>

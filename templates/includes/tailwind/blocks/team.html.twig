@@ -23,7 +23,7 @@
                   {% endif %}
                 {% endif %}
 
-                <h3 class="text-xl text-gray-900">
+                <div class="text-xl text-gray-900">
                   {% if detailUrl %}
                     <a href="{{ detailUrl }}" class="inline-flex items-center gap-1.5">
                       <span>{{ item.fullName }}</span><span class="sr-only"> Profilseite</span>
@@ -34,7 +34,7 @@
                   {% else %}
                     {{ item.fullName }}
                   {% endif %}
-                </h3>
+                </div>
                 <p class="text-base text-black">{{ item.positionName }}</p>
               </div>
               {% if item.contactDetails.socialMedia is not empty or item.contactDetails.websites is not empty %}
