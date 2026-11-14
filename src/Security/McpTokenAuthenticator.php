@@ -18,7 +18,7 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 class McpTokenAuthenticator extends AbstractAuthenticator
 {
     public function __construct(
-        private McpOAuthService $oauthService
+        private readonly McpOAuthService $oauthService
     ) {
     }
 

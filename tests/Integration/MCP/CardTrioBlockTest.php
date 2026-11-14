@@ -11,8 +11,11 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 class CardTrioBlockTest extends KernelTestCase
 {
     private SuluPagesTool $tool;
+
     private Connection $connection;
+
     private string $testPath = '/cmf/example/contents/die-websprinter';
+
     private string $originalDraftProps = '';
 
     protected function setUp(): void

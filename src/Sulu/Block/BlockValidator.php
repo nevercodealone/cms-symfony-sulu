@@ -23,7 +23,7 @@ namespace App\Sulu\Block;
 final class BlockValidator
 {
     public function __construct(
-        private BlockTypeRegistry $registry
+        private readonly BlockTypeRegistry $registry
     ) {
     }
 
@@ -125,6 +125,7 @@ final class BlockValidator
         if ($result['valid']) {
             return null;
         }
+
         return implode('; ', $result['errors']);
     }
 

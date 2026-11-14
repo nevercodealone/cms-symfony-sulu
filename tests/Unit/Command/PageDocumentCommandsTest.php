@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Command;
 
+use RuntimeException;
 use App\Command\PageCreateCommand;
 use App\Command\PageMoveCommand;
 use App\Command\PagePublishCommand;
@@ -67,7 +68,7 @@ class PageDocumentCommandsTest extends TestCase
 
     public function testPublishReportsMissingPage(): void
     {
-        $this->documentManager->method('find')->willThrowException(new \RuntimeException('not found'));
+        $this->documentManager->method('find')->willThrowException(new RuntimeException('not found'));
         $this->documentManager->expects($this->never())->method('publish');
 
         $tester = new CommandTester(new PagePublishCommand($this->documentManager));
@@ -78,7 +79,7 @@ class PageDocumentCommandsTest extends TestCase
     public function testPublishTurnsExceptionsIntoJson(): void
     {
         $this->documentManager->method('find')->willReturn($this->page('/cmf/example/contents/a', '/a'));
-        $this->documentManager->method('publish')->willThrowException(new \RuntimeException('boom'));
+        $this->documentManager->method('publish')->willThrowException(new RuntimeException('boom'));
 
         $tester = new CommandTester(new PagePublishCommand($this->documentManager));
         $this->assertSame(1, $tester->execute(['path' => '/cmf/example/contents/a']));

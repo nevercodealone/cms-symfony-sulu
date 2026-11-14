@@ -13,7 +13,9 @@ use ReflectionClass;
 class OpenApiGenerator
 {
     private const OPENAPI_VERSION = '3.1.0';
+
     private const API_VERSION = '1.0.0';
+
     private const BASE_PATH = '/mcp';
 
     public function __construct(
@@ -68,7 +70,7 @@ class OpenApiGenerator
 
         if (preg_match('/Actions:\s*([^\.]+)\./', $description, $matches)) {
             $actionList = $matches[1];
-            foreach (array_map('trim', explode(',', $actionList)) as $action) {
+            foreach (array_map(trim(...), explode(',', $actionList)) as $action) {
                 $actions[$action] = [
                     'name' => $action,
                     'description' => $this->extractActionDescription($action, $description),
@@ -161,7 +163,7 @@ class OpenApiGenerator
         $properties = [];
         $reflection = new ReflectionClass($schema);
         $prop = $reflection->getProperty('properties');
-        $prop->setAccessible(true);
+
         $schemaProperties = $prop->getValue($schema);
 
         foreach ($schemaProperties as $property) {

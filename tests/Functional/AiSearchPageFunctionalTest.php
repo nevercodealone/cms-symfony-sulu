@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use DOMXPath;
+use DOMDocument;
 use App\Kernel;
 use Sulu\Component\HttpKernel\SuluKernel;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -75,12 +77,12 @@ class AiSearchPageFunctionalTest extends KernelTestCase
     /**
      * @param array<string, string> $query
      */
-    private function requestPage(string $path, array $query = []): \DOMXPath
+    private function requestPage(string $path, array $query = []): DOMXPath
     {
-        $document = new \DOMDocument();
+        $document = new DOMDocument();
         @$document->loadHTML('<?xml encoding="UTF-8">' . $this->requestHtml($path, $query));
 
-        return new \DOMXPath($document);
+        return new DOMXPath($document);
     }
 
     /**

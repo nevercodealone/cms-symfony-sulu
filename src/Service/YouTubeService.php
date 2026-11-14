@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use Google\Service\YouTube\PlaylistItemListResponse;
 use Google_Service_YouTube;
 
 class YouTubeService
@@ -30,19 +31,17 @@ class YouTubeService
         $items = $videoList->getItems();
 
         // Convert to arrays for template compatibility
-        $videos = array_map(function ($item) {
-            return [
-                'snippet' => [
-                    'publishedAt' => $item->getSnippet()->getPublishedAt(),
-                    'title' => $item->getSnippet()->getTitle(),
-                    'description' => $item->getSnippet()->getDescription(),
-                    'thumbnails' => $item->getSnippet()->getThumbnails(),
-                    'resourceId' => [
-                        'videoId' => $item->getSnippet()->getResourceId()->getVideoId(),
-                    ],
+        $videos = array_map(fn($item) => [
+            'snippet' => [
+                'publishedAt' => $item->getSnippet()->getPublishedAt(),
+                'title' => $item->getSnippet()->getTitle(),
+                'description' => $item->getSnippet()->getDescription(),
+                'thumbnails' => $item->getSnippet()->getThumbnails(),
+                'resourceId' => [
+                    'videoId' => $item->getSnippet()->getResourceId()->getVideoId(),
                 ],
-            ];
-        }, $items);
+            ],
+        ], $items);
 
         usort($videos, static function ($a, $b) {
             $actual = strtotime((string) $a['snippet']['publishedAt']);
@@ -56,9 +55,9 @@ class YouTubeService
 
     /**
      * @param array<string, mixed> $params
-     * @return \Google\Service\YouTube\PlaylistItemListResponse
+     * @return PlaylistItemListResponse
      */
-    private function playlistItemsListByPlaylistId(string $part, array $params): \Google\Service\YouTube\PlaylistItemListResponse
+    private function playlistItemsListByPlaylistId(string $part, array $params): PlaylistItemListResponse
     {
         $params = array_filter($params);
 

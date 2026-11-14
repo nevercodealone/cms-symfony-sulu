@@ -17,10 +17,15 @@ use Symfony\Component\Console\Tester\CommandTester;
 class RoutesRepairCommandTest extends TestCase
 {
     private const PAGE = 'aaaaaaaa-0000-0000-0000-000000000001';
+
     private const PARENT = 'aaaaaaaa-0000-0000-0000-000000000002';
+
     private const PARENT_ROUTE_LIVE = 'bbbbbbbb-0000-0000-0000-000000000001';
+
     private const PAGE_ROUTE_LIVE = 'bbbbbbbb-0000-0000-0000-000000000002';
+
     private const PAGE_ROUTE_OLD = 'bbbbbbbb-0000-0000-0000-000000000003';
+
     private const ROUTES_ROOT = 'cccccccc-0000-0000-0000-000000000001';
 
     private Connection $connection;
@@ -91,9 +96,11 @@ class RoutesRepairCommandTest extends TestCase
         if ($dryRun) {
             $options['--dry-run'] = true;
         }
+
         if ($prefix !== '') {
             $options['--path-prefix'] = $prefix;
         }
+
         $this->assertSame(0, $tester->execute($options), $tester->getDisplay());
 
         return $tester;

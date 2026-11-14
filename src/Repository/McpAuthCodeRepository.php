@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use DateTimeImmutable;
 use App\Entity\McpAuthCode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -50,7 +51,7 @@ class McpAuthCodeRepository extends ServiceEntityRepository
             ->where('c.code = :code')
             ->andWhere('c.expiresAt > :now')
             ->setParameter('code', $code)
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', new DateTimeImmutable())
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -63,7 +64,7 @@ class McpAuthCodeRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->delete()
             ->where('c.expiresAt < :now')
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', new DateTimeImmutable())
             ->getQuery()
             ->execute();
     }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Sulu\Service;
 
+use DOMDocument;
+use DOMXPath;
+use Exception;
 use App\Sulu\Logger\McpActivityLogger;
 use App\Sulu\Service\PageReferenceScanner;
 use App\Sulu\Service\PageService;
@@ -21,9 +24,13 @@ class PageServiceTest extends TestCase
     use DocumentCommandStubsTrait;
 
     private Connection&MockObject $connection;
+
     private McpActivityLogger&MockObject $activityLogger;
+
     private PageService $pageService;
+
     private CacheManagerInterface&MockObject $cacheManager;
+
     private FOSCacheManager&MockObject $fosCacheManager;
 
     private const SAMPLE_PHPCR_XML = <<<'XML'
@@ -252,9 +259,10 @@ XML;
         $this->assertStringContainsString('i18n:de-changed', $capturedXml, 'draft metadata must be touched on content writes');
 
         // Parse the captured XML and verify changes
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
+
+        $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
         // Verify blocks-length is now 1 (was 2)
@@ -291,6 +299,7 @@ XML;
                 if ($capturedXml !== null) {
                     return ['path' => '/test', 'props' => $capturedXml];
                 }
+
                 // First call returns original XML
                 return ['path' => '/test', 'props' => self::SAMPLE_PHPCR_XML];
             });
@@ -760,7 +769,7 @@ XML;
         // Cache flush failures are logged inside invalidatePageCache(), not propagated
         $this->fosCacheManager->expects($this->once())
             ->method('flush')
-            ->willThrowException(new \Exception('Cache flush failed'));
+            ->willThrowException(new Exception('Cache flush failed'));
 
         // The publish should still succeed despite the flush exception
         $result = $pageService->publishPage('/cmf/example/contents/test', 'de');
@@ -805,6 +814,7 @@ XML;
 
         $pageService->unpublishPage('/cmf/example/contents/test', 'de');
     }
+
     // ==========================================================================
     // Page Discovery Tests (TDD)
     // ==========================================================================
@@ -1130,12 +1140,10 @@ XML;
 
         $snippetService = $this->createMock(SnippetService::class);
         $snippetService->method('getSnippet')
-            ->willReturnCallback(function (string $uuid) {
-                return match ($uuid) {
-                    'uuid-abc-123' => ['uuid' => 'uuid-abc-123', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
-                    'uuid-def-456' => ['uuid' => 'uuid-def-456', 'title' => 'Support Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
-                    default => null,
-                };
+            ->willReturnCallback(fn(string $uuid) => match ($uuid) {
+                'uuid-abc-123' => ['uuid' => 'uuid-abc-123', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
+                'uuid-def-456' => ['uuid' => 'uuid-def-456', 'title' => 'Support Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
+                default => null,
             });
 
         $pageService = new PageService(
@@ -1246,12 +1254,10 @@ XML;
 
         $snippetService = $this->createMock(SnippetService::class);
         $snippetService->method('getSnippet')
-            ->willReturnCallback(function (string $uuid) {
-                return match ($uuid) {
-                    'uuid-abc-123' => ['uuid' => 'uuid-abc-123', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
-                    'uuid-def-456' => ['uuid' => 'uuid-def-456', 'title' => 'Support Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
-                    default => null,
-                };
+            ->willReturnCallback(fn(string $uuid) => match ($uuid) {
+                'uuid-abc-123' => ['uuid' => 'uuid-abc-123', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
+                'uuid-def-456' => ['uuid' => 'uuid-def-456', 'title' => 'Support Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
+                default => null,
             });
 
         $pageService = new PageService(
@@ -1308,11 +1314,9 @@ XML;
 
         $snippetService = $this->createMock(SnippetService::class);
         $snippetService->method('getSnippet')
-            ->willReturnCallback(function (string $uuid) {
-                return match ($uuid) {
-                    'uuid-single-only' => ['uuid' => 'uuid-single-only', 'title' => 'Single Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/single'],
-                    default => null,
-                };
+            ->willReturnCallback(fn(string $uuid) => match ($uuid) {
+                'uuid-single-only' => ['uuid' => 'uuid-single-only', 'title' => 'Single Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/single'],
+                default => null,
             });
 
         $pageService = new PageService(
@@ -1421,9 +1425,10 @@ XML;
         $this->assertArrayHasKey('excerpt', $result);
 
         // Parse the captured XML and verify updated values
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
+
+        $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
         $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-title"]/sv:value');
@@ -1458,9 +1463,10 @@ XML;
         $this->assertTrue($result['success']);
 
         // Verify new excerpt properties were added
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
+
+        $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
         $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-title"]/sv:value');
@@ -1494,9 +1500,10 @@ XML;
         $this->assertTrue($result['success']);
 
         // Verify XML contains {"ids":[555]} in excerpt-images property
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
+
+        $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
         $imageNodes = $xpath->query('//sv:property[@sv:name="i18n:de-excerpt-images"]/sv:value');
@@ -1532,11 +1539,9 @@ XML;
                 'mcp_excerpt_updated',
                 '/cmf/example/contents/test',
                 'de',
-                $this->callback(function (array $context): bool {
-                    return isset($context['fields'])
-                        && in_array('excerptTitle', $context['fields'], true)
-                        && in_array('excerptDescription', $context['fields'], true);
-                })
+                $this->callback(fn(array $context): bool => isset($context['fields'])
+                    && in_array('excerptTitle', $context['fields'], true)
+                    && in_array('excerptDescription', $context['fields'], true))
             );
 
         $this->pageService->updateExcerpt(
@@ -1573,9 +1578,10 @@ XML;
         $this->assertEquals('SEO metadata updated successfully', $result['message']);
         $this->assertArrayHasKey('seo', $result);
 
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
+
+        $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
         $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-seo-title"]/sv:value');
@@ -1608,9 +1614,10 @@ XML;
 
         $this->assertTrue($result['success']);
 
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
+
+        $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
         $keywordNodes = $xpath->query('//sv:property[@sv:name="i18n:de-seo-keywords"]/sv:value');
@@ -1646,11 +1653,9 @@ XML;
                 'mcp_seo_updated',
                 '/cmf/example/contents/test',
                 'de',
-                $this->callback(function (array $context): bool {
-                    return isset($context['fields'])
-                        && in_array('seoTitle', $context['fields'], true)
-                        && in_array('seoDescription', $context['fields'], true);
-                })
+                $this->callback(fn(array $context): bool => isset($context['fields'])
+                    && in_array('seoTitle', $context['fields'], true)
+                    && in_array('seoDescription', $context['fields'], true))
             );
 
         $this->pageService->updateSeo(
@@ -1687,9 +1692,10 @@ XML;
         $this->assertEquals('Page title updated successfully', $result['message']);
         $this->assertEquals('Updated Title', $result['title']);
 
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($capturedXml);
-        $xpath = new \DOMXPath($xml);
+
+        $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
         $titleNodes = $xpath->query('//sv:property[@sv:name="i18n:de-title"]/sv:value');
@@ -1883,6 +1889,7 @@ XML;
             if (str_contains($sql, 'SELECT id, path, props')) {
                 return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => $sourceProps];
             }
+
             if (str_contains($sql, 'SELECT id FROM')) {
                 return false;
             }
@@ -1938,18 +1945,22 @@ XML;
                 if ($callCount === 1) {
                     return ['path' => '/cmf/example/contents/source-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
                 }
+
                 // Second call: isPagePublished check (for getPage)
                 if ($callCount === 2) {
                     return false;
                 }
+
                 // Third call: createPage - get parent
                 if ($callCount === 3) {
                     return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
                 }
+
                 // Fourth call: check page doesn't exist
                 if ($callCount === 4) {
                     return false;
                 }
+
                 // Fifth call: get max sort order
                 // Remaining calls: addBlock operations
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
@@ -1990,12 +2001,15 @@ XML;
                 if ($callCount <= 2) {
                     return ['path' => '/cmf/example/contents/source-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
                 }
+
                 if ($callCount === 3) {
                     return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
                 }
+
                 if ($callCount === 4) {
                     return false;
                 }
+
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
             });
 
@@ -2027,12 +2041,15 @@ XML;
                 if ($callCount <= 2) {
                     return ['path' => '/cmf/example/contents/source', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
                 }
+
                 if ($callCount === 3) {
                     return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
                 }
+
                 if ($callCount === 4) {
                     return false;
                 }
+
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_EXCERPT];
             });
 
@@ -2077,15 +2094,19 @@ XML;
                 if ($callCount === 1) {
                     return ['path' => '/cmf/example/contents/image-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
                 }
+
                 if ($callCount === 2) {
                     return false;
                 }
+
                 if ($callCount === 3) {
                     return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
                 }
+
                 if ($callCount === 4) {
                     return false;
                 }
+
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
             });
 
@@ -2100,6 +2121,7 @@ XML;
                         $capturedXmlStatements[] = $param;
                     }
                 }
+
                 return 1;
             });
 
@@ -2121,6 +2143,7 @@ XML;
             if (str_contains($xmlString, '"ids":[100,101]')) {
                 $foundImages = true;
             }
+
             if (str_contains($xmlString, '"ids":[200]')) {
                 $foundImage = true;
             }
@@ -2141,15 +2164,19 @@ XML;
                 if ($callCount === 1) {
                     return ['path' => '/cmf/example/contents/image-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
                 }
+
                 if ($callCount === 2) {
                     return false;
                 }
+
                 if ($callCount === 3) {
                     return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
                 }
+
                 if ($callCount === 4) {
                     return false;
                 }
+
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
             });
 
@@ -2164,6 +2191,7 @@ XML;
                         $capturedXmlStatements[] = ['sql' => $sql, 'xml' => $param];
                     }
                 }
+
                 return 1;
             });
 
@@ -2194,15 +2222,19 @@ XML;
                 if ($callCount === 1) {
                     return ['path' => '/cmf/example/contents/image-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
                 }
+
                 if ($callCount === 2) {
                     return false;
                 }
+
                 if ($callCount === 3) {
                     return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
                 }
+
                 if ($callCount === 4) {
                     return false;
                 }
+
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_IMAGE_BLOCKS];
             });
 
@@ -2216,6 +2248,7 @@ XML;
                         $capturedXmlStatements[] = ['sql' => $sql, 'xml' => $param];
                     }
                 }
+
                 return 1;
             });
 
@@ -2276,12 +2309,10 @@ XML;
 
         $snippetService = $this->createMock(SnippetService::class);
         $snippetService->method('getSnippet')
-            ->willReturnCallback(function (string $uuid) {
-                return match ($uuid) {
-                    'uuid-contact-111' => ['uuid' => 'uuid-contact-111', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
-                    'uuid-contact-222' => ['uuid' => 'uuid-contact-222', 'title' => 'Support', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
-                    default => null,
-                };
+            ->willReturnCallback(fn(string $uuid) => match ($uuid) {
+                'uuid-contact-111' => ['uuid' => 'uuid-contact-111', 'title' => 'Main Contact', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/main'],
+                'uuid-contact-222' => ['uuid' => 'uuid-contact-222', 'title' => 'Support', 'type' => 'contact', 'template' => 'contact', 'path' => '/cmf/snippets/contact/support'],
+                default => null,
             });
 
         $pageService = new PageService(
@@ -2304,15 +2335,19 @@ routeHealth: $this->stubRouteHealth());
                 if ($callCount === 1) {
                     return ['path' => '/cmf/example/contents/contact-page', 'props' => self::SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS];
                 }
+
                 if ($callCount === 2) {
                     return false; // isPagePublished
                 }
+
                 if ($callCount === 3) {
                     return ['id' => 1, 'path' => '/cmf/example/contents', 'props' => self::SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS];
                 }
+
                 if ($callCount === 4) {
                     return false; // page doesn't exist
                 }
+
                 return ['props' => self::SAMPLE_PHPCR_XML_WITH_CONTACT_SNIPPETS];
             });
 
@@ -2326,6 +2361,7 @@ routeHealth: $this->stubRouteHealth());
                         $capturedXmlStatements[] = $param;
                     }
                 }
+
                 return 1;
             });
 
@@ -2560,6 +2596,7 @@ routeHealth: $this->stubRouteHealth());
     // ======================================================================
 
     private const TARGET_PATH = '/cmf/example/contents/glossare/nca-php-glossar/phpunit';
+
     private const TARGET_UUID = 'abc12345-0000-0000-0000-000000000001';
 
     /**
@@ -2645,6 +2682,7 @@ XML;
             if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
                 return ['identifier' => self::TARGET_UUID];
             }
+
             if (str_contains($sql, "SELECT props FROM phpcr_nodes") && str_contains($sql, self::WORKSPACE_LIVE_FLAG)) {
                 return ['props' => $publishedProps];
             }
@@ -2678,9 +2716,11 @@ XML;
             if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
                 return ['identifier' => self::TARGET_UUID];
             }
+
             if (str_contains($sql, 'SELECT props FROM phpcr_nodes') && str_contains($sql, self::WORKSPACE_LIVE_FLAG)) {
                 return ['props' => $draftProps];
             }
+
             if (str_contains($sql, 'tr_trash_items')) {
                 return ['id' => 7];
             }
@@ -2922,6 +2962,7 @@ XML;
             if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
                 return ['identifier' => self::TARGET_UUID];
             }
+
             if (str_contains($sql, 'tr_trash_items')) {
                 return ['id' => 42];
             }
@@ -3001,6 +3042,7 @@ XML;
             if (str_contains($sql, 'identifier FROM phpcr_nodes')) {
                 return ['identifier' => 'parent-uuid'];
             }
+
             if (str_contains($sql, 'SELECT 1 FROM phpcr_nodes')) {
                 return false; // not published
             }

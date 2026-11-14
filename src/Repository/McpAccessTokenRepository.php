@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use DateTimeImmutable;
 use App\Entity\McpAccessToken;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -50,7 +51,7 @@ class McpAccessTokenRepository extends ServiceEntityRepository
             ->where('t.token = :token')
             ->andWhere('t.expiresAt > :now')
             ->setParameter('token', $token)
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', new DateTimeImmutable())
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -63,7 +64,7 @@ class McpAccessTokenRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('t')
             ->delete()
             ->where('t.expiresAt < :now')
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', new DateTimeImmutable())
             ->getQuery()
             ->execute();
     }
@@ -79,7 +80,7 @@ class McpAccessTokenRepository extends ServiceEntityRepository
             ->where('t.clientName = :clientName')
             ->andWhere('t.expiresAt > :now')
             ->setParameter('clientName', $clientName)
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', new DateTimeImmutable())
             ->orderBy('t.createdAt', 'DESC')
             ->getQuery()
             ->getResult();

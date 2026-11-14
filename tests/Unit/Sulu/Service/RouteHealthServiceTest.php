@@ -15,15 +15,21 @@ use PHPUnit\Framework\TestCase;
 class RouteHealthServiceTest extends TestCase
 {
     private const PAGE = 'aaaaaaaa-0000-0000-0000-000000000001';
+
     private const ROUTE_DRAFT = 'bbbbbbbb-0000-0000-0000-000000000001';
+
     private const ROUTE_LIVE = 'bbbbbbbb-0000-0000-0000-000000000002';
+
     private const ROUTE_OLD_DRAFT = 'bbbbbbbb-0000-0000-0000-000000000003';
+
     private const ROUTE_OLD_LIVE = 'bbbbbbbb-0000-0000-0000-000000000004';
 
     /** @var list<array{id: int, path: string, workspace_name: string, identifier: string, props: string}> */
     private array $nodes = [];
+
     /** @var list<array{source_id: int, target_id: int}> */
     private array $references = [];
+
     /** @var list<array<string, mixed>> */
     private array $redirects = [];
 
@@ -74,6 +80,7 @@ class RouteHealthServiceTest extends TestCase
 
             return $rows;
         }
+
         if (str_contains($sql, 'FROM phpcr_nodes_references')) {
             foreach ($this->references as $ref) {
                 if (in_array($ref['source_id'], $params, true)) {
@@ -83,6 +90,7 @@ class RouteHealthServiceTest extends TestCase
 
             return $rows;
         }
+
         if (str_contains($sql, 'WHERE path IN (')) {
             $workspaces = array_slice($params, -2);
             $paths = array_slice($params, 0, -2);
@@ -94,6 +102,7 @@ class RouteHealthServiceTest extends TestCase
 
             return $rows;
         }
+
         if (str_contains($sql, 'WHERE identifier = ? AND workspace_name = ?')) {
             foreach ($this->nodes as $n) {
                 if ($n['identifier'] === $params[0] && $n['workspace_name'] === $params[1]
@@ -104,6 +113,7 @@ class RouteHealthServiceTest extends TestCase
 
             return $rows;
         }
+
         if (str_contains($sql, 'WHERE path LIKE ? AND workspace_name IN (?, ?)')) {
             $prefix = rtrim($params[0], '%');
             foreach ($this->nodes as $n) {
@@ -115,6 +125,7 @@ class RouteHealthServiceTest extends TestCase
 
             return $rows;
         }
+
         if (str_contains($sql, 'WHERE path = ? AND workspace_name = ?')) {
             foreach ($this->nodes as $n) {
                 if ($n['path'] === $params[0] && $n['workspace_name'] === $params[1]) {

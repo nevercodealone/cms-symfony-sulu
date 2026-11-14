@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use Exception;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
@@ -18,8 +19,11 @@ use DOMXPath;
 class LatestArticlesService
 {
     private const WORKSPACE_DEFAULT = 'default';
+
     private const WORKSPACE_LIVE = 'default_live';
+
     private const CONTENTS_PREFIX = '/cmf/example/contents';
+
     private const STATE_PUBLISHED = 2;
 
     public function __construct(
@@ -121,7 +125,7 @@ class LatestArticlesService
             if ($nodes !== false && $nodes->length > 0 && $nodes->item(0)) {
                 return $nodes->item(0)->nodeValue;
             }
-        } catch (\Exception) {
+        } catch (Exception) {
             // Ignore parsing errors
         }
 

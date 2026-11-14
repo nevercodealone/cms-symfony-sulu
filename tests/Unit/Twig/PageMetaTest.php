@@ -35,7 +35,7 @@ class PageMetaTest extends TestCase
         $this->assertStringContainsString('createdDay', $template, 'Template must compute a day-level "createdDay" value.');
         $this->assertStringContainsString('updateDate', $template, 'Template must compute an "updateDate" value.');
         $this->assertStringContainsString(
-            'hasBeenUpdated = updateDate|date(\'Y-m-d\') != createdDay',
+            "hasBeenUpdated = updateDate|date('Y-m-d') != createdDay",
             $template,
             'hasBeenUpdated must be derived from a day-level comparison.'
         );

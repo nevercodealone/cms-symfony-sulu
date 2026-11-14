@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use Throwable;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -79,11 +80,11 @@ class PageDeleteCommand extends Command
             ]) ?: '');
 
             return Command::SUCCESS;
-        } catch (\Throwable $e) {
+        } catch (Throwable $throwable) {
             $output->writeln(json_encode([
                 'success' => false,
                 'errorCode' => 'delete_failed',
-                'message' => $e->getMessage(),
+                'message' => $throwable->getMessage(),
             ]) ?: '');
 
             return Command::FAILURE;

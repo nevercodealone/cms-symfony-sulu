@@ -16,13 +16,13 @@ use Symfony\Component\Routing\Attribute\Route;
 class McpOAuthController extends AbstractController
 {
     public function __construct(
-        private McpOAuthService $oauthService,
+        private readonly McpOAuthService $oauthService,
         #[Autowire('%env(MCP_PROJECT_NAME)%')]
-        private string $projectName,
+        private readonly string $projectName,
         #[Autowire('%env(APP_URL)%')]
-        private string $appUrl,
+        private readonly string $appUrl,
         #[Autowire(service: 'limiter.mcp_oauth_login')]
-        private ?RateLimiterFactory $loginLimiter = null,
+        private readonly ?RateLimiterFactory $loginLimiter = null,
     ) {
     }
 

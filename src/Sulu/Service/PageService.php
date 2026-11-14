@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use Exception;
+use Throwable;
+use DOMElement;
+use DateTimeImmutable;
+use DateTimeZone;
 use App\Sulu\Block\BlockExtractor;
 use App\Sulu\Block\BlockTypeRegistry;
 use App\Sulu\Block\BlockValidator;
@@ -62,6 +67,7 @@ use Symfony\Component\Process\Process;
 class PageService
 {
     private const WORKSPACE_DEFAULT = 'default';
+
     private const WORKSPACE_LIVE = 'default_live';
 
     /**
@@ -98,24 +104,27 @@ class PageService
      */
     public const SWITCHABLE_TEMPLATES = [self::DEFAULT_TEMPLATE, self::TEMPLATE_TRAINING_DETAIL];
 
-    private BlockExtractor $blockExtractor;
-    private BlockWriter $blockWriter;
-    private BlockValidator $blockValidator;
-    private BlockTypeRegistry $blockTypeRegistry;
+    private readonly BlockExtractor $blockExtractor;
+
+    private readonly BlockWriter $blockWriter;
+
+    private readonly BlockValidator $blockValidator;
+
+    private readonly BlockTypeRegistry $blockTypeRegistry;
 
     public function __construct(
-        private Connection $connection,
-        private McpActivityLogger $activityLogger,
-        private ?CacheManagerInterface $cacheManager = null,
-        private ?FOSCacheManager $fosCacheManager = null,
+        private readonly Connection $connection,
+        private readonly McpActivityLogger $activityLogger,
+        private readonly ?CacheManagerInterface $cacheManager = null,
+        private readonly ?FOSCacheManager $fosCacheManager = null,
         ?BlockTypeRegistry $blockTypeRegistry = null,
         ?BlockExtractor $blockExtractor = null,
         ?BlockWriter $blockWriter = null,
         ?BlockValidator $blockValidator = null,
-        private ?HttpCacheClearer $httpCacheClearer = null,
-        private ?SnippetService $snippetService = null,
-        private ?string $projectDir = null,
-        private ?PageReferenceScanner $referenceScanner = null,
+        private readonly ?HttpCacheClearer $httpCacheClearer = null,
+        private readonly ?SnippetService $snippetService = null,
+        private readonly ?string $projectDir = null,
+        private readonly ?PageReferenceScanner $referenceScanner = null,
         private ?ConsoleCommandRunner $commandRunner = null,
         private ?RouteHealthService $routeHealth = null,
     ) {
@@ -142,7 +151,7 @@ class PageService
         if ($this->fosCacheManager) {
             try {
                 $this->fosCacheManager->flush();
-            } catch (\Exception $e) {
+            } catch (Exception) {
                 // Log but don't fail the operation
             }
         }
@@ -180,7 +189,7 @@ class PageService
         if ($this->fosCacheManager) {
             try {
                 $this->fosCacheManager->flush();
-            } catch (\Exception $e) {
+            } catch (Exception) {
                 // Log but don't fail the operation
             }
         }
@@ -222,7 +231,7 @@ class PageService
                 } else {
                     $output[] = "{$cmdName}: FAILED - " . $process->getErrorOutput();
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $output[] = "{$cmdName}: ERROR - " . $e->getMessage();
             }
         }
@@ -263,6 +272,7 @@ class PageService
         if (preg_match('#^/cmf/[^/]+/contents(.*)$#', $path, $matches)) {
             return '/' . $locale . $matches[1];
         }
+
         return null;
     }
 
@@ -302,7 +312,7 @@ class PageService
         if (!empty($results)) {
             try {
                 $health = $this->routeHealth()->getRouteHealthBatch(array_column($results, 'path'), $locale);
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 $health = [];
             }
         }
@@ -420,7 +430,7 @@ class PageService
         $health = null;
         try {
             $health = $this->routeHealth()->getRouteHealth($path, $locale);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $health = null;
         }
 
@@ -595,8 +605,8 @@ class PageService
 
             return ['success' => true, 'message' => 'Block added successfully', 'position' => $insertIndex];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage(), 'position' => -1];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage(), 'position' => -1];
         }
     }
 
@@ -609,7 +619,7 @@ class PageService
      *   Block 1 -> Block 2
      *   Position 1 is now free for the new block
      */
-    private function shiftBlocksUp(\DOMXPath $xpath, \DOMDocument $xml, string $locale, int $fromPosition, int $currentLength): void
+    private function shiftBlocksUp(DOMXPath $xpath, DOMDocument $xml, string $locale, int $fromPosition, int $currentLength): void
     {
         // Collect all block properties grouped by position
         $blockProperties = [];
@@ -620,19 +630,19 @@ class PageService
         }
 
         foreach ($allProperties as $prop) {
-            if ($prop instanceof \DOMElement) {
+            if ($prop instanceof DOMElement) {
                 $name = $prop->getAttribute('sv:name');
                 // Skip the length property
                 if ($name === "i18n:{$locale}-blocks-length") {
                     continue;
                 }
+
                 // Extract position from property name (first # number)
                 if (preg_match('/#(\d+)/', $name, $matches)) {
                     $pos = (int) $matches[1];
                     if ($pos >= $fromPosition) {
-                        if (!isset($blockProperties[$pos])) {
-                            $blockProperties[$pos] = [];
-                        }
+                        $blockProperties[$pos] ??= [];
+
                         $blockProperties[$pos][] = $prop;
                     }
                 }
@@ -643,7 +653,7 @@ class PageService
         for ($i = $currentLength - 1; $i >= $fromPosition; $i--) {
             if (isset($blockProperties[$i])) {
                 foreach ($blockProperties[$i] as $prop) {
-                    if ($prop instanceof \DOMElement) {
+                    if ($prop instanceof DOMElement) {
                         $name = $prop->getAttribute('sv:name');
                         // Replace #oldPos with #newPos (only first occurrence to preserve nested indices)
                         $newName = preg_replace('/#' . $i . '(?!\d)/', '#' . ($i + 1), $name, 1);
@@ -696,18 +706,18 @@ class PageService
 
             if ($allProperties !== false) {
                 foreach ($allProperties as $prop) {
-                    if ($prop instanceof \DOMElement) {
+                    if ($prop instanceof DOMElement) {
                         $name = $prop->getAttribute('sv:name');
                         // Skip the length property
                         if ($name === "i18n:{$locale}-blocks-length") {
                             continue;
                         }
+
                         // Extract position from property name (first # number)
                         if (preg_match('/#(\d+)/', $name, $matches)) {
                             $pos = (int) $matches[1];
-                            if (!isset($blockProperties[$pos])) {
-                                $blockProperties[$pos] = [];
-                            }
+                            $blockProperties[$pos] ??= [];
+
                             $blockProperties[$pos][] = $prop;
                         }
                     }
@@ -727,7 +737,7 @@ class PageService
             for ($i = $position + 1; $i < $blocksLength; $i++) {
                 if (isset($blockProperties[$i])) {
                     foreach ($blockProperties[$i] as $prop) {
-                        if ($prop instanceof \DOMElement) {
+                        if ($prop instanceof DOMElement) {
                             $name = $prop->getAttribute('sv:name');
                             // Replace #oldPos with #newPos (and handle nested items like #0-type#1)
                             $newName = preg_replace_callback(
@@ -738,6 +748,7 @@ class PageService
                                     if ($oldNum === $i) {
                                         return '#' . ($oldNum - 1);
                                     }
+
                                     return $m[0];
                                 },
                                 $name,
@@ -775,8 +786,8 @@ class PageService
                 'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -876,16 +887,20 @@ class PageService
         if ($health === null) {
             return 'page disappeared after publish';
         }
+
         $rh = $health['routeHealth'];
         if ($health['draftUrl'] !== $health['liveUrl']) {
             return sprintf('live URL %s does not match draft URL %s', (string) $health['liveUrl'], (string) $health['draftUrl']);
         }
+
         if ($rh['draft'] !== RouteHealthService::STATUS_OK || $rh['live'] !== RouteHealthService::STATUS_OK) {
             return sprintf('route check draft=%s live=%s', $rh['draft'], $rh['live']);
         }
+
         if ($rh['references'] !== RouteHealthService::STATUS_OK) {
             return 'route reference rows missing';
         }
+
         if ($rh['activeRoutes'] > 1) {
             return $rh['activeRoutes'] . ' active routes for one page (duplicate content)';
         }
@@ -909,6 +924,7 @@ class PageService
                 $wasHistory[$r['workspace'] . ':' . $r['url']] = true;
             }
         }
+
         $list = [];
         foreach ($after['routes'] ?? [] as $r) {
             if ($r['history'] && !isset($wasHistory[$r['workspace'] . ':' . $r['url']])) {
@@ -945,9 +961,11 @@ class PageService
         if (empty($parentPath)) {
             return ['success' => false, 'message' => 'parentPath is required'];
         }
+
         if (empty($title)) {
             return ['success' => false, 'message' => 'title is required'];
         }
+
         if (empty($resourceSegment)) {
             return ['success' => false, 'message' => 'resourceSegment is required'];
         }
@@ -1016,6 +1034,7 @@ class PageService
         if ($publish) {
             $args[] = '--publish';
         }
+
         foreach ([
             'seo-title' => $seoTitle,
             'seo-description' => $seoDescription,
@@ -1109,6 +1128,7 @@ class PageService
         if ($publish) {
             $args[] = '--publish';
         }
+
         $result = $this->runDocumentCommand($args, 'set_url_failed');
         if (empty($result['success'])) {
             return $result;
@@ -1147,13 +1167,16 @@ class PageService
         if ($resourceSegment !== null && $resourceSegment !== '' && !preg_match('#^/[a-z0-9-]+$#', $resourceSegment)) {
             return ['success' => false, 'errorCode' => 'invalid_resource_segment', 'message' => 'resourceSegment must be a single slug with leading slash, only lowercase letters, numbers and hyphens'];
         }
+
         if ($path === self::HOMEPAGE_PATH) {
             return ['success' => false, 'errorCode' => 'invalid_move', 'message' => 'The homepage cannot be moved'];
         }
+
         $targetParentPath = rtrim($targetParentPath, '/');
         if ($targetParentPath === $path || str_starts_with($targetParentPath . '/', $path . '/')) {
             return ['success' => false, 'errorCode' => 'invalid_move', 'message' => 'A page cannot be moved into itself or its own subtree'];
         }
+
         if (dirname($path) === $targetParentPath && ($resourceSegment === null || $resourceSegment === '')) {
             return ['success' => false, 'errorCode' => 'invalid_move', 'message' => 'Page is already under ' . $targetParentPath];
         }
@@ -1212,9 +1235,11 @@ class PageService
         if ($resourceSegment !== null && $resourceSegment !== '') {
             $args[] = '--resource-segment=' . $resourceSegment;
         }
+
         if ($publish) {
             $args[] = '--publish';
         }
+
         $result = $this->runDocumentCommand($args, 'move_failed', 120);
         if (empty($result['success'])) {
             return $result;
@@ -1253,6 +1278,7 @@ class PageService
         if ($path === self::HOMEPAGE_PATH) {
             return '/';
         }
+
         $props = $this->connection->fetchOne(
             "SELECT props FROM phpcr_nodes WHERE path = ? AND workspace_name = '" . self::WORKSPACE_DEFAULT . "'",
             [$path]
@@ -1292,9 +1318,11 @@ class PageService
         if ($health === null) {
             return 'page not found after the change';
         }
+
         if ($health['draftUrl'] !== $expectedUrl) {
             return sprintf('draft URL is %s, expected %s', (string) $health['draftUrl'], $expectedUrl);
         }
+
         if ($published) {
             return $this->verifyPublishedRoutes($health);
         }
@@ -1322,6 +1350,7 @@ class PageService
         if (!$fields['published']) {
             $response['note'] = 'Draft only: the live URL changes on publish. Call publish for this path to move the live route.';
         }
+
         if ($verified !== null) {
             $response['errorCode'] = 'route_check_failed';
             $response['reason'] = $verified;
@@ -1380,7 +1409,7 @@ class PageService
             if ($nodes !== false && $nodes->length > 0 && $nodes->item(0)) {
                 return $nodes->item(0)->nodeValue;
             }
-        } catch (\Exception) {
+        } catch (Exception) {
             // Ignore parsing errors
         }
 
@@ -1475,11 +1504,13 @@ class PageService
                     $resolved[] = $uuid;
                     continue;
                 }
+
                 $snippet = $this->snippetService->getSnippet($uuid, $locale);
                 $resolved[] = $snippet
                     ? ['uuid' => $uuid, 'title' => $snippet['title']]
                     : ['uuid' => $uuid, 'title' => null];
             }
+
             $block['snippets'] = $resolved;
         }
 
@@ -1575,8 +1606,8 @@ class PageService
                 'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -1630,6 +1661,7 @@ class PageService
                     $parts[] = $item['description'];
                 }
             }
+
             unset($blockData['items']);
         }
 
@@ -1653,10 +1685,12 @@ class PageService
             if (!is_array($item)) {
                 return false;
             }
+
             $type = $item['type'] ?? null;
             if ($type !== null && $type !== 'description') {
                 return false;
             }
+
             foreach (array_keys($item) as $key) {
                 if ($key !== 'type' && $key !== 'description') {
                     return false;
@@ -1688,9 +1722,11 @@ class PageService
         if (isset($schema['nested'])) {
             $allowed[] = $schema['nested'];
         }
+
         foreach (array_keys($schema['nestedTypes'] ?? []) as $nestedKey) {
             $allowed[] = $nestedKey;
         }
+
         $allowed[] = 'type';
 
         $ignored = array_values(array_diff(array_keys($blockData), array_unique($allowed)));
@@ -1740,7 +1776,7 @@ class PageService
             if ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
                 $valueNode = $existingNodes->item(0);
                 $valueNode->nodeValue = htmlspecialchars($title, ENT_XML1);
-                if ($valueNode instanceof \DOMElement) {
+                if ($valueNode instanceof DOMElement) {
                     $valueNode->setAttribute('length', (string) strlen($title));
                 }
             } else {
@@ -1778,8 +1814,8 @@ class PageService
                 'title' => $title,
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -1842,6 +1878,7 @@ class PageService
                             $node->parentNode->removeChild($node);
                         }
                     }
+
                     $updatedFields[] = $dataKey;
                 } elseif ($existingNodes !== false && $existingNodes->length > 0 && $existingNodes->item(0)) {
                     // Update existing property
@@ -1850,10 +1887,11 @@ class PageService
                     if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
                         $valueNode = $valueNodes->item(0);
                         $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
-                        if ($valueNode instanceof \DOMElement) {
+                        if ($valueNode instanceof DOMElement) {
                             $valueNode->setAttribute('length', (string) strlen((string) $value));
                         }
                     }
+
                     $updatedFields[] = $dataKey;
                 } else {
                     // Create new property
@@ -1897,8 +1935,8 @@ class PageService
                 ],
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -2003,8 +2041,8 @@ class PageService
                 'blocksNotInNewTemplate' => $notSupported,
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -2157,8 +2195,8 @@ class PageService
                 'trainingData' => $this->getTrainingData($updatedXml, $locale),
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -2222,7 +2260,7 @@ class PageService
             }
 
             return $out;
-        } catch (\Exception) {
+        } catch (Exception) {
             return [];
         }
     }
@@ -2267,7 +2305,7 @@ class PageService
                 if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
                     $valueNode = $valueNodes->item(0);
                     $valueNode->nodeValue = htmlspecialchars((string) $value, ENT_XML1);
-                    if ($valueNode instanceof \DOMElement) {
+                    if ($valueNode instanceof DOMElement) {
                         $valueNode->setAttribute('length', (string) strlen((string) $value));
                     }
                 }
@@ -2324,7 +2362,7 @@ class PageService
      */
     private function touchDraftMetadata(DOMDocument $xml, string $locale): void
     {
-        $now = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(self::DATE_FORMAT);
+        $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(self::DATE_FORMAT);
 
         $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
@@ -2337,14 +2375,14 @@ class PageService
             if ($valueNodes !== false && $valueNodes->length > 0 && $valueNodes->item(0)) {
                 $valueNodes->item(0)->nodeValue = $now;
 
-                if ($valueNodes->item(0) instanceof \DOMElement) {
+                if ($valueNodes->item(0) instanceof DOMElement) {
                     $valueNodes->item(0)->setAttribute('length', (string) \strlen($now));
                 }
             }
         } else {
             $rootNode = $xpath->query('/sv:node')->item(0);
 
-            if ($rootNode instanceof \DOMElement) {
+            if ($rootNode instanceof DOMElement) {
                 $this->blockWriter->addProperty($xml, $rootNode, "i18n:{$locale}-changed", $now, 'Date');
             }
         }
@@ -2414,8 +2452,8 @@ class PageService
                 ],
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -2493,8 +2531,8 @@ class PageService
 
             return $result;
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -2531,9 +2569,11 @@ class PageService
             if ($fromPosition < 0 || $fromPosition >= $blocksLength) {
                 return ['success' => false, 'message' => "From position {$fromPosition} out of range"];
             }
+
             if ($toPosition < 0 || $toPosition >= $blocksLength) {
                 return ['success' => false, 'message' => "To position {$toPosition} out of range"];
             }
+
             if ($fromPosition === $toPosition) {
                 return ['success' => true, 'message' => 'Block already at target position'];
             }
@@ -2544,18 +2584,18 @@ class PageService
 
             if ($allProperties !== false) {
                 foreach ($allProperties as $prop) {
-                    if ($prop instanceof \DOMElement) {
+                    if ($prop instanceof DOMElement) {
                         $name = $prop->getAttribute('sv:name');
                         // Skip the length property
                         if (str_contains($name, '-length') && !str_contains($name, '-items#')) {
                             continue;
                         }
+
                         // Extract position from property name
                         if (preg_match('/#(\d+)/', $name, $matches)) {
                             $pos = (int) $matches[1];
-                            if (!isset($blockProperties[$pos])) {
-                                $blockProperties[$pos] = [];
-                            }
+                            $blockProperties[$pos] ??= [];
+
                             $blockProperties[$pos][] = $prop;
                         }
                     }
@@ -2571,7 +2611,7 @@ class PageService
             foreach ($newOrder as $newPos => $oldPos) {
                 if (isset($blockProperties[$oldPos])) {
                     foreach ($blockProperties[$oldPos] as $prop) {
-                        if ($prop instanceof \DOMElement) {
+                        if ($prop instanceof DOMElement) {
                             $name = $prop->getAttribute('sv:name');
                             $newName = preg_replace('/#' . $oldPos . '(?!\d)/', '#' . $newPos, $name);
                             if ($newName !== null) {
@@ -2601,8 +2641,8 @@ class PageService
                 'blocks' => $this->formatCompactBlocks($updatedPage['blocks'] ?? []),
             ];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -2663,8 +2703,8 @@ class PageService
 
             return ['success' => true, 'message' => 'Page unpublished successfully'];
 
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -2688,8 +2728,8 @@ class PageService
 
         try {
             $spawn = $this->spawnDeleteProcess($identifier, $locale);
-        } catch (\Exception $e) {
-            return ['success' => false, 'errorCode' => 'delete_failed', 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'errorCode' => 'delete_failed', 'message' => $exception->getMessage()];
         }
 
         $result = $this->parseDeleteProcessOutput($spawn['output']);
@@ -2814,8 +2854,8 @@ class PageService
 
         try {
             $spawn = $this->commandRunner()->run($arguments, $timeoutSeconds);
-        } catch (\Exception $e) {
-            return ['success' => false, 'errorCode' => $failureCode, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'errorCode' => $failureCode, 'message' => $exception->getMessage()];
         }
 
         return ConsoleCommandRunner::toResult($spawn, $arguments[0] ?? 'console', $timeoutSeconds, $failureCode);
@@ -2947,6 +2987,7 @@ class PageService
                     ['actualDescendantCount' => count($descendants)]
                 );
             }
+
             if ($expectedChildCount !== count($descendants)) {
                 return $this->deleteError(
                     'child_count_mismatch',
@@ -2966,6 +3007,7 @@ class PageService
                     ['path' => $path]
                 );
             }
+
             $reparentCollisions = $this->detectReparentCollisions($path, $newParentPath);
             if (!empty($reparentCollisions)) {
                 return $this->deleteError(
@@ -2981,6 +3023,7 @@ class PageService
         if ($this->referenceScanner instanceof PageReferenceScanner) {
             $references = $this->referenceScanner->findIncomingReferences($uuid, $locale);
         }
+
         if (!empty($references)) {
             return $this->deleteError(
                 'references_present',
@@ -3071,11 +3114,11 @@ class PageService
                 'trashId' => $trashId,
                 'cacheCleared' => !empty($cacheResult['success']),
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $exception) {
             return $this->deleteError(
                 'delete_failed',
-                'exception during delete: ' . $e->getMessage(),
-                ['exception' => $e->getMessage()]
+                'exception during delete: ' . $exception->getMessage(),
+                ['exception' => $exception->getMessage()]
             );
         }
     }
@@ -3107,6 +3150,7 @@ class PageService
         if (empty($paths)) {
             return $this->deleteError('page_not_found', 'paths must be a non-empty array');
         }
+
         if (count($paths) > 10) {
             return $this->deleteError(
                 'batch_too_large',
@@ -3164,6 +3208,7 @@ class PageService
 
                 return $result;
             }
+
             $preconditions[$candidatePath] = $result;
         }
 
@@ -3227,6 +3272,7 @@ class PageService
         if ($uuid === null) {
             return $this->deleteError('page_not_found', "page not found at path: {$path}");
         }
+
         if (!$this->referenceScanner instanceof PageReferenceScanner) {
             return $this->deleteError('delete_failed', 'PageReferenceScanner is not available');
         }
@@ -3295,10 +3341,12 @@ class PageService
             if (!str_starts_with($candidate, $prefix)) {
                 continue;
             }
+
             $relative = substr($candidate, $pathLen);
             if ($relative === false || $relative === '' || str_contains($relative, '/')) {
                 continue; // not a direct child
             }
+
             $children[] = $candidate;
         }
 
@@ -3368,7 +3416,7 @@ class PageService
         }
 
         $newSiblings = $this->getDirectChildPaths($newParentPath);
-        $existingBasenames = array_map(fn (string $p): string => basename($p), $newSiblings);
+        $existingBasenames = array_map(basename(...), $newSiblings);
         $existingSet = array_flip($existingBasenames);
 
         $collisions = [];
@@ -3392,7 +3440,7 @@ class PageService
                  LIMIT 1",
                 [$uuid]
             );
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return null;
         }
 
@@ -3465,9 +3513,7 @@ class PageService
         $allPages = $this->listPages($locale, $pathPrefix);
         $queryLower = mb_strtolower($query);
 
-        return array_values(array_filter($allPages, function (array $page) use ($queryLower): bool {
-            return str_contains(mb_strtolower($page['title']), $queryLower);
-        }));
+        return array_values(array_filter($allPages, fn(array $page): bool => str_contains(mb_strtolower($page['title']), $queryLower)));
     }
 
     /**
@@ -3794,6 +3840,7 @@ class PageService
         if (!$result) {
             return null;
         }
+
         $state = $this->extractPropertyFromXml($result['props'], "i18n:{$locale}-state");
 
         return $state === null ? null : (int) $state;
@@ -3859,12 +3906,15 @@ class PageService
             if (!empty($block['headline'])) {
                 $entry['headline'] = $block['headline'];
             }
+
             if (isset($block['faqs']) && is_array($block['faqs'])) {
                 $entry['faqs_count'] = count($block['faqs']);
             }
+
             if (isset($block['rows']) && is_array($block['rows'])) {
                 $entry['rows_count'] = count($block['rows']);
             }
+
             if (isset($block['items']) && is_array($block['items'])) {
                 $entry['items_count'] = count($block['items']);
             }
@@ -3896,6 +3946,7 @@ class PageService
 
             $compact[] = $entry;
         }
+
         return $compact;
     }
 }

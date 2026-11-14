@@ -94,6 +94,7 @@ trait DocumentCommandStubsTrait
                 return $args;
             }
         }
+
         $this->fail('Command not spawned: ' . $command);
     }
 }

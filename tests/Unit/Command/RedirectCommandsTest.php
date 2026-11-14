@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Command;
 
+use RuntimeException;
 use App\Command\RedirectDeleteCommand;
 use App\Command\RedirectSaveCommand;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,8 +21,9 @@ class RedirectCommandsTest extends TestCase
         $manager = $this->createMock(RedirectRouteManagerInterface::class);
         $manager->method('saveByData')->willReturnCallback(function (array $data) {
             if ($data['source'] === '/de/dup') {
-                throw new \RuntimeException('not unique');
+                throw new RuntimeException('not unique');
             }
+
             $route = new RedirectRoute();
             $route->setId('id-' . $data['source']);
             $route->setSource($data['source']);

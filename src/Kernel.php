@@ -12,7 +12,7 @@ namespace App;
  * This source file is subject to the MIT license that is bundled
  * with this source code in the file LICENSE.
  */
-
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use App\Sulu\Contact\ContactManagerDecorator;
 use FOS\HttpCache\SymfonyCache\HttpCacheProvider;
 use Sulu\Bundle\HttpCacheBundle\Cache\SuluHttpCache;
@@ -47,7 +47,7 @@ class Kernel extends SuluKernel implements HttpCacheProvider
     {
         parent::build($container);
 
-        $container->addCompilerPass(new class implements \Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface {
+        $container->addCompilerPass(new class implements CompilerPassInterface {
             public function process(ContainerBuilder $container): void
             {
                 if ($container->hasDefinition('sulu_contact.contact_manager')) {

@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 class BlockExtractorTest extends TestCase
 {
     private BlockExtractor $extractor;
+
     private BlockTypeRegistry $registry;
 
     protected function setUp(): void

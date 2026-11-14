@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Sulu\Block;
 
+use Exception;
 use DOMDocument;
 use DOMXPath;
 
@@ -77,7 +78,7 @@ final class BlockExtractor
             }
 
             return $blocks;
-        } catch (\Exception) {
+        } catch (Exception) {
             return [];
         }
     }
@@ -100,6 +101,7 @@ final class BlockExtractor
         if ($type === null) {
             return null;
         }
+
         $block['type'] = $type;
 
         // Get schema for this block type.
@@ -214,14 +216,17 @@ final class BlockExtractor
                     if ($tagType !== null) {
                         $tag['type'] = $tagType;
                     }
+
                     $tagText = $this->getProperty($xpath, "{$prefix}-{$nestedName}#{$blockPosition}-tags#{$j}-text#{$k}");
                     if ($tagText !== null) {
                         $tag['text'] = $tagText;
                     }
+
                     if (!empty($tag)) {
                         $tags[] = $tag;
                     }
                 }
+
                 if (!empty($tags)) {
                     $item['tags'] = $tags;
                 }
@@ -265,10 +270,12 @@ final class BlockExtractor
                         $item[$propName] = $value;
                     }
                 }
+
                 if (!empty($item)) {
                     $items[] = $item;
                 }
             }
+
             if (!empty($items)) {
                 $block['items'] = $items;
             }
@@ -284,6 +291,7 @@ final class BlockExtractor
         if ($nodes !== false && $nodes->length > 0 && $nodes->item(0)) {
             return $nodes->item(0)->nodeValue;
         }
+
         return null;
     }
 
@@ -305,6 +313,7 @@ final class BlockExtractor
                 $values[] = $nodes->item($i)->nodeValue;
             }
         }
+
         return $values;
     }
 
@@ -357,6 +366,7 @@ final class BlockExtractor
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 return $decoded;
             }
+
             // Single non-JSON value: wrap in array for consistent return type
             return [$values[0]];
         }

@@ -17,8 +17,8 @@ class ContactDetailPageAdmin extends Admin
     public const EDIT_FORM_VIEW = 'app.contact.detail_page';
 
     public function __construct(
-        private ViewBuilderFactoryInterface $viewBuilderFactory,
-        private SecurityCheckerInterface $securityChecker,
+        private readonly ViewBuilderFactoryInterface $viewBuilderFactory,
+        private readonly SecurityCheckerInterface $securityChecker,
     ) {
     }
 

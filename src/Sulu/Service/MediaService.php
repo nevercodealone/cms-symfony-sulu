@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use PDO;
+use RuntimeException;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as ConnectionException;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
@@ -32,8 +34,8 @@ class MediaService
     ];
 
     public function __construct(
-        private Connection $connection,
-        private MediaManagerInterface $mediaManager,
+        private readonly Connection $connection,
+        private readonly MediaManagerInterface $mediaManager,
     ) {
     }
 
@@ -50,7 +52,7 @@ class MediaService
         int $offset = 0
     ): array {
         $params = [$locale];
-        $types = [\PDO::PARAM_STR];
+        $types = [PDO::PARAM_STR];
 
         $sql = "SELECT m.id, fvm.title, fv.name as filename, fv.mimeType, fv.size, m.idCollections
                 FROM me_media m
@@ -63,14 +65,14 @@ class MediaService
             $sql .= " AND (fvm.title LIKE ? OR fv.name LIKE ?)";
             $params[] = "%{$search}%";
             $params[] = "%{$search}%";
-            $types[] = \PDO::PARAM_STR;
-            $types[] = \PDO::PARAM_STR;
+            $types[] = PDO::PARAM_STR;
+            $types[] = PDO::PARAM_STR;
         }
 
         if ($collectionId !== null) {
             $sql .= " AND m.idCollections = ?";
             $params[] = $collectionId;
-            $types[] = \PDO::PARAM_INT;
+            $types[] = PDO::PARAM_INT;
         }
 
         // Count total before pagination
@@ -86,8 +88,8 @@ class MediaService
         $sql .= " ORDER BY m.id DESC LIMIT ? OFFSET ?";
         $params[] = $limit;
         $params[] = $offset;
-        $types[] = \PDO::PARAM_INT;
-        $types[] = \PDO::PARAM_INT;
+        $types[] = PDO::PARAM_INT;
+        $types[] = PDO::PARAM_INT;
 
         $results = $this->connection->fetchAllAssociative($sql, $params, $types);
 
@@ -245,7 +247,7 @@ class MediaService
      *
      * @return array{id: int, title: string, filename: string, mimeType: string, size: int, collectionId: int}
      *
-     * @throws \RuntimeException On download failure, validation error, or save error
+     * @throws RuntimeException On download failure, validation error, or save error
      */
     public function uploadMediaFromUrl(
         string $url,
@@ -275,7 +277,7 @@ class MediaService
      *
      * @return array{id: int, title: string, filename: string, mimeType: string, size: int, collectionId: int}
      *
-     * @throws \RuntimeException If file does not exist, is not readable, or save fails
+     * @throws RuntimeException If file does not exist, is not readable, or save fails
      */
     public function uploadMediaFromPath(
         string $filePath,
@@ -285,16 +287,16 @@ class MediaService
         ?string $filename = null,
     ): array {
         if (!file_exists($filePath)) {
-            throw new \RuntimeException("File not found: {$filePath}");
+            throw new RuntimeException("File not found: {$filePath}");
         }
 
         if (!is_readable($filePath)) {
-            throw new \RuntimeException("File not readable: {$filePath}");
+            throw new RuntimeException("File not readable: {$filePath}");
         }
 
         $fileSize = filesize($filePath);
         if ($fileSize > self::MAX_UPLOAD_SIZE) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 sprintf('File too large: %s bytes (max %s bytes)', $fileSize, self::MAX_UPLOAD_SIZE)
             );
         }
@@ -331,7 +333,7 @@ class MediaService
 
         try {
             $media = $this->mediaManager->save($uploadedFile, $data, null);
-        } catch (ConnectionException $e) {
+        } catch (ConnectionException) {
             // Retry once — stale DBAL connection in long-lived MCP process
             $this->connection->close();
             $this->connection->connect();
@@ -351,30 +353,30 @@ class MediaService
     /**
      * Validate a URL for safety (scheme, SSRF protection).
      *
-     * @throws \RuntimeException On invalid or blocked URL
+     * @throws RuntimeException On invalid or blocked URL
      */
     private function validateUrl(string $url): void
     {
         $parsed = parse_url($url);
 
         if ($parsed === false || !isset($parsed['scheme'], $parsed['host'])) {
-            throw new \RuntimeException('Invalid URL format');
+            throw new RuntimeException('Invalid URL format');
         }
 
         if (!in_array($parsed['scheme'], ['http', 'https'], true)) {
-            throw new \RuntimeException('Only http and https URLs are allowed');
+            throw new RuntimeException('Only http and https URLs are allowed');
         }
 
         // Resolve hostname to IP and check for internal ranges (SSRF protection)
         $ip = gethostbyname($parsed['host']);
         if ($ip === $parsed['host']) {
             // gethostbyname returns the input on failure
-            throw new \RuntimeException("Cannot resolve hostname: {$parsed['host']}");
+            throw new RuntimeException("Cannot resolve hostname: {$parsed['host']}");
         }
 
         foreach (self::BLOCKED_IP_RANGES as $range) {
             if ($this->ipInRange($ip, $range)) {
-                throw new \RuntimeException('URLs pointing to internal network addresses are not allowed');
+                throw new RuntimeException('URLs pointing to internal network addresses are not allowed');
             }
         }
     }
@@ -396,7 +398,7 @@ class MediaService
     /**
      * Download a file from URL to a local temp path.
      *
-     * @throws \RuntimeException On download failure or file too large
+     * @throws RuntimeException On download failure or file too large
      */
     private function downloadFile(string $url, string $tempPath): void
     {
@@ -415,13 +417,13 @@ class MediaService
 
         $source = @fopen($url, 'r', false, $context);
         if ($source === false) {
-            throw new \RuntimeException("Failed to download from URL: {$url}");
+            throw new RuntimeException("Failed to download from URL: {$url}");
         }
 
         try {
             $dest = fopen($tempPath, 'w');
             if ($dest === false) {
-                throw new \RuntimeException('Failed to create temp file for download');
+                throw new RuntimeException('Failed to create temp file for download');
             }
 
             $bytesWritten = 0;
@@ -431,12 +433,14 @@ class MediaService
                     if ($chunk === false) {
                         break;
                     }
+
                     $bytesWritten += strlen($chunk);
                     if ($bytesWritten > self::MAX_UPLOAD_SIZE) {
-                        throw new \RuntimeException(
+                        throw new RuntimeException(
                             sprintf('Download exceeds max size of %d bytes', self::MAX_UPLOAD_SIZE)
                         );
                     }
+
                     fwrite($dest, $chunk);
                 }
             } finally {
@@ -444,7 +448,7 @@ class MediaService
             }
 
             if ($bytesWritten === 0) {
-                throw new \RuntimeException('Downloaded file is empty');
+                throw new RuntimeException('Downloaded file is empty');
             }
         } finally {
             fclose($source);
@@ -464,7 +468,7 @@ class MediaService
     {
         try {
             $fileVersionId = $this->resolveFileVersionId($mediaId);
-        } catch (ConnectionException $e) {
+        } catch (ConnectionException) {
             $this->connection->close();
             $this->connection->connect();
             $fileVersionId = $this->resolveFileVersionId($mediaId);
@@ -479,7 +483,7 @@ class MediaService
 
         try {
             $this->upsertFileVersionMeta($fileVersionId, $locale, $title);
-        } catch (ConnectionException $e) {
+        } catch (ConnectionException) {
             $this->connection->close();
             $this->connection->connect();
             $this->upsertFileVersionMeta($fileVersionId, $locale, $title);

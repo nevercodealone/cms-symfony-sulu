@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use DOMElement;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMXPath;
@@ -162,21 +163,24 @@ class PageReferenceScanner
         }
 
         foreach ($properties as $property) {
-            if (!$property instanceof \DOMElement) {
+            if (!$property instanceof DOMElement) {
                 continue;
             }
+
             $name = $property->getAttribute('sv:name');
             if (preg_match('/#(\d+)$/', $name, $m) !== 1) {
                 continue;
             }
+
             $position = (int) $m[1];
 
             $values = $xpath->query('sv:value', $property);
             if ($values === false) {
                 continue;
             }
+
             foreach ($values as $value) {
-                if ($value instanceof \DOMElement && trim($value->textContent) === $targetUuid) {
+                if ($value instanceof DOMElement && trim($value->textContent) === $targetUuid) {
                     $hits[] = $position;
                 }
             }
@@ -207,23 +211,27 @@ class PageReferenceScanner
         }
 
         foreach ($properties as $property) {
-            if (!$property instanceof \DOMElement) {
+            if (!$property instanceof DOMElement) {
                 continue;
             }
+
             $name = $property->getAttribute('sv:name');
             if (preg_match('/#(\d+)$/', $name, $m) !== 1) {
                 continue;
             }
+
             $position = (int) $m[1];
 
             $values = $xpath->query('sv:value', $property);
             if ($values === false) {
                 continue;
             }
+
             foreach ($values as $value) {
-                if (!$value instanceof \DOMElement) {
+                if (!$value instanceof DOMElement) {
                     continue;
                 }
+
                 $decoded = html_entity_decode($value->textContent, ENT_QUOTES | ENT_HTML5);
                 $data = json_decode($decoded, true);
                 if (is_array($data) && ($data['dataSource'] ?? null) === $targetUuid) {
@@ -257,17 +265,20 @@ class PageReferenceScanner
         }
 
         foreach ($properties as $property) {
-            if (!$property instanceof \DOMElement) {
+            if (!$property instanceof DOMElement) {
                 continue;
             }
+
             $values = $xpath->query('sv:value', $property);
             if ($values === false) {
                 continue;
             }
+
             foreach ($values as $value) {
-                if (!$value instanceof \DOMElement) {
+                if (!$value instanceof DOMElement) {
                     continue;
                 }
+
                 $decoded = html_entity_decode($value->textContent, ENT_QUOTES | ENT_HTML5);
                 $data = json_decode($decoded, true);
                 if (is_array($data) && ($data['dataSource'] ?? null) === $targetUuid) {
@@ -311,9 +322,10 @@ class PageReferenceScanner
         }
 
         foreach ($properties as $property) {
-            if (!$property instanceof \DOMElement) {
+            if (!$property instanceof DOMElement) {
                 continue;
             }
+
             $name = $property->getAttribute('sv:name');
             $locale = $this->extractLocaleFromPropertyName($name);
 
@@ -321,15 +333,18 @@ class PageReferenceScanner
             if ($values === false) {
                 continue;
             }
+
             foreach ($values as $value) {
-                if (!$value instanceof \DOMElement) {
+                if (!$value instanceof DOMElement) {
                     continue;
                 }
+
                 $raw = $value->textContent;
                 $decoded = html_entity_decode($raw, ENT_QUOTES | ENT_HTML5);
                 if ($decoded === $raw) {
                     // Not entity-encoded; try raw match too
                 }
+
                 $matched = preg_match($pattern, $decoded) === 1
                     || preg_match($patternAlt, $decoded) === 1
                     || preg_match($pattern, $raw) === 1
@@ -339,6 +354,7 @@ class PageReferenceScanner
                     if (preg_match('/#(\d+)/', $name, $m) === 1) {
                         $blockPosition = (int) $m[1];
                     }
+
                     $hits[] = [
                         'blockPosition' => $blockPosition,
                         'locale' => $locale ?? 'de',
@@ -357,6 +373,7 @@ class PageReferenceScanner
         if ($props === '') {
             return null;
         }
+
         $doc = new DOMDocument();
         $previous = libxml_use_internal_errors(true);
         $loaded = $doc->loadXML($props, LIBXML_NONET | LIBXML_NOENT);
@@ -364,6 +381,7 @@ class PageReferenceScanner
         if ($loaded === false) {
             return null;
         }
+
         $xpath = new DOMXPath($doc);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
@@ -376,6 +394,7 @@ class PageReferenceScanner
         if ($xpath === null) {
             return null;
         }
+
         $nodes = $xpath->query('//sv:property[@sv:name="jcr:uuid"]/sv:value');
         if ($nodes === false || $nodes->length === 0 || !$nodes->item(0)) {
             return null;

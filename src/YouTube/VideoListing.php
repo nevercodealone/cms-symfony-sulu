@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\YouTube;
 
+use Generator;
 use Google\Service\YouTube;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Clock\DatePoint;
@@ -20,9 +21,9 @@ final readonly class VideoListing
     }
 
     /**
-     * @return \Generator<VideoData>
+     * @return Generator<VideoData>
      */
-    public function getVideos(string $channelHandle, int $maxResults): \Generator
+    public function getVideos(string $channelHandle, int $maxResults): Generator
     {
         // Check if it's a playlist ID (starts with PL) or channel handle
         if (str_starts_with($channelHandle, 'PL')) {
@@ -48,9 +49,9 @@ final readonly class VideoListing
     }
 
     /**
-     * @return \Generator<VideoData>
+     * @return Generator<VideoData>
      */
-    private function loadVideos(string $playlistId, int $maxResults): \Generator
+    private function loadVideos(string $playlistId, int $maxResults): Generator
     {
         $loaded = 0;
         $response = null;

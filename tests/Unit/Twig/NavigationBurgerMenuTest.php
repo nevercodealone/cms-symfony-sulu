@@ -9,7 +9,9 @@ use PHPUnit\Framework\TestCase;
 class NavigationBurgerMenuTest extends TestCase
 {
     private string $templatePath;
+
     private string $cssPath;
+
     private string $tailwindConfigPath;
 
     protected function setUp(): void

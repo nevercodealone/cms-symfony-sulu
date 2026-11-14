@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Sulu\Block;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Sulu\Block\BlockExtractor;
 use App\Sulu\Block\BlockTypeRegistry;
 use App\Sulu\Block\BlockWriter;
@@ -24,10 +25,13 @@ use PHPUnit\Framework\TestCase;
 class EdugateBlockFamilyTest extends TestCase
 {
     private const E = BlockTypeRegistry::FAMILY_EDUGATE;
+
     private const T = BlockTypeRegistry::FAMILY_TAILWIND;
 
     private BlockWriter $writer;
+
     private BlockExtractor $extractor;
+
     private BlockTypeRegistry $registry;
 
     protected function setUp(): void
@@ -113,7 +117,7 @@ class EdugateBlockFamilyTest extends TestCase
     /**
      * @param array<string, mixed> $block
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('edugateBlockProvider')]
+    #[DataProvider('edugateBlockProvider')]
     public function testEdugateBlockRoundTrips(array $block): void
     {
         $extracted = $this->roundTrip($block);
@@ -219,6 +223,7 @@ class EdugateBlockFamilyTest extends TestCase
 
         $xpath = new DOMXPath($xml);
         $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
+
         $rootNode = $xpath->query('/sv:node')->item(0);
         self::assertNotNull($rootNode);
 

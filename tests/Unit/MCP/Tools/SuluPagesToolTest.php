@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\MCP\Tools;
 
+use JsonSerializable;
+use App\Sulu\Service\RedirectService;
 use App\MCP\Tools\SuluPagesTool;
 use App\Sulu\Block\BlockTypeRegistry;
 use App\Sulu\Service\MediaService;
@@ -19,9 +21,13 @@ use PHPUnit\Framework\TestCase;
 class SuluPagesToolTest extends TestCase
 {
     private PageService&MockObject $pageService;
+
     private BlockTypeRegistry $blockTypeRegistry;
+
     private SnippetService&MockObject $snippetService;
+
     private MediaService&MockObject $mediaService;
+
     private SuluPagesTool $tool;
 
     protected function setUp(): void
@@ -135,7 +141,7 @@ class SuluPagesToolTest extends TestCase
         if (method_exists($schema, 'toArray')) {
             $array = $schema->toArray();
             $this->assertIsArray($array);
-        } elseif ($schema instanceof \JsonSerializable) {
+        } elseif ($schema instanceof JsonSerializable) {
             // If jsonSerialize exists, test that too
             $json = json_encode($schema);
             $this->assertIsString($json);
@@ -2678,7 +2684,7 @@ class SuluPagesToolTest extends TestCase
 
     public function testCreateRedirectActionSupportsSingleAndBulk(): void
     {
-        $redirects = $this->createMock(\App\Sulu\Service\RedirectService::class);
+        $redirects = $this->createMock(RedirectService::class);
         $calls = [];
         $redirects->method('createRedirects')->willReturnCallback(function (array $items) use (&$calls) {
             $calls[] = $items;

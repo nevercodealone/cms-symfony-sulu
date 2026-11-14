@@ -42,6 +42,7 @@ class BlockTypeRegistryTest extends TestCase
                 $this->assertStringNotContainsString('<p>', $item['description']);
             }
         }
+
         $codeItems = array_values(array_filter($example['items'], static fn ($item) => $item['type'] === 'code'));
         $this->assertNotEmpty($codeItems);
         foreach ($codeItems as $item) {

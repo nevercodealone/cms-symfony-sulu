@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Sulu\Service;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Sulu\Logger\McpActivityLogger;
 use App\Sulu\Service\PageService;
 use Doctrine\DBAL\Connection;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
 class PageServiceSwitchTemplateTest extends TestCase
 {
     private Connection&MockObject $connection;
+
     private PageService $pageService;
 
     private const TAILWIND_XML = <<<'XML'
@@ -193,7 +195,7 @@ XML;
         ];
     }
 
-    #[\PHPUnit\Framework\Attributes\DataProvider('unsupportedTemplateProvider')]
+    #[DataProvider('unsupportedTemplateProvider')]
     public function testUnsupportedTargetsAreRejectedWithoutWriting(string $template): void
     {
         $this->connection->expects($this->never())->method('executeStatement');

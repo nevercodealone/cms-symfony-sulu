@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use Throwable;
+use RuntimeException;
 use App\Sulu\Service\RouteHealthService;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -37,6 +39,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class RoutesRepairCommand extends Command
 {
     private const WS_DEFAULT = RouteHealthService::WORKSPACE_DEFAULT;
+
     private const WS_LIVE = RouteHealthService::WORKSPACE_LIVE;
 
     /** @var list<array{page: string, draftUrl: string, liveUrl: string, action: string}> */
@@ -84,15 +87,15 @@ class RoutesRepairCommand extends Command
             } else {
                 $this->connection->commit();
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $throwable) {
             $this->connection->rollBack();
-            $io->error($e->getMessage());
+            $io->error($throwable->getMessage());
 
             return Command::FAILURE;
         }
 
         if ($this->report !== []) {
-            $io->table(['Page', 'Draft URL', 'Live URL', 'Action'], array_map(fn (array $r) => array_values($r), $this->report));
+            $io->table(['Page', 'Draft URL', 'Live URL', 'Action'], array_map(array_values(...), $this->report));
         }
 
         $io->definitionList(...array_map(fn (string $k, int $v) => [$k => $v], array_keys($this->counters), $this->counters));
@@ -135,10 +138,12 @@ class RoutesRepairCommand extends Command
             if ($page['draft'] === null) {
                 continue;
             }
+
             $url = $page['draft']['url'] ?? $page['live']['url'] ?? null;
             if ($prefix !== '' && ($url === null || !str_starts_with($url, $prefix))) {
                 continue;
             }
+
             $result[] = $page;
         }
 
@@ -165,6 +170,7 @@ class RoutesRepairCommand extends Command
             if ($liveRoute === null || !$this->isActiveRouteOf($liveRoute['props'], $page['uuid'])) {
                 continue;
             }
+
             if ($this->loadNode($routePath, self::WS_DEFAULT) !== null) {
                 continue;
             }
@@ -193,12 +199,14 @@ class RoutesRepairCommand extends Command
         $parentPath = $liveNode['parent'];
         if ($this->loadNode($parentPath, self::WS_DEFAULT) === null) {
             if ($parentPath === $root || !str_starts_with($parentPath, $root . '/')) {
-                throw new \RuntimeException('Route root missing in draft workspace: ' . $parentPath);
+                throw new RuntimeException('Route root missing in draft workspace: ' . $parentPath);
             }
+
             $liveParent = $this->loadNode($parentPath, self::WS_LIVE);
             if ($liveParent === null) {
-                throw new \RuntimeException('Live parent route node missing: ' . $parentPath);
+                throw new RuntimeException('Live parent route node missing: ' . $parentPath);
             }
+
             $this->counters['container_nodes_created']++;
             $this->copyLiveNodeToDraft($liveParent, $root);
         }
@@ -240,6 +248,7 @@ class RoutesRepairCommand extends Command
             if ($target === null) {
                 continue;
             }
+
             $targetId = $this->connection->fetchOne(
                 'SELECT id FROM phpcr_nodes WHERE identifier = ? AND workspace_name = ?',
                 [$target, $row['workspace_name']]
@@ -290,6 +299,7 @@ class RoutesRepairCommand extends Command
                         break;
                     }
                 }
+
                 if ($keep === null) {
                     $this->report[] = ['page' => $page['path'], 'draftUrl' => (string) $page['draft']['url'], 'liveUrl' => (string) ($page['live']['url'] ?? ''), 'action' => 'SKIP: ' . count($routes) . ' active routes in ' . $workspace . ' but none matches the URL property'];
                     continue;
@@ -299,6 +309,7 @@ class RoutesRepairCommand extends Command
                     if ($route['id'] === $keep['id']) {
                         continue;
                     }
+
                     $this->report[] = [
                         'page' => $page['path'],
                         'draftUrl' => (string) $page['draft']['url'],

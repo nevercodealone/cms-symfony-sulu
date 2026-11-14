@@ -45,6 +45,7 @@ class PageMoveCommand extends AbstractPageDocumentCommand
             if ($document === null) {
                 return $this->notFound($identifier);
             }
+
             $parent = $this->findDocument($targetParent, $locale);
             if ($parent === null) {
                 return $this->notFound($targetParent, 'parent_not_found');

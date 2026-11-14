@@ -14,8 +14,9 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class HttpCacheClearer
 {
-    private string $cacheDir;
-    private Filesystem $filesystem;
+    private readonly string $cacheDir;
+
+    private readonly Filesystem $filesystem;
 
     public function __construct(string $projectDir, string $environment)
     {

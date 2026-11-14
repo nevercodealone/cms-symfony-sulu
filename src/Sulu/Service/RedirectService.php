@@ -24,6 +24,7 @@ use Doctrine\DBAL\Connection;
 class RedirectService
 {
     public const MAX_BATCH = 50;
+
     public const STATUS_CODES = [301, 302, 307, 308, 410];
 
     public function __construct(
@@ -44,14 +45,17 @@ class RedirectService
             $where[] = 'source LIKE ?';
             $params[] = self::normaliseSource($sourcePrefix) . '%';
         }
+
         if ($target !== null && $target !== '') {
             $where[] = 'target = ?';
             $params[] = $target;
         }
+
         if ($statusCode !== null) {
             $where[] = 'statusCode = ?';
             $params[] = $statusCode;
         }
+
         $limit = max(1, min($limit, 500));
 
         $rows = $this->connection->fetchAllAssociative(
@@ -64,7 +68,7 @@ class RedirectService
         return [
             'success' => true,
             'count' => count($rows),
-            'redirects' => array_map(fn (array $r) => self::formatRow($r), $rows),
+            'redirects' => array_map(self::formatRow(...), $rows),
         ];
     }
 
@@ -81,6 +85,7 @@ class RedirectService
         if ($items === []) {
             return ['success' => false, 'errorCode' => 'invalid_input', 'message' => 'No redirects given'];
         }
+
         if (count($items) > self::MAX_BATCH) {
             return ['success' => false, 'errorCode' => 'too_many_redirects', 'message' => 'At most ' . self::MAX_BATCH . ' redirects per call'];
         }
@@ -95,11 +100,13 @@ class RedirectService
                 $failed[] = ['index' => $index, 'item' => $item, 'reason' => $checked['error'], 'errorCode' => $checked['errorCode']];
                 continue;
             }
+
             $key = $checked['data']['source'] . '|' . ($checked['data']['sourceHost'] ?? '');
             if (isset($seen[$key])) {
                 $failed[] = ['index' => $index, 'item' => $item, 'reason' => 'Duplicate source in this batch', 'errorCode' => 'duplicate_source'];
                 continue;
             }
+
             $seen[$key] = true;
             $valid[] = $checked['data'];
             if (isset($checked['warning'])) {
@@ -114,6 +121,7 @@ class RedirectService
             foreach ($result['failed'] ?? [] as $f) {
                 $failed[] = ['item' => $f['item'], 'reason' => $f['reason'], 'errorCode' => 'save_failed'];
             }
+
             if (!isset($result['saved']) && empty($result['success'])) {
                 foreach ($valid as $v) {
                     $failed[] = ['item' => $v, 'reason' => (string) ($result['message'] ?? 'save failed'), 'errorCode' => (string) ($result['errorCode'] ?? 'save_failed')];
@@ -181,6 +189,7 @@ class RedirectService
                 'details' => ['expected' => $id, 'got' => $confirm],
             ];
         }
+
         if ($this->findById($id) === null) {
             return ['success' => false, 'errorCode' => 'redirect_not_found', 'message' => 'Redirect not found: ' . $id];
         }
@@ -215,9 +224,11 @@ class RedirectService
         if ($rawSource === '') {
             return ['error' => 'source is required, e.g. /de/glossare/old-page', 'errorCode' => 'invalid_source'];
         }
+
         if (preg_match('#^https?://#i', $rawSource)) {
             return ['error' => 'source must be a path, not an absolute URL (use sourceHost for host-specific redirects)', 'errorCode' => 'invalid_source'];
         }
+
         $source = self::normaliseSource($rawSource);
 
         $statusCode = (int) ($item['statusCode'] ?? 301);
@@ -233,6 +244,7 @@ class RedirectService
         } elseif (!str_starts_with($target, '/') && !preg_match('#^https?://#i', $target)) {
             return ['error' => 'target must be a path starting with / or an absolute http(s) URL', 'errorCode' => 'invalid_target'];
         }
+
         if ($target !== '' && strtolower(rtrim($target, '/')) === rtrim($source, '/')) {
             return ['error' => 'source and target are the same', 'errorCode' => 'redirect_loop'];
         }
@@ -255,7 +267,7 @@ class RedirectService
 
         if (($check['type'] ?? null) === 'history_redirect') {
             return [
-                'error' => $source . ' is already a Sulu history route answering 301 to ' . ($check['target'] ?? '?') . '; Sulu\'s router wins, the redirect would never fire',
+                'error' => $source . ' is already a Sulu history route answering 301 to ' . ($check['target'] ?? '?') . "; Sulu's router wins, the redirect would never fire",
                 'errorCode' => 'source_is_history_route',
             ];
         }
@@ -292,15 +304,18 @@ class RedirectService
             if (isset($seen[$current])) {
                 return null;
             }
+
             $seen[$current] = true;
             $check = $this->routeHealth->checkUrl($current);
             $type = $check['type'] ?? null;
             if (!in_array($type, ['history_redirect', 'redirect_bundle'], true) || empty($check['target'])) {
                 return $current;
             }
+
             if (($check['statusCode'] ?? 0) === 410) {
                 return null;
             }
+
             $current = (string) $check['target'];
             if (!str_starts_with($current, '/')) {
                 return $current;
