@@ -26,7 +26,7 @@ RUN --mount=type=secret,id=sulu_composer_token \
     composer install --apcu-autoloader -o --no-scripts --ignore-platform-reqs
 
 # Build actual image
-FROM php:8.2.35-apache AS webserver
+FROM php:8.5.9-apache AS webserver
 
 WORKDIR /var/www/html
 
@@ -42,12 +42,11 @@ RUN apt-get update && apt-get install -y \
         libmagickwand-dev \
         mariadb-client
 
-# install PHP extensions
-RUN docker-php-ext-configure intl && docker-php-ext-install -j$(nproc) \
+# install PHP extensions (opcache is already enabled in the official php image)
+RUN docker-php-ext-configure intl && docker-php-ext-install \
         intl \
         pdo \
         pdo_mysql \
-        opcache \
         zip
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
