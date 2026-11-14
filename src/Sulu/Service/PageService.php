@@ -3120,16 +3120,16 @@ class PageService
         // slashes) - callers cannot be expected to guess the server's
         // exact json_encode flags.
         $confirmDecoded = json_decode($confirm, true);
-        if (!is_array($confirmDecoded) || array_values($confirmDecoded) !== array_values($paths)) {
+        if (!is_array($confirmDecoded) || array_values($confirmDecoded) !== $paths) {
             return $this->deleteError(
                 'confirmation_mismatch',
                 'confirm must be a JSON array containing exactly the same paths in the same order',
-                ['expected' => array_values($paths), 'got' => $confirm]
+                ['expected' => $paths, 'got' => $confirm]
             );
         }
 
         // Deepest-first ordering avoids artificial parent/child conflicts.
-        $ordered = $this->sortPathsDeepestFirst(array_values($paths));
+        $ordered = $this->sortPathsDeepestFirst($paths);
         $pathSet = array_flip($ordered);
 
         // All-or-nothing precondition pass

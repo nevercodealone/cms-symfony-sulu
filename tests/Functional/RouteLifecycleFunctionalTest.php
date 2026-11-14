@@ -131,7 +131,7 @@ class RouteLifecycleFunctionalTest extends KernelTestCase
         $this->assertSame([
             '/glossare/nca-glossar-ki-modelle/zz-route-lifecycle',
             '/glossare/nca-glossar-ki-modelle/zz-route-lifecycle-2',
-        ], array_values($historyUrls));
+        ], $historyUrls);
 
         // redirects: refusal on an active route, 301, 410
         $refused = $this->call(['action' => 'create_redirect', 'source' => '/de/glossare/nca-typescript-glossar/zz-route-lifecycle-2', 'target' => '/de/']);
