@@ -2,9 +2,6 @@
     "brick/math": {
         "version": "0.9.3"
     },
-    "captainhook/captainhook": {
-        "version": "5.4.4"
-    },
     "clue/stream-filter": {
         "version": "v1.5.0"
     },
@@ -385,15 +382,6 @@
     },
     "sebastian/resource-operations": {
         "version": "3.0.3"
-    },
-    "sebastianfeldmann/camino": {
-        "version": "0.9.4"
-    },
-    "sebastianfeldmann/cli": {
-        "version": "3.3.1"
-    },
-    "sebastianfeldmann/git": {
-        "version": "3.4.1"
     },
     "squizlabs/php_codesniffer": {
         "version": "3.0",
