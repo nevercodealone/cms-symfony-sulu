@@ -6,12 +6,12 @@ use Rector\CodeQuality\Rector\Class_\InlineConstructorDefaultToPropertyRector;
 use Rector\Config\RectorConfig;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
-use Rector\Symfony\Set\SymfonyLevelSetList;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([__DIR__ . '/src', __DIR__ . '/tests']);
 
-    $rectorConfig->phpstanConfig(__DIR__ . '/phpstan.neon');
+    // phpstan-ci.neon (no symfony extension section - rector cannot load that)
+    $rectorConfig->phpstanConfig(__DIR__ . '/phpstan-ci.neon');
 
     // basic rules
     $rectorConfig->importNames();
@@ -25,6 +25,7 @@ return static function (RectorConfig $rectorConfig): void {
         LevelSetList::UP_TO_PHP_81,
         SetList::CODING_STYLE,
         SetList::EARLY_RETURN,
-        SymfonyLevelSetList::UP_TO_SYMFONY_54
+        // SymfonyLevelSetList::UP_TO_SYMFONY_54 lives in rector/symfony since rector 2.0;
+        // re-add it after `composer require --dev rector/symfony:^2.0`
     ]);
 };
