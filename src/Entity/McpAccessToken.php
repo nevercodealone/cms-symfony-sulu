@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use DateTimeImmutable;
 use App\Repository\McpAccessTokenRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -27,10 +28,10 @@ class McpAccessToken
     private ?string $clientName = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    private \DateTimeImmutable $expiresAt;
+    private DateTimeImmutable $expiresAt;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $lastUsedAt = null;
+    private ?DateTimeImmutable $lastUsedAt = null;
 
     #[ORM\Column(type: Types::STRING, length: 45, nullable: true)]
     private ?string $createdIp = null;
@@ -39,12 +40,12 @@ class McpAccessToken
     private ?string $lastUsedIp = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    private \DateTimeImmutable $createdAt;
+    private DateTimeImmutable $createdAt;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -74,23 +75,23 @@ class McpAccessToken
         return $this;
     }
 
-    public function getExpiresAt(): \DateTimeImmutable
+    public function getExpiresAt(): DateTimeImmutable
     {
         return $this->expiresAt;
     }
 
-    public function setExpiresAt(\DateTimeImmutable $expiresAt): self
+    public function setExpiresAt(DateTimeImmutable $expiresAt): self
     {
         $this->expiresAt = $expiresAt;
         return $this;
     }
 
-    public function getLastUsedAt(): ?\DateTimeImmutable
+    public function getLastUsedAt(): ?DateTimeImmutable
     {
         return $this->lastUsedAt;
     }
 
-    public function setLastUsedAt(?\DateTimeImmutable $lastUsedAt): self
+    public function setLastUsedAt(?DateTimeImmutable $lastUsedAt): self
     {
         $this->lastUsedAt = $lastUsedAt;
         return $this;
@@ -118,12 +119,12 @@ class McpAccessToken
         return $this;
     }
 
-    public function getCreatedAt(): \DateTimeImmutable
+    public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    public function setCreatedAt(DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
         return $this;
@@ -131,7 +132,7 @@ class McpAccessToken
 
     public function isExpired(): bool
     {
-        return $this->expiresAt < new \DateTimeImmutable();
+        return $this->expiresAt < new DateTimeImmutable();
     }
 
     public function getExpiresIn(): int

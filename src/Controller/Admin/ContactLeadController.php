@@ -17,8 +17,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class ContactLeadController extends AbstractController implements SecuredControllerInterface
 {
     public function __construct(
-        private DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
-        private EntityManagerInterface $entityManager,
+        private readonly DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 

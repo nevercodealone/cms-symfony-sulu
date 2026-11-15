@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Sulu\Service;
 
+use DateTime;
+use Exception;
 use Doctrine\DBAL\Connection;
 use DOMDocument;
 use DOMElement;
@@ -19,15 +21,17 @@ use DOMXPath;
 class SnippetService
 {
     private const WORKSPACE_DEFAULT = 'default';
+
     private const WORKSPACE_LIVE = 'default_live';
+
     private const SNIPPETS_PATH = '/cmf/snippets';
 
     private const DATE_FORMAT = 'Y-m-d\TH:i:s.vP';
 
-    private SnippetSchemaReader $schemaReader;
+    private readonly SnippetSchemaReader $schemaReader;
 
     public function __construct(
-        private Connection $connection,
+        private readonly Connection $connection,
         string $projectDir,
         ?SnippetSchemaReader $schemaReader = null,
     ) {
@@ -76,6 +80,7 @@ class SnippetService
             if (isset($seenUuids[$row['identifier']])) {
                 continue;
             }
+
             $seenUuids[$row['identifier']] = true;
 
             $title = $this->extractPropertyFromXml($row['props'], "i18n:{$locale}-title");
@@ -209,7 +214,7 @@ class SnippetService
             $uuid = $this->generateUuid();
             $slug = $this->buildUniqueSlug($template, $title);
             $path = self::SNIPPETS_PATH . '/' . $template . '/' . $slug;
-            $now = (new \DateTime())->format(self::DATE_FORMAT);
+            $now = (new DateTime())->format(self::DATE_FORMAT);
 
             $props = $this->buildSnippetPropsXml($template, $data, $locale, [
                 'uuid' => $uuid,
@@ -239,8 +244,8 @@ class SnippetService
                 'title' => $title,
                 'published' => $publish,
             ];
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -277,6 +282,7 @@ class SnippetService
             if ($error !== null) {
                 return ['success' => false, 'message' => $error];
             }
+
             unset($data['title'], $data['template']);
 
             $xml = new DOMDocument();
@@ -284,7 +290,7 @@ class SnippetService
 
             $updated = $this->mergeSnippetData($xml, $data, $locale, $schema);
 
-            $now = (new \DateTime())->format(self::DATE_FORMAT);
+            $now = (new DateTime())->format(self::DATE_FORMAT);
             $this->upsertScalarProperty($xml, "i18n:{$locale}-changed", 'Date', $now);
 
             if ($publish) {
@@ -312,8 +318,8 @@ class SnippetService
                 'published' => $publish,
                 'content' => $this->extractContentFromProps($props, $locale),
             ];
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -338,7 +344,7 @@ class SnippetService
             $xml = new DOMDocument();
             $this->loadXmlSecurely($xml, $row['props']);
 
-            $now = (new \DateTime())->format(self::DATE_FORMAT);
+            $now = (new DateTime())->format(self::DATE_FORMAT);
             $this->upsertScalarProperty($xml, "i18n:{$locale}-state", 'Long', '2');
             $this->upsertScalarProperty($xml, "i18n:{$locale}-published", 'Date', $now);
 
@@ -357,8 +363,8 @@ class SnippetService
                 'uuid' => $row['identifier'],
                 'published' => true,
             ];
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -434,6 +440,7 @@ class SnippetService
                     'message' => "Unknown snippet area '{$area}'. Available areas: " . implode(', ', array_keys($areas)),
                 ];
             }
+
             $areaType = $areas[$area]['template'];
 
             $identifier = null;
@@ -450,6 +457,7 @@ class SnippetService
                         'message' => "Snippet template '{$template}' does not match area '{$area}'. Only '{$areaType}' snippets can be assigned to this area.",
                     ];
                 }
+
                 $identifier = $row['identifier'];
             }
 
@@ -486,8 +494,8 @@ class SnippetService
                 'uuid' => $identifier,
                 'template' => $areaType,
             ];
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
         }
     }
 
@@ -620,8 +628,8 @@ class SnippetService
                 'path' => $row['path'],
                 'deletedSnippet' => $snippet,
             ];
-        } catch (\Exception $e) {
-            return $this->deleteError('internal_error', $e->getMessage());
+        } catch (Exception $exception) {
+            return $this->deleteError('internal_error', $exception->getMessage());
         }
     }
 
@@ -703,7 +711,7 @@ class SnippetService
             if ($nodes !== false && $nodes->length > 0 && $nodes->item(0)) {
                 return $nodes->item(0)->nodeValue;
             }
-        } catch (\Exception) {
+        } catch (Exception) {
             // Ignore parsing errors
         }
 
@@ -755,6 +763,7 @@ class SnippetService
                     return "Missing required property '{$name}' ({$property['suluType']})." . $hint;
                 }
             }
+
             foreach ($blocks as $name => $block) {
                 if ($block['minOccurs'] > 0 && $block['writable'] && !isset($data[$name])) {
                     return "Missing required block '{$name}' (min {$block['minOccurs']} items)." . $hint;
@@ -792,12 +801,14 @@ class SnippetService
                 if (!isset($block['types'][$type])) {
                     return "Block '{$blockName}' does not support type '{$type}'. Allowed: " . implode(', ', array_keys($block['types'])) . '.';
                 }
+
                 $typeProperties = $block['types'][$type]['properties'];
 
                 foreach (array_keys($item) as $key) {
                     if ($key === 'type') {
                         continue;
                     }
+
                     if (!isset($typeProperties[$key])) {
                         return "Unknown property '{$key}' in block '{$blockName}' item {$index}. Allowed: "
                             . implode(', ', array_keys($typeProperties)) . '.' . $hint;
@@ -809,6 +820,7 @@ class SnippetService
                     if ($subProperty['required'] && $this->isEmptyValue($value)) {
                         return "Missing required property '{$subName}' in block '{$blockName}' item {$index}." . $hint;
                     }
+
                     if ($value !== null && isset($subProperty['options']) && !in_array((string) $value, $subProperty['options'], true)) {
                         return "Invalid value '{$value}' for '{$subName}' in block '{$blockName}' item {$index}. Allowed: "
                             . implode(', ', $subProperty['options']) . '.';
@@ -1109,6 +1121,7 @@ class SnippetService
                     } elseif ($kind !== 'settings') {
                         $blockItems[$blockName][$index][$kind] = $values[0] ?? '';
                     }
+
                     continue;
                 }
 
@@ -1132,7 +1145,7 @@ class SnippetService
                 ksort($items);
                 $content[$blockName] = array_values($items);
             }
-        } catch (\Exception) {
+        } catch (Exception) {
             // Ignore parsing errors - content is best-effort
         }
 

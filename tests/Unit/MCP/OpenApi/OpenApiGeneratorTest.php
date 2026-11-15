@@ -14,7 +14,9 @@ use PHPUnit\Framework\TestCase;
 class OpenApiGeneratorTest extends TestCase
 {
     private OpenApiGenerator $generator;
+
     private SuluPagesTool&MockObject $tool;
+
     private BlockTypeRegistry $registry;
 
     protected function setUp(): void

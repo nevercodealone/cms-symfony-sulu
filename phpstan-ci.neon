@@ -15,7 +15,8 @@ parameters:
       message: '#StructureInterface::#'
       path: src/Store/SuluContentLoader.php
     # DOMNode vs DOMElement - XPath returns DOMNodeList of DOMNode but actual items are DOMElement
-    - '#Call to an undefined method DOMNode::#'
+    # (PHPStan 2 stubs type DOMNodeList::item() as DOMNameSpaceNode|DOMNode)
+    - '#Call to an undefined method (DOMNameSpaceNode\|)?DOMNode::#'
     # PHPUnit test data providers
     -
       message: '#generic class ReflectionClass does not specify its types#'
@@ -33,6 +34,11 @@ parameters:
     - '#Negated boolean expression is always false#'
     - '#Expression on left side of \?\? is not nullable#'
     - '#will always evaluate to false#'
+    - '#will always evaluate to true#'
+    # Entity is null until PrePersist sets it, while the DB column is NOT NULL
+    -
+        message: '#ContactLead::\$createdAt type mapping mismatch#'
+        path: src/Entity/ContactLead.php
   excludePaths:
     - src/Kernel.php
     - tests/Functional

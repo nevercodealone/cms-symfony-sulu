@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\ContactForm;
 
+use Throwable;
 use App\Entity\ContactLead;
 use App\Telegram\TelegramNotifier;
 use Symfony\Component\Mailer\MailerInterface;
@@ -56,8 +57,8 @@ final class ContactLeadMailer
         // Best-effort Telegram notification. Failures must not break lead submission.
         try {
             $this->telegramNotifier->sendText($body);
-        } catch (\Throwable $e) {
-            error_log('Telegram contact-lead notification failed: ' . $e->getMessage());
+        } catch (Throwable $throwable) {
+            error_log('Telegram contact-lead notification failed: ' . $throwable->getMessage());
         }
     }
 }

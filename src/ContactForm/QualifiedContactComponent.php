@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\ContactForm;
 
+use Throwable;
 use App\Entity\ContactLead;
 use App\Repository\ContactLeadRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,8 +23,11 @@ final class QualifiedContactComponent
     use DefaultActionTrait;
 
     public const STEP_SERVICE = 'service';
+
     public const STEP_DETAILS = 'details';
+
     public const STEP_CONTACT = 'contact';
+
     public const STEP_DONE = 'done';
 
     #[LiveProp(writable: true)]
@@ -164,6 +168,7 @@ final class QualifiedContactComponent
 
             return;
         }
+
         $this->checkboxSelections[] = $value;
     }
 
@@ -242,9 +247,7 @@ final class QualifiedContactComponent
                     'message' => 'message',
                     default => '_general',
                 };
-                if (!isset($this->errors[$field])) {
-                    $this->errors[$field] = $violation->getMessage();
-                }
+                $this->errors[$field] ??= $violation->getMessage();
             }
 
             return;
@@ -269,10 +272,10 @@ final class QualifiedContactComponent
 
             $this->submitted = true;
             $this->step = self::STEP_DONE;
-        } catch (\Throwable $e) {
+        } catch (Throwable $throwable) {
             $this->logger->error(
                 'Contact lead submission failed: {message}',
-                ['message' => $e->getMessage(), 'exception' => $e],
+                ['message' => $throwable->getMessage(), 'exception' => $throwable],
             );
             $this->errors['_general'] = 'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
         }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use Exception;
+use DateTimeImmutable;
+use DateTimeZone;
 use App\Sulu\Service\PageService;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -24,9 +27,13 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 class PageServiceFunctionalTest extends KernelTestCase
 {
     private PageService $pageService;
+
     private Connection $connection;
+
     private ?DocumentManagerInterface $documentManager = null;
+
     private string $testPagePath = '';
+
     private string $testLocale = 'de';
 
     protected function setUp(): void
@@ -39,7 +46,7 @@ class PageServiceFunctionalTest extends KernelTestCase
 
         try {
             $this->documentManager = $container->get('sulu_document_manager.document_manager');
-        } catch (\Exception $e) {
+        } catch (Exception) {
             // DocumentManager may not be available in test environment
         }
     }
@@ -50,6 +57,7 @@ class PageServiceFunctionalTest extends KernelTestCase
         if ($this->testPagePath !== '') {
             $this->cleanupTestPage();
         }
+
         parent::tearDown();
     }
 
@@ -307,7 +315,7 @@ class PageServiceFunctionalTest extends KernelTestCase
                 "DELETE FROM phpcr_nodes WHERE path = ? OR path LIKE ?",
                 [$this->testPagePath, $this->testPagePath . '/%']
             );
-        } catch (\Exception $e) {
+        } catch (Exception) {
             // Ignore cleanup errors
         }
     }
@@ -487,8 +495,8 @@ class PageServiceFunctionalTest extends KernelTestCase
             $document = $this->documentManager->find($this->testPagePath, $this->testLocale);
             echo "✓ DocumentManager can find page after cache clear\n";
             $this->assertNotNull($document);
-        } catch (\Exception $e) {
-            echo "✗ DocumentManager error: " . $e->getMessage() . "\n";
+        } catch (Exception $exception) {
+            echo "✗ DocumentManager error: " . $exception->getMessage() . "\n";
         }
 
         // Cleanup
@@ -647,7 +655,7 @@ class PageServiceFunctionalTest extends KernelTestCase
         );
         $this->assertTrue($addResult['success'], $addResult['message']);
 
-        $todayUtc = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d');
+        $todayUtc = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d');
 
         $draftProps = $this->fetchProps($this->testPagePath, 'default');
         $this->assertNotNull($draftProps, 'draft node must exist');

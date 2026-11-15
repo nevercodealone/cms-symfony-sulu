@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use Throwable;
 use Sulu\Component\Content\Document\Behavior\ResourceSegmentBehavior;
 use Sulu\Component\DocumentManager\DocumentManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -31,12 +32,12 @@ abstract class AbstractPageDocumentCommand extends Command
     {
         try {
             $result = $operation();
-        } catch (\Throwable $e) {
+        } catch (Throwable $throwable) {
             $result = [
                 'success' => false,
                 'errorCode' => $failureCode,
-                'message' => $e->getMessage(),
-                'exception' => $e::class,
+                'message' => $throwable->getMessage(),
+                'exception' => $throwable::class,
             ];
         }
 
@@ -52,7 +53,7 @@ abstract class AbstractPageDocumentCommand extends Command
     {
         try {
             return $this->documentManager->find($identifier, $locale);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }

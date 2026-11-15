@@ -6,6 +6,7 @@
 /var/
 /vendor/
 /uploads
+.ai/
 ###< symfony/framework-bundle ###
 
 ###> symfony/phpunit-bridge ###
@@ -48,6 +49,7 @@ infection.html
 # composer
 /composer.phar
 /vendor
+/auth.json
 
 # npm
 node_modules/

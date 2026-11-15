@@ -35,7 +35,7 @@ class SnippetSchemaReader
     private ?array $cache = null;
 
     public function __construct(
-        private string $projectDir,
+        private readonly string $projectDir,
     ) {
     }
 
@@ -200,10 +200,12 @@ class SnippetSchemaReader
                         $options[] = (string) $option['name'];
                     }
                 }
+
                 if ((string) $param['name'] === 'default_value') {
                     $default = (string) $param['value'];
                 }
             }
+
             $property['options'] = $options;
             if ($default !== null) {
                 $property['default'] = $default;
@@ -229,6 +231,7 @@ class SnippetSchemaReader
                 $entry['blocks'] = $nestedBlocks;
                 $writable = false;
             }
+
             foreach ($typeProperties as $property) {
                 $writable = $writable && $property['writable'];
             }

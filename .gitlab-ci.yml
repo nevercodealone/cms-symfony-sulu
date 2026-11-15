@@ -53,10 +53,14 @@ build:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    - docker build -f Dockerfile.conversis --target webserver-live -t $CI_IMAGE --pull .
+    - export SULU_COMPOSER_TOKEN_FILE="/tmp/sulu_composer_token_$CI_JOB_ID"
+    - (umask 077 && printf '%s' "$SULU_COMPOSER_TOKEN" > "$SULU_COMPOSER_TOKEN_FILE")
+    - docker build -f Dockerfile.conversis --target webserver-live -t $CI_IMAGE --pull --secret id=sulu_composer_token,src=$SULU_COMPOSER_TOKEN_FILE .
     - docker push $CI_IMAGE
-    - docker build -f Dockerfile.conversis --target webserver-dev -t $CI_DEV_IMAGE --pull .
+    - docker build -f Dockerfile.conversis --target webserver-dev -t $CI_DEV_IMAGE --pull --secret id=sulu_composer_token,src=$SULU_COMPOSER_TOKEN_FILE .
     - docker push $CI_DEV_IMAGE
+  after_script:
+    - rm -f "/tmp/sulu_composer_token_$CI_JOB_ID"
   tags:
     - docker1
 

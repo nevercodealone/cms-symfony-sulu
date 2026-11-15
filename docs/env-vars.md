@@ -60,11 +60,10 @@ DATABASE_URL=mysql://...     ← from entrypoint, real value
 | `DB_HOST` `DB_NAME` `DB_USER` `DB_PWD` | compose | CI/CD vars, not in `.env` |
 | `MAILER_DSN` `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` | compose+entrypoint | msmtp config |
 | `CONTACT_LEAD_EMAIL` | compose+entrypoint | recipient |
-| `GEMINI_API_KEY` `GEMINI_MODEL` | compose+entrypoint | AI |
-| `ANTHROPIC_API_KEY` `HUGGINGFACE_KEY` `DEEPL_API_KEY` | compose+entrypoint | AI |
+| `ANTHROPIC_API_KEY` `HUGGINGFACE_API_KEY` `DEEPL_API_KEY` | compose+entrypoint | AI |
+| `SULU_AI_PLATFORM_API_KEY` `SULU_AI_WEBHOOK_SECRET` | compose+entrypoint | sulu.ai platform: intelligent search (`/ai-search`) and webhook |
 | `GOOGLE_API_KEY` | compose+entrypoint | YouTube API |
 | `TWITTER_API_KEY` `TWITTER_API_SECRET` `TWITTER_ACCESS_TOKEN` `TWITTER_ACCESS_SECRET` | compose+entrypoint | social |
-| `CHROMADB_HOST` `CHROMADB_PORT` `CHROMADB_DATABASE` | compose+entrypoint | vector store |
 | `MCP_PROJECT_PASSWORD` `MCP_PROJECT_NAME` `MCP_TOKEN_LIFETIME` `MCP_CODE_LIFETIME` | compose+entrypoint | MCP auth |
 | `LOCK_DSN` `CORS_ALLOW_ORIGIN` | compose+entrypoint | infra |
 | `TELEGRAM_BOT_TOKEN` `TELEGRAM_DEFAULT_CHAT_ID` | compose+entrypoint | outbound notifications (same bot as Hermes) |
@@ -79,6 +78,8 @@ DATABASE_URL=mysql://...     ← from entrypoint, real value
 
 ```bash
 docker exec <SHORTCODE>-web cat /var/www/html/.env | grep VAR
+# Sulu AI (intelligent search at /ai-search): expect two lines with real values
+docker exec <SHORTCODE>-web grep SULU_AI /var/www/html/.env
 # Real value  → CI/CD var set correctly
 # $VARNAME    → CI/CD var missing (was forwarded in .gitlab-ci.yml)
 # empty       → entrypoint.sh line missing or env var empty in container

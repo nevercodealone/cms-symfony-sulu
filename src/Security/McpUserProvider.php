@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Security;
 
+use InvalidArgumentException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -15,7 +16,7 @@ class McpUserProvider implements UserProviderInterface
     public function refreshUser(UserInterface $user): McpUser
     {
         if (!$user instanceof McpUser) {
-            throw new \InvalidArgumentException('Invalid user type');
+            throw new InvalidArgumentException('Invalid user type');
         }
 
         return $user;

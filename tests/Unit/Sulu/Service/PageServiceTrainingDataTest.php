@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 class PageServiceTrainingDataTest extends TestCase
 {
     private Connection&MockObject $connection;
+
     private PageService $pageService;
 
     private const TRAINING_XML = <<<'XML'

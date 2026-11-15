@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
+use Throwable;
 use App\Service\WordpressService;
 use App\Sulu\Service\LatestArticlesService;
 use App\Service\YouTubeService;
@@ -30,11 +31,11 @@ class NcaTwigExtension extends AbstractExtension
         return [
             new TwigFilter(
                 'nca_canonical_url',
-                [$this, 'canonicalUrl']
+                $this->canonicalUrl(...)
             ),
             new TwigFilter(
                 'nca_slugify',
-                [$this, 'slugify']
+                $this->slugify(...)
             ),
         ];
     }
@@ -44,15 +45,15 @@ class NcaTwigExtension extends AbstractExtension
         return [
         new TwigFunction(
             'youtube',
-            [$this, 'playlistItemsListByPlaylistId']
+            $this->playlistItemsListByPlaylistId(...)
         ),
         new TwigFunction(
             'wordpressPosts',
-            [$this, 'getWordpressPosts']
+            $this->getWordpressPosts(...)
         ),
         new TwigFunction(
             'latestArticles',
-            [$this, 'getLatestArticles']
+            $this->getLatestArticles(...)
         ),
         ];
     }
@@ -102,7 +103,7 @@ class NcaTwigExtension extends AbstractExtension
     {
         try {
             return $this->wordpressService->getItemsFromBlog();
-        } catch (\Throwable $e) {
+        } catch (Throwable) {
             return [];
         }
     }
@@ -119,7 +120,7 @@ class NcaTwigExtension extends AbstractExtension
             $locale = $this->requestStack->getCurrentRequest()?->getLocale() ?? 'de';
 
             return $this->latestArticlesService->findLatestArticleUuids($limit, $locale);
-        } catch (\Throwable $e) {
+        } catch (Throwable) {
             return [];
         }
     }

@@ -103,8 +103,10 @@ class McpOpenApiController
                 foreach (explode("\n", $value) as $line) {
                     $formatted .= $prefix . '  ' . $line . "\n";
                 }
+
                 return $formatted;
             }
+
             $formatted .= $this->yamlValue($value);
         } else {
             $formatted .= 'null';
@@ -118,6 +120,7 @@ class McpOpenApiController
         if (is_string($value) && preg_match('/^[a-zA-Z0-9_\-\.\/]+$/', $value)) {
             return $value;
         }
+
         return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: 'null';
     }
 }

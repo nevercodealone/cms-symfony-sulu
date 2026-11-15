@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use RuntimeException;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -14,11 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class WordpressService
 {
-  private HttpClientInterface $httpClient;
-
-  public function __construct(HttpClientInterface $httpClient)
+  public function __construct(private readonly HttpClientInterface $httpClient)
   {
-    $this->httpClient = $httpClient;
   }
 
   /**
@@ -44,7 +42,7 @@ class WordpressService
     ]);
 
     if ($response->getStatusCode() !== Response::HTTP_OK) {
-      throw new \RuntimeException('Failed to fetch blog posts');
+      throw new RuntimeException('Failed to fetch blog posts');
     }
 
     $result = $response->toArray(throw: true);

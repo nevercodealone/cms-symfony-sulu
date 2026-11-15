@@ -2,9 +2,6 @@
     "brick/math": {
         "version": "0.9.3"
     },
-    "captainhook/captainhook": {
-        "version": "5.4.4"
-    },
     "clue/stream-filter": {
         "version": "v1.5.0"
     },
@@ -279,9 +276,6 @@
     "oro/doctrine-extensions": {
         "version": "2.0.0"
     },
-    "paragonie/constant_time_encoding": {
-        "version": "v2.4.0"
-    },
     "php": {
         "version": "7.4"
     },
@@ -323,9 +317,6 @@
     },
     "phpdocumentor/type-resolver": {
         "version": "1.4.0"
-    },
-    "phpseclib/phpseclib": {
-        "version": "3.0.10"
     },
     "phpspec/prophecy": {
         "version": "1.12.1"
@@ -392,15 +383,6 @@
     "sebastian/resource-operations": {
         "version": "3.0.3"
     },
-    "sebastianfeldmann/camino": {
-        "version": "0.9.4"
-    },
-    "sebastianfeldmann/cli": {
-        "version": "3.3.1"
-    },
-    "sebastianfeldmann/git": {
-        "version": "3.4.1"
-    },
     "squizlabs/php_codesniffer": {
         "version": "3.0",
         "recipe": {
@@ -424,6 +406,12 @@
         "files": [
             "config/packages/stof_doctrine_extensions.yaml"
         ]
+    },
+    "sulu/ai-bundle": {
+        "version": "0.3.0"
+    },
+    "sulu/ai-platform-bundle": {
+        "version": "0.3.2"
     },
     "sulu/headless-bundle": {
         "version": "0.10",
@@ -460,6 +448,33 @@
     },
     "symfony-cmf/slugifier-api": {
         "version": "2.1.0"
+    },
+    "symfony/ai-anthropic-platform": {
+        "version": "0.10",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.1",
+            "ref": "169d966953a6b9aeca111cb7f0ac2da72e050159"
+        },
+        "files": [
+            "config/packages/ai_anthropic_platform.yaml"
+        ]
+    },
+    "symfony/ai-bundle": {
+        "version": "dev-main"
+    },
+    "symfony/ai-hugging-face-platform": {
+        "version": "0.10",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.1",
+            "ref": "8cd3b775bd6916b51cce9fc7186d01947dc13015"
+        },
+        "files": [
+            "config/packages/ai_hugging_face_platform.yaml"
+        ]
     },
     "symfony/asset": {
         "version": "v5.3.4"
@@ -604,6 +619,18 @@
         },
         "files": [
             "config/packages/mailer.yaml"
+        ]
+    },
+    "symfony/messenger": {
+        "version": "7.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "6.0",
+            "ref": "d8936e2e2230637ef97e5eecc0eea074eecae58b"
+        },
+        "files": [
+            "config/packages/messenger.yaml"
         ]
     },
     "symfony/mime": {
@@ -835,6 +862,18 @@
             "config/packages/dev/web_profiler.yaml",
             "config/packages/test/web_profiler.yaml",
             "config/routes/dev/web_profiler.yaml"
+        ]
+    },
+    "symfony/webhook": {
+        "version": "7.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "7.3",
+            "ref": "b70844963dc84e9a99b94ae552efe691d74b087f"
+        },
+        "files": [
+            "config/routes/webhook.yaml"
         ]
     },
     "symfony/webpack-encore-bundle": {

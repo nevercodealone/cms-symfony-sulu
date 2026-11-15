@@ -3,7 +3,10 @@
 
 {% if created is defined and created %}
     {% set createdDay = created|date('Y-m-d') %}
-    {% set updateDate = (published is defined and published) ? published : ((changed is defined and changed) ? changed : created) %}
+    {# Sulu sets `published` only once (first publish) - re-publishing keeps the
+       original date. The last content update lives in `changed`, so it wins
+       for the "updated" date; `published` is only the fallback. #}
+    {% set updateDate = (changed is defined and changed) ? changed : ((published is defined and published) ? published : created) %}
     {% set hasBeenUpdated = updateDate|date('Y-m-d') != createdDay %}
     {% set createdLabel = pageLocale == 'de' ? 'Erstellt' : 'Created' %}
     {% set updatedLabel = pageLocale == 'de' ? 'Aktualisiert' : 'Updated' %}

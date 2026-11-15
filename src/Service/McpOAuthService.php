@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use DateTimeImmutable;
 use App\Entity\McpAccessToken;
 use App\Entity\McpAuthCode;
 use App\Repository\McpAccessTokenRepository;
@@ -14,15 +15,15 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class McpOAuthService
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private McpAuthCodeRepository $authCodeRepository,
-        private McpAccessTokenRepository $accessTokenRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly McpAuthCodeRepository $authCodeRepository,
+        private readonly McpAccessTokenRepository $accessTokenRepository,
         #[Autowire('%env(MCP_PROJECT_PASSWORD)%')]
-        private string $projectPassword,
+        private readonly string $projectPassword,
         #[Autowire('%env(int:MCP_TOKEN_LIFETIME)%')]
-        private int $tokenLifetime = 2592000,
+        private readonly int $tokenLifetime = 2592000,
         #[Autowire('%env(int:MCP_CODE_LIFETIME)%')]
-        private int $codeLifetime = 600,
+        private readonly int $codeLifetime = 600,
     ) {
     }
 
@@ -51,7 +52,7 @@ class McpOAuthService
         $code->setPkceChallenge($pkceChallenge);
         $code->setPkceMethod($pkceMethod);
         $code->setState($state);
-        $code->setExpiresAt(new \DateTimeImmutable("+{$this->codeLifetime} seconds"));
+        $code->setExpiresAt(new DateTimeImmutable("+{$this->codeLifetime} seconds"));
 
         $this->entityManager->persist($code);
         $this->entityManager->flush();
@@ -88,7 +89,7 @@ class McpOAuthService
         $accessToken = new McpAccessToken();
         $accessToken->setToken(bin2hex(random_bytes(64)));
         $accessToken->setClientName($authCode->getClientName());
-        $accessToken->setExpiresAt(new \DateTimeImmutable("+{$this->tokenLifetime} seconds"));
+        $accessToken->setExpiresAt(new DateTimeImmutable("+{$this->tokenLifetime} seconds"));
         $accessToken->setCreatedIp($clientIp);
 
         // Delete used auth code
@@ -134,8 +135,9 @@ class McpOAuthService
      */
     public function updateTokenUsage(McpAccessToken $token, ?string $clientIp = null): void
     {
-        $token->setLastUsedAt(new \DateTimeImmutable());
+        $token->setLastUsedAt(new DateTimeImmutable());
         $token->setLastUsedIp($clientIp);
+
         $this->entityManager->flush();
     }
 

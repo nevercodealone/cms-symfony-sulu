@@ -9,8 +9,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class McpUser implements UserInterface
 {
     public function __construct(
-        private string $identifier,
-        private ?string $clientName = null
+        private readonly string $identifier,
+        private readonly ?string $clientName = null
     ) {
     }
 

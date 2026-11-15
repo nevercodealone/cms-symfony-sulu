@@ -1,0 +1,7 @@
+sulu_ai_api:
+  resource: "@SuluAiBundle/config/routes_admin.yaml"
+  prefix:   /admin/api
+
+sulu_ai_platform_api:
+  resource: "@SuluAiPlatformBundle/config/routes_admin.yaml"
+  prefix: /admin/api

@@ -20,7 +20,9 @@ class PageServiceRoutesTest extends TestCase
     use DocumentCommandStubsTrait;
 
     private const KI = '/cmf/example/contents/glossare/ki';
+
     private const TS = '/cmf/example/contents/glossare/ts';
+
     private const PAGE = self::KI . '/krea';
 
     private Connection&MockObject $connection;

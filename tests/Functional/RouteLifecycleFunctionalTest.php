@@ -22,10 +22,13 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 class RouteLifecycleFunctionalTest extends KernelTestCase
 {
     private const PARENT_A = '/cmf/example/contents/glossare/nca-glossar-ki-modelle';
+
     private const PARENT_B = '/cmf/example/contents/glossare/nca-typescript-glossar';
+
     private const SLUG = '/zz-route-lifecycle';
 
     private SuluPagesTool $tool;
+
     private Connection $connection;
 
     /** @var list<string> */
@@ -50,12 +53,14 @@ class RouteLifecycleFunctionalTest extends KernelTestCase
                 $this->call(['action' => 'delete_page', 'path' => $path, 'confirm' => $path, 'dryRun' => 'false']);
             }
         }
+
         // Test redirects and the 410 entries Sulu adds when the test pages are deleted.
         foreach ($this->redirectSourcePrefixes as $prefix) {
             foreach ($this->call(['action' => 'list_redirects', 'sourcePrefix' => $prefix])['redirects'] ?? [] as $redirect) {
                 $this->call(['action' => 'delete_redirect', 'id' => $redirect['id'], 'confirm' => $redirect['id']]);
             }
         }
+
         parent::tearDown();
     }
 
@@ -131,7 +136,7 @@ class RouteLifecycleFunctionalTest extends KernelTestCase
         $this->assertSame([
             '/glossare/nca-glossar-ki-modelle/zz-route-lifecycle',
             '/glossare/nca-glossar-ki-modelle/zz-route-lifecycle-2',
-        ], array_values($historyUrls));
+        ], $historyUrls);
 
         // redirects: refusal on an active route, 301, 410
         $refused = $this->call(['action' => 'create_redirect', 'source' => '/de/glossare/nca-typescript-glossar/zz-route-lifecycle-2', 'target' => '/de/']);

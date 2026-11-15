@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\MCP\Tools;
 
+use RuntimeException;
+use Exception;
+use InvalidArgumentException;
 use App\Sulu\Block\BlockTypeRegistry;
 use App\Sulu\Service\MediaService;
 use App\Sulu\Service\PageService;
@@ -76,7 +79,7 @@ class SuluPagesTool implements StreamableToolInterface
             'DELETE PAGES - batch safe removal (max 10). WORKFLOW: 1) dryRun: {"action":"delete_pages","paths":"[\"/cmf/.../a\",\"/cmf/.../b\"]","confirm":"[\"/cmf/.../a\",\"/cmf/.../b\"]","dryRun":"true"} 2) read response.preconditions (all success=true) 3) execute: same paths and confirm with "dryRun":"false". REQUIRED: paths (JSON array), confirm (a JSON array containing exactly the same paths in the same order - any valid JSON encoding is accepted, escaped or unescaped slashes). RULE: a path is deletable in batch only when every direct child is also listed in paths. Paths are sorted deepest-first internally. All-or-nothing: any failure deletes nothing. ' .
             'LIST REFERENCES - incoming-reference report. {"action":"list_references","path":"/cmf/example/contents/foo"}. Returns every page/snippet that points at the target via page-teaser, subpages-overview dataSource, or a sulu-link in rich text. Use before delete (to satisfy the references_present check) or before rename. ' .
             'ROUTE HEALTH: list and get_structure return draftUrl, liveUrl and routeHealth {draft, live, references, activeRoutes, healthy} per page. draft/live = ok|missing|mismatch|none (none = unpublished, no route expected). Sulu creates route nodes only on publish; a published page needs an active route in BOTH workspaces plus a reference row, otherwise child pages get a wrong URL prefix. Anything not healthy: run bin/console nca:routes:repair --dry-run first. route_health + path returns the full report with every route node. ' .
-            'URLS AND ROUTES: create_page, copy_page, publish, update_resource_locator and move_page run Sulu\'s DocumentManager in a fresh process, so Sulu writes the routes in both workspaces and keeps old URLs as 301 history routes. Each response contains draftUrl, liveUrl, routeHealth and historyRoutes; success=false with reason when the route check after the write fails. ' .
+            "URLS AND ROUTES: create_page, copy_page, publish, update_resource_locator and move_page run Sulu's DocumentManager in a fresh process, so Sulu writes the routes in both workspaces and keeps old URLs as 301 history routes. Each response contains draftUrl, liveUrl, routeHealth and historyRoutes; success=false with reason when the route check after the write fails. " .
             'UPDATE RESOURCE LOCATOR: {"action":"update_resource_locator","path":"/cmf/example/contents/glossare/nca-glossar-ki-modelle/krea","resourceSegment":"/krea-2","publish":"true"}. resourceSegment is the last URL part only (leading slash). Old URL becomes a history route (301). Fails with resource_locator_taken naming the conflicting page. Without publish only the draft changes. ' .
             'MOVE PAGE: {"action":"move_page","path":"/cmf/example/contents/glossare/a/krea","targetParentPath":"/cmf/example/contents/glossare/b","publish":"true"}. Optional resourceSegment renames the slug in the same step. New URL is always <parent URL>/<segment>; all old URLs (draft and live) become history routes; response lists oldUrls and newUrl. Fails with parent_missing_draft_route when the target parent has no active draft route (publish the parent or run nca:routes:repair). Children move with the page. ' .
             'REDIRECTS (SuluRedirectBundle, re_redirect_routes; for URLs that no page owns any more: deleted pages, cross-section moves, external targets, 410 gone). Moving a page or changing its URL creates 301 history routes automatically - no redirect needed. list_redirects: optional sourcePrefix, target, statusCode, limit (newest first). create_redirect: source (path incl. locale, e.g. /de/glossare/old) + target (path or absolute URL) + statusCode (301 default, 302, 307, 308, 410 without target); bulk: redirects = JSON array of up to 50 {source,target,statusCode}. Valid entries are created, invalid ones come back in failed with a reason. Refused with source_is_active_route when a live page answers on source. warnings[].finalTarget appears when target is itself redirected - prefer the final target. update_redirect: id + changed fields (source, target, statusCode, enabled). delete_redirect: id + confirm (confirm must equal id). ' .
@@ -536,7 +539,7 @@ class SuluPagesTool implements StreamableToolInterface
             new SchemaProperty(
                 name: 'expectedChildCount',
                 type: PropertyType::INTEGER,
-                description: 'REQUIRED when children=cascade. Copy this verbatim from the dryRun response\'s descendantCount field. Server aborts if it does not match - re-run dryRun if the tree changed.',
+                description: "REQUIRED when children=cascade. Copy this verbatim from the dryRun response's descendantCount field. Server aborts if it does not match - re-run dryRun if the tree changed.",
                 required: false
             ),
             new SchemaProperty(
@@ -776,6 +779,7 @@ class SuluPagesTool implements StreamableToolInterface
         if (empty($path)) {
             return new TextToolResult('Error: path is required');
         }
+
         if (empty($title)) {
             return new TextToolResult('Error: title is required');
         }
@@ -802,9 +806,11 @@ class SuluPagesTool implements StreamableToolInterface
         if (array_key_exists('excerptTitle', $arguments)) {
             $data['excerptTitle'] = $arguments['excerptTitle'];
         }
+
         if (array_key_exists('excerptDescription', $arguments)) {
             $data['excerptDescription'] = $arguments['excerptDescription'];
         }
+
         if (array_key_exists('excerptImage', $arguments)) {
             $data['excerptImage'] = $arguments['excerptImage'] !== null ? (int) $arguments['excerptImage'] : null;
         }
@@ -940,9 +946,11 @@ class SuluPagesTool implements StreamableToolInterface
         if (array_key_exists('seoTitle', $arguments)) {
             $data['seoTitle'] = $arguments['seoTitle'];
         }
+
         if (array_key_exists('seoDescription', $arguments)) {
             $data['seoDescription'] = $arguments['seoDescription'];
         }
+
         if (array_key_exists('seoKeywords', $arguments)) {
             $data['seoKeywords'] = $arguments['seoKeywords'];
         }
@@ -1023,6 +1031,7 @@ class SuluPagesTool implements StreamableToolInterface
                 if ($parentUuid === null) {
                     return new TextToolResult('Error: subpages-overview block requires dataSource parameter (UUID of source page). Auto-detection failed: parent page not found at ' . $parentPath);
                 }
+
                 $dataSource = $parentUuid;
             }
 
@@ -1073,6 +1082,7 @@ class SuluPagesTool implements StreamableToolInterface
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
             }
+
             // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
                 // Don't normalize code items - they use 'code' not 'description'
@@ -1080,10 +1090,12 @@ class SuluPagesTool implements StreamableToolInterface
                 if ($itemType === 'code') {
                     return $item;
                 }
+
                 if (isset($item['content']) && !isset($item['description'])) {
                     $item['description'] = $item['content'];
                     unset($item['content']);
                 }
+
                 return $item;
             }, $items);
 
@@ -1095,6 +1107,7 @@ class SuluPagesTool implements StreamableToolInterface
             if ($hasHeadline) {
                 $block['headline'] = $headline;
             }
+
             $block[$nestedKey] = $this->normalizeNestedMediaItems($normalizedItems);
 
             // Also merge flat properties from content parameter if provided
@@ -1103,9 +1116,7 @@ class SuluPagesTool implements StreamableToolInterface
                 $decoded = json_decode($content, true);
                 if (is_array($decoded) && !isset($decoded[0])) {
                     foreach ($decoded as $key => $value) {
-                        if (!isset($block[$key])) {
-                            $block[$key] = $value;
-                        }
+                        $block[$key] ??= $value;
                     }
                 }
             }
@@ -1122,6 +1133,7 @@ class SuluPagesTool implements StreamableToolInterface
                     if ($hasHeadline) {
                         $block['headline'] = $headline;
                     }
+
                     foreach ($decoded as $key => $value) {
                         $block[$key] = $value;
                     }
@@ -1146,12 +1158,15 @@ class SuluPagesTool implements StreamableToolInterface
         if (isset($arguments['text'])) {
             $block['text'] = $this->unescapeUnicode($arguments['text']);
         }
+
         if (isset($arguments['url'])) {
             $block['url'] = $arguments['url'];
         }
+
         if (isset($arguments['texttwo'])) {
             $block['texttwo'] = $this->unescapeUnicode($arguments['texttwo']);
         }
+
         if (isset($arguments['urltwo'])) {
             $block['urltwo'] = $arguments['urltwo'];
         }
@@ -1169,6 +1184,7 @@ class SuluPagesTool implements StreamableToolInterface
                             $value = $decoded;
                         }
                     }
+
                     $block[$propName] = is_string($value) ? $this->unescapeUnicode($value) : $value;
                 }
             }
@@ -1233,7 +1249,7 @@ class SuluPagesTool implements StreamableToolInterface
             return new TextToolResult('Error: positions must be a non-empty JSON array of integers');
         }
 
-        $positions = array_map('intval', $positions);
+        $positions = array_map(intval(...), $positions);
         $result = $this->pageService->removeBlocks($path, $positions, $locale);
         $result = $this->applyPublishFlag($result, $arguments, $locale);
 
@@ -1255,6 +1271,7 @@ class SuluPagesTool implements StreamableToolInterface
         if (!is_array($updates) || empty($updates)) {
             return new TextToolResult('Error: updates must be a non-empty JSON array');
         }
+
         if (count($updates) > 10) {
             return new TextToolResult('Error: maximum 10 updates per call');
         }
@@ -1287,12 +1304,14 @@ class SuluPagesTool implements StreamableToolInterface
                 if ($key === 'position') {
                     continue;
                 }
+
                 // Normalize item arrays: content -> description (except code items)
                 if (is_array($value)) {
                     $value = array_map(function ($item) {
                         if (!is_array($item) || ($item['type'] ?? '') === 'code') {
                             return $item;
                         }
+
                         if (isset($item['content']) && !isset($item['description'])) {
                             $item['description'] = $item['content'];
                             unset($item['content']);
@@ -1301,6 +1320,7 @@ class SuluPagesTool implements StreamableToolInterface
                         return $item;
                     }, $value);
                 }
+
                 $blockData[$key] = $value;
             }
 
@@ -1387,6 +1407,7 @@ class SuluPagesTool implements StreamableToolInterface
         if ($path === '') {
             return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
         }
+
         if ($segment === '') {
             return $this->jsonResult(['success' => false, 'errorCode' => 'invalid_resource_segment', 'message' => 'resourceSegment is required, e.g. /krea-2']);
         }
@@ -1409,9 +1430,11 @@ class SuluPagesTool implements StreamableToolInterface
         if ($path === '') {
             return $this->jsonResult(['success' => false, 'errorCode' => 'page_not_found', 'message' => 'path is required']);
         }
+
         if ($target === '') {
             return $this->jsonResult(['success' => false, 'errorCode' => 'parent_not_found', 'message' => 'targetParentPath is required']);
         }
+
         $segment = isset($arguments['resourceSegment']) && $arguments['resourceSegment'] !== '' ? (string) $arguments['resourceSegment'] : null;
 
         return $this->jsonResult($this->pageService->movePage(
@@ -1466,6 +1489,7 @@ class SuluPagesTool implements StreamableToolInterface
             if ($items instanceof ToolResultInterface) {
                 return $items;
             }
+
             if (!array_is_list($items)) {
                 $items = [$items];
             }
@@ -1473,7 +1497,7 @@ class SuluPagesTool implements StreamableToolInterface
             $items = [array_intersect_key($arguments, array_flip(['source', 'sourceHost', 'target', 'statusCode', 'enabled']))];
         }
 
-        return $this->jsonResult($service->createRedirects(array_values(array_filter($items, 'is_array'))));
+        return $this->jsonResult($service->createRedirects(array_values(array_filter($items, is_array(...)))));
     }
 
     /**
@@ -1485,6 +1509,7 @@ class SuluPagesTool implements StreamableToolInterface
         if ($service === null) {
             return $this->redirectsUnavailable();
         }
+
         $id = (string) ($arguments['id'] ?? '');
         if ($id === '') {
             return $this->jsonResult(['success' => false, 'errorCode' => 'redirect_not_found', 'message' => 'id is required (see list_redirects)']);
@@ -1502,6 +1527,7 @@ class SuluPagesTool implements StreamableToolInterface
         if ($service === null) {
             return $this->redirectsUnavailable();
         }
+
         $id = (string) ($arguments['id'] ?? '');
         if ($id === '') {
             return $this->jsonResult(['success' => false, 'errorCode' => 'redirect_not_found', 'message' => 'id is required (see list_redirects)']);
@@ -1618,6 +1644,7 @@ class SuluPagesTool implements StreamableToolInterface
         if (is_bool($value)) {
             return $value;
         }
+
         if (is_string($value)) {
             return strtolower($value) === 'true' || $value === '1';
         }
@@ -1655,6 +1682,7 @@ class SuluPagesTool implements StreamableToolInterface
         if (isset($arguments['headline'])) {
             $blockData['headline'] = $this->unescapeUnicode($arguments['headline']);
         }
+
         if (isset($arguments['content'])) {
             $blockData['content'] = $arguments['content'];
         }
@@ -1665,6 +1693,7 @@ class SuluPagesTool implements StreamableToolInterface
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return new TextToolResult('Error: items must be valid JSON array. JSON error: ' . json_last_error_msg() . '. First 200 chars: ' . mb_substr($arguments['items'], 0, 200));
             }
+
             // Normalize items: content -> description for Sulu storage (except for code items)
             $normalizedItems = array_map(function ($item) {
                 // Don't normalize code items - they use 'code' not 'description'
@@ -1672,10 +1701,12 @@ class SuluPagesTool implements StreamableToolInterface
                 if ($itemType === 'code') {
                     return $item;
                 }
+
                 if (isset($item['content']) && !isset($item['description'])) {
                     $item['description'] = $item['content'];
                     unset($item['content']);
                 }
+
                 return $item;
             }, $items);
 
@@ -1699,6 +1730,7 @@ class SuluPagesTool implements StreamableToolInterface
                                 $value = $decoded;
                             }
                         }
+
                         $blockData[$propName] = $value;
                     }
                 }
@@ -1772,10 +1804,12 @@ class SuluPagesTool implements StreamableToolInterface
             if ($itemType === 'code') {
                 return $item;
             }
+
             if (isset($item['content']) && !isset($item['description'])) {
                 $item['description'] = $item['content'];
                 unset($item['content']);
             }
+
             return $item;
         }, $items);
 
@@ -1797,9 +1831,11 @@ class SuluPagesTool implements StreamableToolInterface
         if (empty($path)) {
             return new TextToolResult('Error: path is required');
         }
+
         if ($fromPosition < 0) {
             return new TextToolResult('Error: from_position is required');
         }
+
         if ($toPosition < 0) {
             return new TextToolResult('Error: to_position is required');
         }
@@ -2131,12 +2167,12 @@ class SuluPagesTool implements StreamableToolInterface
                 'collectionId' => $result['collectionId'],
                 'usage_hint' => "Use media ID {$result['id']} in add_block image/images parameter or excerptImage",
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: '{}');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return new TextToolResult(json_encode([
                 'success' => false,
                 'error' => $e->getMessage(),
             ], JSON_PRETTY_PRINT) ?: '{}');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return new TextToolResult(json_encode([
                 'success' => false,
                 'error' => 'Upload failed: ' . $e->getMessage(),
@@ -2230,7 +2266,7 @@ class SuluPagesTool implements StreamableToolInterface
     {
         // Already in correct format
         if (is_array($value) && isset($value['ids'])) {
-            return ['ids' => array_map('intval', $value['ids'])];
+            return ['ids' => array_map(intval(...), $value['ids'])];
         }
 
         // {"id": 42} format (single media object)
@@ -2240,7 +2276,7 @@ class SuluPagesTool implements StreamableToolInterface
 
         // Plain array of integers [100, 101]
         if (is_array($value) && isset($value[0])) {
-            return ['ids' => array_map('intval', $value)];
+            return ['ids' => array_map(intval(...), $value)];
         }
 
         // String input — try to decode
@@ -2253,17 +2289,20 @@ class SuluPagesTool implements StreamableToolInterface
                 if (is_array($decoded)) {
                     // {"ids": [...]} already correct
                     if (isset($decoded['ids'])) {
-                        return ['ids' => array_map('intval', $decoded['ids'])];
+                        return ['ids' => array_map(intval(...), $decoded['ids'])];
                     }
+
                     // {"id": 42} single media
                     if (isset($decoded['id'])) {
                         return ['ids' => [(int) $decoded['id']]];
                     }
+
                     // [100, 101] plain array
                     if (isset($decoded[0])) {
-                        return ['ids' => array_map('intval', $decoded)];
+                        return ['ids' => array_map(intval(...), $decoded)];
                     }
                 }
+
                 // Single integer decoded from string
                 if (is_int($decoded)) {
                     return ['ids' => [$decoded]];
@@ -2312,6 +2351,7 @@ class SuluPagesTool implements StreamableToolInterface
             if ($headline !== '') {
                 $block['headline'] = $headline;
             }
+
             if ($content !== '') {
                 $block['description'] = $content;
             }
@@ -2324,6 +2364,7 @@ class SuluPagesTool implements StreamableToolInterface
             if ($headline !== '') {
                 $block['headline'] = $headline;
             }
+
             if ($content !== '') {
                 $block['items'] = [
                     ['type' => 'description', 'description' => $content],
@@ -2350,6 +2391,7 @@ class SuluPagesTool implements StreamableToolInterface
             if ($content !== '') {
                 $block['text'] = $content;
             }
+
             if ($headline !== '') {
                 $block['author'] = $headline;
             }
@@ -2362,6 +2404,7 @@ class SuluPagesTool implements StreamableToolInterface
         if ($headline !== '') {
             $block['headline'] = $headline;
         }
+
         if ($content !== '') {
             $block['description'] = $content;
         }
@@ -2385,7 +2428,7 @@ class SuluPagesTool implements StreamableToolInterface
         $decoded = json_decode('"' . str_replace('"', '\\"', $value) . '"');
 
         if (!is_string($decoded)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Failed to decode unicode escapes in: ' . mb_substr($value, 0, 100)
             );
         }

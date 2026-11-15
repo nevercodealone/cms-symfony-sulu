@@ -54,4 +54,7 @@ return [
     KLP\KlpMcpServer\KlpMcpServerBundle::class => ['all' => true],
     Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true],
     Sulu\Bundle\RedirectBundle\SuluRedirectBundle::class => ['all' => true],
+    Symfony\AI\AiBundle\AiBundle::class => ['all' => true],
+    Sulu\Bundle\AiPlatformBundle\SuluAiPlatformBundle::class => ['all' => true],
+    Sulu\Bundle\AiBundle\SuluAiBundle::class => ['all' => true],
 ];

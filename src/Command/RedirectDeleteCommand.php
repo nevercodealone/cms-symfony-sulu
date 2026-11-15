@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use Throwable;
 use Doctrine\ORM\EntityManagerInterface;
 use Sulu\Bundle\RedirectBundle\Manager\RedirectRouteManagerInterface;
 use Sulu\Bundle\RedirectBundle\Model\RedirectRouteRepositoryInterface;
@@ -49,8 +50,8 @@ class RedirectDeleteCommand extends Command
                 $this->entityManager->flush();
                 $result = ['success' => true, 'deleted' => $deleted];
             }
-        } catch (\Throwable $e) {
-            $result = ['success' => false, 'errorCode' => 'redirect_delete_failed', 'message' => $e->getMessage()];
+        } catch (Throwable $throwable) {
+            $result = ['success' => false, 'errorCode' => 'redirect_delete_failed', 'message' => $throwable->getMessage()];
         }
 
         $output->writeln((string) json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));

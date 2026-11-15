@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Telegram;
 
+use RuntimeException;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -30,8 +32,8 @@ final class TelegramNotifier
      *
      * @return array<string, mixed>
      *
-     * @throws \RuntimeException when the Telegram API returns ok=false or a non-200 status
-     * @throws \Symfony\Contracts\HttpClient\Exception\ExceptionInterface on network/transport errors
+     * @throws RuntimeException when the Telegram API returns ok=false or a non-200 status
+     * @throws ExceptionInterface on network/transport errors
      */
     public function sendText(string $text, ?string $chatId = null, string $parseMode = ''): array
     {
@@ -52,7 +54,7 @@ final class TelegramNotifier
         $body = $response->toArray(false);
         if (!isset($body['ok']) || $body['ok'] !== true) {
             $description = $body['description'] ?? 'unknown error';
-            throw new \RuntimeException('Telegram API error: ' . $description);
+            throw new RuntimeException('Telegram API error: ' . $description);
         }
 
         return $body['result'] ?? [];

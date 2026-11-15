@@ -28,6 +28,7 @@ class RedirectServiceTest extends TestCase
                 if (str_contains($sql, 'WHERE id = ?') && $row['id'] === $params[0]) {
                     return $row;
                 }
+
                 if (str_contains($sql, 'WHERE source = ?') && $row['source'] === $params[0]) {
                     return $row;
                 }
@@ -44,6 +45,7 @@ class RedirectServiceTest extends TestCase
             if ($args[0] === 'app:redirect:delete') {
                 return ['success' => true, 'deleted' => ['id' => $args[1]]];
             }
+
             $items = json_decode($args[1], true);
 
             return ['success' => true, 'saved' => array_map(fn (array $i) => $i + ['id' => $i['id'] ?? 'new-id'], $items), 'failed' => []];

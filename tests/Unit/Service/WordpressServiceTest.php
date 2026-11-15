@@ -1,6 +1,10 @@
 <?php
 namespace App\Tests\Unit\Service;
 
+use RuntimeException;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
+use Exception;
 use App\Service\WordpressService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -97,7 +101,7 @@ class WordpressServiceTest extends TestCase
     $mockHttpClient = new MockHttpClient($mockResponse);
     $service = new WordpressService($mockHttpClient);
 
-    $this->expectException(\RuntimeException::class);
+    $this->expectException(RuntimeException::class);
     $this->expectExceptionMessage('Failed to fetch blog posts');
     $service->getItemsFromBlog();
   }
@@ -111,26 +115,24 @@ class WordpressServiceTest extends TestCase
     $mockHttpClient = new MockHttpClient($mockResponse);
     $service = new WordpressService($mockHttpClient);
 
-    $this->expectException(\Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface::class);
+    $this->expectException(DecodingExceptionInterface::class);
     $service->getItemsFromBlog();
   }
 
   public function testThrowsDecodingExceptionOnInvalidJsonResponse(): void
   {
-    $mockResponse = $this->createMock(\Symfony\Contracts\HttpClient\ResponseInterface::class);
+    $mockResponse = $this->createMock(ResponseInterface::class);
     $mockResponse->method('getStatusCode')
       ->willReturn(Response::HTTP_OK);
 
     $mockResponse->method('toArray')
-      ->willThrowException(new class extends \Exception implements \Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface {});
+      ->willThrowException(new class extends Exception implements DecodingExceptionInterface {});
 
-    $mockHttpClient = new MockHttpClient(function() use ($mockResponse) {
-      return $mockResponse;
-    });
+    $mockHttpClient = new MockHttpClient(fn() => $mockResponse);
 
     $service = new WordpressService($mockHttpClient);
 
-    $this->expectException(\Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface::class);
+    $this->expectException(DecodingExceptionInterface::class);
     $service->getItemsFromBlog();
   }
 

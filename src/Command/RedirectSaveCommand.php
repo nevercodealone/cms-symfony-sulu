@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use Throwable;
 use Doctrine\ORM\EntityManagerInterface;
 use Sulu\Bundle\RedirectBundle\Manager\RedirectRouteManagerInterface;
 use Sulu\Bundle\RedirectBundle\Model\RedirectRouteInterface;
@@ -63,7 +64,7 @@ class RedirectSaveCommand extends Command
                 $route->setEnabled((bool) ($item['enabled'] ?? true));
                 $this->entityManager->flush();
                 $saved[] = self::toArray($route);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $failed[] = ['item' => $item, 'reason' => $e->getMessage()];
                 if (!$this->entityManager->isOpen()) {
                     break;

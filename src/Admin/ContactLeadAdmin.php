@@ -17,18 +17,13 @@ use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 class ContactLeadAdmin extends Admin
 {
     public const LIST_VIEW = 'app.contact_lead.list';
+
     public const EDIT_FORM_VIEW = 'app.contact_lead.edit_form';
+
     public const EDIT_FORM_DETAILS_VIEW = 'app.contact_lead.edit_form.details';
 
-    private ViewBuilderFactoryInterface $viewBuilderFactory;
-    private SecurityCheckerInterface $securityChecker;
-
-    public function __construct(
-        ViewBuilderFactoryInterface $viewBuilderFactory,
-        SecurityCheckerInterface $securityChecker
-    ) {
-        $this->viewBuilderFactory = $viewBuilderFactory;
-        $this->securityChecker = $securityChecker;
+    public function __construct(private readonly ViewBuilderFactoryInterface $viewBuilderFactory, private readonly SecurityCheckerInterface $securityChecker)
+    {
     }
 
     public function configureNavigationItems(NavigationItemCollection $navigationItemCollection): void

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Sulu\Logger;
 
+use Sulu\Bundle\PageBundle\Document\PageDocument;
+use DOMDocument;
+use DOMXPath;
 use Doctrine\DBAL\Connection;
 use Exception;
 
@@ -55,9 +58,11 @@ class McpActivityLogger
             if (isset($context['blockType'])) {
                 $payload['block_type'] = $context['blockType'];
             }
+
             if (isset($context['headline'])) {
                 $payload['headline'] = $context['headline'];
             }
+
             if (isset($context['position'])) {
                 $payload['position'] = $context['position'];
             }
@@ -97,14 +102,14 @@ class McpActivityLogger
                 sprintf('%s [MCP: %s]', $pageTitle, $actionType),
                 $locale,
                 'sulu.webspaces.' . $this->webspaceKey,
-                'Sulu\Bundle\PageBundle\Document\PageDocument',
+                PageDocument::class,
                 $pageUuid,
                 $userId,
             ]);
 
             return true;
-        } catch (Exception $e) {
-            error_log("McpActivityLogger: Failed to log activity: " . $e->getMessage());
+        } catch (Exception $exception) {
+            error_log("McpActivityLogger: Failed to log activity: " . $exception->getMessage());
             return false;
         }
     }
@@ -140,11 +145,11 @@ class McpActivityLogger
                 return null;
             }
 
-            $xml = new \DOMDocument();
+            $xml = new DOMDocument();
             $previousValue = libxml_use_internal_errors(true);
             $xml->loadXML($result['props'], LIBXML_NONET | LIBXML_NOENT);
             libxml_use_internal_errors($previousValue);
-            $xpath = new \DOMXPath($xml);
+            $xpath = new DOMXPath($xml);
             $xpath->registerNamespace('sv', 'http://www.jcp.org/jcr/sv/1.0');
 
             $titleNodes = $xpath->query("//sv:property[@sv:name='i18n:$locale-title']/sv:value");

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Sulu\Block;
 
+use InvalidArgumentException;
+use ReflectionMethod;
 use App\Sulu\Block\BlockExtractor;
 use App\Sulu\Block\BlockTypeRegistry;
 use App\Sulu\Block\BlockWriter;
@@ -14,7 +16,9 @@ use PHPUnit\Framework\TestCase;
 class BlockWriterTest extends TestCase
 {
     private BlockWriter $writer;
+
     private BlockExtractor $extractor;
+
     private BlockTypeRegistry $registry;
 
     protected function setUp(): void
@@ -59,7 +63,7 @@ XML);
         $xpath = $this->getXpath($xml);
         $rootNode = $xpath->query('/sv:node')->item(0);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Block must have a "type" property');
 
         $this->writer->addBlock($xml, $rootNode, 'de', 0, ['headline' => 'Test']);
@@ -657,7 +661,7 @@ XML);
      */
     private function callEncodeCodeValue(string $value): string
     {
-        $method = new \ReflectionMethod(BlockWriter::class, 'encodeCodeValue');
+        $method = new ReflectionMethod(BlockWriter::class, 'encodeCodeValue');
 
         return $method->invoke($this->writer, $value);
     }

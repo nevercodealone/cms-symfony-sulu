@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use DateTimeImmutable;
 use App\Entity\McpAuthCode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -12,9 +13,9 @@ use Doctrine\Persistence\ManagerRegistry;
  * @extends ServiceEntityRepository<McpAuthCode>
  *
  * @method McpAuthCode|null find($id, $lockMode = null, $lockVersion = null)
- * @method McpAuthCode|null findOneBy(array $criteria, array $orderBy = null)
+ * @method McpAuthCode|null findOneBy(array<string, mixed> $criteria, array<string, string> $orderBy = null)
  * @method McpAuthCode[]    findAll()
- * @method McpAuthCode[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method McpAuthCode[]    findBy(array<string, mixed> $criteria, array<string, string> $orderBy = null, $limit = null, $offset = null)
  */
 class McpAuthCodeRepository extends ServiceEntityRepository
 {
@@ -50,7 +51,7 @@ class McpAuthCodeRepository extends ServiceEntityRepository
             ->where('c.code = :code')
             ->andWhere('c.expiresAt > :now')
             ->setParameter('code', $code)
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', new DateTimeImmutable())
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -63,7 +64,7 @@ class McpAuthCodeRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->delete()
             ->where('c.expiresAt < :now')
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', new DateTimeImmutable())
             ->getQuery()
             ->execute();
     }

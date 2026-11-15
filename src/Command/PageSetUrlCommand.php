@@ -58,6 +58,7 @@ class PageSetUrlCommand extends AbstractPageDocumentCommand
             if ($publish) {
                 $this->documentManager->publish($document, $locale);
             }
+
             $this->documentManager->flush();
 
             return [

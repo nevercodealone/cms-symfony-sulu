@@ -167,9 +167,8 @@ final class QuestionTree
         $grouped = [];
         foreach ($options as $option) {
             $groupName = $option['group'] ?? '';
-            if (!isset($grouped[$groupName])) {
-                $grouped[$groupName] = [];
-            }
+            $grouped[$groupName] ??= [];
+
             $grouped[$groupName][] = $option;
         }
 

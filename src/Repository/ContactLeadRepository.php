@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use DateTimeImmutable;
 use App\Entity\ContactLead;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -18,7 +19,7 @@ class ContactLeadRepository extends ServiceEntityRepository
 
     public function countLeadsFromIpInLastHour(string $userIp): int
     {
-        $since = new \DateTimeImmutable('-1 hour');
+        $since = new DateTimeImmutable('-1 hour');
 
         return (int) $this->createQueryBuilder('l')
             ->select('COUNT(l.id)')

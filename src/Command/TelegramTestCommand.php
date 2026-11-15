@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use Throwable;
 use App\Telegram\TelegramNotifier;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -43,8 +44,8 @@ class TelegramTestCommand extends Command
             $result = $this->telegramNotifier->sendText($text, $chatId);
             $io->success('Message sent. message_id=' . ($result['message_id'] ?? '?'));
             return Command::SUCCESS;
-        } catch (\Throwable $e) {
-            $io->error('Telegram send failed: ' . $e->getMessage());
+        } catch (Throwable $throwable) {
+            $io->error('Telegram send failed: ' . $throwable->getMessage());
             return Command::FAILURE;
         }
     }

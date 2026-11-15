@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 class PageReferenceScannerTest extends TestCase
 {
     private Connection&MockObject $connection;
+
     private PageReferenceScanner $scanner;
 
     private const TARGET_UUID = '0e36092e-eb62-41d0-ae38-f8cd9c7cc56e';

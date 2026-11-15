@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Sulu\Service;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use App\Sulu\Service\SnippetService;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
@@ -47,6 +48,7 @@ class SnippetServiceWriteTest extends TestCase
                 if (str_contains($sql, 'MAX(')) {
                     return 5;
                 }
+
                 // Path lookup: folder exists, snippet slug is free
                 return ($params[0] ?? '') === '/cmf/snippets/workshop_offer' ? 123 : null;
             }
@@ -256,6 +258,7 @@ class SnippetServiceWriteTest extends TestCase
                         'props' => self::FACTS_PROPS,
                     ];
                 }
+
                 if (str_contains($sql, "path = ? AND workspace_name = ?") && ($params[0] ?? '') === '/cmf/example') {
                     return ['props' => '<?xml version="1.0"?><sv:node xmlns:sv="http://www.jcp.org/jcr/sv/1.0"><sv:property sv:name="jcr:uuid" sv:type="String" sv:multi-valued="0"><sv:value>135f2839-a1e2-4a4e-9c5a-7f5fc633a7a8</sv:value></sv:property></sv:node>'];
                 }
@@ -593,7 +596,7 @@ class SnippetServiceWriteTest extends TestCase
     /**
      * @param array<int, array{path: string, workspace_name: string, props: string}> $referencingRows
      */
-    private function offerDeleteConnection(array $referencingRows): Connection&\PHPUnit\Framework\MockObject\MockObject
+    private function offerDeleteConnection(array $referencingRows): Connection&MockObject
     {
         $connection = $this->createMock(Connection::class);
         $connection->method('fetchAssociative')->willReturn([

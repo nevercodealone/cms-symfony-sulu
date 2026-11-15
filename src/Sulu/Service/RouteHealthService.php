@@ -27,13 +27,19 @@ use Doctrine\DBAL\Connection;
 class RouteHealthService
 {
     public const WORKSPACE_DEFAULT = 'default';
+
     public const WORKSPACE_LIVE = 'default_live';
+
     public const WEBSPACE = 'example';
+
     public const LOCALES = ['de', 'en'];
 
     public const STATUS_OK = 'ok';
+
     public const STATUS_MISSING = 'missing';
+
     public const STATUS_MISMATCH = 'mismatch';
+
     public const STATUS_NONE = 'none';
 
     public function __construct(
@@ -115,6 +121,7 @@ class RouteHealthService
         if (!isset($pages[$pagePath])) {
             return null;
         }
+
         $page = $pages[$pagePath];
 
         $index = $this->loadRouteIndex($locale);
@@ -135,6 +142,7 @@ class RouteHealthService
                 if (isset($collected[$key])) {
                     continue;
                 }
+
                 $collected[$key] = $route;
                 if (!isset($seen[$route['identifier']])) {
                     $seen[$route['identifier']] = true;
@@ -160,6 +168,7 @@ class RouteHealthService
             } else {
                 $entry['target'] = $page['path'];
             }
+
             $formatted[] = $entry;
         }
 
@@ -207,7 +216,7 @@ class RouteHealthService
                         'duplicate' => $duplicate,
                         'canonicalUrl' => $canonical !== null ? '/' . $locale . $canonical : null,
                         'warning' => $duplicate
-                            ? 'This URL serves the page although the page\'s current URL is ' . '/' . $locale . $canonical . ' (duplicate content). Convert it to a history route with nca:routes:repair.'
+                            ? "This URL serves the page although the page's current URL is " . '/' . $locale . $canonical . ' (duplicate content). Convert it to a history route with nca:routes:repair.'
                             : null,
                     ];
                 }
@@ -336,6 +345,7 @@ class RouteHealthService
         if ($activeRoutes === []) {
             return $published ? self::STATUS_MISSING : self::STATUS_NONE;
         }
+
         if ($url === null) {
             return self::STATUS_MISMATCH;
         }
@@ -407,6 +417,7 @@ class RouteHealthService
             if (isset($seen[$current['target']])) {
                 return null;
             }
+
             $seen[$current['target']] = true;
             $current = $this->loadRouteByIdentifier($current['target'], $current['workspace'], $locale);
         }
@@ -463,6 +474,7 @@ class RouteHealthService
             if (!is_array($row)) {
                 continue;
             }
+
             $path = (string) $row['path'];
             $node = [
                 'id' => (int) $row['id'],
@@ -590,11 +602,13 @@ class RouteHealthService
             if (!is_array($row) || !isset($row['props'])) {
                 continue;
             }
+
             $props = (string) $row['props'];
             $target = self::extractProperty($props, 'sulu:content');
             if ($target === null) {
                 continue; // plain container node, not a route
             }
+
             $history = self::extractProperty($props, 'sulu:history');
             $routes[] = [
                 'id' => (int) $row['id'],
@@ -623,9 +637,11 @@ class RouteHealthService
                 $withRef[(int) $ref['source_id']] = true;
             }
         }
+
         foreach ($routes as &$route) {
             $route['referenceRow'] = isset($withRef[$route['id']]);
         }
+
         unset($route);
 
         return $routes;

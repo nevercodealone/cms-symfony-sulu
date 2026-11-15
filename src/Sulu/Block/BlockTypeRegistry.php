@@ -696,6 +696,7 @@ final class BlockTypeRegistry
      * - FAMILY_EDUGATE:  config/templates/includes/edugate/blocks/*.xml   (EDUGATE_OVERRIDES)
      */
     public const FAMILY_TAILWIND = 'tailwind';
+
     public const FAMILY_EDUGATE = 'edugate';
 
     /**
@@ -1116,6 +1117,7 @@ final class BlockTypeRegistry
         if ($schema === null) {
             return false;
         }
+
         return in_array($property, $schema['properties'], true);
     }
 }

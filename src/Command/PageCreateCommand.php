@@ -74,6 +74,7 @@ class PageCreateCommand extends AbstractPageDocumentCommand
             if ($seo !== []) {
                 $extensions['seo'] = $seo;
             }
+
             $excerpt = array_filter([
                 'title' => $input->getOption('excerpt-title'),
                 'description' => $input->getOption('excerpt-description'),
@@ -82,9 +83,11 @@ class PageCreateCommand extends AbstractPageDocumentCommand
             if ($image !== null && $image !== '') {
                 $excerpt['images'] = ['ids' => [(int) $image]];
             }
+
             if ($excerpt !== []) {
                 $extensions['excerpt'] = $excerpt;
             }
+
             if ($extensions !== []) {
                 $document->setExtensionsData($extensions);
             }
@@ -96,6 +99,7 @@ class PageCreateCommand extends AbstractPageDocumentCommand
             if ($publish) {
                 $this->documentManager->publish($document, $locale);
             }
+
             $this->documentManager->flush();
 
             return ['success' => true, 'message' => 'Page created', 'published' => $publish] + $this->describe($document);

@@ -5,33 +5,37 @@ export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
 export SMTP_PORT="${SMTP_PORT:-587}"
 export SMTP_USER="${SMTP_USER}"
 export SMTP_PASSWORD="${SMTP_PASSWORD}"
-if command -v envsubst &> /dev/null && [ -f /etc/msmtprc.template ]; then
+if command -v envsubst &> /dev/null && [[ -f /etc/msmtprc.template ]]; then
   envsubst < /etc/msmtprc.template > /etc/msmtprc
 fi
 
 # Write .env from environment variables
-[ -n "$APP_ENV" ] && echo "APP_ENV=$APP_ENV" > .env
-[ -n "$APP_SECRET" ] && echo "APP_SECRET=$APP_SECRET" >> .env
-[ -n "$DATABASE_URL" ] && echo "DATABASE_URL=$DATABASE_URL" >> .env
-[ -n "$GOOGLE_API_KEY" ] && echo "GOOGLE_API_KEY=$GOOGLE_API_KEY" >> .env
-[ -n "$ELASTICSEARCH_HOST" ] && echo "ELASTICSEARCH_HOST=$ELASTICSEARCH_HOST" >> .env
-[ -n "$ELASTICSEARCH_INDEX" ] && echo "ELASTICSEARCH_INDEX=$ELASTICSEARCH_INDEX" >> .env
-[ -n "$TWITTER_API_KEY" ] && echo "TWITTER_API_KEY=$TWITTER_API_KEY" >> .env
-[ -n "$TWITTER_API_SECRET" ] && echo "TWITTER_API_SECRET=$TWITTER_API_SECRET" >> .env
-[ -n "$TWITTER_ACCESS_TOKEN" ] && echo "TWITTER_ACCESS_TOKEN=$TWITTER_ACCESS_TOKEN" >> .env
-[ -n "$TWITTER_ACCESS_SECRET" ] && echo "TWITTER_ACCESS_SECRET=$TWITTER_ACCESS_SECRET" >> .env
-[ -n "$DEEPL_API_KEY" ] && echo "DEEPL_API_KEY=$DEEPL_API_KEY" >> .env
-[ -n "$CORS_ALLOW_ORIGIN" ] && echo "CORS_ALLOW_ORIGIN=$CORS_ALLOW_ORIGIN" >> .env
-[ -n "$APP_URL" ] && echo "APP_URL=$APP_URL" >> .env
-[ -n "$MCP_PROJECT_PASSWORD" ] && echo "MCP_PROJECT_PASSWORD=$MCP_PROJECT_PASSWORD" >> .env
-[ -n "$MCP_PROJECT_NAME" ] && echo "MCP_PROJECT_NAME=\"$MCP_PROJECT_NAME\"" >> .env
-[ -n "$MCP_TOKEN_LIFETIME" ] && echo "MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME" >> .env
-[ -n "$MCP_CODE_LIFETIME" ] && echo "MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME" >> .env
-[ -n "$LOCK_DSN" ] && echo "LOCK_DSN=$LOCK_DSN" >> .env
+[[ -n "$APP_ENV" ]] && echo "APP_ENV=$APP_ENV" > .env
+[[ -n "$APP_SECRET" ]] && echo "APP_SECRET=$APP_SECRET" >> .env
+[[ -n "$DATABASE_URL" ]] && echo "DATABASE_URL=$DATABASE_URL" >> .env
+[[ -n "$GOOGLE_API_KEY" ]] && echo "GOOGLE_API_KEY=$GOOGLE_API_KEY" >> .env
+[[ -n "$ELASTICSEARCH_HOST" ]] && echo "ELASTICSEARCH_HOST=$ELASTICSEARCH_HOST" >> .env
+[[ -n "$ELASTICSEARCH_INDEX" ]] && echo "ELASTICSEARCH_INDEX=$ELASTICSEARCH_INDEX" >> .env
+[[ -n "$TWITTER_API_KEY" ]] && echo "TWITTER_API_KEY=$TWITTER_API_KEY" >> .env
+[[ -n "$TWITTER_API_SECRET" ]] && echo "TWITTER_API_SECRET=$TWITTER_API_SECRET" >> .env
+[[ -n "$TWITTER_ACCESS_TOKEN" ]] && echo "TWITTER_ACCESS_TOKEN=$TWITTER_ACCESS_TOKEN" >> .env
+[[ -n "$TWITTER_ACCESS_SECRET" ]] && echo "TWITTER_ACCESS_SECRET=$TWITTER_ACCESS_SECRET" >> .env
+[[ -n "$DEEPL_API_KEY" ]] && echo "DEEPL_API_KEY=$DEEPL_API_KEY" >> .env
+[[ -n "$ANTHROPIC_API_KEY" ]] && echo "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" >> .env
+[[ -n "$HUGGINGFACE_API_KEY" ]] && echo "HUGGINGFACE_API_KEY=$HUGGINGFACE_API_KEY" >> .env
+[[ -n "$SULU_AI_PLATFORM_API_KEY" ]] && echo "SULU_AI_PLATFORM_API_KEY=$SULU_AI_PLATFORM_API_KEY" >> .env
+[[ -n "$SULU_AI_WEBHOOK_SECRET" ]] && echo "SULU_AI_WEBHOOK_SECRET=$SULU_AI_WEBHOOK_SECRET" >> .env
+[[ -n "$CORS_ALLOW_ORIGIN" ]] && echo "CORS_ALLOW_ORIGIN=$CORS_ALLOW_ORIGIN" >> .env
+[[ -n "$APP_URL" ]] && echo "APP_URL=$APP_URL" >> .env
+[[ -n "$MCP_PROJECT_PASSWORD" ]] && echo "MCP_PROJECT_PASSWORD=$MCP_PROJECT_PASSWORD" >> .env
+[[ -n "$MCP_PROJECT_NAME" ]] && echo "MCP_PROJECT_NAME=\"$MCP_PROJECT_NAME\"" >> .env
+[[ -n "$MCP_TOKEN_LIFETIME" ]] && echo "MCP_TOKEN_LIFETIME=$MCP_TOKEN_LIFETIME" >> .env
+[[ -n "$MCP_CODE_LIFETIME" ]] && echo "MCP_CODE_LIFETIME=$MCP_CODE_LIFETIME" >> .env
+[[ -n "$LOCK_DSN" ]] && echo "LOCK_DSN=$LOCK_DSN" >> .env
 echo "MAILER_DSN=${MAILER_DSN:-smtp://${SMTP_USER}:${SMTP_PASSWORD}@${SMTP_HOST:-smtp.gmail.com}:${SMTP_PORT:-587}}" >> .env
 echo "CONTACT_LEAD_EMAIL=${CONTACT_LEAD_EMAIL:-info@nevercodealone.de}" >> .env
-[ -n "$TELEGRAM_BOT_TOKEN" ] && echo "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN" >> .env
-[ -n "$TELEGRAM_DEFAULT_CHAT_ID" ] && echo "TELEGRAM_DEFAULT_CHAT_ID=$TELEGRAM_DEFAULT_CHAT_ID" >> .env
+[[ -n "$TELEGRAM_BOT_TOKEN" ]] && echo "TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN" >> .env
+[[ -n "$TELEGRAM_DEFAULT_CHAT_ID" ]] && echo "TELEGRAM_DEFAULT_CHAT_ID=$TELEGRAM_DEFAULT_CHAT_ID" >> .env
 
 # Fix .env ownership (just written as root)
 chown www-data:www-data /var/www/html/.env 2>/dev/null || true
@@ -43,7 +47,7 @@ chown -R www-data:www-data /var/www/html/public/uploads/ 2>/dev/null || true
 # Clear stale compiled cache but keep the warmed HTTP page cache across restarts
 CACHE_DIR="/var/www/html/var/cache"
 PRESERVE_DIR="/tmp/http_cache-preserve"
-if [ -d "$CACHE_DIR" ] && [ -n "$(find "$CACHE_DIR" -type d -name http_cache -print -quit 2>/dev/null)" ]; then
+if [[ -d "$CACHE_DIR" ]] && [[ -n "$(find "$CACHE_DIR" -type d -name http_cache -print -quit 2>/dev/null)" ]]; then
   mkdir -p "$PRESERVE_DIR"
   find "$CACHE_DIR" -type d -name http_cache | while read -r dir; do
     target="$PRESERVE_DIR${dir#"$CACHE_DIR"}"
@@ -52,7 +56,7 @@ if [ -d "$CACHE_DIR" ] && [ -n "$(find "$CACHE_DIR" -type d -name http_cache -pr
   done
 fi
 rm -rf "$CACHE_DIR"/*
-if [ -d "$PRESERVE_DIR" ]; then
+if [[ -d "$PRESERVE_DIR" ]]; then
   cp -a "$PRESERVE_DIR/." "$CACHE_DIR"/
   rm -rf "$PRESERVE_DIR"
 fi

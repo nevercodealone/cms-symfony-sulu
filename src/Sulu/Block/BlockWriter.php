@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Sulu\Block;
 
+use InvalidArgumentException;
+use RuntimeException;
+use DOMElement;
 use DOMDocument;
 use DOMNode;
 use DOMXPath;
@@ -55,7 +58,7 @@ final class BlockWriter
     ): int {
         $type = $block['type'] ?? '';
         if (empty($type)) {
-            throw new \InvalidArgumentException('Block must have a "type" property');
+            throw new InvalidArgumentException('Block must have a "type" property');
         }
 
         $prefix = "i18n:{$locale}-{$blockProperty}";
@@ -169,7 +172,7 @@ final class BlockWriter
         $rootNode = $xpath->query('/sv:node')->item(0);
 
         if (!$rootNode) {
-            throw new \RuntimeException('Invalid XML structure: root node not found');
+            throw new RuntimeException('Invalid XML structure: root node not found');
         }
 
         // Get schema for this block type
@@ -265,7 +268,7 @@ final class BlockWriter
 
         if ($allProperties !== false) {
             foreach ($allProperties as $prop) {
-                if ($prop instanceof \DOMElement) {
+                if ($prop instanceof DOMElement) {
                     $name = $prop->getAttribute('sv:name');
                     // Only remove if this is the main position (not nested item position)
                     if (preg_match('/^' . preg_quote($prefix, '/') . '-[^#]+#' . $position . '(?:-|$)/', $name)) {
@@ -467,6 +470,7 @@ final class BlockWriter
         $valueNode = $xml->createElementNS('http://www.jcp.org/jcr/sv/1.0', 'sv:value');
         $valueNode->setAttribute('length', (string) strlen($value));
         $valueNode->appendChild($xml->createTextNode($value));
+
         $property->appendChild($valueNode);
 
         $rootNode->appendChild($property);
@@ -603,6 +607,7 @@ final class BlockWriter
         if (empty($value)) {
             return false;
         }
+
         // Check if first element is an associative array (nested item)
         $first = reset($value);
         return is_array($first) && !array_is_list($first);
@@ -668,9 +673,7 @@ final class BlockWriter
         // 2. Convert newlines to <br>
         $encoded = str_replace("\n", '<br>', $encoded);
         // 3. Convert leading spaces per line to &nbsp;
-        $encoded = preg_replace_callback('/(?<=<br>|^)( +)/', function ($m) {
-            return str_repeat('&nbsp;', strlen($m[1]));
-        }, $encoded);
+        $encoded = preg_replace_callback('/(?<=<br>|^)( +)/', fn($m) => str_repeat('&nbsp;', strlen($m[1])), $encoded);
         // 4. Wrap in <p>
         return '<p>' . $encoded . '</p>';
     }

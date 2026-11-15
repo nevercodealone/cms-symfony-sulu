@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Command;
 
+use RuntimeException;
 use App\Command\PageDeleteCommand;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -66,7 +67,7 @@ class PageDeleteCommandTest extends TestCase
 
     public function testReturnsStructuredErrorOnException(): void
     {
-        $this->documentManager->method('find')->willThrowException(new \RuntimeException('session went away'));
+        $this->documentManager->method('find')->willThrowException(new RuntimeException('session went away'));
 
         $tester = new CommandTester(new PageDeleteCommand($this->documentManager));
         $exitCode = $tester->execute(['path' => '/cmf/example/contents/foo']);

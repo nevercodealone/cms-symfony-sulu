@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use DateTimeImmutable;
 use App\Repository\ContactLeadRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -15,8 +16,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 class ContactLead
 {
     final public const RESOURCE_KEY = 'contact_leads';
+
     final public const FORM_KEY = 'contact_lead_details';
+
     final public const LIST_KEY = 'contact_leads';
+
     final public const SECURITY_CONTEXT = 'sulu.contact_leads.contact_leads';
 
     #[ORM\Id]
@@ -48,12 +52,12 @@ class ContactLead
     private ?string $userIp = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    private ?\DateTimeImmutable $createdAt = null;
+    private ?DateTimeImmutable $createdAt = null;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -135,7 +139,7 @@ class ContactLead
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): ?DateTimeImmutable
     {
         return $this->createdAt;
     }

@@ -62,6 +62,17 @@ The script now runs `vendor/bin/phpunit`. If you change
 `PageService`, `SuluPagesTool` or any write path, run the full gate above -
 never assume a green checkmark somewhere covers the unit suite.
 
+### 4. MCP token lost after a dump import
+
+The `sulu_pages` MCP tool is served over HTTP (`/mcp`) with OAuth bearer
+tokens from `mcp_access_tokens`. Importing a live dump replaces that table
+with live's tokens, so every locally stored client token becomes invalid -
+every tool call fails with `401 unauthorized` **before** reaching the
+service. Fix: mint a local token (`INSERT INTO mcp_access_tokens
+(token, client_name, expires_at, created_at) VALUES (<64-hex>, 'local-dev',
+NOW() + INTERVAL 30 DAY, NOW())`) or re-run the client's OAuth flow
+(`/oauth/authorize` -> `/oauth/token`), then update the client config.
+
 ## Deployment gate
 
 Never deploy to the live system while any of the following fails:
